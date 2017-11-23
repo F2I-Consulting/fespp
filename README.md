@@ -1,2 +1,3 @@
-# fespp
-A Paraview plugin to visualize Resqml 2.0 data
+# Dependencies
+- Paraview : https://www.paraview.org/
+- Fesapi : https://github.com/F2I-Consulting/fesapi
