@@ -1,0 +1,18 @@
+<RCC>
+  <qresource>
+    <file>branch-closed.png</file>
+    <file>branch-end.png</file>
+    <file>branch-more.png</file>
+    <file>branch-open.png</file>
+    <file>Polyline.png</file>
+	<file>Triangulated.png</file>
+	<file>Grid2D.png</file>
+	<file>IjkGrid.png</file>
+	<file>SubRepresentation.png</file>
+    <file>pqEyeball16.png</file>
+	<file>pqEyeballd16.png</file>
+    <file>vline.png</file>
+	<file>UnstructuredGrid.png</file>
+	<file>WellTraj.png</file>
+  </qresource>
+</RCC>

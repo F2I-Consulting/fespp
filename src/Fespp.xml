@@ -1,0 +1,57 @@
+ <ServerManagerConfiguration>
+	<ProxyGroup name="sources">
+		<!-- EPCReader -->
+		<SourceProxy name="Fespp" 
+					class="Fespp" 
+					label="F2i-consulting Energistics Standard Paraview Plugin">
+			<Documentation
+				long_help="Read a .epc file."
+				short_help="Read a .epc file.">
+			</Documentation>
+			<StringVectorProperty
+				name="FileName"
+				animateable="0"
+				command="SetFileName"
+				number_of_elements="1"
+				panel_visibility="never">
+				<FileListDomain name="files"/>
+				<Documentation>
+					This property specifies the file name for the EPC reader.
+				</Documentation>
+			</StringVectorProperty>
+			<Hints>
+				<ReaderFactory extensions="epc" file_description="Resqml files" />
+			</Hints>
+			
+	<StringVectorProperty
+        name="uuidPropertysInfo"
+        information_only="1"        
+        default = "1">
+        <ArraySelectionInformationHelper attribute_name="uuidPropertys"/>
+     </StringVectorProperty>
+	  
+      <StringVectorProperty
+         name="uuidPropertys" 
+         command="SetuuidPropertysArrayStatus"         
+         number_of_elements="0"
+         repeat_command="1"
+         number_of_elements_per_command="2"
+         element_types="2 0"
+         information_property="uuidPropertysInfo"
+         label="Properties">
+        <ArraySelectionDomain name="array_list">
+          <RequiredProperties>
+            <Property name="uuidPropertysInfo" function="ArrayList"/>
+          </RequiredProperties>
+        </ArraySelectionDomain>
+        <Documentation>
+          This property lists which cell-centered arrays to read.
+        </Documentation>
+      </StringVectorProperty>
+						
+		<!-- End EPCReader -->
+		</SourceProxy>
+		
+	</ProxyGroup>
+<!-- End Reader -->
+ </ServerManagerConfiguration>
