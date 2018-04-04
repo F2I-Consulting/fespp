@@ -1,8 +1,8 @@
 ﻿#include "VtkAbstractObject.h"
 
 //----------------------------------------------------------------------------
-VtkAbstractObject::VtkAbstractObject( const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent):
-	fileName(fileName), name(name), uuid(uuid), uuidParent(uuidParent)
+VtkAbstractObject::VtkAbstractObject( const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, const int & idProc, const int & maxProc):
+	fileName(fileName), name(name), uuid(uuid), uuidParent(uuidParent), idProc(idProc), maxProc(maxProc)
 {
 }
 
@@ -28,6 +28,21 @@ std::string VtkAbstractObject::getUuid() const
 std::string VtkAbstractObject::getParent() const
 {
 	return uuidParent;
+}
+
+//----------------------------------------------------------------------------
+int VtkAbstractObject::getIdProc() const
+{
+	return idProc;
+}
+
+//----------------------------------------------------------------------------
+int VtkAbstractObject::getMaxProc() const
+{
+	if(maxProc==0)
+		return 1;
+	else
+		return maxProc;
 }
 
 //----------------------------------------------------------------------------

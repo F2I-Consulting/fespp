@@ -1,252 +1,253 @@
-﻿#include "Fespp.h"
+﻿#include <Fespp.h>
+#include <vtkDataArraySelection.h>
+#include <vtkIndent.h>
+#include <vtkInformation.h>
+#include <vtkInformationVector.h>
+#include <vtkMPI.h>
+#include <vtkMPICommunicator.h>
+#include <vtkMPIController.h>
+#include <vtkMultiBlockDataSet.h>
+#include <vtkMultiProcessController.h>
+#include <vtkObjectFactory.h>
+#include <vtkOStreamWrapper.h>
+#include <vtkSetGet.h>
+#include <vtkSmartPointer.h>
+#include <VTK/VtkEpcDocument.h>
+#include <VTK/VtkEpcDocumentSet.h>
+#include <exception>
+#include <iostream>
+#include <utility>
+#include <vector>
 
-#include "VTK/VtkEpcDocument.h"
-
-#include "PQSelectionPanel.h"
-
-#include "vtkObjectFactory.h" 
-#include "vtkInformation.h"
-#include "vtkInformationRequestKey.h"
-#include "vtkInformationVector.h"
-#include "vtkMultiBlockDataSet.h"
-#include "vtkSMProxy.h"
-#include "vtkStreamingDemandDrivenPipeline.h"
-#include "vtkDataArraySelection.h"
-#include "vtkCallbackCommand.h"
-
-#include <QApplication>
-#include <pqPropertiesPanel.h>
-#include <pqView.h>
-#include <pqPVApplicationCore.h>
-
-#include <sstream>
-#include <qmessagebox.h>
-
-namespace
-{
-	PQSelectionPanel* getPanelSelection()
-	{
-		// get Selection panel
-		PQSelectionPanel *panel = 0;
-		foreach(QWidget *widget, qApp->topLevelWidgets())
-		{
-			panel = widget->findChild<PQSelectionPanel *>();
-			if (panel)
-			{
-				break;
-			}
-		}
-		return panel;
-	}
-
-	pqPropertiesPanel* getpqPropertiesPanel()
-	{
-		// get multi-block inspector panel
-		pqPropertiesPanel *panel = 0;
-		foreach(QWidget *widget, qApp->topLevelWidgets())
-		{
-			panel = widget->findChild<pqPropertiesPanel *>();
-
-			if (panel)
-			{
-				break;
-			}
-		}
-		return panel;
-	}
-
-}
+#ifndef MPICH_IGNORE_CXX_SEEK
+#define MPICH_IGNORE_CXX_SEEK
+#endif
 
 vtkStandardNewMacro(Fespp);
+vtkCxxSetObjectMacro(Fespp, Controller, vtkMultiProcessController);
+
 
 //----------------------------------------------------------------------------
 Fespp::Fespp()
 {
 	FileName = NULL;
 
-	this->uuidPropertys = vtkDataArraySelection::New();
-
 	SetNumberOfInputPorts(0);
 	SetNumberOfOutputPorts(1);
 
-	treeWidgetSelection = getPanelSelection();
 	loadedFile = false;
+
+	this->subFileList = vtkDataArraySelection::New();
+	this->uuidList = vtkDataArraySelection::New();
+
+	this->Controller = NULL;
+	this->SetController(vtkMultiProcessController::GetGlobalController());
+
+	auto comm = GetMPICommunicator();
+	this->idProc =0;
+	this->nbProc =0;
+	if (comm != MPI_COMM_NULL)
+	{
+		MPI_Comm_rank(comm, &this->idProc);
+		MPI_Comm_size(comm, &this->nbProc);
+	}
+	countTest = 0;
+
 }
 
 //----------------------------------------------------------------------------
 Fespp::~Fespp()
 {
-	//deleting object variables
-	if (this->uuidPropertys != NULL)
-	{
-		this->uuidPropertys = nullptr;
-	}
-	SetFileName(0);
-}
-
-char* Fespp::whatFile()
-{
-	return FileName;
+	SetFileName(NULL);
+	this->SetController(NULL);
+	for (std::pair<std::string, VtkEpcDocument*> element : vtkEpcDocuments)
+		delete element.second;
 }
 
 //----------------------------------------------------------------------------
-void Fespp::visualize(std::string file, std::string uuid)
+int Fespp::GetsubFileListArrayStatus(const char* name)
 {
-	if (this->uuidPropertys != NULL){
-		if (uuid != "first")
-		{
-			this->change("Fisrt", 0);
-		}
-		this->change(uuid, 1);
+	return (this->subFileList->ArrayIsEnabled(name));
+}
+//----------------------------------------------------------------------------
+void Fespp::SetSubFileList(const char* name, int status)
+{
+	if (status)
+	{
+		this->subFileList->EnableArray(name);
 	}
+	else
+	{
+		if (this->subFileList != nullptr)
+		{
+			this->subFileList->EnableArray(name);
+		}
+		else
+			this->subFileList = vtkDataArraySelection::New();
+	}
+	this->subFileList->Modified();
+
+	openEpcDocument(name);
+
+	this->Modified();
 }
 
-void Fespp::change(std::string uuid, unsigned int status)
+//----------------------------------------------------------------------------
+int Fespp::GetNumberOfsubFileListArrays()
 {
-	this->SetupOutputInformation(this->GetOutputPortInformation(0));
-	this->SetuuidPropertysArrayStatus(uuid.c_str(), status);
-	this->SetupOutputInformation(this->GetOutputPortInformation(0));
+	return this->subFileList->GetNumberOfArrays();
 }
 
+//----------------------------------------------------------------------------
+const char* Fespp::GetsubFileListArrayName(int index)
+{
+	return this->subFileList->GetArrayName(index);
+}
+
+//----------------------------------------------------------------------------
+int Fespp::GetuuidListArrayStatus(const char* uuid)
+{
+	return (this->uuidList->ArrayIsEnabled(uuid));
+}
+//----------------------------------------------------------------------------
+void Fespp::SetUuidList(const char* uuid, int status)
+{
+	if (status)
+	{
+		vtkEpcDocumentSet->visualize(std::string(uuid));
+	}
+	else
+	{
+		vtkEpcDocumentSet->unvisualize(std::string(uuid));
+	}
+
+	this->Modified();
+	this->Update();
+	this->UpdateDataObject();
+	this->UpdateInformation();
+	this->UpdateWholeExtent();
+}
+
+//----------------------------------------------------------------------------
+int Fespp::GetNumberOfuuidListArrays()
+{
+	return this->uuidList->GetNumberOfArrays();
+}
+
+//----------------------------------------------------------------------------
+const char* Fespp::GetuuidListArrayName(int index)
+{
+	return this->uuidList->GetArrayName(index);
+}
+
+//----------------------------------------------------------------------------
+MPI_Comm Fespp::GetMPICommunicator()
+{
+	MPI_Comm comm = MPI_COMM_NULL;
+
+	vtkMPIController *MPIController = vtkMPIController::SafeDownCast(this->Controller);
+
+	if (MPIController != NULL)
+	{
+		vtkMPICommunicator *mpiComm = vtkMPICommunicator::SafeDownCast(MPIController->GetCommunicator());
+
+		if (mpiComm != NULL)
+		{
+			comm = *mpiComm->GetMPIComm()->GetHandle();
+		}
+	}
+	return comm;
+}
+
+//----------------------------------------------------------------------------
 void Fespp::displayError(std::string msg)
 {
 	vtkErrorMacro(<< msg.c_str());
 }
 
+//----------------------------------------------------------------------------
 void Fespp::displayWarning(std::string msg)
 {
 	vtkWarningMacro(<< msg.c_str());
 }
-//----------------------------------------------------------------------------
-void Fespp::RemoveUuid(std::string uuid)
-{
-	this->change(uuid, 0);
-}
-
-//----------------------------------------------------------------------------
-int Fespp::CanReadFile(const char* name)
-{
-	if (treeWidgetSelection->canAddFile(name))
-		return 1;
-	return 0;
-}
 
 //----------------------------------------------------------------------------
 int Fespp::RequestInformation(
-	vtkInformation *request,
-	vtkInformationVector **inputVector,
-	vtkInformationVector *outputVector)
+		vtkInformation *request,
+		vtkInformationVector **inputVector,
+		vtkInformationVector *outputVector)
 {
-	if (!loadedFile)
+	if ( !loadedFile )
 	{
-		try{
-			common::EpcDocument *pck = new common::EpcDocument(FileName);
-			std::string result = pck->deserialize();
-			if (result.empty())
-			{
-				auto warnings = pck->getWarnings();
-				for (const auto& warning : warnings)
-				{
-					vtkWarningMacro("Deserialization warning : " + warning);
-				}
-				treeWidgetSelection->addFileName(FileName, this, pck);
-				loadedFile = true;
-			}
-			else
-			{
-				vtkErrorMacro("XML validation error : " + result);
-				pck->close();
-			}
-		}
-		catch (const std::exception & e)
+		auto stringFileName = std::string(FileName);
+		auto lengthFileName = stringFileName.length();
+		auto extension = stringFileName.substr(lengthFileName -3, lengthFileName);
+
+		vtkEpcDocumentSet = new VtkEpcDocumentSet(idProc, nbProc, false, true);
+		openEpcDocument(FileName);
+		if (extension=="epc")
 		{
-			vtkErrorMacro("EXCEPTION in fesapi when reading file " << FileName << " : " << e.what());
+			vtkEpcDocumentSet->visualizeFull();
 		}
 	}
 	return 1;
 }
 
 //----------------------------------------------------------------------------
-int Fespp::RequestData(vtkInformation *request,
-	vtkInformationVector **inputVector,
-	vtkInformationVector *outputVector)
+void Fespp::openEpcDocument(const std::string & name)
 {
-	// get the info object
+	vtkEpcDocumentSet->addEpcDocument(name);
+
+	loadedFile = true;
+}
+
+//----------------------------------------------------------------------------
+int Fespp::RequestData(vtkInformation *request,
+		vtkInformationVector **inputVector,
+		vtkInformationVector *outputVector)
+{
+	auto comm = GetMPICommunicator();
+	double t1, t2;
+	if (comm != MPI_COMM_NULL)
+		t1 = MPI_Wtime();
+
+	if (this->idProc == 0)
+		cout << "traitement fait avec " <<  this->nbProc << " processeur(s) \n";
+
 	vtkInformation *outInfo = outputVector->GetInformationObject(0);
-	// get the output
 	vtkMultiBlockDataSet *output = vtkMultiBlockDataSet::SafeDownCast(outInfo->Get(vtkMultiBlockDataSet::DATA_OBJECT()));
+
+	if (comm != MPI_COMM_NULL)
+		MPI_Barrier(comm);
+
 	if (loadedFile)
 	{
 		try{
-			std::string StrFileName(FileName);
-			output->DeepCopy(treeWidgetSelection->getOutput(StrFileName));
+			auto outputSet = vtkEpcDocumentSet->getVisualization();
+
+			output->DeepCopy(vtkEpcDocumentSet->getVisualization());
 		}
 		catch (const std::exception & e)
 		{
 			vtkErrorMacro("EXCEPTION fesapi.dll:" << e.what());
 		}
 	}
+
+	if (comm != MPI_COMM_NULL)
+	{
+		MPI_Barrier(comm);
+		t2 = MPI_Wtime();
+		if (this->idProc == 0)
+			cout << "Elapsed time is " << (t2-t1) << "\n";
+	}
+
 	return 1;
 }
 
 //----------------------------------------------------------------------------
 void Fespp::PrintSelf(ostream& os, vtkIndent indent)
 {
+	cout<<"Fespp::PrintSelf\n";
 	Superclass::PrintSelf(os, indent);
-	os << indent << "File Name: " << (FileName ? FileName : "(none)") << "\n";
-}
-
-//----------------------------------------------------------------------------
-int Fespp::GetuuidPropertysArrayStatus(const char* name)
-{
-	// if 'name' not found, it is treated as 'disabled'
-	return (this->uuidPropertys->ArrayIsEnabled(name));
-}
-//----------------------------------------------------------------------------
-void Fespp::SetuuidPropertysArrayStatus(const char* name, int status)
-{
-	if (status)
-	{
-		this->uuidPropertys->EnableArray(name);
-	}
-	else
-	{
-		int nbProperty = uuidPropertys->GetNumberOfArrays();
-
-		if (this->uuidPropertys != nullptr)
-		{
-			int test = this->uuidPropertys->GetNumberOfArrays();
-			this->uuidPropertys->EnableArray(name);
-			this->uuidPropertys->RemoveArrayByName(name);
-		}
-		else
-			this->uuidPropertys = vtkDataArraySelection::New();
-	}
-	this->uuidPropertys->Modified();
-}
-
-//----------------------------------------------------------------------------
-void Fespp::SetupOutputInformation(vtkInformation *outInfo)
-{
-	this->Modified();
-	pqApplicationCore::instance()->render();
-
-	getpqPropertiesPanel()->updateGeometry();
-	getpqPropertiesPanel()->show();
-	getpqPropertiesPanel()->view()->forceRender();
-	getpqPropertiesPanel()->view()->render();
-	getpqPropertiesPanel()->setUpdatesEnabled(true);
-	emit getpqPropertiesPanel()->apply();
-}
-
-//----------------------------------------------------------------------------
-int Fespp::GetNumberOfuuidPropertysArrays()
-{
-	return this->uuidPropertys->GetNumberOfArrays();
-}
-
-//----------------------------------------------------------------------------
-const char* Fespp::GetuuidPropertysArrayName(int index)
-{
-	return this->uuidPropertys->GetArrayName(index);
+	os << indent << "fileName: " << (FileName ? FileName : "(none)") << "\n";
 }

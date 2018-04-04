@@ -25,10 +25,9 @@
 #include <vtkUnsignedCharArray.h>
 
 //----------------------------------------------------------------------------
-VtkProperty::VtkProperty(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, common::EpcDocument *pck) :
-VtkAbstractObject(fileName, name, uuid, uuidParent), epcPackage(pck)
+VtkProperty::VtkProperty(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, common::EpcDocument *pck, const int & idProc, const int & maxProc) :
+VtkAbstractObject(fileName, name, uuid, uuidParent, idProc, maxProc), epcPackage(pck)
 {
-//	this->cellData = vtkSmartPointer<vtkDataArray>::New();
 }
 
 //----------------------------------------------------------------------------
@@ -44,16 +43,10 @@ void VtkProperty::createTreeVtk(const std::string & uuid, const std::string & pa
 //----------------------------------------------------------------------------
 void VtkProperty::remove(const std::string & uuid)
 {
-//	this->cellData->Reset();
-// vtkSmartPointer<vtkDataArray> cellData = vtkSmartPointer<vtkDataArray>::New();
+	cellData=nullptr;
 }
 
 //----------------------------------------------------------------------------
-//vtkDataArray* VtkProperty::getCellData() const
-//{
-//	return cellData;
-//}
-
 unsigned int VtkProperty::getSupport()
 {
 	return support;
@@ -156,17 +149,19 @@ vtkDataArray* VtkProperty::loadValuesPropertySet(std::vector<resqml2::AbstractVa
 					break;
 				}
 			case resqml2::AbstractValuesProperty::hdfDatatypeEnum::DOUBLE :
-				{	 
+				{
 					vtkSmartPointer<vtkDoubleArray> cellDataDouble = vtkSmartPointer<vtkDoubleArray>::New();
-					double* valuesDoubleSet = new double[nbElement];
+					//double* valuesDoubleSet = new double[nbElement];
+					double* valuesDoubleSet;
 
 					if (valuesProperty->getXmlTag() == "ContinuousProperty")
 					{
 						resqml2_0_1::ContinuousProperty *propertyValue = static_cast<resqml2_0_1::ContinuousProperty*>(valuesPropertySet[i]);
-						if ( propertyValue->getElementCountPerValue() == 1)
-						{
+	//					if ( propertyValue->getElementCountPerValue() == 1)
+		//				{
+							valuesDoubleSet = new double[nbElement*propertyValue->getElementCountPerValue()];
 							propertyValue->getDoubleValuesOfPatch(0, valuesDoubleSet);
-						}
+			//			}
 					}
 					else if (valuesProperty->getXmlTag() == "DiscreteProperty")
 					{
@@ -183,9 +178,9 @@ vtkDataArray* VtkProperty::loadValuesPropertySet(std::vector<resqml2::AbstractVa
 					cellData = cellDataDouble;
 //					delete[] valuesDoubleSet;
 					break;
-				} 
+				}
 			case resqml2::AbstractValuesProperty::hdfDatatypeEnum::FLOAT :
-				{	 
+				{
 					vtkSmartPointer<vtkFloatArray> cellDataFloat = vtkSmartPointer<vtkFloatArray>::New();
 					float* valuesFloatSet = new float[nbElement];
 
@@ -214,7 +209,7 @@ vtkDataArray* VtkProperty::loadValuesPropertySet(std::vector<resqml2::AbstractVa
 					break;
 			}
 			case resqml2::AbstractValuesProperty::hdfDatatypeEnum::LONG :
-				{	 
+				{
 					vtkSmartPointer<vtkLongArray> cellDataLong = vtkSmartPointer<vtkLongArray>::New();
 					long* valuesLongSet = new long[nbElement];
 
@@ -247,7 +242,7 @@ vtkDataArray* VtkProperty::loadValuesPropertySet(std::vector<resqml2::AbstractVa
 					break;
 				}
 			case resqml2::AbstractValuesProperty::hdfDatatypeEnum::ULONG :
-				{	 
+				{
 					vtkSmartPointer<vtkUnsignedLongArray> cellDataLong = vtkSmartPointer<vtkUnsignedLongArray>::New();
 					unsigned long* valuesULongSet = new unsigned long[nbElement];
 
@@ -280,7 +275,7 @@ vtkDataArray* VtkProperty::loadValuesPropertySet(std::vector<resqml2::AbstractVa
 					break;
 			}
 			case resqml2::AbstractValuesProperty::hdfDatatypeEnum::INT :
-				{	 
+				{
 					vtkSmartPointer<vtkIntArray> cellDataInt = vtkSmartPointer<vtkIntArray>::New();
 					int* valuesIntSet = new int[nbElement];
 
@@ -313,7 +308,7 @@ vtkDataArray* VtkProperty::loadValuesPropertySet(std::vector<resqml2::AbstractVa
 					break;
 			}
 			case resqml2::AbstractValuesProperty::hdfDatatypeEnum::UINT :
-				{	 
+				{
 					vtkSmartPointer<vtkUnsignedIntArray> cellDataUInt = vtkSmartPointer<vtkUnsignedIntArray>::New();
 					unsigned int* valuesUIntSet = new unsigned int[nbElement];
 
@@ -344,9 +339,9 @@ vtkDataArray* VtkProperty::loadValuesPropertySet(std::vector<resqml2::AbstractVa
 					cellData = cellDataUInt;
 //					delete[] valuesUIntSet;
 					break;
-				}																		
+				}
 			case resqml2::AbstractValuesProperty::hdfDatatypeEnum::SHORT :
-				{	 
+				{
 					vtkSmartPointer<vtkShortArray> cellDataShort = vtkSmartPointer<vtkShortArray>::New();
 					short* valuesShortSet = new short[nbElement];
 
@@ -377,9 +372,9 @@ vtkDataArray* VtkProperty::loadValuesPropertySet(std::vector<resqml2::AbstractVa
 					cellData = cellDataShort;
 //					delete[] valuesShortSet;
 					break;
-				}																		
+				}
 			case resqml2::AbstractValuesProperty::hdfDatatypeEnum::USHORT :
-				{	 
+				{
 					vtkSmartPointer<vtkUnsignedShortArray> cellDataUShort = vtkSmartPointer<vtkUnsignedShortArray>::New();
 					unsigned short* valuesUShortSet = new unsigned short[nbElement];
 
@@ -410,9 +405,9 @@ vtkDataArray* VtkProperty::loadValuesPropertySet(std::vector<resqml2::AbstractVa
 					cellData = cellDataUShort;
 //					delete[] valuesUShortSet;
 					break;
-				}																		
+				}
 			case resqml2::AbstractValuesProperty::hdfDatatypeEnum::CHAR :
-				{	 
+				{
 					vtkSmartPointer<vtkCharArray> cellDataChar = vtkSmartPointer<vtkCharArray>::New();
 					char* valuesCharSet = new char[nbElement];
 
@@ -443,9 +438,9 @@ vtkDataArray* VtkProperty::loadValuesPropertySet(std::vector<resqml2::AbstractVa
 					cellData = cellDataChar;
 //					delete[] valuesCharSet;
 					break;
-				}																		
+				}
 			case resqml2::AbstractValuesProperty::hdfDatatypeEnum::UCHAR :
-				{	 
+				{
 					vtkSmartPointer<vtkUnsignedCharArray> cellDataUInt = vtkSmartPointer<vtkUnsignedCharArray>::New();
 					unsigned char* valuesUCharSet = new unsigned char[nbElement];
 
@@ -479,13 +474,187 @@ vtkDataArray* VtkProperty::loadValuesPropertySet(std::vector<resqml2::AbstractVa
 				}
 			default:
 				vtkOutputWindowDisplayDebugText("property not supported...  (hdfDatatypeEnum)");
-				break;			
+				break;
 			}
 		}
 	}
 	return cellData;
 }
 
+//----------------------------------------------------------------------------
+vtkDataArray* VtkProperty::loadValuesPropertySet(std::vector<resqml2::AbstractValuesProperty*> valuesPropertySet, long cellCount, long pointCount,
+		int iCellCount, int jCellCount, int kCellCount, int initKIndex)
+{
+	for (size_t i = 0; i < valuesPropertySet.size(); ++i)
+	{
+		if (valuesPropertySet[i]->getUuid() == getUuid())
+		{
+			resqml2::AbstractValuesProperty* valuesProperty = valuesPropertySet[i];
+
+			int nbElement = 0;
+			gsoap_resqml2_0_1::resqml2__IndexableElements element = valuesPropertySet[i]->getAttachmentKind();
+			if (element == gsoap_resqml2_0_1::resqml2__IndexableElements::resqml2__IndexableElements__cells )
+			{
+				nbElement = cellCount;
+				support = typeSupport::CELLS;
+			}
+			else
+				if (element == gsoap_resqml2_0_1::resqml2__IndexableElements::resqml2__IndexableElements__nodes )
+				{
+					support = typeSupport::POINTS ;
+					nbElement = pointCount;
+				}
+				else
+				vtkOutputWindowDisplayDebugText("property not supported...  (resqml2__IndexableElements: not cells or nodes)");
+
+			auto typeProperty = valuesProperty->getXmlTag();
+			unsigned long long numValuesInEachDimension = iCellCount*jCellCount*kCellCount;
+			unsigned long long offsetInEachDimension = iCellCount*jCellCount*initKIndex;
+
+			if (typeProperty == "ContinuousProperty")
+			{
+				vtkSmartPointer<vtkFloatArray> cellDataFloat = vtkSmartPointer<vtkFloatArray>::New();
+				float* valuesFloatSet = new float[nbElement];
+				resqml2_0_1::ContinuousProperty *propertyValue = static_cast<resqml2_0_1::ContinuousProperty*>(valuesPropertySet[i]);
+
+				if (propertyValue->getElementCountPerValue() == 1)
+				{
+					if (propertyValue->getDimensionsCountOfPatch(0)==3)
+					{
+						propertyValue->getFloatValuesOf3dPatch(0, valuesFloatSet,iCellCount, jCellCount, kCellCount, 0, 0, initKIndex);
+					}else if(propertyValue->getDimensionsCountOfPatch(0)==1)
+						{
+							propertyValue->getFloatValuesOfPatch(0, valuesFloatSet, &numValuesInEachDimension, &offsetInEachDimension, 1);
+						}else
+							{
+								vtkOutputWindowDisplayDebugText("error in : propertyValue->getDimensionsCountOfPatch (values different of 1 or 3)");
+							}
+				}
+				std::string name = valuesPropertySet[i]->getTitle();
+				cellDataFloat->SetName(name.c_str());
+				cellDataFloat->SetArray(valuesFloatSet, nbElement, 0);
+				cellData = cellDataFloat;
+			}
+			else if(typeProperty == "DiscreteProperty")
+			{
+				vtkSmartPointer<vtkIntArray> cellDataInt = vtkSmartPointer<vtkIntArray>::New();
+				int* valuesIntSet = new int[nbElement];
+				resqml2_0_1::DiscreteProperty *propertyValue = static_cast<resqml2_0_1::DiscreteProperty*>(valuesPropertySet[i]);
+				if (propertyValue->getElementCountPerValue() == 1)
+				{
+					if (propertyValue->getDimensionsCountOfPatch(0)==3)
+					{
+						propertyValue->getIntValuesOf3dPatch(0, valuesIntSet,iCellCount, jCellCount, kCellCount, 0, 0, initKIndex);
+					}else if(propertyValue->getDimensionsCountOfPatch(0)==1)
+						{
+							propertyValue->getIntValuesOfPatch(0, valuesIntSet, &numValuesInEachDimension, &offsetInEachDimension, 1);
+						}else
+							{
+								vtkOutputWindowDisplayDebugText("error in : propertyValue->getDimensionsCountOfPatch (values different of 1 or 3)");
+							}
+				}
+				std::string name = valuesPropertySet[i]->getTitle();
+				cellDataInt->SetName(name.c_str());
+				cellDataInt->SetArray(valuesIntSet, nbElement, 0);
+				cellData = cellDataInt;
+			}
+			else if (typeProperty == "CategoricalProperty")
+			{
+				vtkSmartPointer<vtkIntArray> cellDataInt = vtkSmartPointer<vtkIntArray>::New();
+				int* valuesIntSet = new int[nbElement];
+				resqml2_0_1::CategoricalProperty *propertyValue = static_cast<resqml2_0_1::CategoricalProperty*>(valuesPropertySet[i]);
+				if (propertyValue->getElementCountPerValue() == 1)
+				{
+					if (propertyValue->getDimensionsCountOfPatch(0)==3)
+					{
+						propertyValue->getIntValuesOf3dPatch(0, valuesIntSet,iCellCount, jCellCount, kCellCount, 0, 0, initKIndex);
+					}else if(propertyValue->getDimensionsCountOfPatch(0)==1)
+						{
+							propertyValue->getIntValuesOfPatch(0, valuesIntSet, &numValuesInEachDimension, &offsetInEachDimension, 1);
+						}else
+							{
+								vtkOutputWindowDisplayDebugText("error in : propertyValue->getDimensionsCountOfPatch (values different of 1 or 3)");
+							}
+
+				}
+				std::string name = valuesPropertySet[i]->getTitle();
+				cellDataInt->SetName(name.c_str());
+				cellDataInt->SetArray(valuesIntSet, nbElement, 0);
+				cellData = cellDataInt;
+			}
+			else {
+				vtkOutputWindowDisplayDebugText("property not supported...  (hdfDatatypeEnum)");
+			}
+		}
+	}
+	return cellData;
+/*	resqml2::AbstractValuesProperty::hdfDatatypeEnum hdfDatatype = valuesPropertySet[i]->getValuesHdfDatatype();
+
+	switch (hdfDatatype)
+	{
+	case resqml2::AbstractValuesProperty::hdfDatatypeEnum::UNKNOWN :
+		{
+			break;
+		}
+	case resqml2::AbstractValuesProperty::hdfDatatypeEnum::FLOAT :
+		{
+			vtkSmartPointer<vtkFloatArray> cellDataFloat = vtkSmartPointer<vtkFloatArray>::New();
+			float* valuesFloatSet = new float[nbElement];
+
+			if (valuesProperty->getXmlTag() == "ContinuousProperty")
+			{
+				resqml2_0_1::ContinuousProperty *propertyValue = static_cast<resqml2_0_1::ContinuousProperty*>(valuesPropertySet[i]);
+				if (propertyValue->getElementCountPerValue() == 1)
+				{
+					propertyValue->getFloatValuesOf3dPatch(0, valuesFloatSet,iCellCount, jCellCount, kCellCount, 0, 0, initKIndex);
+				}
+			}
+
+			std::string name = valuesPropertySet[i]->getTitle();
+			cellDataFloat->SetName(name.c_str());
+			cellDataFloat->SetArray(valuesFloatSet, nbElement, 0);
+			cellData = cellDataFloat;
+//					delete[] valuesFloatSet;
+			break;
+	}
+	case resqml2::AbstractValuesProperty::hdfDatatypeEnum::INT :
+		{
+			vtkSmartPointer<vtkIntArray> cellDataInt = vtkSmartPointer<vtkIntArray>::New();
+			int* valuesIntSet = new int[nbElement];
+
+			if (valuesProperty->getXmlTag() == "DiscreteProperty")
+			{
+				resqml2_0_1::DiscreteProperty *propertyValue = static_cast<resqml2_0_1::DiscreteProperty*>(valuesPropertySet[i]);
+				if (propertyValue->getElementCountPerValue() == 1)
+				{
+					propertyValue->getIntValuesOf3dPatch(0, valuesIntSet,iCellCount, jCellCount, kCellCount, 0, 0, initKIndex);
+				}
+			}
+			else if (valuesProperty->getXmlTag() == "CategoricalProperty")
+			{
+				resqml2_0_1::CategoricalProperty *propertyValue = static_cast<resqml2_0_1::CategoricalProperty*>(valuesPropertySet[i]);
+				if (propertyValue->getElementCountPerValue() == 1)
+				{
+					propertyValue->getIntValuesOf3dPatch(0, valuesIntSet,iCellCount, jCellCount, kCellCount, 0, 0, initKIndex);
+				}
+			}
+
+			std::string name = valuesPropertySet[i]->getTitle();
+			cellDataInt->SetName(name.c_str());
+			cellDataInt->SetArray(valuesIntSet, nbElement, 0);
+			cellData = cellDataInt;
+//					delete[] valuesIntSet;
+			break;
+	}
+	default:
+		vtkOutputWindowDisplayDebugText("property not supported...  (hdfDatatypeEnum)");
+		break;
+	}
+}
+}
+return cellData;
+*/
+}
 long VtkProperty::getAttachmentPropertyCount(const std::string & uuid, const FesppAttachmentProperty propertyUnit)
 {
 	return 0;

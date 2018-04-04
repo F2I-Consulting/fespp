@@ -54,16 +54,17 @@ knowledge of the CeCILL license and that you accept its terms.
 
 class VtkResqml2MultiBlockDataSet : public VtkAbstractObject
 {
+	/*
 	typedef struct{
 		std::string	uuid;
 		Resqml2Type type;
 	} FirstChild;
-
+	 */
 public:
 	/**
 	* Constructor
 	*/
-	VtkResqml2MultiBlockDataSet (const std::string & fileName, const std::string & name="", const std::string & uuid="", const std::string & uuidParent="");
+	VtkResqml2MultiBlockDataSet (const std::string & fileName, const std::string & name="", const std::string & uuid="", const std::string & uuidParent="", const int & idProc=0, const int & maxProc=0);
 
 	/**
 	* method : getOutput
@@ -87,14 +88,13 @@ public:
 	void detach();
 	
 protected:
-	
-#if (defined(_WIN32) && _MSC_VER >= 1600)
-	std::unordered_map<std::string, FirstChild> uuidIsChildOf;
-#else
-	std::tr1::unordered_map<std::string, FirstChild> uuidIsChildOf;
-#endif
-	std::vector<std::string> attachUuids;
 	vtkSmartPointer<vtkMultiBlockDataSet> vtkOutput;
 
+#if (defined(_WIN32) && _MSC_VER >= 1600)
+	std::unordered_map<std::string, infoUuid> uuidIsChildOf;
+#else
+	std::tr1::unordered_map<std::string, VtkAbstractObject::infoUuid> uuidIsChildOf;
+#endif
+	std::vector<std::string> attachUuids;
 };
 #endif

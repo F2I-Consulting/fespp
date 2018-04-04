@@ -58,7 +58,7 @@ public:
 	/**
 	* Constructor
 	*/
-	VtkSetPatch (const std::string & fileName, const std::string & name, const std:: string & uuid, const std::string & uuidParent, common::EpcDocument *pckEPC); 
+	VtkSetPatch (const std::string & fileName, const std::string & name, const std:: string & uuid, const std::string & uuidParent, common::EpcDocument *pckEPC, const int & idProc=0, const int & maxProc=0);
 	
 	/**
 	* method : createTreeVtk

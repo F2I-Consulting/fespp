@@ -6,7 +6,7 @@
 #include <vtkCellArray.h>
 
 // include F2i-consulting Energistics Standards API
-#include <EpcDocument.h>
+#include <common/EpcDocument.h>
 #include <resqml2_0_1/Grid2dRepresentation.h>
 
 //----------------------------------------------------------------------------
@@ -21,7 +21,7 @@ void VtkGrid2DRepresentationCells::createOutput(const std::string & uuid)
 	if (!subRepresentation)	{
 
 		resqml2_0_1::Grid2dRepresentation* grid2dRepresentation = nullptr;
-		resqml2::AbstractObject* obj = epcPackageRepresentation->getResqmlAbstractObjectByUuid(uuid);
+		common::AbstractObject* obj = epcPackageRepresentation->getResqmlAbstractObjectByUuid(uuid);
 		if (obj != nullptr && obj->getXmlTag() == "Grid2dRepresentation")
 		{
 			grid2dRepresentation = static_cast<resqml2_0_1::Grid2dRepresentation*>(obj);

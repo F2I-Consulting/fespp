@@ -51,18 +51,12 @@ knowledge of the CeCILL license and that you accept its terms.
 #include <string>
 #include <vector>
 
-#include <vtkSmartPointer.h> 
-#include <vtkMultiBlockDataSet.h>
-
 class pqPipelineSource;
 class pqServer;
-class Fespp;
 class pqOutputPort;
 class pqView;
 
-#include "EpcDocument.h"
-
-class VtkEpcDocument;
+#include "common/EpcDocument.h"
 
 namespace resqml2
 {
@@ -99,18 +93,11 @@ public:
 	* Open an epc document and create the treeWidget in panel.
 	* @return informative message
 	*/
-	VtkEpcDocument* addFileName(const std::string & fileName,Fespp *plugin, common::EpcDocument *pck);
+	void addFileName(const std::string & fileName);
 
 	bool canAddFile(const char* fileName);
 
 	void uuidKO(const std::string & uuid);
-
-	/**
-	* method : getOutput
-	* variable : --
-	* return the vtkMultiBlockDataSet.
-	*/
-	vtkSmartPointer<vtkMultiBlockDataSet> getOutput(const std::string & FileName) const;
 
 signals:
 	/**
@@ -125,21 +112,6 @@ protected slots:
 	*/
 	void clicSelection(QTreeWidgetItem* item,int column);
 
-		/**
-	* Check button.
-	*/
-	void checkButton();
-
-			/**
-	* unCheck button.
-	*/
-	void uncheckButton();
-
-		/**
-	* When a line is selected.
-	*/
-	void doubleClicSelection(QTreeWidgetItem* item,int column);
-	
 	/**
 	* When a row is checked.
 	*/
@@ -155,29 +127,6 @@ protected slots:
 	*/
 	void deletePipelineSource(pqPipelineSource*);
 
-	/** 
-	* Called to hide the block. the action which emits the signal will
-	* contain the block index in its data().
-	*/
-	void hideBlock();
-	
-	/** 
-	* Called to show the block. the action which emits the signal will
-	* contain the block index in its data().
-	*/
-	void showBlock();
-
-	/**
-	* Called to show only the selected block. the action which emits the
-	* signal will contain the block index in its data().
-	*/
-	void showOnlyBlock();
-
-	/**
-	* Called to show all blocks.
-	*/
-	void showAllBlocks();
-	
 private:
 	void deleteUUID(QTreeWidgetItem *item);
 
@@ -211,42 +160,42 @@ private:
 	/**
 	* Add Polylines Representation in TreeView
 	*/
-	void addTreePolylines(const std::string & fileName, std::vector<resqml2_0_1::PolylineSetRepresentation*> polylines, VtkEpcDocument * vtkEpcDocument);
+	void addTreePolylines(const std::string & fileName, std::vector<resqml2_0_1::PolylineSetRepresentation*> polylines);
 	
 	/**
 	* Add triangulated Representation in TreeView
 	*/
-	void addTreeTriangulated(const std::string & fileName, std::vector<resqml2_0_1::TriangulatedSetRepresentation*> triangulated, VtkEpcDocument * vtkEpcDocument);
+	void addTreeTriangulated(const std::string & fileName, std::vector<resqml2_0_1::TriangulatedSetRepresentation*> triangulated);
 
 	/**
 	* Add grid2D Representation in TreeView
 	*/
-	void addTreeGrid2D(const std::string & fileName, std::vector<resqml2_0_1::Grid2dRepresentation*> grid2D, VtkEpcDocument * vtkEpcDocument);
+	void addTreeGrid2D(const std::string & fileName, std::vector<resqml2_0_1::Grid2dRepresentation*> grid2D);
 
 	/**
 	* Add ijkGrid Representation in TreeView
 	*/
-	void addTreeIjkGrid(const std::string & fileName, std::vector<resqml2_0_1::AbstractIjkGridRepresentation*> ijkGrid, VtkEpcDocument * vtkEpcDocument);
+	void addTreeIjkGrid(const std::string & fileName, std::vector<resqml2_0_1::AbstractIjkGridRepresentation*> ijkGrid);
 
 	/**
 	* Add unstructuredGrid Representation in TreeView
 	*/
-	void addTreeUnstructuredGrid(const std::string & fileName, std::vector<resqml2_0_1::UnstructuredGridRepresentation*> unstructuredGrid, VtkEpcDocument * vtkEpcDocument);
+	void addTreeUnstructuredGrid(const std::string & fileName, std::vector<resqml2_0_1::UnstructuredGridRepresentation*> unstructuredGrid);
 
 	/**
 	* Add WellboreTrajectoryRepresentation in TreeView
 	*/
-	void addTreeWellboreTrajectory(const std::string & fileName, std::vector<resqml2_0_1::WellboreTrajectoryRepresentation*> wellCubicParmLineTraj, VtkEpcDocument * vtkEpcDocument);
+	void addTreeWellboreTrajectory(const std::string & fileName, std::vector<resqml2_0_1::WellboreTrajectoryRepresentation*> wellCubicParmLineTraj);
 
 	/**
 	* Add SubRepresentation in TreeView
 	*/
-	void addTreeSubRepresentation(const std::string & fileName, std::vector<resqml2::SubRepresentation*> subRepresentation, VtkEpcDocument * vtkEpcDocument);
+	void addTreeSubRepresentation(const std::string & fileName, std::vector<resqml2::SubRepresentation*> subRepresentation);
 
 	/**
 	* Add Feature and Interpretation in TreeView
 	*/
-	std::string addFeatInterp(const std::string & fileName, resqml2::AbstractFeatureInterpretation * interpretation, VtkEpcDocument * vtkEpcDocument);
+	std::string addFeatInterp(const std::string & fileName, resqml2::AbstractFeatureInterpretation * interpretation);
 	/**
 	* Add Representation in TreeView
 	*/
@@ -255,7 +204,7 @@ private:
 	/**
 	* Add the Properties
 	*/
-	void addTreeProperty(QTreeWidgetItem *parent, std::vector<resqml2::AbstractValuesProperty*> valuesPropertySet, VtkEpcDocument * vtkEpcDocument);
+	void addTreeProperty(QTreeWidgetItem *parent, std::vector<resqml2::AbstractValuesProperty*> valuesPropertySet);
 
 	/**
 	* Load representation/property uuid's
@@ -265,16 +214,12 @@ private:
 	/**
 	* Remove representation/property uuid's
 	*/
-	void removeUuid(std::string uuid, VtkEpcDocument *);
+	void removeUuid(std::string uuid);
 	
 	QTreeWidget *treeWidget;
-	QPushButton *checkAllButton;
-	QPushButton *uncheckAllButton;
-	QProgressBar *progressBar;
 
 	unsigned int indexFile;
 	std::vector<std::string> allFileName;
-	QMap<VtkEpcDocument *, Fespp*> fespp;
 	QMap<std::string, std::string> uuidToFilename;
 	QMap<std::string, std::vector<std::string> > filenameToUuids;
 	QMap<std::string, std::vector<std::string> > filenameToUuidsPartial;
@@ -298,7 +243,7 @@ private:
 	// hide/show block
 	std::string pickedBlocks;
 	std::vector<std::string> uuidVisible;
-	std::vector<std::string> uuidInvisible;
+//	std::vector<std::string> uuidInvisible;
 
 	std::vector<std::string> uuidCheckable;
 
@@ -306,11 +251,6 @@ private:
 
 	QMap<std::string, common::EpcDocument *> pcksave;
 
-	QProgressDialog dlg;
-	QFutureWatcher<void> futureWatcher;
-
-	QMap<std::string, VtkEpcDocument *> epcDocument;
-	QMap<std::string, VtkEpcDocument *> partialRepresentation;
 	QMap<std::string, QButtonGroup *> uuidParentGroupButton;
 	QMap<QAbstractButton *, std::string> radioButtonToUuid;
 };

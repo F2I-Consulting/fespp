@@ -69,7 +69,7 @@ public:
 	/**
 	* Constructor
 	*/
-	VtkProperty(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, common::EpcDocument *pck);
+	VtkProperty(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, common::EpcDocument *pck, const int & idProc=0, const int & maxProc=0);
 
 	/**
 	* method : getCellData
@@ -111,6 +111,7 @@ public:
 
 	unsigned int getSupport();
 	vtkDataArray *loadValuesPropertySet(std::vector<resqml2::AbstractValuesProperty*> valuesPropertySet, long cellCount, long pointCount);
+	vtkDataArray *loadValuesPropertySet(std::vector<resqml2::AbstractValuesProperty*> valuesPropertySet, long cellCount, long pointCount, int iCellCount, int jCellCount, int kCellCount, int initKIndex);
 
 	long getAttachmentPropertyCount(const std::string & uuid, const FesppAttachmentProperty propertyUnit);
 

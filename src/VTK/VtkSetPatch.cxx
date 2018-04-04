@@ -18,12 +18,12 @@
 #include "VtkProperty.h"
 
 //----------------------------------------------------------------------------
-VtkSetPatch::VtkSetPatch(const std::string & fileName, const std::string & name, const std:: string & uuid, const std::string & uuidParent, common::EpcDocument *pck):
-VtkResqml2MultiBlockDataSet(fileName, name, uuid, uuidParent), epcPackage(pck)
+VtkSetPatch::VtkSetPatch(const std::string & fileName, const std::string & name, const std:: string & uuid, const std::string & uuidParent, common::EpcDocument *pck, const int & idProc, const int & maxProc):
+VtkResqml2MultiBlockDataSet(fileName, name, uuid, uuidParent, idProc, maxProc), epcPackage(pck)
 {
 	resqml2_0_1::PolylineSetRepresentation* polylineSetRep = nullptr;
 	resqml2_0_1::TriangulatedSetRepresentation * triangulatedSetRep = nullptr;
-	resqml2::AbstractObject *object = epcPackage->getResqmlAbstractObjectByUuid(uuid);
+	common::AbstractObject *object = epcPackage->getResqmlAbstractObjectByUuid(uuid);
 	std::string xmlTag = object->getXmlTag();
 	if (xmlTag == "PolylineSetRepresentation")
 	{
@@ -36,7 +36,7 @@ VtkResqml2MultiBlockDataSet(fileName, name, uuid, uuidParent), epcPackage(pck)
 			sstm << "Patch " << patchIndex;
 			uuidToVtkPolylineRepresentation[uuid].push_back(new VtkPolylineRepresentation(fileName, sstm.str(), uuid, uuidParent, patchIndex, epcPackage, nullptr));
 		}
-		uuidIsChildOf[uuid].type = Resqml2Type::POLYLINE_SET;
+		uuidIsChildOf[uuid].myType = Resqml2Type::POLYLINE_SET;
 		uuidIsChildOf[uuid].uuid = uuid;
 	}
 	else if (xmlTag == "TriangulatedSetRepresentation")
@@ -50,7 +50,7 @@ VtkResqml2MultiBlockDataSet(fileName, name, uuid, uuidParent), epcPackage(pck)
 			sstm << "Patch " << patchIndex;
 			uuidToVtkTriangulatedRepresentation[uuid].push_back(new VtkTriangulatedRepresentation(fileName, sstm.str(), uuid, uuidParent, patchIndex, epcPackage, nullptr));
 		}
-		uuidIsChildOf[uuid].type = Resqml2Type::TRIANGULATED_SET;
+		uuidIsChildOf[uuid].myType = Resqml2Type::TRIANGULATED_SET;
 		uuidIsChildOf[uuid].uuid = uuid;
 	}
 }
@@ -58,17 +58,17 @@ VtkResqml2MultiBlockDataSet(fileName, name, uuid, uuidParent), epcPackage(pck)
 //----------------------------------------------------------------------------
 void VtkSetPatch::createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, const Resqml2Type & type)
 {
-	uuidIsChildOf[uuid].type = type;
+	uuidIsChildOf[uuid].myType = type;
 	uuidIsChildOf[uuid].uuid = uuid;
 
 	resqml2_0_1::PolylineSetRepresentation* polylineSetRep = nullptr;
 	resqml2_0_1::TriangulatedSetRepresentation * triangulatedSetRep = nullptr;
-	resqml2::AbstractObject* obj = epcPackage->getResqmlAbstractObjectByUuid(getUuid());
+	common::AbstractObject* obj = epcPackage->getResqmlAbstractObjectByUuid(getUuid());
 
 	// PROPERTY
-	uuidIsChildOf[uuid].type = uuidIsChildOf[parent].type;
+	uuidIsChildOf[uuid].myType = uuidIsChildOf[parent].myType;
 	uuidIsChildOf[uuid].uuid = uuidIsChildOf[parent].uuid;
-	if (uuidIsChildOf[parent].type == Resqml2Type::POLYLINE_SET)
+	if (uuidIsChildOf[parent].myType == Resqml2Type::POLYLINE_SET)
 	{
 		std::string titi = obj->getXmlTag();
 		if ((obj != nullptr && obj->getXmlTag() == "PolylineRepresentation") || (obj != nullptr && obj->getXmlTag() == "PolylineSetRepresentation"))
@@ -81,7 +81,7 @@ void VtkSetPatch::createTreeVtk(const std::string & uuid, const std::string & pa
 			uuidToVtkPolylineRepresentation[uuidIsChildOf[uuid].uuid][patchIndex]->createTreeVtk(uuid, parent, name, type);
 		}
 	}
-	if (uuidIsChildOf[parent].type == Resqml2Type::TRIANGULATED_SET)
+	if (uuidIsChildOf[parent].myType == Resqml2Type::TRIANGULATED_SET)
 	{
 		if (obj != nullptr && obj->getXmlTag() ==  "TriangulatedSetRepresentation")
 		{
@@ -100,7 +100,7 @@ void VtkSetPatch::visualize(const std::string & uuid)
 {
 	std::vector<VtkPolylineRepresentation *> vectPolyPatch;
 	std::vector<VtkTriangulatedRepresentation *> vectTriPatch;
-	switch (uuidIsChildOf[uuid].type)
+	switch (uuidIsChildOf[uuid].myType)
 	{
 	case Resqml2Type::POLYLINE_SET:
 		vectPolyPatch = uuidToVtkPolylineRepresentation[uuidIsChildOf[uuid].uuid];
@@ -135,7 +135,7 @@ void VtkSetPatch::visualize(const std::string & uuid)
 //----------------------------------------------------------------------------
 void VtkSetPatch::remove(const std::string & uuid)
 {
-	switch (uuidIsChildOf[uuid].type)
+	switch (uuidIsChildOf[uuid].myType)
 	{
 	case Resqml2Type::POLYLINE_SET:
 		for (unsigned int patchIndex = 0; patchIndex < uuidToVtkPolylineRepresentation[uuidIsChildOf[uuid].uuid].size(); ++patchIndex)
@@ -169,7 +169,7 @@ void VtkSetPatch::attach()
 	for (unsigned int newBlockIndex = 0; newBlockIndex < attachUuids.size(); ++newBlockIndex)
 	{
 		std::string uuid = attachUuids[newBlockIndex];
-		switch (uuidIsChildOf[uuid].type)
+		switch (uuidIsChildOf[uuid].myType)
 		{
 		case Resqml2Type::POLYLINE_SET:
 			for (unsigned int patchIndex = 0; patchIndex < uuidToVtkPolylineRepresentation[uuidIsChildOf[uuid].uuid].size(); ++patchIndex)
@@ -197,7 +197,7 @@ void VtkSetPatch::addProperty(const std::string uuidProperty, vtkDataArray* data
 {
 	std::vector<VtkPolylineRepresentation *> vectPolyPatch;
 	std::vector<VtkTriangulatedRepresentation *> vectTriPatch;
-	switch (uuidIsChildOf[uuidProperty].type)
+	switch (uuidIsChildOf[uuidProperty].myType)
 	{
 	case Resqml2Type::POLYLINE_SET:
 		vectPolyPatch = uuidToVtkPolylineRepresentation[uuidIsChildOf[uuidProperty].uuid];
@@ -235,7 +235,7 @@ long VtkSetPatch::getAttachmentPropertyCount(const std::string & uuid, const Fes
 	long result = 0;
 	std::vector<VtkPolylineRepresentation *> vectPolyPatch;
 	std::vector<VtkTriangulatedRepresentation *> vectTriPatch;
-	switch (uuidIsChildOf[uuid].type)
+	switch (uuidIsChildOf[uuid].myType)
 	{
 	case Resqml2Type::POLYLINE_SET:
 		vectPolyPatch = uuidToVtkPolylineRepresentation[uuidIsChildOf[uuid].uuid];

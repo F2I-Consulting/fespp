@@ -7,7 +7,7 @@
 #include <vtkCellArray.h>
 
 // include F2i-consulting Energistics Standards API
-#include <EpcDocument.h>
+#include <common/EpcDocument.h>
 #include <resqml2_0_1/Grid2dRepresentation.h>
 
 // include F2i-consulting Energistics Standards ParaView Plugin
@@ -26,7 +26,7 @@ void VtkGrid2DRepresentationPoints::createOutput(const std::string & uuid)
 	if (!subRepresentation)	{
 
 		resqml2_0_1::Grid2dRepresentation* grid2dRepresentation = nullptr;
-		resqml2::AbstractObject* obj = epcPackageRepresentation->getResqmlAbstractObjectByUuid(getUuid().substr(0, 36));
+		common::AbstractObject* obj = epcPackageRepresentation->getResqmlAbstractObjectByUuid(getUuid().substr(0, 36));
 
 		if (obj != nullptr && obj->getXmlTag() == "Grid2dRepresentation")
 			grid2dRepresentation = static_cast<resqml2_0_1::Grid2dRepresentation*>(obj);
@@ -92,14 +92,7 @@ void VtkGrid2DRepresentationPoints::createOutput(const std::string & uuid)
 //----------------------------------------------------------------------------
 	void VtkGrid2DRepresentationPoints::addProperty(const std::string uuidProperty, vtkDataArray* dataProperty)
 {
-	for (int i = 0; i < vtkOutput->GetPointData()->GetNumberOfArrays(); ++i)
-	{
-		vtkOutput->GetPointData()->RemoveArray(vtkOutput->GetPointData()->GetArrayName(i));
-	}
-
 	vtkOutput->Modified();
-	//		vtkOutput->GetCellData()->SetScalars(arrayProperty);
-	//		vtkOutput->GetCellData()->SetVectors(arrayProperty);
 	vtkOutput->GetPointData()->AddArray(dataProperty);
 	lastProperty = uuidProperty;
 }
@@ -108,7 +101,7 @@ void VtkGrid2DRepresentationPoints::createOutput(const std::string & uuid)
 	{
 		long result = 0;
 		resqml2_0_1::Grid2dRepresentation* grid2dRepresentation = nullptr;
-		resqml2::AbstractObject* obj = epcPackageRepresentation->getResqmlAbstractObjectByUuid(getUuid().substr(0, 36));
+		common::AbstractObject* obj = epcPackageRepresentation->getResqmlAbstractObjectByUuid(getUuid().substr(0, 36));
 
 		if (obj != nullptr && obj->getXmlTag() == "Grid2dRepresentation"){
 			grid2dRepresentation = static_cast<resqml2_0_1::Grid2dRepresentation*>(obj);

@@ -38,18 +38,19 @@ knowledge of the CeCILL license and that you accept its terms.
 #include "vtkMultiBlockDataSetAlgorithm.h"
 
 // include system
-//#include <unordered_map>
 #include <string>
+#include <unordered_map>
 
-//#include <qpushbutton.h>
+#include <common/EpcDocument.h>
 
-class pqPipelineSource;
-class pqServer;
+class VtkEpcDocumentSet;
 class VtkEpcDocument;
-class PQSelectionPanel;
 class vtkStdString;
-class vtkDataArraySelection;
 class vtkCallbackCommand;
+class vtkMultiProcessController;
+class vtkDataArraySelection;
+
+#include <mpi.h>
 
 class Fespp : public vtkMultiBlockDataSetAlgorithm
 {
@@ -63,53 +64,64 @@ public:
 	vtkSetStringMacro(FileName);
 	vtkGetStringMacro(FileName);
 
-	vtkGetObjectMacro(uuidPropertys, vtkDataArraySelection);
-	int GetuuidPropertysArrayStatus(const char* name);
-	void SetuuidPropertysArrayStatus(const char* name, int status);  
-	int GetNumberOfuuidPropertysArrays();
-	const char* GetuuidPropertysArrayName(int index);	
+	// Description:
+	// Get/set the multi process controller to use for coordinated reads.  By
+	// default, set to the global controller.
+	vtkGetObjectMacro(Controller, vtkMultiProcessController);
+	virtual void SetController(vtkMultiProcessController *);
+
+	vtkGetObjectMacro(subFileList, vtkDataArraySelection);
+	int GetsubFileListArrayStatus(const char* name);
+	int GetNumberOfsubFileListArrays();
+	const char* GetsubFileListArrayName(int index);
+	void SetSubFileList(const char* name, int status);
 	
-	/**
-	* unload representation
-	*/
-	void RemoveUuid(std::string uuid);
-	
-	/**
-	* load representation
-	*/
-	void visualize(std::string, std::string);
+	vtkGetObjectMacro(uuidList, vtkDataArraySelection);
+	int GetuuidListArrayStatus(const char* name);
+	int GetNumberOfuuidListArrays();
+	const char* GetuuidListArrayName(int index);
+	void SetUuidList(const char* name, int status);
 
 	void displayError(std::string);
 	void displayWarning(std::string);
-
-	// Description:
-	// Test whether the file with the given name can be read by this
-	// reader.
-	virtual int CanReadFile(const char* name);
-
-	char* whatFile();
 
 protected:
 	Fespp();
 	~Fespp();
 
-	void SetupOutputInformation(vtkInformation *outInfo);	
-	void change(std::string, unsigned int status);
-		
 	int RequestInformation(vtkInformation *, vtkInformationVector **, vtkInformationVector *);
 	int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *);
 					
-	char *FileName;
+	void openEpcDocument(const std::string & fileName);
 
-	//collection of drill hole names to be sent to ui
-	vtkDataArraySelection* uuidPropertys;
+	char*						FileName;
+	vtkDataArraySelection* 				subFileList;
+	vtkDataArraySelection* 				uuidList;
+
+	vtkMultiProcessController*	Controller;
 
 private:
 	Fespp(const Fespp&);
 	void operator=(const Fespp&);
 	
-	bool loadedFile;
-	  
-	PQSelectionPanel * treeWidgetSelection;
+	bool 						loadedFile;
+
+	// mapping between file name & vtkEpcDocument
+	std::unordered_map<std::string, VtkEpcDocument*> vtkEpcDocuments;
+	// mapping between uuid & file name
+	std::unordered_map<std::string, std::string> uuidToFileName;
+
+	// id of process
+	int idProc;
+	// number of process
+	int nbProc;
+
+	MPI_Comm GetMPICommunicator();
+
+	VtkEpcDocumentSet* vtkEpcDocumentSet;
+
+	int countTest;
+
 };
 #endif
+

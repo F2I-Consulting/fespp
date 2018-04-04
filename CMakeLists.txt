@@ -25,16 +25,16 @@ ENDIF (UNIX)
 # checking for required dependencies
 # ============================================================================
 
+# -- Fesapi --
 # path to custom find_package modules
 SET (CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/modules/")
 
 # -- FESAPI --
+SET(FESAPI_DIR "FESAPI_DIR-NOTFOUND" CACHE PATH "Fesapi install PATH")
 find_package(Fesapi REQUIRED)
-mark_as_advanced(FESAPI_INCLUDE_DIRS)
-mark_as_advanced(FESAPI_LIBRARY)
+
 
 # -- ParaView --
-
 IF (ParaView_SOURCE_DIR)
   # we are building from within ParaView Source. The environment is already set.
   # Nothing more to do.
@@ -46,6 +46,7 @@ ELSE (ParaView_SOURCE_DIR)
   # Load information about VTK/ParaView modules loaded/available.
   pv_setup_module_environment("Fespp")
 ENDIF (ParaView_SOURCE_DIR)
+
 
 # -----------------------------------------------------------------------------
 # Process all vtk-modules defined in this plugin. This generates the necessary

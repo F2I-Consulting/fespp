@@ -49,13 +49,23 @@ public:
 	enum Resqml2Type { EPC_DOC = 0, FEATURE = 1, INTERPRETATION = 2, POLYLINE_SET = 3, TRIANGULATED_SET = 4, POLYLINE = 5, TRIANGULATED = 6, IJK_GRID = 7, GRID_2D = 8, PROPERTY = 9, UNSTRUC_GRID = 10, WELL_TRAJ = 11, PARTIAL = 12, SUB_REP = 13 };
 	enum FesppAttachmentProperty { POINTS = 0, CELLS = 1 };
 
-	VtkAbstractObject (const std::string & fileName, const std::string & name="", const std::string & uuid="", const std::string & uuidParent="");
+	typedef struct{
+		std::string	uuid;
+		std::string	parent;
+		Resqml2Type myType;
+		Resqml2Type parentType;
+	} infoUuid;
+
+	VtkAbstractObject (const std::string & fileName, const std::string & name="", const std::string & uuid="", const std::string & uuidParent="", const int & idProc=0, const int & maxProc=0);
 
 	std::string getFileName() const;
 	std::string getName() const;
 	std::string getUuid() const;
 	std::string getParent() const;
 	
+	int getIdProc() const;
+	int getMaxProc() const;
+
 	void setFileName(const std::string &);
 	void setName(const std::string &);
 	void setUuid(const std::string &);
@@ -86,6 +96,9 @@ private:
 	std::string name;
 	std::string uuid;
 	std::string uuidParent;
+
+	int idProc;
+	int maxProc;
 
 };
 #endif

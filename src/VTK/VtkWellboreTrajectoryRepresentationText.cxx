@@ -1,7 +1,7 @@
 ﻿#include "VtkWellboreTrajectoryRepresentationText.h"
 
 // include F2i-consulting Energistics Standards API 
-#include <EpcDocument.h>
+#include <common/EpcDocument.h>
 
 // include F2i-consulting Energistics Standards ParaView Plugin
 #include "VtkResqml2PolyData.h"

@@ -6,7 +6,7 @@
 #include <vtkInformation.h>
 
 // include F2i-consulting Energistics Standards API
-#include <EpcDocument.h>
+#include <common/EpcDocument.h>
 
 // include F2i-consulting Energistics Standards ParaView Plugin
 #include "VtkGrid2DRepresentationPoints.h"

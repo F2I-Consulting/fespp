@@ -6,7 +6,7 @@
 #include <vtkInformation.h>
 
 // include F2i-consulting Energistics Standards API 
-#include <EpcDocument.h>
+#include <common/EpcDocument.h>
 #include <resqml2_0_1/WellboreTrajectoryRepresentation.h>
 
 // include F2i-consulting Energistics Standards ParaView Plugin

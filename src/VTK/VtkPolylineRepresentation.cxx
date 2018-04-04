@@ -9,7 +9,7 @@
 
 // include F2i-consulting Energistics Standards API
 #include <resqml2_0_1/PolylineSetRepresentation.h>
-#include <EpcDocument.h>
+#include <common/EpcDocument.h>
 
 // include F2i-consulting Energistics Standards ParaView Plugin
 #include "VtkProperty.h"
@@ -25,7 +25,7 @@ void VtkPolylineRepresentation::createOutput(const std::string & uuid)
 {
 	if (!subRepresentation)	{
 		resqml2_0_1::PolylineSetRepresentation* polylineSetRepresentation = nullptr;
-		resqml2::AbstractObject* obj = epcPackageRepresentation->getResqmlAbstractObjectByUuid(getUuid());
+		common::AbstractObject* obj = epcPackageRepresentation->getResqmlAbstractObjectByUuid(getUuid());
 		if (obj != nullptr && obj->getXmlTag() == "PolylineSetRepresentation")
 		{
 			polylineSetRepresentation = static_cast<resqml2_0_1::PolylineSetRepresentation*>(obj);
@@ -85,14 +85,8 @@ void VtkPolylineRepresentation::createOutput(const std::string & uuid)
 //----------------------------------------------------------------------------
 void VtkPolylineRepresentation::addProperty(const std::string uuidProperty, vtkDataArray* dataProperty)
 {
-	for (int i = 0; i < vtkOutput->GetPointData()->GetNumberOfArrays(); ++i)
-	{
-		vtkOutput->GetPointData()->RemoveArray(vtkOutput->GetPointData()->GetArrayName(i));
-	}
-
 	vtkOutput->Modified();
-		//vtkOutput->GetPointData()->SetScalars(arrayProperty);
-		vtkOutput->GetPointData()->AddArray(dataProperty);
+	vtkOutput->GetPointData()->AddArray(dataProperty);
 	lastProperty = uuidProperty;
 }
 
@@ -100,7 +94,7 @@ long VtkPolylineRepresentation::getAttachmentPropertyCount(const std::string & u
 {
 	long result = 0;
 	resqml2_0_1::PolylineSetRepresentation* polylineSetRepresentation = nullptr;
-	resqml2::AbstractObject* obj = epcPackageRepresentation->getResqmlAbstractObjectByUuid(getUuid());
+	common::AbstractObject* obj = epcPackageRepresentation->getResqmlAbstractObjectByUuid(getUuid());
 	if (obj != nullptr && obj->getXmlTag() == "PolylineSetRepresentation")
 	{
 		polylineSetRepresentation = static_cast<resqml2_0_1::PolylineSetRepresentation*>(obj);

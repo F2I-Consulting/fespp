@@ -2,12 +2,12 @@
 #include "VtkProperty.h"
 
 // FESAPI
-#include <EpcDocument.h>
+#include <common/EpcDocument.h>
 
 #include <vtkDataArray.h>
 //----------------------------------------------------------------------------
-VtkAbstractRepresentation::VtkAbstractRepresentation(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, common::EpcDocument *pckEPCRep, common::EpcDocument *pckEPCSubRep) :
-VtkAbstractObject(fileName, name, uuid, uuidParent), epcPackageRepresentation(pckEPCRep), epcPackageSubRepresentation(pckEPCSubRep)
+VtkAbstractRepresentation::VtkAbstractRepresentation(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, common::EpcDocument *pckEPCRep, common::EpcDocument *pckEPCSubRep, const int & idProc, const int & maxProc) :
+VtkAbstractObject(fileName, name, uuid, uuidParent, idProc, maxProc), epcPackageRepresentation(pckEPCRep), epcPackageSubRepresentation(pckEPCSubRep)
 {
 	if (!pckEPCSubRep){
 		subRepresentation = false;

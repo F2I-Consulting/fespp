@@ -1,8 +1,10 @@
 ﻿#include "VtkResqml2StructuredGrid.h"
 
+#include <vtkCellData.h>
+
 //----------------------------------------------------------------------------
-VtkResqml2StructuredGrid::VtkResqml2StructuredGrid(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, common::EpcDocument *pckRep, common::EpcDocument *pckSubRep) :
-	VtkAbstractRepresentation(fileName, name, uuid, uuidParent, pckRep, pckSubRep)
+VtkResqml2StructuredGrid::VtkResqml2StructuredGrid(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, common::EpcDocument *pckRep, common::EpcDocument *pckSubRep, const int & idProc, const int & maxProc) :
+	VtkAbstractRepresentation(fileName, name, uuid, uuidParent, pckRep, pckSubRep, idProc, maxProc)
 {
 }
 
@@ -18,5 +20,9 @@ void VtkResqml2StructuredGrid::remove(const std::string & uuid)
 	if (uuid == getUuid())
 	{
 		vtkOutput = NULL;
+	}
+	else if(uuidToVtkProperty[uuid])
+	{
+		vtkOutput->GetCellData()-> RemoveArray(0);
 	}
 }

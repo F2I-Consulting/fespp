@@ -1,8 +1,8 @@
 ﻿#include "VtkResqml2MultiBlockDataSet.h"
 
 //----------------------------------------------------------------------------
-VtkResqml2MultiBlockDataSet::VtkResqml2MultiBlockDataSet(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent):
-	VtkAbstractObject(fileName, name, uuid, uuidParent)
+VtkResqml2MultiBlockDataSet::VtkResqml2MultiBlockDataSet(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, const int & idProc, const int & maxProc):
+	VtkAbstractObject(fileName, name, uuid, uuidParent, idProc, maxProc)
 {
 	vtkOutput = vtkSmartPointer<vtkMultiBlockDataSet>::New();
 }
@@ -27,6 +27,7 @@ void VtkResqml2MultiBlockDataSet::detach()
 	{
 		vtkOutput->RemoveBlock(0);
 	}
+
 }
 
 

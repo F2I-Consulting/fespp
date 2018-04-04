@@ -39,6 +39,7 @@ knowledge of the CeCILL license and that you accept its terms.
 
 #include "VtkResqml2MultiBlockDataSet.h"
 
+class VtkEpcDocumentSet;
 class VtkIjkGridRepresentation;
 class VtkUnstructuredGridRepresentation;
 class VtkPartialRepresentation;
@@ -60,7 +61,7 @@ public:
 	/**
 	* Constructor
 	*/
-	VtkEpcDocument (const std::string & fileName, common::EpcDocument *pck);
+	VtkEpcDocument (const std::string & fileName, const int & idProc=0, const int & maxProc=0, VtkEpcDocumentSet * epcDocSet=nullptr);
 	/**
 	* Destructor
 	*/
@@ -73,13 +74,6 @@ public:
 	*/
 	void visualize(const std::string & uuid);
 	
-	/**
-	* method : createTreeVtk
-	* variable : uuid, parent uuid, name, type
-	* prepare VtkEpcDocument & Children.
-	*/
-	void createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, const Resqml2Type & resqmlType);
-
 	/**
 	* method : createTreeVtkPartialRep
 	* variable : uuid, VtkEpcDocument with complete representation
@@ -102,17 +96,44 @@ public:
 	*/
 	void attach();
 
+	std::string getFullUuid(std::string uuidPartial);
+
+	void addPartialUUid(const std::string & uuid, VtkEpcDocument *vtkEpcDowumentWithCompleteRep);
+
 	void addProperty(const std::string uuidProperty, vtkDataArray* dataProperty);
+
+	VtkAbstractObject::Resqml2Type getType(std::string);
 
 	long getAttachmentPropertyCount(const std::string & uuid, const FesppAttachmentProperty propertyUnit);
 
-	VtkAbstractObject::Resqml2Type getType(std::string uuid);
-
 	common::EpcDocument *getEpcDocument();
+	
+	std::vector<std::string> getPartialUuid();
+	int getCountPartialUuid();
+	std::vector<std::string> getUuid();
+	int getCountUuid();
 	
 protected:
 
 private:
+	void addGrid2DTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name);
+	void addPolylineSetTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name);
+	void addTriangulatedSetTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name);
+	void addWellTrajTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name);
+	void addIjkGridTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name);
+	void addUnstrucGridTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name);
+	void addSubRepTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name);
+	void addPropertyTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name);
+	
+	/**
+	* method : createTreeVtk
+	* variable : uuid, parent uuid, name, type
+	* prepare VtkEpcDocument & Children.
+	*/
+	void createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, const Resqml2Type & resqmlType);
+
+
+
 	// EPC DOCUMENT
 	common::EpcDocument *epcPackage;
 
@@ -137,5 +158,12 @@ private:
 	std::unordered_map<std::string, VtkUnstructuredGridRepresentation*> uuidToVtkUnstructuredGridRepresentation;
 	std::unordered_map<std::string, VtkPartialRepresentation*> uuidToVtkPartialRepresentation;
 #endif
+
+	std::vector<std::string> uuidPartialRep;
+	std::vector<std::string> uuidRep;
+	int ProcRank;
+	int NbProc;
+
+	VtkEpcDocumentSet * epcSet;
 };
 #endif

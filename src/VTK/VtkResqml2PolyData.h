@@ -54,7 +54,7 @@ public:
 	/**
 	* Constructor
 	*/
-	VtkResqml2PolyData(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, common::EpcDocument *epcPackageRepresentation, common::EpcDocument *epcPackageSubRepresentation);
+	VtkResqml2PolyData(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, common::EpcDocument *epcPackageRepresentation, common::EpcDocument *epcPackageSubRepresentation, const int & idProc=0, const int & maxProc=0);
 
 	/**
 	* method : createOutput

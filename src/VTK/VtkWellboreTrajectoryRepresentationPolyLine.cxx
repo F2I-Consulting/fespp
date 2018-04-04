@@ -8,7 +8,7 @@
 #include <vtkDataArray.h>
 
 // include F2i-consulting Energistics Standards API 
-#include <EpcDocument.h>
+#include <common/EpcDocument.h>
 #include <resqml2_0_1/WellboreTrajectoryRepresentation.h>
 
 // include F2i-consulting Energistics Standards ParaView Plugin
@@ -27,7 +27,7 @@ void VtkWellboreTrajectoryRepresentationPolyLine::createOutput(const std::string
 
 		resqml2_0_1::WellboreTrajectoryRepresentation* wellboreSetRepresentation = nullptr;
 		std::string teoto = getUuid().substr(0, 36);
-		resqml2::AbstractObject* obj = epcPackageRepresentation->getResqmlAbstractObjectByUuid(getUuid().substr(0, 36));
+		common::AbstractObject* obj = epcPackageRepresentation->getResqmlAbstractObjectByUuid(getUuid().substr(0, 36));
 		if (obj != nullptr && obj->getXmlTag() == "WellboreTrajectoryRepresentation")
 		{
 			wellboreSetRepresentation = static_cast<resqml2_0_1::WellboreTrajectoryRepresentation*>(obj);
@@ -75,13 +75,7 @@ void VtkWellboreTrajectoryRepresentationPolyLine::createOutput(const std::string
 //----------------------------------------------------------------------------
 void VtkWellboreTrajectoryRepresentationPolyLine::addProperty(const std::string uuidProperty, vtkDataArray* dataProperty)
 {
-	for (int i = 0; i < vtkOutput->GetPointData()->GetNumberOfArrays(); ++i)
-	{
-		vtkOutput->GetPointData()->RemoveArray(vtkOutput->GetPointData()->GetArrayName(i));
-	}
-
 	vtkOutput->Modified();
-	//vtkOutput->GetPointData()->SetScalars(arrayProperty);
 	vtkOutput->GetPointData()->AddArray(dataProperty);
 	lastProperty = uuidProperty;
 }
@@ -90,7 +84,7 @@ long VtkWellboreTrajectoryRepresentationPolyLine::getAttachmentPropertyCount(con
 {
 	long result = 0;
 	resqml2_0_1::WellboreTrajectoryRepresentation* wellboreSetRepresentation = nullptr;
-	resqml2::AbstractObject* obj = epcPackageRepresentation->getResqmlAbstractObjectByUuid(getUuid().substr(0, 36));
+	common::AbstractObject* obj = epcPackageRepresentation->getResqmlAbstractObjectByUuid(getUuid().substr(0, 36));
 	if (obj != nullptr && obj->getXmlTag() == "WellboreTrajectoryRepresentation")
 	{
 		wellboreSetRepresentation = static_cast<resqml2_0_1::WellboreTrajectoryRepresentation*>(obj);

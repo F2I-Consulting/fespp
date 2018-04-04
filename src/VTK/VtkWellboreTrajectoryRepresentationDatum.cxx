@@ -7,7 +7,7 @@
 #include <vtkPoints.h>
 
 // include F2i-consulting Energistics Standards API 
-#include <EpcDocument.h>
+#include <common/EpcDocument.h>
 #include <resqml2_0_1/WellboreTrajectoryRepresentation.h>
 #include <resqml2/MdDatum.h>
 
@@ -22,7 +22,7 @@ void VtkWellboreTrajectoryRepresentationDatum::createOutput(const std::string & 
 {
 	vtkOutput = vtkSmartPointer<vtkUnstructuredGrid>::New();
 	resqml2_0_1::WellboreTrajectoryRepresentation* wellboreSetRepresentation = nullptr;
-	resqml2::AbstractObject* obj = epcPackageRepresentation->getResqmlAbstractObjectByUuid(uuid);
+	common::AbstractObject* obj = epcPackageRepresentation->getResqmlAbstractObjectByUuid(uuid);
 	if (obj != nullptr && obj->getXmlTag() ==  "WellboreTrajectoryRepresentation")
 	{
 		wellboreSetRepresentation = static_cast<resqml2_0_1::WellboreTrajectoryRepresentation*>(obj);

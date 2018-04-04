@@ -12,7 +12,7 @@
 #include <resqml2_0_1/UnstructuredGridRepresentation.h>
 #include <resqml2_0_1/WellboreTrajectoryRepresentation.h>
 #include <resqml2_0_1/AbstractIjkGridRepresentation.h>
-#include <resqml2/AbstractObject.h>
+#include <common/AbstractObject.h>
 
 //----------------------------------------------------------------------------
 VtkPartialRepresentation::VtkPartialRepresentation(const std::string & fileName, const std::string & uuid, VtkEpcDocument *vtkEpcDowumentWithCompleteRep, common::EpcDocument *pck) :
@@ -25,7 +25,7 @@ void VtkPartialRepresentation::visualize(const std::string & uuid)
 {
 	if (uuid != vtkPartialReprUuid)
 	{
-		resqml2::AbstractObject* obj = epcPackage->getResqmlAbstractObjectByUuid(vtkPartialReprUuid);
+		common::AbstractObject* obj = epcPackage->getResqmlAbstractObjectByUuid(vtkPartialReprUuid);
 		if (obj != nullptr){
 			long cellCount = 0;
 			long pointCount = 0;

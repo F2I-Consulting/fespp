@@ -2,12 +2,15 @@
 	<ProxyGroup name="sources">
 		<!-- EPCReader -->
 		<SourceProxy name="Fespp" 
-					class="Fespp" 
-					label="F2i-consulting Energistics Standard Paraview Plugin">
+			class="Fespp" 
+			label="F2i-consulting Energistics Standard Paraview Plugin">
 			<Documentation
 				long_help="Read a .epc file."
 				short_help="Read a .epc file.">
 			</Documentation>
+
+<!--  -->
+
 			<StringVectorProperty
 				name="FileName"
 				animateable="0"
@@ -22,34 +25,56 @@
 			<Hints>
 				<ReaderFactory extensions="epc" file_description="Resqml files" />
 			</Hints>
+
+<!--  -->
+
+			<StringVectorProperty
+			        name="subFileInfo"
+			        information_only="1"        
+			        default = "1">
+			        <ArraySelectionInformationHelper attribute_name="subFileList"/>
+			</StringVectorProperty>
+			<StringVectorProperty name="subFileList"
+				command="SetSubFileList" number_of_elements="0" repeat_command="1"
+				number_of_elements_per_command="2" element_types="2 0"
+				information_property="subFileInfo" label="epc subfiles list"
+				panel_visibility="advanced">
+				<ArraySelectionDomain name="array_list">
+					<RequiredProperties>
+						<Property name="subFileInfo"
+							function="ArrayList" />
+					</RequiredProperties>
+				</ArraySelectionDomain>
+				<Documentation>List epc subfile.</Documentation>
+			</StringVectorProperty>
 			
-	<StringVectorProperty
-        name="uuidPropertysInfo"
-        information_only="1"        
-        default = "1">
-        <ArraySelectionInformationHelper attribute_name="uuidPropertys"/>
-     </StringVectorProperty>
-	  
-      <StringVectorProperty
-         name="uuidPropertys" 
-         command="SetuuidPropertysArrayStatus"         
-         number_of_elements="0"
-         repeat_command="1"
-         number_of_elements_per_command="2"
-         element_types="2 0"
-         information_property="uuidPropertysInfo"
-         label="Properties">
-        <ArraySelectionDomain name="array_list">
-          <RequiredProperties>
-            <Property name="uuidPropertysInfo" function="ArrayList"/>
-          </RequiredProperties>
-        </ArraySelectionDomain>
-        <Documentation>
-          This property lists which cell-centered arrays to read.
-        </Documentation>
-      </StringVectorProperty>
-						
-		<!-- End EPCReader -->
+<!--  -->
+
+			<StringVectorProperty
+			        name="uuidInfo"
+			        information_only="1"        
+			        default = "1">
+			        <ArraySelectionInformationHelper attribute_name="uuidList"/>
+			</StringVectorProperty>
+
+			<StringVectorProperty name="uuidList"
+				command="SetUuidList" number_of_elements="0" repeat_command="1"
+				number_of_elements_per_command="2" element_types="2 0"
+				information_property="uuidInfo" label="uuid to display"
+				panel_visibility="advanced">
+				<ArraySelectionDomain name="array_list">
+					<RequiredProperties>
+						<Property name="uuidInfo"
+							function="ArrayList" />
+					</RequiredProperties>
+				</ArraySelectionDomain>
+				<Documentation>List uuid to display</Documentation>
+			</StringVectorProperty>
+			
+			<Property name="Refresh" command="Modified" panelwidget="command_button"/>
+			
+
+			<!-- End EPCReader -->
 		</SourceProxy>
 		
 	</ProxyGroup>

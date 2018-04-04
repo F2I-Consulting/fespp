@@ -40,11 +40,11 @@ knowledge of the CeCILL license and that you accept its terms.
 namespace common
 {
 	class EpcDocument;
-}
-
-namespace resqml2
-{
 	class AbstractObject;
+}
+namespace resqml2_0_1
+{
+	class AbstractIjkGridRepresentation;
 }
 
 class VtkIjkGridRepresentation : public VtkResqml2UnstructuredGrid
@@ -53,25 +53,69 @@ public:
 	/**
 	* Constructor
 	*/
-	VtkIjkGridRepresentation(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, common::EpcDocument *pckRep, common::EpcDocument *pckSubRep);
+	VtkIjkGridRepresentation(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, common::EpcDocument *pckRep, common::EpcDocument *pckSubRep, const int & idProc=0, const int & maxProc=0);
 	
 	/**
 	* method : createOutput
-	* variable : std::string uuid (ijk Grid representation UUID)
-	* create the vtk objects for represent ijk Grid.
+	* variable : uuid (ijk Grid representation or property) 
+	* description : 
+	*    - if ijk uuid : create the vtk objects for represent ijk Grid 
+	*    - if property uuid : add property to ijk Grid 
 	*/
 	void createOutput(const std::string & uuid);
-
+	
+	/**
+	* method : addProperty
+	* variable : uuid,  dataProperty
+	* description :
+	* add property to ijk Grid
+	*/
 	void addProperty(const std::string uuidProperty, vtkDataArray* dataProperty);
 
+	/**
+	* method : getAttachmentPropertyCount
+	* variable : uuid,  support property (CELLS or POINTS)
+	* return : count 
+	*/
 	long getAttachmentPropertyCount(const std::string & uuid, const FesppAttachmentProperty propertyUnit);
-	
-	void createWithPoints(const vtkSmartPointer<vtkPoints> & pointsRepresentation, resqml2::AbstractObject* obj2);
 
+	/**
+	* method : createWithPoints
+	* variable : points de l'ijkGrid,  ijkGrid or sub-rep
+	* description :
+	* create the vtk objects with points
+	*/	
+	void createWithPoints(const vtkSmartPointer<vtkPoints> & pointsRepresentation, common::AbstractObject* obj2);
+
+	/**
+	* method : createpoint
+	* variable : 
+	* return : vtk points of ijkGrid Representation
+	* 	int iCellCount;
+	*   int jCellCount;
+	*   int kCellCount;
+	*   int initKIndex;
+	*   int maxKIndex;
+	*/	
 	vtkSmartPointer<vtkPoints> createpoint();
 
-			
 private:
+
+	/**
+	* method : checkHyperslabingCapacity
+	* variable : ijkGridRepresentation
+	* calc if ijkgrid isHyperslabed
+	*/	
+	void checkHyperslabingCapacity(resqml2_0_1::AbstractIjkGridRepresentation* ijkGridRepresentation);
+
 	std::string lastProperty;
+
+	int iCellCount;
+	int jCellCount;
+	int kCellCount;
+	int initKIndex;
+	int maxKIndex;
+
+	bool isHyperslabed;
 };
 #endif

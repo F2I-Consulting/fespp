@@ -4,8 +4,8 @@
 //#include <time.h>
 
 #include "PQSelectionPanel.h"
-#include "resqml2/AbstractObject.h"
-#include "EpcDocument.h"
+#include "common/AbstractObject.h"
+#include "common/EpcDocument.h"
 
 #include <vtkInformation.h>
 
@@ -46,11 +46,12 @@ void PQMetaDataPanel::constructor()
   ui.tableView->setModel(tableViewModel);
 
   connect(getPQSelectionPanel(), SIGNAL(selectionName(std::string, std::string, common::EpcDocument *)), this, SLOT(displayMetaData(std::string, std::string, common::EpcDocument *)));
+  this->setVisible(false);
 }
 
 void PQMetaDataPanel::displayMetaData(const std::string & fileName, const std::string & uuid, common::EpcDocument *pck)
 {
-	resqml2::AbstractObject *object = pck->getResqmlAbstractObjectByUuid(uuid);
+	common::AbstractObject *object = pck->getResqmlAbstractObjectByUuid(uuid);
 	
 	tableViewModel->setItem(0,0,new QStandardItem(QString("Uuid")));
 	tableViewModel->setItem(0,1,new QStandardItem(QString(object->getUuid().c_str())));
