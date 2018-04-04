@@ -1,0 +1,7 @@
+<RCC>
+  <qresource prefix="/Tools" >
+    <file>DataLoadManager.png</file>
+    <file>PanelSelection.png</file>
+    <file>PanelMetadata.png</file>
+  </qresource>
+</RCC>
