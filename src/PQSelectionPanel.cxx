@@ -35,7 +35,7 @@
 // include ParaView
 #include <PQToolsManager.h>
 #include <pqPropertiesPanel.h>
-#include <pqMultiBlockInspectorPanel.h>
+#include <pqMultiBlockInspectorWidget.h>
 #include <qobject.h>
 #include <pqView.h>
 #include <pqPipelineSource.h>
@@ -78,13 +78,13 @@ pqPropertiesPanel* getpqPropertiesPanel()
 	return panel;
 }
 
-pqMultiBlockInspectorPanel* getpqMultiBlockInspectorPanel()
+pqMultiBlockInspectorWidget* getpqMultiBlockInspectorPanel()
 {
 	// get multi-block inspector panel
-	pqMultiBlockInspectorPanel *panel = 0;
+	pqMultiBlockInspectorWidget *panel = 0;
 	foreach(QWidget *widget, qApp->topLevelWidgets())
 	{
-		panel = widget->findChild<pqMultiBlockInspectorPanel *>();
+		panel = widget->findChild<pqMultiBlockInspectorWidget *>();
 
 		if (panel)
 		{
@@ -752,7 +752,7 @@ void PQSelectionPanel::addTreeProperty(QTreeWidgetItem *parent, std::vector<resq
 void PQSelectionPanel::deleteFileName(const std::string & fileName)
 {
 	std::vector<std::string> uuids = filenameToUuids[fileName];
-	for (unsigned int i = 0; i < uuids.size(); ++i)
+	for (size_t i = 0; i < uuids.size(); ++i)
 	{
 		auto uuidTest = uuids[i];
 
@@ -883,7 +883,7 @@ pqPipelineSource * PQSelectionPanel::findPipelineSource(const char *SMName)
 	{
 		if (strcmp(s->getSMName().toStdString().c_str(), SMName) == 0) return s;
 	}
-	return NULL;
+	return nullptr;
 }
 
 //----------------------------------------------------------------------------
