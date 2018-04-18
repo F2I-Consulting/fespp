@@ -81,17 +81,17 @@ public:
 
 
 //=============================================================================
-QPointer<PQToolsManager> PQToolsManagerInstance = NULL;
+QPointer<PQToolsManager> PQToolsManagerInstance = nullptr;
 
 PQToolsManager* PQToolsManager::instance()
 {
-	if (PQToolsManagerInstance == NULL)
+	if (PQToolsManagerInstance == nullptr)
 	{
 		pqApplicationCore* core = pqApplicationCore::instance();
 		if (!core)
 		{
 			qFatal("Cannot use the Tools without an application core instance.");
-			return NULL;
+			return nullptr;
 		}
 
 		PQToolsManagerInstance = new PQToolsManager(core);
@@ -109,7 +109,7 @@ PQToolsManager::PQToolsManager(QObject* p)
 
 	// This widget serves no real purpose other than initializing the Actions
 	// structure created with designer that holds the actions.
-	this->Internal->ActionPlaceholder = new QWidget(NULL);
+	this->Internal->ActionPlaceholder = new QWidget(nullptr);
 	this->Internal->Actions.setupUi(this->Internal->ActionPlaceholder);
 
 	this->existEpcPipe = false;
@@ -224,7 +224,7 @@ QWidget* PQToolsManager::getMainWindow()
 		if (qobject_cast<QMainWindow*>(topWidget))
 			return topWidget;
 						  }
-	return NULL;
+	return nullptr;
 }
 
 //-----------------------------------------------------------------------------
@@ -249,7 +249,7 @@ pqPipelineSource* PQToolsManager::findPipelineSource(const char* SMName)
 			return s;
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 //-----------------------------------------------------------------------------
@@ -279,7 +279,7 @@ pqView* PQToolsManager::findView(pqPipelineSource* source, int port, const QStri
 		}
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 //-----------------------------------------------------------------------------
