@@ -35,7 +35,6 @@
 // include ParaView
 #include <PQToolsManager.h>
 #include <pqPropertiesPanel.h>
-#include <pqMultiBlockInspectorWidget.h>
 #include <qobject.h>
 #include <pqView.h>
 #include <pqPipelineSource.h>
@@ -78,21 +77,6 @@ pqPropertiesPanel* getpqPropertiesPanel()
 	return panel;
 }
 
-pqMultiBlockInspectorWidget* getpqMultiBlockInspectorPanel()
-{
-	// get multi-block inspector panel
-	pqMultiBlockInspectorWidget *panel = 0;
-	foreach(QWidget *widget, qApp->topLevelWidgets())
-	{
-		panel = widget->findChild<pqMultiBlockInspectorWidget *>();
-
-		if (panel)
-		{
-			break;
-		}
-	}
-	return panel;
-}
 }
 
 //----------------------------------------------------------------------------
@@ -114,7 +98,11 @@ void PQSelectionPanel::constructor()
 
 	treeWidget->header()->setStretchLastSection(false);
 	treeWidget->header()->resizeSection(1, 20);
+#if QT_VERSION >= 0x050000
 	treeWidget->header()->setSectionResizeMode(0, QHeaderView::Stretch);
+#else
+	treeWidget->header()->setResizeMode(0, QHeaderView::Stretch);
+#endif
 	treeWidget->expandToDepth(0);
 	treeWidget->header()->close();
 
