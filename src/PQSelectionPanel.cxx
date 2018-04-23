@@ -35,7 +35,6 @@
 // include ParaView
 #include <PQToolsManager.h>
 #include <pqPropertiesPanel.h>
-#include <pqMultiBlockInspectorPanel.h>
 #include <qobject.h>
 #include <pqView.h>
 #include <pqPipelineSource.h>
@@ -78,21 +77,6 @@ pqPropertiesPanel* getpqPropertiesPanel()
 	return panel;
 }
 
-pqMultiBlockInspectorPanel* getpqMultiBlockInspectorPanel()
-{
-	// get multi-block inspector panel
-	pqMultiBlockInspectorPanel *panel = 0;
-	foreach(QWidget *widget, qApp->topLevelWidgets())
-	{
-		panel = widget->findChild<pqMultiBlockInspectorPanel *>();
-
-		if (panel)
-		{
-			break;
-		}
-	}
-	return panel;
-}
 }
 
 //----------------------------------------------------------------------------

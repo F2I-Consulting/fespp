@@ -8,7 +8,6 @@
 #include "vtkSMProperty.h"
 #include "vtkSMSourceProxy.h"
 #include "pqDataRepresentation.h"
-#include "pqDisplayPolicy.h"
 #include "pqSMAdaptor.h"
 #include "pqUndoStack.h"
 
@@ -89,7 +88,6 @@ void PQDataLoadManager::setupPipeline()
 {
 	pqApplicationCore* core = pqApplicationCore::instance();
 	pqObjectBuilder* builder = core->getObjectBuilder();
-	pqDisplayPolicy* displayPolicy = core->getDisplayPolicy();
 
 	PQToolsManager* manager = PQToolsManager::instance();
 
