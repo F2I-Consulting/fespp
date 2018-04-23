@@ -77,6 +77,7 @@ pqPropertiesPanel* getpqPropertiesPanel()
 	return panel;
 }
 
+
 }
 
 //----------------------------------------------------------------------------
