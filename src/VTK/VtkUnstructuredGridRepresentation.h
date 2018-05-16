@@ -56,7 +56,12 @@ public:
 	* Constructor
 	*/
 	VtkUnstructuredGridRepresentation(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, common::EpcDocument *pckEPCRep, common::EpcDocument *pckEPCSubRep, const int & idProc=0, const int & maxProc=0);
-		
+
+	/**
+	* Destructor
+	*/
+	~VtkUnstructuredGridRepresentation();
+
 	/**
 	* method : createOutput
 	* variable : std::string uuid (Unstructured Grid UUID)

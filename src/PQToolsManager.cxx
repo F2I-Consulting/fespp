@@ -119,10 +119,9 @@ PQToolsManager::PQToolsManager(QObject* p)
 	QObject::connect(this->actionDataLoadManager(), SIGNAL(triggered(bool)), this, SLOT(showDataLoadManager()));
 	//QObject::connect(this->actionPanelSelection(), SIGNAL(triggered(bool)), this, SLOT(showPanelSelection()));
 	QObject::connect(this->actionPanelMetadata(), SIGNAL(triggered(bool)), this, SLOT(showPanelMetadata()));
-	connect(getpqPropertiesPanel(), SIGNAL(deleteRequested(pqPipelineSource*)), this, SLOT(deletePipelineSource(pqPipelineSource*)));
 
 	this->actionPanelMetadata()->setEnabled(false);
-//	this->actionPanelSelection()->setEnabled(false);
+	//	this->actionPanelSelection()->setEnabled(false);
 
 }
 
@@ -144,7 +143,7 @@ QAction* PQToolsManager::actionPanelSelection()
 {
 	return this->Internal->Actions.actionPanelSelection;
 }
-*/
+ */
 
 //-----------------------------------------------------------------------------
 QAction* PQToolsManager::actionPanelMetadata()
@@ -162,22 +161,6 @@ void PQToolsManager::showDataLoadManager()
 }
 
 //-----------------------------------------------------------------------------
-void PQToolsManager::showPanelSelection()
-{
-	if(this->panelSelectionVisible)
-	{
-		this->setVisibilityPanelSelection(false);
-		this->setVisibilityPanelMetadata(false);
-		this->actionPanelMetadata()->setEnabled(false);
-	}
-	else
-	{
-		this->setVisibilityPanelSelection(true);
-		this->actionPanelMetadata()->setEnabled(true);
-	}
-}
-
-//-----------------------------------------------------------------------------
 void PQToolsManager::setVisibilityPanelSelection(bool visible)
 {
 	getPQSelectionPanel()->setVisible(visible);
@@ -190,10 +173,12 @@ void PQToolsManager::showPanelMetadata()
 	if(this->panelMetadataVisible)
 	{
 		this->setVisibilityPanelMetadata(false);
+		panelMetadataVisible = false;
 	}
 	else
 	{
 		this->setVisibilityPanelMetadata(true);
+		panelMetadataVisible = true;
 	}
 }
 
@@ -220,10 +205,10 @@ pqView* PQToolsManager::getFesppView()
 QWidget* PQToolsManager::getMainWindow()
 {
 	foreach (QWidget* topWidget, QApplication::topLevelWidgets())
-						  {
+								  {
 		if (qobject_cast<QMainWindow*>(topWidget))
 			return topWidget;
-						  }
+
 	return nullptr;
 }
 
@@ -258,11 +243,11 @@ pqView* PQToolsManager::findView(pqPipelineSource* source, int port, const QStri
 	if (source)
 	{
 		foreach (pqView* view, source->getViews())
-    						{
+    								{
 			pqDataRepresentation* repr = source->getRepresentation(port, view);
 			if (repr && repr->isVisible())
 				return view;
-    						}
+    								}
 	}
 	pqView* view = pqActiveObjects::instance().activeView();
 	if (view->getViewType() == viewType)
@@ -297,18 +282,28 @@ void PQToolsManager::existPipe(bool value)
 //----------------------------------------------------------------------------
 void PQToolsManager::deletePipelineSource(pqPipelineSource* pipe)
 {
-	pqPipelineSource * source = findPipelineSource("EpcDocument");
-	if (!source)
+	if(this->existPipe())
 	{
-		this->existEpcPipe = false;
-//		getPQSelectionPanel()->setVisible(false);
-//		this->panelSelectionVisible=false;
+		cout << "delete PipelineSource\n";
+		pqPipelineSource * source = findPipelineSource("EpcDocument");
+		if (!source)
+		{
+			getPQSelectionPanel()->deleteTreeView();
+			this->existEpcPipe = false;
+		}
 	}
-
+	this->actionPanelMetadata()->setEnabled(false);
+	this->setVisibilityPanelMetadata(false);
+	panelMetadataVisible = false;
 }
 
+//----------------------------------------------------------------------------
 void PQToolsManager::newFile(const std::string & fileName)
 {
+	this->actionPanelMetadata()->setEnabled(true);
 	getPQSelectionPanel()->addFileName(fileName);
-//	this->actionPanelSelection()->setEnabled(true);
+	//	this->actionPanelSelection()->setEnabled(true);
+
+	connect(getpqPropertiesPanel(), SIGNAL(deleteRequested(pqPipelineSource*)), this, SLOT(deletePipelineSource(pqPipelineSource*)));
+
 }

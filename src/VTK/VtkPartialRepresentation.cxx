@@ -20,6 +20,31 @@ epcPackage(pck), vtkEpcDocumentSource(vtkEpcDowumentWithCompleteRep), vtkPartial
 {
 }
 
+VtkPartialRepresentation::~VtkPartialRepresentation()
+{
+	cout << "VtkPartialRepresentation::~VtkPartialRepresentation() " << vtkPartialReprUuid << "\n";
+	// delete uuidToVtkProperty
+#if (defined(_WIN32) && _MSC_VER >= 1600)
+	for (std::unordered_map< std::string, VtkProperty* >::const_iterator it = uuidToVtkProperty.begin(); it != uuidToVtkProperty.end(); ++it)
+#else
+	for (std::tr1::unordered_map< std::string, VtkProperty* >::const_iterator it = uuidToVtkProperty.begin(); it != uuidToVtkProperty.end(); ++it)
+#endif
+	{
+	  delete it->second;
+	}
+	uuidToVtkProperty.clear();
+
+	if (epcPackage != nullptr) {
+		epcPackage = nullptr;
+	}
+
+	if (vtkEpcDocumentSource != nullptr) {
+		vtkEpcDocumentSource = nullptr;
+	}
+
+	vtkPartialReprUuid = "";
+	fileName = "";
+}
 //----------------------------------------------------------------------------
 void VtkPartialRepresentation::visualize(const std::string & uuid)
 {

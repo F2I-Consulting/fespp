@@ -21,6 +21,14 @@ VtkResqml2PolyData(fileName, name, uuid, uuidParent, pckRep, pckSubRep), patchIn
 }
 
 //----------------------------------------------------------------------------
+VtkPolylineRepresentation::~VtkPolylineRepresentation()
+{
+	cout << "VtkPolylineRepresentation::~VtkPolylineRepresentation() " << getUuid() << "\n";
+	patchIndex = 0;
+	lastProperty = "";
+}
+
+//----------------------------------------------------------------------------
 void VtkPolylineRepresentation::createOutput(const std::string & uuid)
 {
 	if (!subRepresentation)	{

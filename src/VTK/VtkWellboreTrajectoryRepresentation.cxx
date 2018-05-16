@@ -31,6 +31,37 @@ VtkResqml2MultiBlockDataSet(fileName, name, uuid, uuidParent), epcPackageReprese
 	text = new VtkWellboreTrajectoryRepresentationText(getFileName(), name, textUuid.str(), uuidParent, pckRep, pckSubRep);
 }
 
+
+//----------------------------------------------------------------------------
+VtkWellboreTrajectoryRepresentation::~VtkWellboreTrajectoryRepresentation()
+{
+	cout << "VtkWellboreTrajectoryRepresentation::~VtkWellboreTrajectoryRepresentation() " << getUuid() << "\n";
+	if (epcPackageRepresentation != nullptr) {
+		epcPackageRepresentation = nullptr;
+	}
+
+	if (epcPackageSubRepresentation != nullptr) {
+		epcPackageSubRepresentation = nullptr;
+	}
+
+	if (polyline != nullptr) {
+		delete polyline;
+		polyline = nullptr;
+	}
+	if (head != nullptr) {
+		delete head;
+		head = nullptr;
+	}
+	if (head != nullptr) {
+		delete head;
+		head = nullptr;
+	}
+	if (text != nullptr) {
+		delete text;
+		text = nullptr;
+	}
+}
+
 //----------------------------------------------------------------------------
 void VtkWellboreTrajectoryRepresentation::createTreeVtk(const std::string & uuid, const std::string & uuidParent, const std::string & name, const Resqml2Type & type)
 {

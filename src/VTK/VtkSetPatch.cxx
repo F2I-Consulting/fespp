@@ -56,6 +56,30 @@ VtkResqml2MultiBlockDataSet(fileName, name, uuid, uuidParent, idProc, maxProc), 
 }
 
 //----------------------------------------------------------------------------
+VtkSetPatch::~VtkSetPatch()
+{
+	cout << "VtkSetPatch::~VtkSetPatch() " << getUuid() << "\n";
+	if (epcPackage != nullptr) {
+		epcPackage = nullptr;
+	}
+
+	uuidToVtkPolylineRepresentation.clear();
+	uuidToVtkTriangulatedRepresentation.clear();
+
+	// delete uuidToVtkProperty
+#if _MSC_VER < 1600
+	for (std::tr1::unordered_map< std::string, VtkProperty* >::const_iterator it = uuidToVtkProperty.begin(); it != uuidToVtkProperty.end(); ++it)
+#else
+	for (std::unordered_map< std::string, VtkProperty* >::const_iterator it = uuidToVtkProperty.begin(); it != uuidToVtkProperty.end(); ++it)
+#endif
+	{
+	  delete it->second;
+	}
+	uuidToVtkProperty.clear();
+
+}
+
+//----------------------------------------------------------------------------
 void VtkSetPatch::createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, const Resqml2Type & type)
 {
 	uuidIsChildOf[uuid].myType = type;

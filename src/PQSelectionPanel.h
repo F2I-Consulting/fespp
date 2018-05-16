@@ -99,6 +99,11 @@ public:
 
 	void uuidKO(const std::string & uuid);
 
+	/**
+	* When a pipeline source is deleted
+	*/
+	void deleteTreeView();
+
 signals:
 	/**
 	* Signal emit when a item is selected
@@ -121,11 +126,6 @@ protected slots:
 	* When a row is checked.
 	*/
 	void checkedRadioButton(int);
-
-	/**
-	* When a pipeline source is deleted
-	*/
-	void deletePipelineSource(pqPipelineSource*);
 
 private:
 	void deleteUUID(QTreeWidgetItem *item);
@@ -247,7 +247,7 @@ private:
 
 	std::vector<std::string> uuidCheckable;
 
-	QPointer<pqOutputPort> OutputPort;
+//	QPointer<pqOutputPort> OutputPort;
 
 	QMap<std::string, common::EpcDocument *> pcksave;
 

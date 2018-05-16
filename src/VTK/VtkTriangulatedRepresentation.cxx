@@ -19,6 +19,14 @@ VtkResqml2PolyData(fileName, name, uuid, uuidParent, pckRep, pckSubRep), patchIn
 }
 
 //----------------------------------------------------------------------------
+VtkTriangulatedRepresentation::~VtkTriangulatedRepresentation()
+{
+	cout << "VtkTriangulatedRepresentation::~VtkTriangulatedRepresentation() " << getUuid() << "\n";
+	patchIndex = 0;
+	lastProperty = "";
+}
+
+//----------------------------------------------------------------------------
 void VtkTriangulatedRepresentation::createOutput(const std::string &uuid)
 {
 	if (!subRepresentation)	{

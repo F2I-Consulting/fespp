@@ -58,6 +58,11 @@ public:
 	VtkWellboreTrajectoryRepresentationPolyLine(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, common::EpcDocument *pckRep, common::EpcDocument *pckSubRep);
 	
 	/**
+	* Destructor
+	*/
+	~VtkWellboreTrajectoryRepresentationPolyLine();
+
+	/**
 	* method : createOutput
 	* variable : std::string uuid (Wellbore trajectory representation UUID)
 	* create the vtk object for represent Wellbore trajectory Polyline.

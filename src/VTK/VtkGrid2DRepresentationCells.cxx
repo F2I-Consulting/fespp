@@ -15,6 +15,10 @@ VtkResqml2StructuredGrid(fileName, name, uuid, uuidParent, pckEPCRep, pckEPCSubR
 {
 }
 
+VtkGrid2DRepresentationCells::~VtkGrid2DRepresentationCells()
+{
+	lastProperty = "";
+}
 //----------------------------------------------------------------------------
 void VtkGrid2DRepresentationCells::createOutput(const std::string & uuid)
 {

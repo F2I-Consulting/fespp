@@ -23,6 +23,14 @@ VtkResqml2UnstructuredGrid(fileName, name, uuid, uuidParent, pckRep, pckSubRep, 
 {
 }
 
+
+//----------------------------------------------------------------------------
+VtkUnstructuredGridRepresentation::~VtkUnstructuredGridRepresentation()
+{
+	cout << "VtkUnstructuredGridRepresentation::~VtkUnstructuredGridRepresentation() " << getUuid() << "\n";
+	lastProperty = "";
+}
+
 //----------------------------------------------------------------------------
 void VtkUnstructuredGridRepresentation::createOutput(const std::string & uuid)
 {

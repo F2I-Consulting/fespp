@@ -40,6 +40,7 @@ knowledge of the CeCILL license and that you accept its terms.
 // include system
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 #include <common/EpcDocument.h>
 
@@ -64,18 +65,15 @@ public:
 	vtkSetStringMacro(FileName);
 	vtkGetStringMacro(FileName);
 
+	void SetSubFileName(const char* name);
+	vtkGetStringMacro(SubFileName);
+
 	// Description:
 	// Get/set the multi process controller to use for coordinated reads.  By
 	// default, set to the global controller.
 	vtkGetObjectMacro(Controller, vtkMultiProcessController);
 	virtual void SetController(vtkMultiProcessController *);
 
-	vtkGetObjectMacro(subFileList, vtkDataArraySelection);
-	int GetsubFileListArrayStatus(const char* name);
-	int GetNumberOfsubFileListArrays();
-	const char* GetsubFileListArrayName(int index);
-	void SetSubFileList(const char* name, int status);
-	
 	vtkGetObjectMacro(uuidList, vtkDataArraySelection);
 	int GetuuidListArrayStatus(const char* name);
 	int GetNumberOfuuidListArrays();
@@ -95,7 +93,8 @@ protected:
 	void openEpcDocument(const std::string & fileName);
 
 	char*						FileName;
-	vtkDataArraySelection* 				subFileList;
+	char*						SubFileName;
+
 	vtkDataArraySelection* 				uuidList;
 
 	vtkMultiProcessController*	Controller;
@@ -105,11 +104,6 @@ private:
 	void operator=(const Fespp&);
 	
 	bool 						loadedFile;
-
-	// mapping between file name & vtkEpcDocument
-	std::unordered_map<std::string, VtkEpcDocument*> vtkEpcDocuments;
-	// mapping between uuid & file name
-	std::unordered_map<std::string, std::string> uuidToFileName;
 
 	// id of process
 	int idProc;
@@ -122,6 +116,7 @@ private:
 
 	int countTest;
 
+	std::vector<std::string> fileNameSet;
 };
 #endif
 

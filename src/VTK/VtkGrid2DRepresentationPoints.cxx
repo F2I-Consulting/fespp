@@ -20,6 +20,10 @@ VtkResqml2PolyData(fileName, name, uuid, uuidParent, pckEPCRep, pckEPCSubRep)
 {
 }
 
+VtkGrid2DRepresentationPoints::~VtkGrid2DRepresentationPoints()
+{
+	lastProperty = "";
+}
 //----------------------------------------------------------------------------
 void VtkGrid2DRepresentationPoints::createOutput(const std::string & uuid)
 {

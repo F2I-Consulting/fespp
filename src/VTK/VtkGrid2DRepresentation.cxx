@@ -28,6 +28,28 @@ VtkResqml2MultiBlockDataSet(fileName, name, uuid, uuidParent), epcPackageReprese
 //	grid2DCells = new VtkGrid2DRepresentationCells(getFileName(), name, grid2DCellsUuid.str(), uuidParent, epcPackage);
 }
 
+VtkGrid2DRepresentation::~VtkGrid2DRepresentation()
+{
+	cout << "VtkGrid2DRepresentation::~VtkGrid2DRepresentation() " << getUuid() << "\n";
+	if (epcPackageRepresentation != nullptr) {
+		epcPackageRepresentation = nullptr;
+	}
+
+	if (epcPackageSubRepresentation != nullptr) {
+		epcPackageSubRepresentation = nullptr;
+	}
+
+	if (grid2DPoints != nullptr) {
+		delete grid2DPoints;
+		grid2DPoints = nullptr;
+	}
+
+	if (grid2DCells != nullptr) {
+		delete grid2DCells;
+		grid2DCells = nullptr;
+	}
+}
+
 //----------------------------------------------------------------------------
 void VtkGrid2DRepresentation::createTreeVtk(const std::string & uuid, const std::string & uuidParent, const std::string & name, const Resqml2Type & type)
 {

@@ -18,7 +18,21 @@ procRank(idProc), nbProc(maxProc), 	treeRep(tree), visualization(visu)
 //----------------------------------------------------------------------------
 VtkEpcDocumentSet::~VtkEpcDocumentSet()
 {
-	vtkOutput->Delete();
+	vtkEpcNameList.clear();
+	uuidToVtkEpc.clear();
+
+	for (std::vector< VtkEpcDocument* >::const_iterator it = vtkEpcList.begin() ; it != vtkEpcList.end(); ++it)
+   {
+     delete (*it);
+   }
+	vtkEpcList.clear();
+
+	treeUuid.clear(); // Tree
+
+	vtkOutput = NULL;
+
+	int procRank = 0;
+	int nbProc = 0;
 }
 
 //----------------------------------------------------------------------------
@@ -40,7 +54,6 @@ void VtkEpcDocumentSet::visualizeFull()
 			auto uuidList = vtkEpcElem->getUuid();
 			for (auto &uuidListElem : uuidList)
 			{
-				cout << "uuid to visualize : " << uuidListElem << "\n";
 				vtkEpcElem->visualize(uuidListElem);
 			}
 		}
@@ -82,21 +95,17 @@ vtkSmartPointer<vtkMultiBlockDataSet> VtkEpcDocumentSet::getVisualization() cons
 //----------------------------------------------------------------------------
 void VtkEpcDocumentSet::addEpcDocument(const std::string & fileName)
 {
-	if (std::find(vtkEpcNameList.begin(), vtkEpcNameList.end(), fileName) == vtkEpcNameList.end())
+	if (std::find(vtkEpcNameList.begin(), vtkEpcNameList.end(),fileName)==vtkEpcNameList.end())
 	{
 		auto vtkEpc = new VtkEpcDocument(fileName, procRank, nbProc, this);
-
-		// link uuid to VtkEpcDocument
 		auto uuidList = vtkEpc->getUuid();
 		for (auto &uuidListElem : uuidList)
 		{
 			uuidToVtkEpc[uuidListElem] = vtkEpc;
 		}
-
 		vtkEpcList.push_back(vtkEpc);
 		vtkEpcNameList.push_back(fileName);
 	}
-
 }
 
 VtkEpcDocument* VtkEpcDocumentSet::getVtkEpcDocument(const std::string & uuid)
