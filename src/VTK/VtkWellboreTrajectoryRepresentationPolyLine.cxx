@@ -72,6 +72,13 @@ void VtkWellboreTrajectoryRepresentationPolyLine::createOutput(const std::string
 	}
 }
 
+
+//----------------------------------------------------------------------------
+VtkWellboreTrajectoryRepresentationPolyLine::~VtkWellboreTrajectoryRepresentationPolyLine()
+{
+	lastProperty = "";
+}
+
 //----------------------------------------------------------------------------
 void VtkWellboreTrajectoryRepresentationPolyLine::addProperty(const std::string uuidProperty, vtkDataArray* dataProperty)
 {

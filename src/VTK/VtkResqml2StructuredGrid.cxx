@@ -9,6 +9,12 @@ VtkResqml2StructuredGrid::VtkResqml2StructuredGrid(const std::string & fileName,
 }
 
 //----------------------------------------------------------------------------
+VtkResqml2StructuredGrid::~VtkResqml2StructuredGrid()
+{
+	vtkOutput = NULL;
+}
+
+//----------------------------------------------------------------------------
 vtkSmartPointer<vtkStructuredGrid> VtkResqml2StructuredGrid::getOutput() const
 {
 	return vtkOutput;

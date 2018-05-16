@@ -72,6 +72,11 @@ public:
 	VtkProperty(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, common::EpcDocument *pck, const int & idProc=0, const int & maxProc=0);
 
 	/**
+	* Destructor
+	*/
+	~VtkProperty();
+
+	/**
 	* method : getCellData
 	* variable : --
 	* return the vtkDataArray.
@@ -118,7 +123,6 @@ public:
 protected:
 
 private:
-	//	vtkSmartPointer<vtkDoubleArray> cellData;
 	vtkSmartPointer<vtkDataArray> cellData;
 	typeSupport support;
 

@@ -51,6 +51,11 @@ public:
 	VtkTriangulatedRepresentation(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, const unsigned int & patchNo, common::EpcDocument *pckEPCRep, common::EpcDocument *pckEPCSubRep);
 	
 	/**
+	* Destructor
+	*/
+	~VtkTriangulatedRepresentation();
+
+	/**
 	* method : createOutput
 	* variable : std::string uuid (Triangulated representation UUID)
 	* create the vtk objects for represent triangulated.

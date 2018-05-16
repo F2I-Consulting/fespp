@@ -62,6 +62,11 @@ public:
 	VtkPartialRepresentation(const std::string & fileName, const std::string & uuid, VtkEpcDocument *vtkEpcDowumentWithCompleteRep, common::EpcDocument *pck);
 
 	/**
+	* Destructor
+	*/
+	~VtkPartialRepresentation();
+
+	/**
 	* method : visualize
 	* variable : std::string uuid 
 	*/

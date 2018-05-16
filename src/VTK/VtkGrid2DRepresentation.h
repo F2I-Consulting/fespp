@@ -56,6 +56,11 @@ public:
 	VtkGrid2DRepresentation(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, common::EpcDocument *pckRep, common::EpcDocument *pckSubRep);
 	
 	/**
+	* Destructor
+	*/
+	~VtkGrid2DRepresentation();
+
+	/**
 	* method : createTreeVtk
 	* variable : 
 	* prepare grid2D points and grid2D cells.

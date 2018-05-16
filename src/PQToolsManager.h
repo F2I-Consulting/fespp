@@ -71,7 +71,6 @@ public:
 
 public slots:
 	void showDataLoadManager();
-	void showPanelSelection();
 	void showPanelMetadata();
 
 protected:

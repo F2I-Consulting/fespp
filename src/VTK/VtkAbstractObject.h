@@ -57,6 +57,10 @@ public:
 	} infoUuid;
 
 	VtkAbstractObject (const std::string & fileName, const std::string & name="", const std::string & uuid="", const std::string & uuidParent="", const int & idProc=0, const int & maxProc=0);
+	/**
+	* Destructor
+	*/
+	~VtkAbstractObject();
 
 	std::string getFileName() const;
 	std::string getName() const;

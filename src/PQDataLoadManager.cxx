@@ -28,21 +28,21 @@ class PQDataLoadManager::pqUI : public Ui::PQDataLoadManager
 
 namespace
 {
-	pqPropertiesPanel* getpqPropertiesPanel()
+pqPropertiesPanel* getpqPropertiesPanel()
+{
+	// get multi-block inspector panel
+	pqPropertiesPanel *panel = 0;
+	foreach(QWidget *widget, qApp->topLevelWidgets())
 	{
-		// get multi-block inspector panel
-		pqPropertiesPanel *panel = 0;
-		foreach(QWidget *widget, qApp->topLevelWidgets())
-		{
-			panel = widget->findChild<pqPropertiesPanel *>();
+		panel = widget->findChild<pqPropertiesPanel *>();
 
-			if (panel)
-			{
-				break;
-			}
+		if (panel)
+		{
+			break;
 		}
-		return panel;
 	}
+	return panel;
+}
 }
 
 //=============================================================================
@@ -95,12 +95,14 @@ void PQDataLoadManager::setupPipeline()
 
 	pqPipelineSource* fesppReader;
 
-	if (!manager->existPipe()){
+	if (manager->existPipe())
+	{
+		fesppReader = manager->getFesppReader();
+	}
+	else
+	{
 		fesppReader = builder->createReader("sources", "Fespp", QStringList("EpcDocument"), this->Server);
 		manager->existPipe(true);
-	}
-	else{
-		fesppReader = manager->getFesppReader();
 	}
 
 	QString epcFiles = this->ui->epcFile->filenames().join("*");
@@ -117,10 +119,10 @@ void PQDataLoadManager::setupPipeline()
 
 			// add file to property
 			vtkSMProxy* fesppReaderProxy = fesppReader->getProxy();
+//			vtkSMPropertyHelper( fesppReaderProxy, "subFileList" ).SetStatus(epcFiles.toStdString().c_str(),1);
+			vtkSMPropertyHelper( fesppReaderProxy, "SubFileName" ).Set(epcFiles.toStdString().c_str());
 
-	        vtkSMPropertyHelper( fesppReaderProxy, "subFileList" ).SetStatus(epcFiles.toStdString().c_str(),1);
-
-	        fesppReaderProxy->UpdateSelfAndAllInputs();
+			fesppReaderProxy->UpdateSelfAndAllInputs();
 		}
 	}
 	END_UNDO_SET();

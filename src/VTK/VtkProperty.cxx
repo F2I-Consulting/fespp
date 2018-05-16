@@ -31,6 +31,16 @@ VtkAbstractObject(fileName, name, uuid, uuidParent, idProc, maxProc), epcPackage
 }
 
 //----------------------------------------------------------------------------
+VtkProperty::~VtkProperty()
+{
+	cellData = NULL;
+
+	if (epcPackage != nullptr) {
+		epcPackage = nullptr;
+	}
+}
+
+//----------------------------------------------------------------------------
 void VtkProperty::visualize(const std::string & uuid)
 {
 }

@@ -57,6 +57,11 @@ public:
 	VtkResqml2PolyData(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, common::EpcDocument *epcPackageRepresentation, common::EpcDocument *epcPackageSubRepresentation, const int & idProc=0, const int & maxProc=0);
 
 	/**
+	* Destructor
+	*/
+	~VtkResqml2PolyData();
+
+	/**
 	* method : createOutput
 	* variable : --
 	* return the vtkPolyData.

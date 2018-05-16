@@ -10,6 +10,12 @@ VtkResqml2PolyData::VtkResqml2PolyData(const std::string & fileName, const std::
 }
 
 //----------------------------------------------------------------------------
+VtkResqml2PolyData::~VtkResqml2PolyData()
+{
+	vtkOutput = NULL;
+}
+
+//----------------------------------------------------------------------------
 vtkSmartPointer<vtkPolyData> VtkResqml2PolyData::getOutput() const
 {
 	return vtkOutput;

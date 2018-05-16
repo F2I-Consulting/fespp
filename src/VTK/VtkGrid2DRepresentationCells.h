@@ -51,6 +51,11 @@ public:
 	VtkGrid2DRepresentationCells(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, common::EpcDocument *pckRep, common::EpcDocument *pckSubRep);
 	
 	/**
+	* Destructor
+	*/
+	~VtkGrid2DRepresentationCells();
+
+	/**
 	* method : createOutput
 	* variable : std::string uuid (Triangulated representation UUID)
 	* create the vtk objects for represent triangulated.

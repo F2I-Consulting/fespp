@@ -22,6 +22,17 @@ VtkResqml2UnstructuredGrid(fileName, name, uuid, uuidParent, pckEPCRep, pckEPCSu
 	isHyperslabed = false;
 }
 
+VtkIjkGridRepresentation::~VtkIjkGridRepresentation()
+{
+	lastProperty = "";
+
+	iCellCount = 0;
+	jCellCount = 0;
+	kCellCount = 0;
+	initKIndex = 0;
+	maxKIndex = 0;
+
+}
 vtkSmartPointer<vtkPoints> VtkIjkGridRepresentation::createpoint()
 {
 	if (!vtkPointsIsCreated())

@@ -17,7 +17,8 @@
 #include <exception>
 #include <iostream>
 #include <utility>
-#include <vector>
+#include <algorithm>
+
 
 #ifndef MPICH_IGNORE_CXX_SEEK
 #define MPICH_IGNORE_CXX_SEEK
@@ -37,7 +38,6 @@ Fespp::Fespp()
 
 	loadedFile = false;
 
-	this->subFileList = vtkDataArraySelection::New();
 	this->uuidList = vtkDataArraySelection::New();
 
 	this->Controller = NULL;
@@ -53,55 +53,35 @@ Fespp::Fespp()
 	}
 	countTest = 0;
 
+	vtkEpcDocumentSet = nullptr;
 }
 
 //----------------------------------------------------------------------------
 Fespp::~Fespp()
 {
 	SetFileName(NULL);
-	this->SetController(NULL);
-	for (std::pair<std::string, VtkEpcDocument*> element : vtkEpcDocuments)
-		delete element.second;
-}
+	SetController(NULL);
+	fileNameSet.clear();
+	uuidList->Delete();
+	idProc = 0;
+	nbProc = 0;
 
-//----------------------------------------------------------------------------
-int Fespp::GetsubFileListArrayStatus(const char* name)
-{
-	return (this->subFileList->ArrayIsEnabled(name));
-}
-//----------------------------------------------------------------------------
-void Fespp::SetSubFileList(const char* name, int status)
-{
-	if (status)
-	{
-		this->subFileList->EnableArray(name);
+	if (vtkEpcDocumentSet != nullptr) {
+		delete vtkEpcDocumentSet;
+		vtkEpcDocumentSet = nullptr;
 	}
-	else
+
+	countTest = 0;
+}
+
+//----------------------------------------------------------------------------
+void Fespp::SetSubFileName(const char* name)
+{
+	if (std::find(fileNameSet.begin(), fileNameSet.end(),std::string(name))==fileNameSet.end())
 	{
-		if (this->subFileList != nullptr)
-		{
-			this->subFileList->EnableArray(name);
-		}
-		else
-			this->subFileList = vtkDataArraySelection::New();
+		fileNameSet.push_back(std::string(name));
+		openEpcDocument(name);
 	}
-	this->subFileList->Modified();
-
-	openEpcDocument(name);
-
-	this->Modified();
-}
-
-//----------------------------------------------------------------------------
-int Fespp::GetNumberOfsubFileListArrays()
-{
-	return this->subFileList->GetNumberOfArrays();
-}
-
-//----------------------------------------------------------------------------
-const char* Fespp::GetsubFileListArrayName(int index)
-{
-	return this->subFileList->GetArrayName(index);
 }
 
 //----------------------------------------------------------------------------
@@ -184,10 +164,13 @@ int Fespp::RequestInformation(
 		auto extension = stringFileName.substr(lengthFileName -3, lengthFileName);
 
 		vtkEpcDocumentSet = new VtkEpcDocumentSet(idProc, nbProc, false, true);
-		openEpcDocument(FileName);
-		if (extension=="epc")
+		if (stringFileName != "EpcDocument")
 		{
-			vtkEpcDocumentSet->visualizeFull();
+			if (extension=="epc")
+			{
+				openEpcDocument(FileName);
+				vtkEpcDocumentSet->visualizeFull();
+			}
 		}
 	}
 	return 1;
