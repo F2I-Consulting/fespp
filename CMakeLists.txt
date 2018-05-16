@@ -39,7 +39,7 @@ IF (ParaView_SOURCE_DIR)
   # we are building from within ParaView Source. The environment is already set.
   # Nothing more to do.
 ELSE (ParaView_SOURCE_DIR)
-  find_package(ParaView)
+  find_package(ParaView REQUIRED)
   include("${PARAVIEW_USE_FILE}")
   include (ParaViewPlugins)
 
@@ -53,6 +53,15 @@ ENDIF (ParaView_SOURCE_DIR)
 # wrappings for all these modules as well.
 # -----------------------------------------------------------------------------
 pv_process_modules()
+
+# ============================================================================
+# compilation options
+# ============================================================================
+
+# Build with Multiple Processes on windows
+IF (WIN32)
+	SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP")
+ENDIF (WIN32)
 
 # -----------------------------------------------------------------------------
 # Build the Paraview plugins

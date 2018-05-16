@@ -29,10 +29,9 @@ vtkCxxSetObjectMacro(Fespp, Controller, vtkMultiProcessController);
 
 
 //----------------------------------------------------------------------------
-Fespp::Fespp()
+Fespp::Fespp() :
+FileName(nullptr), Controller(nullptr), loadedFile(false), idProc(0), nbProc(0), countTest(0)
 {
-	FileName = NULL;
-
 	SetNumberOfInputPorts(0);
 	SetNumberOfOutputPorts(1);
 
@@ -40,27 +39,24 @@ Fespp::Fespp()
 
 	this->uuidList = vtkDataArraySelection::New();
 
-	this->Controller = NULL;
 	this->SetController(vtkMultiProcessController::GetGlobalController());
 
 	auto comm = GetMPICommunicator();
-	this->idProc =0;
-	this->nbProc =0;
 	if (comm != MPI_COMM_NULL)
 	{
 		MPI_Comm_rank(comm, &this->idProc);
 		MPI_Comm_size(comm, &this->nbProc);
 	}
-	countTest = 0;
 
+	countTest = 0;
 	vtkEpcDocumentSet = nullptr;
 }
 
 //----------------------------------------------------------------------------
 Fespp::~Fespp()
 {
-	SetFileName(NULL);
-	SetController(NULL);
+	SetFileName(nullptr); // Also delete FileName if not nullptr.
+	SetController(nullptr);
 	fileNameSet.clear();
 	uuidList->Delete();
 	idProc = 0;
@@ -70,7 +66,6 @@ Fespp::~Fespp()
 		delete vtkEpcDocumentSet;
 		vtkEpcDocumentSet = nullptr;
 	}
-
 	countTest = 0;
 }
 
@@ -92,7 +87,7 @@ int Fespp::GetuuidListArrayStatus(const char* uuid)
 //----------------------------------------------------------------------------
 void Fespp::SetUuidList(const char* uuid, int status)
 {
-	if (status)
+	if (status != 0)
 	{
 		vtkEpcDocumentSet->visualize(std::string(uuid));
 	}
@@ -127,11 +122,11 @@ MPI_Comm Fespp::GetMPICommunicator()
 
 	vtkMPIController *MPIController = vtkMPIController::SafeDownCast(this->Controller);
 
-	if (MPIController != NULL)
+	if (MPIController != nullptr)
 	{
 		vtkMPICommunicator *mpiComm = vtkMPICommunicator::SafeDownCast(MPIController->GetCommunicator());
 
-		if (mpiComm != NULL)
+		if (mpiComm != nullptr)
 		{
 			comm = *mpiComm->GetMPIComm()->GetHandle();
 		}
