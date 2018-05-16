@@ -503,9 +503,6 @@ VtkEpcDocument::~VtkEpcDocument()
 	uuidPartialRep.clear();
 	uuidRep.clear();
 
-	ProcRank = 0;
-	NbProc = 0;
-
 	epcSet = nullptr;
 
 	epcPackage->close();
@@ -1150,7 +1147,7 @@ void VtkEpcDocument::attach()
 }
 
 //----------------------------------------------------------------------------
-void VtkEpcDocument::addProperty(const std::string uuidProperty, vtkDataArray* dataProperty)
+void VtkEpcDocument::addProperty(const std::string & uuidProperty, vtkDataArray* dataProperty)
 {
 	switch (uuidIsChildOf[uuidProperty].myType)
 	{

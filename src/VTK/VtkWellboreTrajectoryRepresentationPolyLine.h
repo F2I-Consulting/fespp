@@ -69,7 +69,7 @@ public:
 	*/
 	void createOutput(const std::string & uuid);
 	
-	void addProperty(const std::string uuidProperty, vtkDataArray* dataProperty);
+	void addProperty(const std::string & uuidProperty, vtkDataArray* dataProperty);
 	
 	long getAttachmentPropertyCount(const std::string & uuid, const FesppAttachmentProperty propertyUnit);
 protected:

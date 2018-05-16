@@ -117,7 +117,7 @@ void VtkWellboreTrajectoryRepresentation::attach()
 	vtkOutput->GetMetaData(index++)->Set(vtkCompositeDataSet::NAME(),head->getName().c_str());
 }
 
-void VtkWellboreTrajectoryRepresentation::addProperty(const std::string uuidProperty, vtkDataArray* dataProperty)
+void VtkWellboreTrajectoryRepresentation::addProperty(const std::string & uuidProperty, vtkDataArray* dataProperty)
 {
 	this->polyline->addProperty(uuidProperty, dataProperty);
 }

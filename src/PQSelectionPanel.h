@@ -133,11 +133,6 @@ private:
 	void constructor();
 	
 	/**
-	* delete treeWidget fileName in panel
-	*/
-	void deleteFileName(const std::string & fileName);
-
-	/**
 	* search a pqPipelineSource 
 	*/
 	virtual pqPipelineSource * findPipelineSource(const char *SMName);

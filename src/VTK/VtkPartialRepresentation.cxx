@@ -22,7 +22,6 @@ epcPackage(pck), vtkEpcDocumentSource(vtkEpcDowumentWithCompleteRep), vtkPartial
 
 VtkPartialRepresentation::~VtkPartialRepresentation()
 {
-	cout << "VtkPartialRepresentation::~VtkPartialRepresentation() " << vtkPartialReprUuid << "\n";
 	// delete uuidToVtkProperty
 #if (defined(_WIN32) && _MSC_VER >= 1600)
 	for (std::unordered_map< std::string, VtkProperty* >::const_iterator it = uuidToVtkProperty.begin(); it != uuidToVtkProperty.end(); ++it)
@@ -57,44 +56,38 @@ void VtkPartialRepresentation::visualize(const std::string & uuid)
 			std::vector<resqml2::AbstractValuesProperty*> valuesPropertySet;
 
 			if (obj->getXmlTag() == "PolylineSetRepresentation") {
-				resqml2_0_1::PolylineSetRepresentation* polylineSetRepresentation = nullptr;
-				polylineSetRepresentation = static_cast<resqml2_0_1::PolylineSetRepresentation*>(obj);
+				resqml2_0_1::PolylineSetRepresentation* polylineSetRepresentation = static_cast<resqml2_0_1::PolylineSetRepresentation*>(obj);
 				valuesPropertySet = polylineSetRepresentation->getValuesPropertySet();
 				pointCount = vtkEpcDocumentSource->getAttachmentPropertyCount(vtkPartialReprUuid, VtkAbstractObject::FesppAttachmentProperty::POINTS);
 			}
 			else {
 				if (obj->getXmlTag() == "IjkGridRepresentation" || obj->getXmlTag() == "TruncatedIjkGridRepresentation") {
-					resqml2_0_1::AbstractIjkGridRepresentation* ijkGridRepresentation = nullptr;
-					ijkGridRepresentation = static_cast<resqml2_0_1::AbstractIjkGridRepresentation*>(obj);
+					resqml2_0_1::AbstractIjkGridRepresentation* ijkGridRepresentation = static_cast<resqml2_0_1::AbstractIjkGridRepresentation*>(obj);
 					valuesPropertySet = ijkGridRepresentation->getValuesPropertySet();
 					cellCount = vtkEpcDocumentSource->getAttachmentPropertyCount(vtkPartialReprUuid, VtkAbstractObject::FesppAttachmentProperty::CELLS);
 				}			
 				else {
 					if (obj->getXmlTag() == "TriangulatedSetRepresentation") {
-						resqml2_0_1::TriangulatedSetRepresentation* triangulatedSetRepresentation = nullptr;
-						triangulatedSetRepresentation = static_cast<resqml2_0_1::TriangulatedSetRepresentation*>(obj);
+						resqml2_0_1::TriangulatedSetRepresentation* triangulatedSetRepresentation = static_cast<resqml2_0_1::TriangulatedSetRepresentation*>(obj);
 						valuesPropertySet = triangulatedSetRepresentation->getValuesPropertySet();
 						pointCount = vtkEpcDocumentSource->getAttachmentPropertyCount(vtkPartialReprUuid, VtkAbstractObject::FesppAttachmentProperty::POINTS);
 					}
 					else {
 						if (obj->getXmlTag() == "UnstructuredGridRepresentation") {
-							resqml2_0_1::UnstructuredGridRepresentation* unstructuredGridRep = nullptr;
-							unstructuredGridRep = static_cast<resqml2_0_1::UnstructuredGridRepresentation*>(obj);
+							resqml2_0_1::UnstructuredGridRepresentation* unstructuredGridRep = static_cast<resqml2_0_1::UnstructuredGridRepresentation*>(obj);
 							valuesPropertySet = unstructuredGridRep->getValuesPropertySet();
 							pointCount = vtkEpcDocumentSource->getAttachmentPropertyCount(vtkPartialReprUuid, VtkAbstractObject::FesppAttachmentProperty::POINTS);
 							cellCount = vtkEpcDocumentSource->getAttachmentPropertyCount(vtkPartialReprUuid, VtkAbstractObject::FesppAttachmentProperty::CELLS);
 						}
 						else {
 							if (obj->getXmlTag() == "Grid2dRepresentation") {
-								resqml2_0_1::Grid2dRepresentation* grid2dRepresentation = nullptr;
-								grid2dRepresentation = static_cast<resqml2_0_1::Grid2dRepresentation*>(obj);
+								resqml2_0_1::Grid2dRepresentation* grid2dRepresentation = static_cast<resqml2_0_1::Grid2dRepresentation*>(obj);
 								valuesPropertySet = grid2dRepresentation->getValuesPropertySet();
 								pointCount = vtkEpcDocumentSource->getAttachmentPropertyCount(vtkPartialReprUuid, VtkAbstractObject::FesppAttachmentProperty::POINTS);
 							}
 							else {
 								if (obj->getXmlTag() == "WellboreTrajectoryRepresentation") {
-									resqml2_0_1::WellboreTrajectoryRepresentation* wellboreTrajectoryRepresentation = nullptr;
-									wellboreTrajectoryRepresentation = static_cast<resqml2_0_1::WellboreTrajectoryRepresentation*>(obj);
+									resqml2_0_1::WellboreTrajectoryRepresentation* wellboreTrajectoryRepresentation = static_cast<resqml2_0_1::WellboreTrajectoryRepresentation*>(obj);
 									valuesPropertySet = wellboreTrajectoryRepresentation->getValuesPropertySet();
 									pointCount = vtkEpcDocumentSource->getAttachmentPropertyCount(vtkPartialReprUuid, VtkAbstractObject::FesppAttachmentProperty::POINTS);
 								}

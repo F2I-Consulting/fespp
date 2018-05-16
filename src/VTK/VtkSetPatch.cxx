@@ -94,7 +94,6 @@ void VtkSetPatch::createTreeVtk(const std::string & uuid, const std::string & pa
 	uuidIsChildOf[uuid].uuid = uuidIsChildOf[parent].uuid;
 	if (uuidIsChildOf[parent].myType == Resqml2Type::POLYLINE_SET)
 	{
-		std::string titi = obj->getXmlTag();
 		if ((obj != nullptr && obj->getXmlTag() == "PolylineRepresentation") || (obj != nullptr && obj->getXmlTag() == "PolylineSetRepresentation"))
 		{
 			polylineSetRep = static_cast<resqml2_0_1::PolylineSetRepresentation*>(obj);
@@ -217,7 +216,7 @@ void VtkSetPatch::attach()
 	}
 }
 
-void VtkSetPatch::addProperty(const std::string uuidProperty, vtkDataArray* dataProperty)
+void VtkSetPatch::addProperty(const std::string & uuidProperty, vtkDataArray* dataProperty)
 {
 	std::vector<VtkPolylineRepresentation *> vectPolyPatch;
 	std::vector<VtkTriangulatedRepresentation *> vectTriPatch;

@@ -42,7 +42,6 @@ void VtkTriangulatedRepresentation::createOutput(const std::string &uuid)
 		{
 			vtkOutput = vtkSmartPointer<vtkPolyData>::New();
 
-			unsigned int countPatch = triangulatedSetRepresentation->getPatchCount();
 			// POINT
 			vtkSmartPointer<vtkPoints> triangulatedRepresentationPoints = vtkSmartPointer<vtkPoints>::New();
 
@@ -83,7 +82,7 @@ void VtkTriangulatedRepresentation::createOutput(const std::string &uuid)
 }
 
 //----------------------------------------------------------------------------
-void VtkTriangulatedRepresentation::addProperty(const std::string uuidProperty, vtkDataArray* dataProperty)
+void VtkTriangulatedRepresentation::addProperty(const std::string & uuidProperty, vtkDataArray* dataProperty)
 {
 	vtkOutput->Modified();
 	vtkOutput->GetPointData()->AddArray(dataProperty);

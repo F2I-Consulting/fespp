@@ -23,7 +23,6 @@ VtkResqml2PolyData(fileName, name, uuid, uuidParent, pckRep, pckSubRep), patchIn
 //----------------------------------------------------------------------------
 VtkPolylineRepresentation::~VtkPolylineRepresentation()
 {
-	cout << "VtkPolylineRepresentation::~VtkPolylineRepresentation() " << getUuid() << "\n";
 	patchIndex = 0;
 	lastProperty = "";
 }
@@ -91,7 +90,7 @@ void VtkPolylineRepresentation::createOutput(const std::string & uuid)
 }
 
 //----------------------------------------------------------------------------
-void VtkPolylineRepresentation::addProperty(const std::string uuidProperty, vtkDataArray* dataProperty)
+void VtkPolylineRepresentation::addProperty(const std::string & uuidProperty, vtkDataArray* dataProperty)
 {
 	vtkOutput->Modified();
 	vtkOutput->GetPointData()->AddArray(dataProperty);
@@ -108,5 +107,5 @@ long VtkPolylineRepresentation::getAttachmentPropertyCount(const std::string & u
 		polylineSetRepresentation = static_cast<resqml2_0_1::PolylineSetRepresentation*>(obj);
 		result = polylineSetRepresentation->getXyzPointCountOfPatch(0);
 	}
-	return 0;
+	return result;
 }

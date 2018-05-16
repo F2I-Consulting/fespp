@@ -18,7 +18,7 @@ void VtkWellboreTrajectoryRepresentationText::createOutput(const std::string & u
 }
 
 //----------------------------------------------------------------------------
-void VtkWellboreTrajectoryRepresentationText::addProperty(const std::string uuidProperty, vtkDataArray* dataProperty)
+void VtkWellboreTrajectoryRepresentationText::addProperty(const std::string & uuidProperty, vtkDataArray* dataProperty)
 {
 }
 

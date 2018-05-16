@@ -31,8 +31,8 @@ VtkEpcDocumentSet::~VtkEpcDocumentSet()
 
 	vtkOutput = NULL;
 
-	int procRank = 0;
-	int nbProc = 0;
+	procRank = 0;
+	nbProc = 0;
 }
 
 //----------------------------------------------------------------------------

@@ -94,7 +94,7 @@ void VtkGrid2DRepresentationPoints::createOutput(const std::string & uuid)
 }
 
 //----------------------------------------------------------------------------
-	void VtkGrid2DRepresentationPoints::addProperty(const std::string uuidProperty, vtkDataArray* dataProperty)
+	void VtkGrid2DRepresentationPoints::addProperty(const std::string & uuidProperty, vtkDataArray* dataProperty)
 {
 	vtkOutput->Modified();
 	vtkOutput->GetPointData()->AddArray(dataProperty);

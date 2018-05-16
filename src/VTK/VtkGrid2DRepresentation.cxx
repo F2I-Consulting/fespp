@@ -30,7 +30,6 @@ VtkResqml2MultiBlockDataSet(fileName, name, uuid, uuidParent), epcPackageReprese
 
 VtkGrid2DRepresentation::~VtkGrid2DRepresentation()
 {
-	cout << "VtkGrid2DRepresentation::~VtkGrid2DRepresentation() " << getUuid() << "\n";
 	if (epcPackageRepresentation != nullptr) {
 		epcPackageRepresentation = nullptr;
 	}
@@ -44,16 +43,17 @@ VtkGrid2DRepresentation::~VtkGrid2DRepresentation()
 		grid2DPoints = nullptr;
 	}
 
+	/*
 	if (grid2DCells != nullptr) {
 		delete grid2DCells;
 		grid2DCells = nullptr;
 	}
+	*/
 }
 
 //----------------------------------------------------------------------------
 void VtkGrid2DRepresentation::createTreeVtk(const std::string & uuid, const std::string & uuidParent, const std::string & name, const Resqml2Type & type)
 {
-	std::string test = getUuid();
 	if (uuid != getUuid())
 	{
 		grid2DPoints->createTreeVtk(uuid, uuidParent, name, type);
@@ -108,12 +108,12 @@ void VtkGrid2DRepresentation::attach()
 //	vtkOutput->GetMetaData(index++)->Set(vtkCompositeDataSet::NAME(),grid2DCells->getUuid().c_str());
 }
 
-void VtkGrid2DRepresentation::addProperty(const std::string uuidProperty, vtkDataArray* dataProperty)
+void VtkGrid2DRepresentation::addProperty(const std::string & uuidProperty, vtkDataArray* dataProperty)
 {
 	grid2DPoints->addProperty(uuidProperty, dataProperty);
 }
 
 long VtkGrid2DRepresentation::getAttachmentPropertyCount(const std::string & uuid, const FesppAttachmentProperty propertyUnit)
 {
-	return grid2DCells->getAttachmentPropertyCount(uuid, propertyUnit);
+	return grid2DPoints->getAttachmentPropertyCount(uuid, propertyUnit);
 }

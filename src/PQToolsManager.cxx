@@ -284,7 +284,6 @@ void PQToolsManager::deletePipelineSource(pqPipelineSource* pipe)
 {
 	if(this->existPipe())
 	{
-		cout << "delete PipelineSource\n";
 		pqPipelineSource * source = findPipelineSource("EpcDocument");
 		if (!source)
 		{

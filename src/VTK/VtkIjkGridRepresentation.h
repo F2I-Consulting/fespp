@@ -75,7 +75,7 @@ public:
 	* description :
 	* add property to ijk Grid
 	*/
-	void addProperty(const std::string uuidProperty, vtkDataArray* dataProperty);
+	void addProperty(const std::string & uuidProperty, vtkDataArray* dataProperty);
 
 	/**
 	* method : getAttachmentPropertyCount

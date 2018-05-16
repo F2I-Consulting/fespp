@@ -100,7 +100,7 @@ public:
 
 	void addPartialUUid(const std::string & uuid, VtkEpcDocument *vtkEpcDowumentWithCompleteRep);
 
-	void addProperty(const std::string uuidProperty, vtkDataArray* dataProperty);
+	void addProperty(const std::string & uuidProperty, vtkDataArray* dataProperty);
 
 	VtkAbstractObject::Resqml2Type getType(std::string);
 
@@ -161,8 +161,6 @@ private:
 
 	std::vector<std::string> uuidPartialRep;
 	std::vector<std::string> uuidRep;
-	int ProcRank;
-	int NbProc;
 
 	VtkEpcDocumentSet * epcSet;
 };

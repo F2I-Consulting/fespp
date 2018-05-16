@@ -28,6 +28,7 @@
 VtkProperty::VtkProperty(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, common::EpcDocument *pck, const int & idProc, const int & maxProc) :
 VtkAbstractObject(fileName, name, uuid, uuidParent, idProc, maxProc), epcPackage(pck)
 {
+	support = typeSupport::CELLS;
 }
 
 //----------------------------------------------------------------------------

@@ -178,7 +178,6 @@ void PQSelectionPanel::onItemCheckedUnchecked(QTreeWidgetItem * item, int column
 //----------------------------------------------------------------------------
 void PQSelectionPanel::deleteTreeView()
 {
-	cout << "void PQSelectionPanel::deleteTreeView()· IN\n";
 	treeWidget->clear();
 
 	indexFile = 0;
@@ -201,7 +200,7 @@ void PQSelectionPanel::deleteTreeView()
 
 	mapUuidParentButtonInvisible.clear();
 
-	std::string pickedBlocks = "";
+	pickedBlocks = "";
 	uuidVisible.clear();
 
 	uuidCheckable.clear();
@@ -211,7 +210,6 @@ void PQSelectionPanel::deleteTreeView()
 	radioButtonToUuid.clear();
 
 	addTreeRoot("root", "epcdocument");
-	cout << "void PQSelectionPanel::deleteTreeView()· OUT\n";
 
 }
 
@@ -757,74 +755,6 @@ void PQSelectionPanel::addTreeProperty(QTreeWidgetItem *parent, std::vector<resq
 	}
 	connect(buttonGroup, SIGNAL(buttonClicked(int)), this, SLOT(checkedRadioButton(int)));
 	uuidParentGroupButton[itemUuid[parent]] = buttonGroup;
-}
-
-//----------------------------------------------------------------------------
-void PQSelectionPanel::deleteFileName(const std::string & fileName)
-{
-	cout << "PQSelectionPanel::deleteFileName("<< fileName << ") IN\n";
-	std::vector<std::string> uuids = filenameToUuids[fileName];
-	for (size_t i = 0; i < uuids.size(); ++i)
-	{
-		cout << " uuid " << i << " = " << uuids[i] << "\n";
-		auto uuidTest = uuids[i];
-		cout << " 1\n";
-		std::vector<std::string>::iterator uuidCheckable_iterator = std::find(uuidCheckable.begin(), uuidCheckable.end(), uuids[i]);
-		cout << " 2\n";
-		if (uuidCheckable_iterator != uuidCheckable.end())
-		{
-			cout << " 3\n";
-			uuidCheckable.erase(uuidCheckable_iterator);
-		}
-		cout << " 4\n";
-		std::vector<std::string>::iterator uuidVisible_iterator = std::find(uuidVisible.begin(), uuidVisible.end(), uuids[i]);
-		cout << " 5\n";
-		if (uuidVisible_iterator != uuidVisible.end())
-		{
-			cout << " 6\n";
-			uuidVisible.erase(uuidVisible_iterator);
-		}
-		cout << " 7\n";
-		itemUuid.remove(uuidItem[uuids[i]]);
-		cout << " 8\n";
-		if (uuidItem[uuids[i]]->childCount() > 0)
-		{
-			cout << " 9\n";
-			deleteUUID(uuidItem[uuids[i]]);
-		}
-		/*		else
-		{
-			cout << " 10 = " << uuidItem[uuids[i]]->childCount() << "\n";
-			uuidItem[uuids[i]]->setHidden(true);
-		}*/
-		cout << " 11\n";
-		uuidItem.remove(uuids[i]);
-		cout << " 12\n";
-		uuidToFilename.remove(uuids[i]);
-		cout << " 13\n";
-		uuidParentItem.remove(uuids[i]);
-		cout << " 14\n";
-		mapUuidProperty.remove(uuids[i]);
-		cout << " 15\n";
-		mapUuidWithProperty.remove(uuids[i]);
-	}
-
-	cout << "tous les uuids sont traités \n";
-	uuids = filenameToUuidsPartial[fileName];
-	/*
-	for (size_t i = 0; i < uuids.size(); ++i){
-		if (partialRepresentation.count(uuids[i]) > 0){
-			partialRepresentation.remove(uuids[i]);
-		}
-	}
-	 */
-
-	filenameToUuids.remove(fileName);
-
-	delete uuidItem[fileName];
-
-
-	cout << "PQSelectionPanel::deleteFileName("<< fileName << ") OUT\n";
 }
 
 //****************************************************************************

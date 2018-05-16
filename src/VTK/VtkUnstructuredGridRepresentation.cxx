@@ -170,7 +170,7 @@ vtkSmartPointer<vtkCellArray> VtkUnstructuredGridRepresentation::createOutputVtk
 }
 
 //----------------------------------------------------------------------------
-void VtkUnstructuredGridRepresentation::addProperty(const std::string uuidProperty, vtkDataArray* dataProperty)
+void VtkUnstructuredGridRepresentation::addProperty(const std::string & uuidProperty, vtkDataArray* dataProperty)
 {
 	vtkOutput->Modified();
 	if (uuidToVtkProperty[uuidProperty]->getSupport() == VtkProperty::typeSupport::CELLS)

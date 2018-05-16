@@ -89,7 +89,7 @@ public:
 	
 	vtkSmartPointer<vtkPoints> createVtkPoints(const ULONG64 & pointCount, const double * allXyzPoints, const resqml2::AbstractLocal3dCrs * localCRS);
 
-	virtual void addProperty(const std::string uuidProperty, vtkDataArray* dataProperty) = 0;
+	virtual void addProperty(const std::string & uuidProperty, vtkDataArray* dataProperty) = 0;
 
 	vtkSmartPointer<vtkPoints> getVtkPoints();
 
