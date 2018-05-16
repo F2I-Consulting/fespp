@@ -61,6 +61,11 @@ public:
 	VtkSetPatch (const std::string & fileName, const std::string & name, const std:: string & uuid, const std::string & uuidParent, common::EpcDocument *pckEPC, const int & idProc=0, const int & maxProc=0);
 	
 	/**
+	* Destructor
+	*/
+	~VtkSetPatch();
+
+	/**
 	* method : createTreeVtk
 	* variable : std::string uuid, std::string parent, std::string name, Resqml2Type resqml Type
 	* prepare the vtk object for represent the set representation.
@@ -81,7 +86,7 @@ public:
 	*/
 	void remove(const std::string & uuid);
 
-	void addProperty(const std::string uuidProperty, vtkDataArray* dataProperty);
+	void addProperty(const std::string & uuidProperty, vtkDataArray* dataProperty);
 	
 	long getAttachmentPropertyCount(const std::string & uuid, const FesppAttachmentProperty propertyUnit);
 protected:

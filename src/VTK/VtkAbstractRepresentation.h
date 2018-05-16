@@ -68,6 +68,11 @@ public:
 	VtkAbstractRepresentation(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, common::EpcDocument *epcPackageRepresentation, common::EpcDocument *epcPackageSubRepresentation, const int & idProc=0, const int & maxProc=0);
 
 	/**
+	* Destructor
+	*/
+	~VtkAbstractRepresentation();
+
+	/**
 	* load & display representation uuid's
 	*/
 	void visualize(const std::string & uuid);
@@ -84,7 +89,7 @@ public:
 	
 	vtkSmartPointer<vtkPoints> createVtkPoints(const ULONG64 & pointCount, const double * allXyzPoints, const resqml2::AbstractLocal3dCrs * localCRS);
 
-	virtual void addProperty(const std::string uuidProperty, vtkDataArray* dataProperty) = 0;
+	virtual void addProperty(const std::string & uuidProperty, vtkDataArray* dataProperty) = 0;
 
 	vtkSmartPointer<vtkPoints> getVtkPoints();
 

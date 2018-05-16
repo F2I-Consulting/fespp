@@ -7,6 +7,18 @@ VtkAbstractObject::VtkAbstractObject( const std::string & fileName, const std::s
 }
 
 //----------------------------------------------------------------------------
+VtkAbstractObject::~VtkAbstractObject()
+{
+	fileName = "";
+	name = "";
+	uuid = "";
+	uuidParent = "";
+
+	idProc = 0;
+	maxProc = 0;
+}
+
+//----------------------------------------------------------------------------
 std::string VtkAbstractObject::getFileName() const
 {
 	return fileName;

@@ -76,7 +76,6 @@ pqPropertiesPanel* getpqPropertiesPanel()
 	}
 	return panel;
 }
-
 }
 
 //----------------------------------------------------------------------------
@@ -109,8 +108,6 @@ void PQSelectionPanel::constructor()
 	connect(ui.treeWidget, SIGNAL(itemClicked(QTreeWidgetItem*, int)), this, SLOT(clicSelection(QTreeWidgetItem*, int)));
 	connect(ui.treeWidget, SIGNAL(itemChanged(QTreeWidgetItem*, int)), this, SLOT(onItemCheckedUnchecked(QTreeWidgetItem*, int)));
 
-	connect(getpqPropertiesPanel(), SIGNAL(deleteRequested(pqPipelineSource*)), this, SLOT(deletePipelineSource(pqPipelineSource*)));
-
 	radioButtonCount = 0;
 
 	indexFile = 0;
@@ -123,18 +120,21 @@ void PQSelectionPanel::constructor()
 //----------------------------------------------------------------------------
 void PQSelectionPanel::clicSelection(QTreeWidgetItem* item, int column)
 {
+	unsigned int cpt;
 	pickedBlocks = itemUuid[item];
-
-	QFileInfo file(uuidToFilename[pickedBlocks].c_str());
-	pqPipelineSource * source = findPipelineSource("EpcDocument");
-	if (source)
+	if (pickedBlocks!="root")
 	{
-		pqActiveObjects *activeObjects = &pqActiveObjects::instance();
-		activeObjects->setActiveSource(source);
-	}
-	if (!(uuidToFilename[pickedBlocks] == pickedBlocks))
-	{
-		emit selectionName(uuidToFilename[pickedBlocks], pickedBlocks, pcksave[uuidToFilename[pickedBlocks]]);
+		QFileInfo file(uuidToFilename[pickedBlocks].c_str());
+		pqPipelineSource * source = findPipelineSource("EpcDocument");
+		if (source)
+		{
+			pqActiveObjects *activeObjects = &pqActiveObjects::instance();
+			activeObjects->setActiveSource(source);
+		}
+		if (!(uuidToFilename[pickedBlocks] == pickedBlocks))
+		{
+			emit selectionName(uuidToFilename[pickedBlocks], pickedBlocks, pcksave[uuidToFilename[pickedBlocks]]);
+		}
 	}
 }
 
@@ -153,7 +153,6 @@ void PQSelectionPanel::onItemCheckedUnchecked(QTreeWidgetItem * item, int column
 			}
 			else
 			{
-				bool removeOK = false;
 				// Property exist
 				if (uuidItem[uuid]->childCount() > 0 && mapUuidWithProperty[uuid] != "")
 				{
@@ -168,7 +167,6 @@ void PQSelectionPanel::onItemCheckedUnchecked(QTreeWidgetItem * item, int column
 				std::vector<std::string>::iterator it_Visible = std::find(uuidVisible.begin(), uuidVisible.end(), uuid);
 				if (it_Visible != uuidVisible.end())
 				{
-					removeOK = true;
 					uuidVisible.erase(std::find(uuidVisible.begin(), uuidVisible.end(), uuid));
 					this->removeUuid(uuid);
 				}
@@ -178,19 +176,41 @@ void PQSelectionPanel::onItemCheckedUnchecked(QTreeWidgetItem * item, int column
 }
 
 //----------------------------------------------------------------------------
-void PQSelectionPanel::deletePipelineSource(pqPipelineSource* pipe)
+void PQSelectionPanel::deleteTreeView()
 {
-	for (unsigned int fileNameInd = 0; fileNameInd < allFileName.size(); ++fileNameInd)
-	{
-		QFileInfo file(allFileName[fileNameInd].c_str());
-		const char* toto = file.fileName().toStdString().c_str();
-		pqPipelineSource * source = findPipelineSource(file.fileName().toStdString().c_str());
-		if (!source)
-		{
-			this->deleteFileName(allFileName[fileNameInd]);
+	treeWidget->clear();
 
-		}
-	}
+	indexFile = 0;
+	radioButtonCount = 0;
+	allFileName.clear();
+	uuidToFilename.clear();
+	filenameToUuids.clear();
+	filenameToUuidsPartial.clear();
+
+	uuidItem.clear();
+	itemUuid.clear();
+	uuidParentItem.clear();
+
+	mapUuidProperty.clear();
+	mapUuidWithProperty.clear();
+
+	displayUuid.clear();
+
+	mapRadioButtonNo.clear();
+
+	mapUuidParentButtonInvisible.clear();
+
+	pickedBlocks = "";
+	uuidVisible.clear();
+
+	uuidCheckable.clear();
+
+	pcksave.clear();
+	uuidParentGroupButton.clear();
+	radioButtonToUuid.clear();
+
+	addTreeRoot("root", "epcdocument");
+
 }
 
 //----------------------------------------------------------------------------
@@ -229,66 +249,65 @@ bool PQSelectionPanel::canAddFile(const char* fileName)
 //----------------------------------------------------------------------------
 void PQSelectionPanel::addFileName(const std::string & fileName)
 {
-	common::EpcDocument *pck = nullptr;
-	
-	try{
-		pck = new common::EpcDocument(fileName, common::EpcDocument::READ_ONLY);
-	}
-	catch (const std::exception & e)
+	if (std::find(allFileName.begin(), allFileName.end(),fileName)==allFileName.end())
 	{
-		cout << "EXCEPTION in fesapi when reading file: " << fileName << " : " << e.what();
-	}
-	
-	std::string result = "";
-	
-	try{
-		 result = pck->deserialize();
-	}
-	catch (const std::exception & e)
-	{
-		cout << "EXCEPTION in fesapi when deserialize file: " << fileName << " : " << e.what();
-	}
-	
-	if (result.empty())
-	{
-		allFileName.push_back(fileName);
-		uuidToFilename[fileName] = fileName;
-
-		pcksave[fileName] = pck;
-
-		// add treeView polylines representation
-		addTreePolylines(fileName, pck->getFaultPolylineSetRepSet());
-		addTreePolylines(fileName, pck->getHorizonPolylineSetRepSet());
-
-		// add treeView triangulated representation
-		addTreeTriangulated(fileName, pck->getAllTriangulatedSetRepSet());
-
-		// add treeView Grid2D representation
-		addTreeGrid2D(fileName, pck->getHorizonGrid2dRepSet());
-
-		// add treeView ijkGrid representation
-		addTreeIjkGrid(fileName, pck->getIjkGridRepresentationSet());
-
-		// add treeView UnstrucutredGrid representation
-		addTreeUnstructuredGrid(fileName, pck->getUnstructuredGridRepresentationSet());
-
-		// add treeView UnstrucutredGrid representation
-		addTreeWellboreTrajectory(fileName, pck->getWellboreTrajectoryRepresentationSet());
-
-		// add treeView Sub-representation
-		addTreeSubRepresentation(fileName, pck->getSubRepresentationSet());
-
-		++indexFile;
-
-	}
-	else
-	{
+		common::EpcDocument *pck = nullptr;
 		try{
-			pck->close();
+			pck = new common::EpcDocument(fileName, common::EpcDocument::READ_ONLY);
 		}
 		catch (const std::exception & e)
 		{
-			cout << "EXCEPTION in fesapi when closing file " << fileName << " : " << e.what();
+			cout << "EXCEPTION in fesapi when reading file: " << fileName << " : " << e.what();
+		}
+		std::string result = "";
+		try{
+			result = pck->deserialize();
+		}
+		catch (const std::exception & e)
+		{
+			cout << "EXCEPTION in fesapi when deserialize file: " << fileName << " : " << e.what();
+		}
+		if (result.empty())
+		{
+			allFileName.push_back(fileName);
+			uuidToFilename[fileName] = fileName;
+
+			pcksave[fileName] = pck;
+
+			// add treeView polylines representation
+			addTreePolylines(fileName, pck->getFaultPolylineSetRepSet());
+			addTreePolylines(fileName, pck->getHorizonPolylineSetRepSet());
+
+			// add treeView triangulated representation
+			addTreeTriangulated(fileName, pck->getAllTriangulatedSetRepSet());
+
+			// add treeView Grid2D representation
+			addTreeGrid2D(fileName, pck->getHorizonGrid2dRepSet());
+
+			// add treeView ijkGrid representation
+			addTreeIjkGrid(fileName, pck->getIjkGridRepresentationSet());
+
+			// add treeView UnstrucutredGrid representation
+			addTreeUnstructuredGrid(fileName, pck->getUnstructuredGridRepresentationSet());
+
+			// add treeView UnstrucutredGrid representation
+			addTreeWellboreTrajectory(fileName, pck->getWellboreTrajectoryRepresentationSet());
+
+			// add treeView Sub-representation
+			addTreeSubRepresentation(fileName, pck->getSubRepresentationSet());
+
+			++indexFile;
+
+		}
+		else
+		{
+			try{
+				pck->close();
+			}
+			catch (const std::exception & e)
+			{
+				cout << "EXCEPTION in fesapi when closing file " << fileName << " : " << e.what();
+			}
 		}
 	}
 }
@@ -369,7 +388,7 @@ void PQSelectionPanel::addTreePolylines(const std::string & fileName, std::vecto
 {
 	QIcon icon;
 	icon.addFile(QString::fromUtf8(":Polyline.png"), QSize(), QIcon::Normal, QIcon::Off);
-	for (unsigned int polylineIter = 0; polylineIter < polylines.size(); ++polylineIter)
+	for (size_t polylineIter = 0; polylineIter < polylines.size(); ++polylineIter)
 	{
 		bool propertyTreeView = false;
 
@@ -408,7 +427,7 @@ void PQSelectionPanel::addTreeTriangulated(const std::string & fileName, std::ve
 {
 	QIcon icon;
 	icon.addFile(QString::fromUtf8(":Triangulated.png"), QSize(), QIcon::Normal, QIcon::Off);
-	for (unsigned int triangulatedIter = 0; triangulatedIter < triangulated.size(); ++triangulatedIter)
+	for (size_t triangulatedIter = 0; triangulatedIter < triangulated.size(); ++triangulatedIter)
 	{
 		bool propertyTreeView = false;
 
@@ -449,7 +468,7 @@ void PQSelectionPanel::addTreeGrid2D(const std::string & fileName, std::vector<r
 {
 	QIcon icon;
 	icon.addFile(QString::fromUtf8(":Grid2D.png"), QSize(), QIcon::Normal, QIcon::Off);
-	for (unsigned int grid2DIter = 0; grid2DIter < grid2D.size(); ++grid2DIter)
+	for (size_t grid2DIter = 0; grid2DIter < grid2D.size(); ++grid2DIter)
 	{
 		bool propertyTreeView = false;
 
@@ -489,29 +508,30 @@ void PQSelectionPanel::addTreeIjkGrid(const std::string & fileName, std::vector<
 {
 	QIcon icon;
 	icon.addFile(QString::fromUtf8(":IjkGrid.png"), QSize(), QIcon::Normal, QIcon::Off);
-	for (unsigned int ijkGridIter = 0; ijkGridIter < ijkGrid.size(); ++ijkGridIter)
+	for (size_t ijkGridIter = 0; ijkGridIter < ijkGrid.size(); ++ijkGridIter)
 	{
 		bool propertyTreeView = false;
-
 		if (ijkGrid[ijkGridIter]->getGeometryKind() != resqml2_0_1::AbstractIjkGridRepresentation::NO_GEOMETRY)
 		{
 			std::string uuidParent = addFeatInterp(fileName, ijkGrid[ijkGridIter]->getInterpretation());
-			if (ijkGrid[ijkGridIter]->isPartial()){
-				if (uuidItem.count(ijkGrid[ijkGridIter]->getUuid())>0){
+			if (ijkGrid[ijkGridIter]->isPartial())
+			{
+				if (uuidItem.count(ijkGrid[ijkGridIter]->getUuid())>0)
+				{
 					filenameToUuidsPartial[fileName].push_back(ijkGrid[ijkGridIter]->getUuid());
-
 					propertyTreeView = true;
 				}
-				else{
+				else
+				{
 					QMessageBox msgBox;
 					msgBox.setIcon(QMessageBox::Information);
 					msgBox.setText(QString(("Partial UUID: " + ijkGrid[ijkGridIter]->getUuid() + " and the complete UUID not found.").c_str()));
 					msgBox.exec();
 				}
 			}
-			else{
+			else
+			{
 				uuidToFilename[ijkGrid[ijkGridIter]->getUuid()] = fileName;
-
 				addTreeRepresentation(uuidItem[uuidParent],
 						ijkGrid[ijkGridIter]->getTitle().c_str(),
 						ijkGrid[ijkGridIter]->getUuid(),
@@ -519,7 +539,8 @@ void PQSelectionPanel::addTreeIjkGrid(const std::string & fileName, std::vector<
 				);
 				propertyTreeView = true;
 			}
-			if (propertyTreeView){
+			if (propertyTreeView)
+			{
 				std::vector<resqml2::AbstractValuesProperty*> valuesPropertySet = ijkGrid[ijkGridIter]->getValuesPropertySet();
 				addTreeProperty(uuidItem[ijkGrid[ijkGridIter]->getUuid()], valuesPropertySet);
 			}
@@ -532,7 +553,7 @@ void PQSelectionPanel::addTreeUnstructuredGrid(const std::string & fileName, std
 {
 	QIcon icon;
 	icon.addFile(QString::fromUtf8(":UnstructuredGrid.png"), QSize(), QIcon::Normal, QIcon::Off);
-	for (unsigned int unstructuredGridIter = 0; unstructuredGridIter < unstructuredGrid.size(); ++unstructuredGridIter)
+	for (size_t unstructuredGridIter = 0; unstructuredGridIter < unstructuredGrid.size(); ++unstructuredGridIter)
 	{
 		bool propertyTreeView = false;
 
@@ -572,7 +593,7 @@ void PQSelectionPanel::addTreeWellboreTrajectory(const std::string & fileName, s
 {
 	QIcon icon;
 	icon.addFile(QString::fromUtf8(":WellTraj.png"), QSize(), QIcon::Normal, QIcon::Off);
-	for (unsigned int WellboreTrajectoryIter = 0; WellboreTrajectoryIter < WellboreTrajectory.size(); ++WellboreTrajectoryIter)
+	for (size_t WellboreTrajectoryIter = 0; WellboreTrajectoryIter < WellboreTrajectory.size(); ++WellboreTrajectoryIter)
 	{
 		bool propertyTreeView = false;
 
@@ -672,8 +693,8 @@ void PQSelectionPanel::addTreeRepresentation(QTreeWidgetItem *parent,
 		sstm << " already exists: uuid (" << uuid << ")";
 		auto test = fespp[epcDocument[uuid]];
 		fespp[epcDocument[uuid]]->displayWarning(sstm.str());
-		*/
-		
+		 */
+
 	}
 }
 
@@ -694,7 +715,7 @@ void PQSelectionPanel::addTreeProperty(QTreeWidgetItem *parent, std::vector<resq
 	radioButtonCount++;
 	mapUuidParentButtonInvisible[itemUuid[parent]] = radioButtonInvisible;
 
-	for (unsigned int i = 0; i < valuesPropertySet.size(); ++i)
+	for (size_t i = 0; i < valuesPropertySet.size(); ++i)
 	{
 		resqml2::AbstractValuesProperty* valuesProperty = valuesPropertySet[i];
 		if (valuesProperty->getXmlTag() == "ContinuousProperty" ||
@@ -736,59 +757,9 @@ void PQSelectionPanel::addTreeProperty(QTreeWidgetItem *parent, std::vector<resq
 	uuidParentGroupButton[itemUuid[parent]] = buttonGroup;
 }
 
-//----------------------------------------------------------------------------
-void PQSelectionPanel::deleteFileName(const std::string & fileName)
-{
-	std::vector<std::string> uuids = filenameToUuids[fileName];
-	for (size_t i = 0; i < uuids.size(); ++i)
-	{
-		auto uuidTest = uuids[i];
-
-		std::vector<std::string>::iterator uuidCheckable_iterator = std::find(uuidCheckable.begin(), uuidCheckable.end(), uuids[i]);
-		if (uuidCheckable_iterator != uuidCheckable.end())
-		{
-			uuidCheckable.erase(uuidCheckable_iterator);
-		}
-
-		std::vector<std::string>::iterator uuidVisible_iterator = std::find(uuidVisible.begin(), uuidVisible.end(), uuids[i]);
-		if (uuidVisible_iterator != uuidVisible.end())
-		{
-			uuidVisible.erase(uuidVisible_iterator);
-		}
-
-		itemUuid.remove(uuidItem[uuids[i]]);
-		if (uuidItem[uuids[i]]->childCount() > 0) { deleteUUID(uuidItem[uuids[i]]); }
-		else { uuidItem[uuids[i]]->setHidden(true); }
-		uuidItem.remove(uuids[i]);
-		uuidToFilename.remove(uuids[i]);
-		uuidParentItem.remove(uuids[i]);
-		mapUuidProperty.remove(uuids[i]);
-		mapUuidWithProperty.remove(uuids[i]);
-	}
-	uuids = filenameToUuidsPartial[fileName];
-	/*
-	for (unsigned int i = 0; i < uuids.size(); ++i){
-		if (partialRepresentation.count(uuids[i]) > 0){
-			partialRepresentation.remove(uuids[i]);
-		}
-	}
-	*/
-
-	filenameToUuids.remove(fileName);
-	delete uuidItem[fileName];
-
-
-	std::vector<std::string>::iterator allFileName_iterator = std::find(allFileName.begin(), allFileName.end(), fileName);
-	if (allFileName_iterator != allFileName.end())
-	{
-		allFileName.erase(allFileName_iterator);
-	}
-}
-
 //****************************************************************************
 void PQSelectionPanel::deleteUUID(QTreeWidgetItem *item)
 {
-	auto test = item->childCount();
 	for (int o = 0; item->childCount(); o++)
 	{
 		deleteUUID(item->child(0));
@@ -807,7 +778,7 @@ void PQSelectionPanel::loadUuid(std::string uuid)
 
 		PQToolsManager* manager = PQToolsManager::instance();
 		auto fesppReader = manager->getFesppReader();
-				
+
 		if (fesppReader)
 		{
 			pqActiveObjects *activeObjects = &pqActiveObjects::instance();
@@ -837,7 +808,7 @@ void PQSelectionPanel::removeUuid(std::string uuid)
 
 		PQToolsManager* manager = PQToolsManager::instance();
 		auto fesppReader = manager->getFesppReader();
-					
+
 		if (fesppReader)
 		{
 			pqActiveObjects *activeObjects = &pqActiveObjects::instance();

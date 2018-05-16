@@ -67,6 +67,11 @@ public:
 	VtkResqml2MultiBlockDataSet (const std::string & fileName, const std::string & name="", const std::string & uuid="", const std::string & uuidParent="", const int & idProc=0, const int & maxProc=0);
 
 	/**
+	* Destructor
+	*/
+	~VtkResqml2MultiBlockDataSet();
+
+	/**
 	* method : getOutput
 	* variable : --
 	* return the vtkMultiBlockDataSet.
@@ -91,7 +96,7 @@ protected:
 	vtkSmartPointer<vtkMultiBlockDataSet> vtkOutput;
 
 #if (defined(_WIN32) && _MSC_VER >= 1600)
-	std::unordered_map<std::string, infoUuid> uuidIsChildOf;
+	std::unordered_map<std::string, VtkAbstractObject::infoUuid> uuidIsChildOf;
 #else
 	std::tr1::unordered_map<std::string, VtkAbstractObject::infoUuid> uuidIsChildOf;
 #endif

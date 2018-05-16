@@ -23,6 +23,14 @@ VtkResqml2UnstructuredGrid(fileName, name, uuid, uuidParent, pckRep, pckSubRep, 
 {
 }
 
+
+//----------------------------------------------------------------------------
+VtkUnstructuredGridRepresentation::~VtkUnstructuredGridRepresentation()
+{
+	cout << "VtkUnstructuredGridRepresentation::~VtkUnstructuredGridRepresentation() " << getUuid() << "\n";
+	lastProperty = "";
+}
+
 //----------------------------------------------------------------------------
 void VtkUnstructuredGridRepresentation::createOutput(const std::string & uuid)
 {
@@ -162,7 +170,7 @@ vtkSmartPointer<vtkCellArray> VtkUnstructuredGridRepresentation::createOutputVtk
 }
 
 //----------------------------------------------------------------------------
-void VtkUnstructuredGridRepresentation::addProperty(const std::string uuidProperty, vtkDataArray* dataProperty)
+void VtkUnstructuredGridRepresentation::addProperty(const std::string & uuidProperty, vtkDataArray* dataProperty)
 {
 	vtkOutput->Modified();
 	if (uuidToVtkProperty[uuidProperty]->getSupport() == VtkProperty::typeSupport::CELLS)

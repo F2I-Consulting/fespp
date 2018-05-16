@@ -51,13 +51,18 @@ public:
 	VtkGrid2DRepresentationPoints(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, common::EpcDocument *pckRep, common::EpcDocument *pckSubRep);
 	
 	/**
+	* Destructor
+	*/
+	~VtkGrid2DRepresentationPoints();
+
+	/**
 	* method : createOutput
 	* variable : std::string uuid (grid 2D representation UUID)
 	* create the vtk objects for represent grid 2D.
 	*/
 	void createOutput(const std::string & uuid);
 
-	void addProperty(const std::string uuidProperty, vtkDataArray* dataProperty);
+	void addProperty(const std::string & uuidProperty, vtkDataArray* dataProperty);
 
 	long getAttachmentPropertyCount(const std::string & uuid, const FesppAttachmentProperty propertyUnit);
 			

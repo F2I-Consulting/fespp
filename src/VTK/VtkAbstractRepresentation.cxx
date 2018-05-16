@@ -17,6 +17,29 @@ VtkAbstractObject(fileName, name, uuid, uuidParent, idProc, maxProc), epcPackage
 	}
 }
 
+VtkAbstractRepresentation::~VtkAbstractRepresentation()
+{
+	// delete uuidToVtkProperty
+#if (defined(_WIN32) && _MSC_VER >= 1600)
+	for (std::unordered_map< std::string, VtkProperty* >::const_iterator it = uuidToVtkProperty.begin(); it != uuidToVtkProperty.end(); ++it)
+#else
+	for (std::tr1::unordered_map< std::string, VtkProperty* >::const_iterator it = uuidToVtkProperty.begin(); it != uuidToVtkProperty.end(); ++it)
+#endif
+	{
+	  delete it->second;
+	}
+	uuidToVtkProperty.clear();
+
+	if (epcPackageRepresentation != nullptr) {
+		epcPackageRepresentation = nullptr;
+	}
+
+	if (epcPackageSubRepresentation != nullptr) {
+		epcPackageSubRepresentation = nullptr;
+	}
+
+	points = NULL;
+}
 //----------------------------------------------------------------------------
 void VtkAbstractRepresentation::createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, const Resqml2Type & resqmlType)
 {

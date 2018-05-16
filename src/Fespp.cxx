@@ -17,7 +17,8 @@
 #include <exception>
 #include <iostream>
 #include <utility>
-#include <vector>
+#include <algorithm>
+
 
 #ifndef MPICH_IGNORE_CXX_SEEK
 #define MPICH_IGNORE_CXX_SEEK
@@ -34,7 +35,8 @@ FileName(nullptr), Controller(nullptr), loadedFile(false), idProc(0), nbProc(0),
 	SetNumberOfInputPorts(0);
 	SetNumberOfOutputPorts(1);
 
-	this->subFileList = vtkDataArraySelection::New();
+	loadedFile = false;
+
 	this->uuidList = vtkDataArraySelection::New();
 
 	this->SetController(vtkMultiProcessController::GetGlobalController());
@@ -45,55 +47,36 @@ FileName(nullptr), Controller(nullptr), loadedFile(false), idProc(0), nbProc(0),
 		MPI_Comm_rank(comm, &this->idProc);
 		MPI_Comm_size(comm, &this->nbProc);
 	}
+
+	countTest = 0;
+	vtkEpcDocumentSet = nullptr;
 }
 
 //----------------------------------------------------------------------------
 Fespp::~Fespp()
 {
 	SetFileName(nullptr); // Also delete FileName if not nullptr.
-	this->SetController(nullptr);
-	for (std::pair<std::string, VtkEpcDocument*> element : vtkEpcDocuments)
-		delete element.second;
-}
+	SetController(nullptr);
+	fileNameSet.clear();
+	uuidList->Delete();
+	idProc = 0;
+	nbProc = 0;
 
-//----------------------------------------------------------------------------
-int Fespp::GetsubFileListArrayStatus(const char* name)
-{
-	return (this->subFileList->ArrayIsEnabled(name));
-}
-//----------------------------------------------------------------------------
-void Fespp::SetSubFileList(const char* name, int status)
-{
-	if (status != 0)
-	{
-		this->subFileList->EnableArray(name);
+	if (vtkEpcDocumentSet != nullptr) {
+		delete vtkEpcDocumentSet;
+		vtkEpcDocumentSet = nullptr;
 	}
-	else
+	countTest = 0;
+}
+
+//----------------------------------------------------------------------------
+void Fespp::SetSubFileName(const char* name)
+{
+	if (std::find(fileNameSet.begin(), fileNameSet.end(),std::string(name))==fileNameSet.end())
 	{
-		if (this->subFileList != nullptr)
-		{
-			this->subFileList->EnableArray(name);
-		}
-		else
-			this->subFileList = vtkDataArraySelection::New();
+		fileNameSet.push_back(std::string(name));
+		openEpcDocument(name);
 	}
-	this->subFileList->Modified();
-
-	openEpcDocument(name);
-
-	this->Modified();
-}
-
-//----------------------------------------------------------------------------
-int Fespp::GetNumberOfsubFileListArrays()
-{
-	return this->subFileList->GetNumberOfArrays();
-}
-
-//----------------------------------------------------------------------------
-const char* Fespp::GetsubFileListArrayName(int index)
-{
-	return this->subFileList->GetArrayName(index);
 }
 
 //----------------------------------------------------------------------------
@@ -176,10 +159,13 @@ int Fespp::RequestInformation(
 		auto extension = stringFileName.substr(lengthFileName -3, lengthFileName);
 
 		vtkEpcDocumentSet = new VtkEpcDocumentSet(idProc, nbProc, false, true);
-		openEpcDocument(FileName);
-		if (extension=="epc")
+		if (stringFileName != "EpcDocument")
 		{
-			vtkEpcDocumentSet->visualizeFull();
+			if (extension=="epc")
+			{
+				openEpcDocument(FileName);
+				vtkEpcDocumentSet->visualizeFull();
+			}
 		}
 	}
 	return 1;
@@ -199,7 +185,7 @@ int Fespp::RequestData(vtkInformation *request,
 		vtkInformationVector *outputVector)
 {
 	auto comm = GetMPICommunicator();
-	double t1, t2;
+	double t1;
 	if (comm != MPI_COMM_NULL)
 		t1 = MPI_Wtime();
 
@@ -227,6 +213,7 @@ int Fespp::RequestData(vtkInformation *request,
 
 	if (comm != MPI_COMM_NULL)
 	{
+		double t2;
 		MPI_Barrier(comm);
 		t2 = MPI_Wtime();
 		if (this->idProc == 0)

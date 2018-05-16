@@ -62,6 +62,11 @@ public:
 	VtkWellboreTrajectoryRepresentation(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, common::EpcDocument *pckRep, common::EpcDocument *pckSubRep);
 	
 	/**
+	* Destructor
+	*/
+	~VtkWellboreTrajectoryRepresentation();
+
+	/**
 	* method : createTreeVtk
 	* variable : std::string uuid (Wellbore trajectory representation UUID)
 	* create the vtk objects for represent Wellbore trajectory (polyline + datum + text).
@@ -82,7 +87,7 @@ public:
 	*/
 	void remove(const std::string & uuid);
 
-	void addProperty(const std::string uuidProperty, vtkDataArray* dataProperty);
+	void addProperty(const std::string & uuidProperty, vtkDataArray* dataProperty);
 
 	long getAttachmentPropertyCount(const std::string & uuid, const FesppAttachmentProperty propertyUnit);
 protected:

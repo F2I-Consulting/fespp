@@ -10,7 +10,6 @@
 			</Documentation>
 
 <!--  -->
-
 			<StringVectorProperty
 				name="FileName"
 				animateable="0"
@@ -27,25 +26,12 @@
 			</Hints>
 
 <!--  -->
-
 			<StringVectorProperty
-			        name="subFileInfo"
-			        information_only="1"        
-			        default = "1">
-			        <ArraySelectionInformationHelper attribute_name="subFileList"/>
-			</StringVectorProperty>
-			<StringVectorProperty name="subFileList"
-				command="SetSubFileList" number_of_elements="0" repeat_command="1"
-				number_of_elements_per_command="2" element_types="2 0"
-				information_property="subFileInfo" label="epc subfiles list"
-				panel_visibility="advanced">
-				<ArraySelectionDomain name="array_list">
-					<RequiredProperties>
-						<Property name="subFileInfo"
-							function="ArrayList" />
-					</RequiredProperties>
-				</ArraySelectionDomain>
-				<Documentation>List epc subfile.</Documentation>
+				name="SubFileName"
+				animateable="0"
+				command="SetSubFileName"
+				number_of_elements="1"
+				panel_visibility="never">
 			</StringVectorProperty>
 			
 <!--  -->

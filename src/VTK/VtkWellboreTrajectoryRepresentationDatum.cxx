@@ -62,7 +62,7 @@ void VtkWellboreTrajectoryRepresentationDatum::createOutput(const std::string & 
 }
 
 //----------------------------------------------------------------------------
-void VtkWellboreTrajectoryRepresentationDatum::addProperty(const std::string uuidProperty, vtkDataArray* dataProperty)
+void VtkWellboreTrajectoryRepresentationDatum::addProperty(const std::string & uuidProperty, vtkDataArray* dataProperty)
 {
 	;
 }

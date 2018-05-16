@@ -26,7 +26,6 @@ void VtkWellboreTrajectoryRepresentationPolyLine::createOutput(const std::string
 	if (!subRepresentation)	{
 
 		resqml2_0_1::WellboreTrajectoryRepresentation* wellboreSetRepresentation = nullptr;
-		std::string teoto = getUuid().substr(0, 36);
 		common::AbstractObject* obj = epcPackageRepresentation->getResqmlAbstractObjectByUuid(getUuid().substr(0, 36));
 		if (obj != nullptr && obj->getXmlTag() == "WellboreTrajectoryRepresentation")
 		{
@@ -72,8 +71,15 @@ void VtkWellboreTrajectoryRepresentationPolyLine::createOutput(const std::string
 	}
 }
 
+
 //----------------------------------------------------------------------------
-void VtkWellboreTrajectoryRepresentationPolyLine::addProperty(const std::string uuidProperty, vtkDataArray* dataProperty)
+VtkWellboreTrajectoryRepresentationPolyLine::~VtkWellboreTrajectoryRepresentationPolyLine()
+{
+	lastProperty = "";
+}
+
+//----------------------------------------------------------------------------
+void VtkWellboreTrajectoryRepresentationPolyLine::addProperty(const std::string & uuidProperty, vtkDataArray* dataProperty)
 {
 	vtkOutput->Modified();
 	vtkOutput->GetPointData()->AddArray(dataProperty);

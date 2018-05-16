@@ -412,6 +412,99 @@ VtkResqml2MultiBlockDataSet(fileName, fileName, fileName, "", idProc, maxProc), 
 //----------------------------------------------------------------------------
 VtkEpcDocument::~VtkEpcDocument()
 {
+	// delete uuidToVtkGrid2DRepresentation
+#if _MSC_VER < 1600
+	for (std::tr1::unordered_map< std::string, VtkGrid2DRepresentation* >::const_iterator it = uuidToVtkGrid2DRepresentation.begin(); it != uuidToVtkGrid2DRepresentation.end(); ++it)
+#else
+	for (std::unordered_map< std::string, VtkGrid2DRepresentation* >::const_iterator it = uuidToVtkGrid2DRepresentation.begin(); it != uuidToVtkGrid2DRepresentation.end(); ++it)
+#endif
+	{
+	  delete it->second;
+	}
+	uuidToVtkGrid2DRepresentation.clear();
+
+	// delete uuidToVtkPolylineRepresentation
+#if _MSC_VER < 1600
+	for (std::tr1::unordered_map< std::string, VtkPolylineRepresentation* >::const_iterator it = uuidToVtkPolylineRepresentation.begin(); it != uuidToVtkPolylineRepresentation.end(); ++it)
+#else
+	for (std::unordered_map< std::string, VtkPolylineRepresentation* >::const_iterator it = uuidToVtkPolylineRepresentation.begin(); it != uuidToVtkPolylineRepresentation.end(); ++it)
+#endif
+	{
+	  delete it->second;
+	}
+	uuidToVtkPolylineRepresentation.clear();
+
+	// delete uuidToVtkTriangulatedRepresentation
+#if _MSC_VER < 1600
+	for (std::tr1::unordered_map< std::string, VtkTriangulatedRepresentation* >::const_iterator it = uuidToVtkTriangulatedRepresentation.begin(); it != uuidToVtkTriangulatedRepresentation.end(); ++it)
+#else
+	for (std::unordered_map< std::string, VtkTriangulatedRepresentation* >::const_iterator it = uuidToVtkTriangulatedRepresentation.begin(); it != uuidToVtkTriangulatedRepresentation.end(); ++it)
+#endif
+	{
+	  delete it->second;
+	}
+	uuidToVtkTriangulatedRepresentation.clear();
+
+	// delete uuidToVtkSetPatch
+#if _MSC_VER < 1600
+	for (std::tr1::unordered_map< std::string, VtkSetPatch* >::const_iterator it = uuidToVtkSetPatch.begin(); it != uuidToVtkSetPatch.end(); ++it)
+#else
+	for (std::unordered_map< std::string, VtkSetPatch* >::const_iterator it = uuidToVtkSetPatch.begin(); it != uuidToVtkSetPatch.end(); ++it)
+#endif
+	{
+	  delete it->second;
+	}
+	uuidToVtkSetPatch.clear();
+
+	// delete uuidToVtkWellboreTrajectoryRepresentation
+#if _MSC_VER < 1600
+	for (std::tr1::unordered_map< std::string, VtkWellboreTrajectoryRepresentation* >::const_iterator it = uuidToVtkWellboreTrajectoryRepresentation.begin(); it != uuidToVtkWellboreTrajectoryRepresentation.end(); ++it)
+#else
+	for (std::unordered_map< std::string, VtkWellboreTrajectoryRepresentation* >::const_iterator it = uuidToVtkWellboreTrajectoryRepresentation.begin(); it != uuidToVtkWellboreTrajectoryRepresentation.end(); ++it)
+#endif
+	{
+	  delete it->second;
+	}
+	uuidToVtkWellboreTrajectoryRepresentation.clear();
+
+	// delete uuidToVtkIjkGridRepresentation
+#if _MSC_VER < 1600
+	for (std::tr1::unordered_map< std::string, VtkIjkGridRepresentation* >::const_iterator it = uuidToVtkIjkGridRepresentation.begin(); it != uuidToVtkIjkGridRepresentation.end(); ++it)
+#else
+	for (std::unordered_map< std::string, VtkIjkGridRepresentation* >::const_iterator it = uuidToVtkIjkGridRepresentation.begin(); it != uuidToVtkIjkGridRepresentation.end(); ++it)
+#endif
+	{
+	  delete it->second;
+	}
+	uuidToVtkIjkGridRepresentation.clear();
+
+	// delete uuidToVtkUnstructuredGridRepresentation
+#if _MSC_VER < 1600
+	for (std::tr1::unordered_map< std::string, VtkUnstructuredGridRepresentation* >::const_iterator it = uuidToVtkUnstructuredGridRepresentation.begin(); it != uuidToVtkUnstructuredGridRepresentation.end(); ++it)
+#else
+	for (std::unordered_map< std::string, VtkUnstructuredGridRepresentation* >::const_iterator it = uuidToVtkUnstructuredGridRepresentation.begin(); it != uuidToVtkUnstructuredGridRepresentation.end(); ++it)
+#endif
+	{
+	  delete it->second;
+	}
+	uuidToVtkUnstructuredGridRepresentation.clear();
+
+	// delete uuidToVtkPartialRepresentation
+#if _MSC_VER < 1600
+	for (std::tr1::unordered_map< std::string, VtkPartialRepresentation* >::const_iterator it = uuidToVtkPartialRepresentation.begin(); it != uuidToVtkPartialRepresentation.end(); ++it)
+#else
+	for (std::unordered_map< std::string, VtkPartialRepresentation* >::const_iterator it = uuidToVtkPartialRepresentation.begin(); it != uuidToVtkPartialRepresentation.end(); ++it)
+#endif
+	{
+	  delete it->second;
+	}
+	uuidToVtkPartialRepresentation.clear();
+
+	uuidPartialRep.clear();
+	uuidRep.clear();
+
+	epcSet = nullptr;
+
 	epcPackage->close();
 }
 
@@ -918,6 +1011,28 @@ void VtkEpcDocument::remove(const std::string & uuid)
 			}
 			break;
 		}
+		case Resqml2Type::SUB_REP:
+		{
+			if (uuidIsChildOf[uuidIsChildOf[uuid].parent].parentType == Resqml2Type::IJK_GRID)
+			{
+				uuidToVtkIjkGridRepresentation[uuidIsChildOf[uuidIsChildOf[uuid].parent].uuid]->remove(uuid);
+			}
+			if (uuidIsChildOf[uuidIsChildOf[uuid].parent].parentType == Resqml2Type::UNSTRUC_GRID)
+			{
+				uuidToVtkUnstructuredGridRepresentation[uuidIsChildOf[uuidIsChildOf[uuid].parent].uuid]->remove(uuid);
+			}
+			if (uuidIsChildOf[uuidIsChildOf[uuid].parent].parentType == Resqml2Type::PARTIAL)
+			{
+				uuidToVtkPartialRepresentation[uuidIsChildOf[uuidIsChildOf[uuid].parent].uuid]->remove(uuid);
+			}
+			if (uuid == uuidtoAttach)
+			{
+				this->detach();
+				attachUuids.erase(std::find(attachUuids.begin(), attachUuids.end(), uuid));
+				this->attach();
+			}
+			break;
+		}
 		case Resqml2Type::PARTIAL:
 		{
 			uuidToVtkPartialRepresentation[uuidtoAttach]->remove(uuid);
@@ -1032,7 +1147,7 @@ void VtkEpcDocument::attach()
 }
 
 //----------------------------------------------------------------------------
-void VtkEpcDocument::addProperty(const std::string uuidProperty, vtkDataArray* dataProperty)
+void VtkEpcDocument::addProperty(const std::string & uuidProperty, vtkDataArray* dataProperty)
 {
 	switch (uuidIsChildOf[uuidProperty].myType)
 	{

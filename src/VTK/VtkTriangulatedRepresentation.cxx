@@ -19,6 +19,14 @@ VtkResqml2PolyData(fileName, name, uuid, uuidParent, pckRep, pckSubRep), patchIn
 }
 
 //----------------------------------------------------------------------------
+VtkTriangulatedRepresentation::~VtkTriangulatedRepresentation()
+{
+	cout << "VtkTriangulatedRepresentation::~VtkTriangulatedRepresentation() " << getUuid() << "\n";
+	patchIndex = 0;
+	lastProperty = "";
+}
+
+//----------------------------------------------------------------------------
 void VtkTriangulatedRepresentation::createOutput(const std::string &uuid)
 {
 	if (!subRepresentation)	{
@@ -34,7 +42,6 @@ void VtkTriangulatedRepresentation::createOutput(const std::string &uuid)
 		{
 			vtkOutput = vtkSmartPointer<vtkPolyData>::New();
 
-			unsigned int countPatch = triangulatedSetRepresentation->getPatchCount();
 			// POINT
 			vtkSmartPointer<vtkPoints> triangulatedRepresentationPoints = vtkSmartPointer<vtkPoints>::New();
 
@@ -75,7 +82,7 @@ void VtkTriangulatedRepresentation::createOutput(const std::string &uuid)
 }
 
 //----------------------------------------------------------------------------
-void VtkTriangulatedRepresentation::addProperty(const std::string uuidProperty, vtkDataArray* dataProperty)
+void VtkTriangulatedRepresentation::addProperty(const std::string & uuidProperty, vtkDataArray* dataProperty)
 {
 	vtkOutput->Modified();
 	vtkOutput->GetPointData()->AddArray(dataProperty);

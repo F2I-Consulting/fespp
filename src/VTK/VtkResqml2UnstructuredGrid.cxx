@@ -9,6 +9,12 @@ VtkResqml2UnstructuredGrid::VtkResqml2UnstructuredGrid(const std::string & fileN
 }
 
 //----------------------------------------------------------------------------
+VtkResqml2UnstructuredGrid::~VtkResqml2UnstructuredGrid()
+{
+	vtkOutput = NULL;
+}
+
+//----------------------------------------------------------------------------
 vtkSmartPointer<vtkUnstructuredGrid> VtkResqml2UnstructuredGrid::getOutput() const
 {
 	return vtkOutput;
