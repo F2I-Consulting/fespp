@@ -76,8 +76,6 @@ pqPropertiesPanel* getpqPropertiesPanel()
 	}
 	return panel;
 }
-
-
 }
 
 //----------------------------------------------------------------------------
@@ -99,7 +97,11 @@ void PQSelectionPanel::constructor()
 
 	treeWidget->header()->setStretchLastSection(false);
 	treeWidget->header()->resizeSection(1, 20);
+#if QT_VERSION >= 0x050000
 	treeWidget->header()->setSectionResizeMode(0, QHeaderView::Stretch);
+#else
+	treeWidget->header()->setResizeMode(0, QHeaderView::Stretch);
+#endif
 	treeWidget->expandToDepth(0);
 	treeWidget->header()->close();
 
@@ -845,7 +847,7 @@ pqPipelineSource * PQSelectionPanel::findPipelineSource(const char *SMName)
 	{
 		if (strcmp(s->getSMName().toStdString().c_str(), SMName) == 0) return s;
 	}
-	return NULL;
+	return nullptr;
 }
 
 //----------------------------------------------------------------------------
