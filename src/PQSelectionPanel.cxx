@@ -153,7 +153,6 @@ void PQSelectionPanel::onItemCheckedUnchecked(QTreeWidgetItem * item, int column
 			}
 			else
 			{
-				bool removeOK = false;
 				// Property exist
 				if (uuidItem[uuid]->childCount() > 0 && mapUuidWithProperty[uuid] != "")
 				{
@@ -168,7 +167,6 @@ void PQSelectionPanel::onItemCheckedUnchecked(QTreeWidgetItem * item, int column
 				std::vector<std::string>::iterator it_Visible = std::find(uuidVisible.begin(), uuidVisible.end(), uuid);
 				if (it_Visible != uuidVisible.end())
 				{
-					removeOK = true;
 					uuidVisible.erase(std::find(uuidVisible.begin(), uuidVisible.end(), uuid));
 					this->removeUuid(uuid);
 				}
@@ -762,11 +760,8 @@ void PQSelectionPanel::addTreeProperty(QTreeWidgetItem *parent, std::vector<resq
 //****************************************************************************
 void PQSelectionPanel::deleteUUID(QTreeWidgetItem *item)
 {
-	cout <<" void PQSelectionPanel::deleteUUID(QTreeWidgetItem *item) \n";
-	cout <<" void PQSelectionPanel::deleteUUID(QTreeWidgetItem *item) child = " <<  item->childCount() << "\n";
 	for (int o = 0; item->childCount(); o++)
 	{
-		cout << "vhild n = " << o << "\n";
 		deleteUUID(item->child(0));
 	}
 	delete item;

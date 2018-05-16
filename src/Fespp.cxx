@@ -185,7 +185,7 @@ int Fespp::RequestData(vtkInformation *request,
 		vtkInformationVector *outputVector)
 {
 	auto comm = GetMPICommunicator();
-	double t1, t2;
+	double t1;
 	if (comm != MPI_COMM_NULL)
 		t1 = MPI_Wtime();
 
@@ -213,6 +213,7 @@ int Fespp::RequestData(vtkInformation *request,
 
 	if (comm != MPI_COMM_NULL)
 	{
+		double t2;
 		MPI_Barrier(comm);
 		t2 = MPI_Wtime();
 		if (this->idProc == 0)

@@ -205,9 +205,10 @@ pqView* PQToolsManager::getFesppView()
 QWidget* PQToolsManager::getMainWindow()
 {
 	foreach (QWidget* topWidget, QApplication::topLevelWidgets())
-								  {
+	{
 		if (qobject_cast<QMainWindow*>(topWidget))
 			return topWidget;
+	}
 
 	return nullptr;
 }
