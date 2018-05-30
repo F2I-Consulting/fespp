@@ -115,14 +115,13 @@ void PQDataLoadManager::setupPipeline()
 			pqActiveObjects *activeObjects = &pqActiveObjects::instance();
 			activeObjects->setActiveSource(fesppReader);
 
-			manager->newFile(epcFiles.toStdString().c_str());
-
 			// add file to property
 			vtkSMProxy* fesppReaderProxy = fesppReader->getProxy();
-//			vtkSMPropertyHelper( fesppReaderProxy, "subFileList" ).SetStatus(epcFiles.toStdString().c_str(),1);
 			vtkSMPropertyHelper( fesppReaderProxy, "SubFileName" ).Set(epcFiles.toStdString().c_str());
 
 			fesppReaderProxy->UpdateSelfAndAllInputs();
+
+			manager->newFile(epcFiles.toStdString().c_str());
 		}
 	}
 	END_UNDO_SET();

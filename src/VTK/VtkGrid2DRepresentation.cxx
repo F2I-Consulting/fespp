@@ -52,7 +52,7 @@ VtkGrid2DRepresentation::~VtkGrid2DRepresentation()
 }
 
 //----------------------------------------------------------------------------
-void VtkGrid2DRepresentation::createTreeVtk(const std::string & uuid, const std::string & uuidParent, const std::string & name, const Resqml2Type & type)
+void VtkGrid2DRepresentation::createTreeVtk(const std::string & uuid, const std::string & uuidParent, const std::string & name, const VtkEpcTools::Resqml2Type & type)
 {
 	if (uuid != getUuid())
 	{
@@ -113,7 +113,7 @@ void VtkGrid2DRepresentation::addProperty(const std::string & uuidProperty, vtkD
 	grid2DPoints->addProperty(uuidProperty, dataProperty);
 }
 
-long VtkGrid2DRepresentation::getAttachmentPropertyCount(const std::string & uuid, const FesppAttachmentProperty propertyUnit)
+long VtkGrid2DRepresentation::getAttachmentPropertyCount(const std::string & uuid, const VtkEpcTools::FesppAttachmentProperty propertyUnit)
 {
 	return grid2DPoints->getAttachmentPropertyCount(uuid, propertyUnit);
 }

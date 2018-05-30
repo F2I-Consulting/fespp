@@ -58,38 +58,38 @@ void VtkPartialRepresentation::visualize(const std::string & uuid)
 			if (obj->getXmlTag() == "PolylineSetRepresentation") {
 				resqml2_0_1::PolylineSetRepresentation* polylineSetRepresentation = static_cast<resqml2_0_1::PolylineSetRepresentation*>(obj);
 				valuesPropertySet = polylineSetRepresentation->getValuesPropertySet();
-				pointCount = vtkEpcDocumentSource->getAttachmentPropertyCount(vtkPartialReprUuid, VtkAbstractObject::FesppAttachmentProperty::POINTS);
+				pointCount = vtkEpcDocumentSource->getAttachmentPropertyCount(vtkPartialReprUuid, VtkEpcTools::POINTS);
 			}
 			else {
 				if (obj->getXmlTag() == "IjkGridRepresentation" || obj->getXmlTag() == "TruncatedIjkGridRepresentation") {
 					resqml2_0_1::AbstractIjkGridRepresentation* ijkGridRepresentation = static_cast<resqml2_0_1::AbstractIjkGridRepresentation*>(obj);
 					valuesPropertySet = ijkGridRepresentation->getValuesPropertySet();
-					cellCount = vtkEpcDocumentSource->getAttachmentPropertyCount(vtkPartialReprUuid, VtkAbstractObject::FesppAttachmentProperty::CELLS);
+					cellCount = vtkEpcDocumentSource->getAttachmentPropertyCount(vtkPartialReprUuid, VtkEpcTools::CELLS);
 				}			
 				else {
 					if (obj->getXmlTag() == "TriangulatedSetRepresentation") {
 						resqml2_0_1::TriangulatedSetRepresentation* triangulatedSetRepresentation = static_cast<resqml2_0_1::TriangulatedSetRepresentation*>(obj);
 						valuesPropertySet = triangulatedSetRepresentation->getValuesPropertySet();
-						pointCount = vtkEpcDocumentSource->getAttachmentPropertyCount(vtkPartialReprUuid, VtkAbstractObject::FesppAttachmentProperty::POINTS);
+						pointCount = vtkEpcDocumentSource->getAttachmentPropertyCount(vtkPartialReprUuid, VtkEpcTools::POINTS);
 					}
 					else {
 						if (obj->getXmlTag() == "UnstructuredGridRepresentation") {
 							resqml2_0_1::UnstructuredGridRepresentation* unstructuredGridRep = static_cast<resqml2_0_1::UnstructuredGridRepresentation*>(obj);
 							valuesPropertySet = unstructuredGridRep->getValuesPropertySet();
-							pointCount = vtkEpcDocumentSource->getAttachmentPropertyCount(vtkPartialReprUuid, VtkAbstractObject::FesppAttachmentProperty::POINTS);
-							cellCount = vtkEpcDocumentSource->getAttachmentPropertyCount(vtkPartialReprUuid, VtkAbstractObject::FesppAttachmentProperty::CELLS);
+							pointCount = vtkEpcDocumentSource->getAttachmentPropertyCount(vtkPartialReprUuid, VtkEpcTools::POINTS);
+							cellCount = vtkEpcDocumentSource->getAttachmentPropertyCount(vtkPartialReprUuid, VtkEpcTools::CELLS);
 						}
 						else {
 							if (obj->getXmlTag() == "Grid2dRepresentation") {
 								resqml2_0_1::Grid2dRepresentation* grid2dRepresentation = static_cast<resqml2_0_1::Grid2dRepresentation*>(obj);
 								valuesPropertySet = grid2dRepresentation->getValuesPropertySet();
-								pointCount = vtkEpcDocumentSource->getAttachmentPropertyCount(vtkPartialReprUuid, VtkAbstractObject::FesppAttachmentProperty::POINTS);
+								pointCount = vtkEpcDocumentSource->getAttachmentPropertyCount(vtkPartialReprUuid, VtkEpcTools::POINTS);
 							}
 							else {
 								if (obj->getXmlTag() == "WellboreTrajectoryRepresentation") {
 									resqml2_0_1::WellboreTrajectoryRepresentation* wellboreTrajectoryRepresentation = static_cast<resqml2_0_1::WellboreTrajectoryRepresentation*>(obj);
 									valuesPropertySet = wellboreTrajectoryRepresentation->getValuesPropertySet();
-									pointCount = vtkEpcDocumentSource->getAttachmentPropertyCount(vtkPartialReprUuid, VtkAbstractObject::FesppAttachmentProperty::POINTS);
+									pointCount = vtkEpcDocumentSource->getAttachmentPropertyCount(vtkPartialReprUuid, VtkEpcTools::POINTS);
 								}
 							}
 						}
@@ -103,9 +103,9 @@ void VtkPartialRepresentation::visualize(const std::string & uuid)
 }
 	
 //----------------------------------------------------------------------------
-void VtkPartialRepresentation::createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, const VtkAbstractObject::Resqml2Type & resqmlType)
+void VtkPartialRepresentation::createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, const VtkEpcTools::Resqml2Type & resqmlType)
 {
-	if (resqmlType == VtkAbstractObject::Resqml2Type::SUB_REP )
+	if (resqmlType == VtkEpcTools::SUB_REP )
 	{
 		;
 	}
@@ -120,7 +120,7 @@ void VtkPartialRepresentation::remove(const std::string & uuid)
 }
 
 //----------------------------------------------------------------------------
-VtkAbstractObject::Resqml2Type VtkPartialRepresentation::getType()
+VtkEpcTools::Resqml2Type VtkPartialRepresentation::getType()
 {
 	return vtkEpcDocumentSource->getType(vtkPartialReprUuid);
 }

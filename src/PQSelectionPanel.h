@@ -95,8 +95,6 @@ public:
 	*/
 	void addFileName(const std::string & fileName);
 
-	bool canAddFile(const char* fileName);
-
 	void uuidKO(const std::string & uuid);
 
 	/**
@@ -235,14 +233,6 @@ private:
 	QMap<int, std::string> mapRadioButtonNo;
 	QMap<std::string, QRadioButton*> mapUuidParentButtonInvisible;
 
-	// hide/show block
-	std::string pickedBlocks;
-	std::vector<std::string> uuidVisible;
-//	std::vector<std::string> uuidInvisible;
-
-	std::vector<std::string> uuidCheckable;
-
-//	QPointer<pqOutputPort> OutputPort;
 
 	QMap<std::string, common::EpcDocument *> pcksave;
 

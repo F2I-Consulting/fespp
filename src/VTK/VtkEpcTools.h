@@ -32,41 +32,23 @@ The fact that you are presently reading this means that you have had
 knowledge of the CeCILL license and that you accept its terms.
 -----------------------------------------------------------------------*/
 
-#ifndef __VtkWellboreTrajectoryRepresentationDatum_h
-#define __VtkWellboreTrajectoryRepresentationDatum_h
+#pragma once
 
-#include "VtkResqml2UnstructuredGrid.h"
+// include system
+#include <string>
 
-namespace resqml2_0_1
+namespace VtkEpcTools
 {
-	class AbstractValuesProperty;
+	enum Resqml2Object {NONE=0, FAULT=1, HORIZON=2};
+	enum FesppAttachmentProperty { POINTS = 0, CELLS = 1 };
+	enum modeVtkEpc {TreeView=0, Representation=1, Both=2};
+	enum Resqml2Type { EPC_DOC = 0, FEATURE = 1, INTERPRETATION = 2, POLYLINE_SET = 3, TRIANGULATED_SET = 4, POLYLINE = 5, TRIANGULATED = 6, IJK_GRID = 7, GRID_2D = 8, PROPERTY = 9, UNSTRUC_GRID = 10, WELL_TRAJ = 11, PARTIAL = 12, SUB_REP = 13 };
+
+	typedef struct{
+		std::string	uuid;
+		std::string	parent;
+		Resqml2Type myType;
+		Resqml2Type parentType;
+	} infoUuid;
+
 }
-
-namespace common
-{
-	class EpcDocument;
-}
-
-class VtkWellboreTrajectoryRepresentationDatum : public VtkResqml2UnstructuredGrid
-{
-public:
-	/**
-	* Constructor
-	*/
-	VtkWellboreTrajectoryRepresentationDatum(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, common::EpcDocument *pckRep, common::EpcDocument *pckSubRep);
-	
-	/**
-	* method : createOutput
-	* variable : std::string uuid (Wellbore trajectory representation UUID)
-	* create the vtk object for represent Wellbore trajectory Datum.
-	*/
-	void createOutput(const std::string & uuid);
-	
-	void addProperty(const std::string & uuidProperty, vtkDataArray* dataProperty);
-
-	long getAttachmentPropertyCount(const std::string & uuid, const VtkEpcTools::FesppAttachmentProperty propertyUnit);
-protected:
-
-private:
-};
-#endif

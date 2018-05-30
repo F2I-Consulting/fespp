@@ -1,7 +1,10 @@
 ﻿#include "VtkEpcDocumentSet.h"
+#include "VtkEpcDocument.h"
 
 // include Vtk
 #include <vtkInformation.h>
+#include <vtkSmartPointer.h>
+#include <vtkMultiBlockDataSet.h>
 
 // include system
 #include <algorithm>
@@ -9,9 +12,20 @@
 
 
 //----------------------------------------------------------------------------
-VtkEpcDocumentSet::VtkEpcDocumentSet(const int & idProc, const int & maxProc, bool tree, bool visu) :
-procRank(idProc), nbProc(maxProc), 	treeRep(tree), visualization(visu)
+VtkEpcDocumentSet::VtkEpcDocumentSet(const int & idProc, const int & maxProc, const VtkEpcTools::modeVtkEpc & mode) :
+procRank(idProc), nbProc(maxProc)
 {
+	treeViewMode = false;
+	representationMode = false;
+	if (mode==VtkEpcTools::Both || mode==VtkEpcTools::TreeView)
+	{
+		treeViewMode=true;;
+	}
+	if (mode==VtkEpcTools::Both || mode==VtkEpcTools::Representation)
+	{
+		representationMode=true;
+	}
+
 	vtkOutput = vtkSmartPointer<vtkMultiBlockDataSet>::New();
 }
 
@@ -22,12 +36,12 @@ VtkEpcDocumentSet::~VtkEpcDocumentSet()
 	uuidToVtkEpc.clear();
 
 	for (std::vector< VtkEpcDocument* >::const_iterator it = vtkEpcList.begin() ; it != vtkEpcList.end(); ++it)
-   {
-     delete (*it);
-   }
+	{
+		delete (*it);
+	}
 	vtkEpcList.clear();
 
-	treeUuid.clear(); // Tree
+	treeView.clear(); // Tree
 
 	vtkOutput = NULL;
 
@@ -38,7 +52,7 @@ VtkEpcDocumentSet::~VtkEpcDocumentSet()
 //----------------------------------------------------------------------------
 void VtkEpcDocumentSet::visualize(const std::string & uuid)
 {
-	if(visualization)
+	if(representationMode)
 	{
 		uuidToVtkEpc[uuid]->visualize(uuid);
 	}
@@ -47,7 +61,7 @@ void VtkEpcDocumentSet::visualize(const std::string & uuid)
 //----------------------------------------------------------------------------
 void VtkEpcDocumentSet::visualizeFull()
 {
-	if(visualization)
+	if(representationMode)
 	{
 		for (auto &vtkEpcElem : vtkEpcList)
 		{
@@ -63,14 +77,14 @@ void VtkEpcDocumentSet::visualizeFull()
 //----------------------------------------------------------------------------
 void VtkEpcDocumentSet::unvisualize(const std::string & uuid)
 {
-	if(visualization)
+	if(representationMode)
 	{
 		uuidToVtkEpc[uuid]->remove(uuid);
 	}
 }
 
 //----------------------------------------------------------------------------
-VtkAbstractObject::Resqml2Type VtkEpcDocumentSet::getType(std::string uuid)
+VtkEpcTools::Resqml2Type VtkEpcDocumentSet::getType(std::string uuid)
 {
 	return uuidToVtkEpc[uuid]->getType(uuid);
 }
@@ -78,7 +92,8 @@ VtkAbstractObject::Resqml2Type VtkEpcDocumentSet::getType(std::string uuid)
 //----------------------------------------------------------------------------
 vtkSmartPointer<vtkMultiBlockDataSet> VtkEpcDocumentSet::getVisualization() const
 {
-
+if(representationMode)
+{
 	vtkOutput->Initialize();
 	auto index = 0;
 	for (auto i=0; i < vtkEpcList.size(); ++i)
@@ -89,6 +104,7 @@ vtkSmartPointer<vtkMultiBlockDataSet> VtkEpcDocumentSet::getVisualization() cons
 			vtkOutput->GetMetaData(index++)->Set(vtkCompositeDataSet::NAME(), vtkEpcList[i]->getFileName().c_str());
 		}
 	}
+}
 	return vtkOutput;
 }
 

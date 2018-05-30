@@ -158,7 +158,7 @@ int Fespp::RequestInformation(
 		auto lengthFileName = stringFileName.length();
 		auto extension = stringFileName.substr(lengthFileName -3, lengthFileName);
 
-		vtkEpcDocumentSet = new VtkEpcDocumentSet(idProc, nbProc, false, true);
+		vtkEpcDocumentSet = new VtkEpcDocumentSet(idProc, nbProc, VtkEpcTools::Both);
 		if (stringFileName != "EpcDocument")
 		{
 			if (extension=="epc")

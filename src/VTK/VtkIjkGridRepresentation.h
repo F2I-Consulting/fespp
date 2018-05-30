@@ -82,7 +82,7 @@ public:
 	* variable : uuid,  support property (CELLS or POINTS)
 	* return : count 
 	*/
-	long getAttachmentPropertyCount(const std::string & uuid, const FesppAttachmentProperty propertyUnit);
+	long getAttachmentPropertyCount(const std::string & uuid, const VtkEpcTools::FesppAttachmentProperty propertyUnit);
 
 	/**
 	* method : createWithPoints

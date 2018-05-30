@@ -67,7 +67,7 @@ void VtkWellboreTrajectoryRepresentationDatum::addProperty(const std::string & u
 	;
 }
 
-long VtkWellboreTrajectoryRepresentationDatum::getAttachmentPropertyCount(const std::string & uuid, const FesppAttachmentProperty propertyUnit)
+long VtkWellboreTrajectoryRepresentationDatum::getAttachmentPropertyCount(const std::string & uuid, const VtkEpcTools::FesppAttachmentProperty propertyUnit)
 {
 	return 0;
 }

@@ -184,7 +184,7 @@ void VtkIjkGridRepresentation::addProperty(const std::string & uuidProperty, vtk
 }
 
 //----------------------------------------------------------------------------
-long VtkIjkGridRepresentation::getAttachmentPropertyCount(const std::string & uuid, const FesppAttachmentProperty propertyUnit)
+long VtkIjkGridRepresentation::getAttachmentPropertyCount(const std::string & uuid, const VtkEpcTools::FesppAttachmentProperty propertyUnit)
 {
 	long result = 0;
 	resqml2_0_1::AbstractIjkGridRepresentation* ijkGridRepresentation = nullptr;

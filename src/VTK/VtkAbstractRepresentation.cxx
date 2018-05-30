@@ -23,11 +23,11 @@ VtkAbstractRepresentation::~VtkAbstractRepresentation()
 #if (defined(_WIN32) && _MSC_VER >= 1600)
 	for (std::unordered_map< std::string, VtkProperty* >::const_iterator it = uuidToVtkProperty.begin(); it != uuidToVtkProperty.end(); ++it)
 #else
-	for (std::tr1::unordered_map< std::string, VtkProperty* >::const_iterator it = uuidToVtkProperty.begin(); it != uuidToVtkProperty.end(); ++it)
+		for (std::tr1::unordered_map< std::string, VtkProperty* >::const_iterator it = uuidToVtkProperty.begin(); it != uuidToVtkProperty.end(); ++it)
 #endif
-	{
-	  delete it->second;
-	}
+		{
+			delete it->second;
+		}
 	uuidToVtkProperty.clear();
 
 	if (epcPackageRepresentation != nullptr) {
@@ -41,13 +41,16 @@ VtkAbstractRepresentation::~VtkAbstractRepresentation()
 	points = NULL;
 }
 //----------------------------------------------------------------------------
-void VtkAbstractRepresentation::createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, const Resqml2Type & resqmlType)
+void VtkAbstractRepresentation::createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, const VtkEpcTools::Resqml2Type & resqmlType)
 {
-	if (subRepresentation){
-		uuidToVtkProperty[uuid] = new VtkProperty(getFileName(), name, uuid, parent, epcPackageSubRepresentation);
-	}
-	else{
-		uuidToVtkProperty[uuid] = new VtkProperty(getFileName(), name, uuid, parent, epcPackageRepresentation);
+	if (resqmlType==VtkEpcTools::PROPERTY)
+	{
+		if (subRepresentation){
+			uuidToVtkProperty[uuid] = new VtkProperty(getFileName(), name, uuid, parent, epcPackageSubRepresentation);
+		}
+		else{
+			uuidToVtkProperty[uuid] = new VtkProperty(getFileName(), name, uuid, parent, epcPackageRepresentation);
+		}
 	}
 }
 

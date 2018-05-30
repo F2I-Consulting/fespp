@@ -38,8 +38,8 @@ knowledge of the CeCILL license and that you accept its terms.
 #include <vtkDataArray.h>
 
 #include "VtkResqml2MultiBlockDataSet.h"
+#include "VtkEpcDocumentSet.h"
 
-class VtkEpcDocumentSet;
 class VtkIjkGridRepresentation;
 class VtkUnstructuredGridRepresentation;
 class VtkPartialRepresentation;
@@ -79,7 +79,7 @@ public:
 	* variable : uuid, VtkEpcDocument with complete representation
 	* prepare VtkEpcDocument & Children.
 	*/
-	void createTreeVtkPartialRep(const std::string & uuid, const std::string & parent, VtkEpcDocument *vtkEpcDowumentWithCompleteRep);
+	void createTreeVtkPartialRep(const std::string & uuid, /*const std::string & parent,*/ VtkEpcDocument *vtkEpcDowumentWithCompleteRep);
 
 	void deleteTreeVtkPartial(const std::string & uuid);
 
@@ -102,9 +102,9 @@ public:
 
 	void addProperty(const std::string & uuidProperty, vtkDataArray* dataProperty);
 
-	VtkAbstractObject::Resqml2Type getType(std::string);
+	VtkEpcTools::Resqml2Type getType(std::string);
 
-	long getAttachmentPropertyCount(const std::string & uuid, const FesppAttachmentProperty propertyUnit);
+	long getAttachmentPropertyCount(const std::string & uuid, const VtkEpcTools::FesppAttachmentProperty propertyUnit);
 
 	common::EpcDocument *getEpcDocument();
 	
@@ -130,7 +130,7 @@ private:
 	* variable : uuid, parent uuid, name, type
 	* prepare VtkEpcDocument & Children.
 	*/
-	void createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, const Resqml2Type & resqmlType);
+	void createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, const VtkEpcTools::Resqml2Type & resqmlType);
 
 
 

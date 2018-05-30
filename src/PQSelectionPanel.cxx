@@ -19,6 +19,8 @@
 #include "resqml2_0_1/PropertyKindMapper.h"
 #include "resqml2_0_1/SubRepresentation.h"
 
+#include "resqml2/TimeSeries.h"
+
 // include Qt
 #include <QtGui>
 #include <QFileInfo>
@@ -121,10 +123,9 @@ void PQSelectionPanel::constructor()
 void PQSelectionPanel::clicSelection(QTreeWidgetItem* item, int column)
 {
 	unsigned int cpt;
-	pickedBlocks = itemUuid[item];
+	auto pickedBlocks = itemUuid[item];
 	if (pickedBlocks!="root")
 	{
-		QFileInfo file(uuidToFilename[pickedBlocks].c_str());
 		pqPipelineSource * source = findPipelineSource("EpcDocument");
 		if (source)
 		{
@@ -141,38 +142,32 @@ void PQSelectionPanel::clicSelection(QTreeWidgetItem* item, int column)
 //----------------------------------------------------------------------------
 void PQSelectionPanel::onItemCheckedUnchecked(QTreeWidgetItem * item, int column)
 {
-	std::string uuid = itemUuid[item];
-	if (!(uuid == ""))
+	auto uuid = itemUuid[item];
+
+ 	 if (!(uuid == ""))
 	{
-		if (column == 0)
-		{
-			if (item->checkState(0) == Qt::Checked)
-			{
-				uuidVisible.push_back(uuid);
-				this->loadUuid(uuid);
-			}
-			else
-			{
-				// Property exist
-				if (uuidItem[uuid]->childCount() > 0 && mapUuidWithProperty[uuid] != "")
-				{
-					std::string uuidOld = mapUuidWithProperty[uuid];
-					this->removeUuid(uuidOld);
-
-					mapUuidWithProperty[uuid] = "";
-					mapUuidParentButtonInvisible[uuid]->setChecked(true);
-					uuidItem[uuid]->setData(0, Qt::CheckStateRole, QVariant());
-				}
-
-				std::vector<std::string>::iterator it_Visible = std::find(uuidVisible.begin(), uuidVisible.end(), uuid);
-				if (it_Visible != uuidVisible.end())
-				{
-					uuidVisible.erase(std::find(uuidVisible.begin(), uuidVisible.end(), uuid));
-					this->removeUuid(uuid);
-				}
-			}
-		}
+	if (item->checkState(0) == Qt::Checked)
+	{
+		this->loadUuid(uuid);
 	}
+	else
+	{
+		// Property exist
+		if (uuidItem[uuid]->childCount() > 0 && mapUuidWithProperty[uuid] != "")
+		{
+			auto uuidProperty = mapUuidWithProperty[uuid];
+			this->removeUuid(uuidProperty);
+
+			mapUuidWithProperty[uuid] = "";
+			mapUuidParentButtonInvisible[uuid]->setChecked(true);
+			uuidItem[uuid]->setData(0, Qt::CheckStateRole, QVariant());
+		}
+
+		this->removeUuid(uuid);
+
+	}
+	}
+
 }
 
 //----------------------------------------------------------------------------
@@ -199,11 +194,6 @@ void PQSelectionPanel::deleteTreeView()
 	mapRadioButtonNo.clear();
 
 	mapUuidParentButtonInvisible.clear();
-
-	pickedBlocks = "";
-	uuidVisible.clear();
-
-	uuidCheckable.clear();
 
 	pcksave.clear();
 	uuidParentGroupButton.clear();
@@ -236,16 +226,6 @@ void PQSelectionPanel::checkedRadioButton(int rbNo)
 //****************************************************************************
 
 //********************************* TreeView *********************************
-
-bool PQSelectionPanel::canAddFile(const char* fileName)
-{
-
-	std::vector<std::string>::iterator it_present = std::find(allFileName.begin(), allFileName.end(), std::string(fileName));
-	if (it_present != allFileName.end())
-		return false;
-
-	return true;
-}
 //----------------------------------------------------------------------------
 void PQSelectionPanel::addFileName(const std::string & fileName)
 {
@@ -295,6 +275,21 @@ void PQSelectionPanel::addFileName(const std::string & fileName)
 
 			// add treeView Sub-representation
 			addTreeSubRepresentation(fileName, pck->getSubRepresentationSet());
+			/*
+			// add treeView Sub-representation
+			auto timeSerieSet = pck->getTimeSeriesSet();
+
+			for (size_t timeSerieSetIter = 0; timeSerieSetIter < timeSerieSet.size(); ++timeSerieSetIter)
+			{
+				cout << " Time Series: " << timeSerieSet[timeSerieSetIter]->getTimestampCount() << "\n";
+
+				auto properties = timeSerieSet[timeSerieSetIter]->getPropertySet();
+				for (size_t propertiesIter = 0; propertiesIter < properties.size(); ++propertiesIter)
+				{
+					properties[propertiesIter]
+				}
+			}
+			 */
 
 			++indexFile;
 
@@ -637,23 +632,40 @@ void PQSelectionPanel::addTreeSubRepresentation(const std::string & fileName, st
 	{
 		auto propertyTreeView = false;
 
-		auto uuidParent = subRepresentation[subRepresentationIter]->getSupportingRepresentationUuid(0);
-		if (uuidItem.count(uuidParent)>0)
+		if (subRepresentation[subRepresentationIter]->isPartial())
 		{
-			uuidToFilename[subRepresentation[subRepresentationIter]->getUuid()] = fileName;
-
-			addTreeRepresentation(uuidItem[uuidParent],
-					subRepresentation[subRepresentationIter]->getTitle().c_str(),
-					subRepresentation[subRepresentationIter]->getUuid(),
-					icon
-			);
-			propertyTreeView = true;
+			if (uuidItem.count(subRepresentation[subRepresentationIter]->getUuid())>0)
+			{
+				filenameToUuidsPartial[fileName].push_back(subRepresentation[subRepresentationIter]->getUuid());
+				propertyTreeView = true;
+			}
+			else
+			{
+				QMessageBox msgBox;
+				msgBox.setIcon(QMessageBox::Information);
+				msgBox.setText(QString(("Partial UUID: " + subRepresentation[subRepresentationIter]->getUuid() + " and the complete UUID not found.").c_str()));
+				msgBox.exec();
+			}
 		}
 		else{
-			QMessageBox msgBox;
-			msgBox.setIcon(QMessageBox::Information);
-			msgBox.setText(QString(("supporting representation UUID: " + uuidParent + " not found.").c_str()));
-			msgBox.exec();
+			auto uuidParent = subRepresentation[subRepresentationIter]->getSupportingRepresentationUuid(0);
+			if (uuidItem.count(uuidParent)>0)
+			{
+				uuidToFilename[subRepresentation[subRepresentationIter]->getUuid()] = fileName;
+
+				addTreeRepresentation(uuidItem[uuidParent],
+						subRepresentation[subRepresentationIter]->getTitle().c_str(),
+						subRepresentation[subRepresentationIter]->getUuid(),
+						icon
+				);
+				propertyTreeView = true;
+			}
+			else{
+				QMessageBox msgBox;
+				msgBox.setIcon(QMessageBox::Information);
+				msgBox.setText(QString(("supporting representation UUID: " + uuidParent + " not found.").c_str()));
+				msgBox.exec();
+			}
 		}
 		if (propertyTreeView){
 			std::vector<resqml2::AbstractValuesProperty*> valuesPropertySet = subRepresentation[subRepresentationIter]->getValuesPropertySet();
@@ -671,8 +683,9 @@ void PQSelectionPanel::addTreeRepresentation(QTreeWidgetItem *parent,
 		QTreeWidgetItem *treeItem = new QTreeWidgetItem();
 		treeItem->setText(0, name);
 		treeItem->setIcon(0, icon);
-		treeItem->setFlags(treeItem->flags() | Qt::ItemIsUserCheckable | Qt::ItemIsSelectable);
 		treeItem->setCheckState(0, Qt::Unchecked);
+		treeItem->setFlags(treeItem->flags() | Qt::ItemIsUserCheckable | Qt::ItemIsSelectable);
+
 
 		if (parent == nullptr)
 		{
@@ -683,7 +696,6 @@ void PQSelectionPanel::addTreeRepresentation(QTreeWidgetItem *parent,
 		uuidItem[uuid] = treeItem;
 		itemUuid[treeItem] = uuid;
 
-		uuidCheckable.push_back(uuid);
 		filenameToUuids[uuidToFilename[uuid]].push_back(uuid);
 	}
 	else
@@ -707,7 +719,8 @@ void PQSelectionPanel::addTreeProperty(QTreeWidgetItem *parent, std::vector<resq
 		buttonGroup = new QButtonGroup();
 		buttonGroup->setExclusive(true);
 	}
-	else{
+	else
+	{
 		buttonGroup = uuidParentGroupButton[itemUuid[parent]];
 	}
 	QRadioButton *radioButtonInvisible = new QRadioButton("invisible");
@@ -718,45 +731,47 @@ void PQSelectionPanel::addTreeProperty(QTreeWidgetItem *parent, std::vector<resq
 	for (size_t i = 0; i < valuesPropertySet.size(); ++i)
 	{
 		resqml2::AbstractValuesProperty* valuesProperty = valuesPropertySet[i];
-		if (valuesProperty->getXmlTag() == "ContinuousProperty" ||
-				valuesProperty->getXmlTag() == "DiscreteProperty" ||
-				valuesProperty->getXmlTag() == "CategoricalProperty")
+		if (!valuesProperty->getTimeSeries())
 		{
-			std::string uuid;
-			if (valuesProperty->getElementCountPerValue() > 0) {
-				uuid = valuesPropertySet[i]->getUuid();
-
-				QTreeWidgetItem *treeItem = new QTreeWidgetItem();
-				QRadioButton *radioButton = new QRadioButton(QString(valuesPropertySet[i]->getTitle().c_str()));
-
-				mapRadioButtonNo[radioButtonCount] = uuid;
-
-				buttonGroup->addButton(radioButton, radioButtonCount);
-				parent->addChild(treeItem);
-
-				treeWidget->setItemWidget(treeItem, 0, radioButton);
-				uuidItem[uuid] = treeItem;
-				uuidParentItem[uuid] = parent;
-				itemUuid[treeItem] = uuid;
-				uuidToFilename[uuid] = uuidToFilename[itemUuid[parent]];
-
-				radioButtonCount++;
-				radioButtonToUuid[radioButton] = uuid;
-				parent->setData(0, Qt::CheckStateRole, QVariant());
-			}
-			else
+			if (valuesProperty->getXmlTag() == "ContinuousProperty" ||
+					valuesProperty->getXmlTag() == "DiscreteProperty" ||
+					valuesProperty->getXmlTag() == "CategoricalProperty")
 			{
-				QTreeWidgetItem *treeItem = new QTreeWidgetItem();
-				treeItem->setText(0, QString(valuesPropertySet[i]->getTitle().c_str()));
+				std::string uuid;
+				if (valuesProperty->getElementCountPerValue() > 0) {
+					uuid = valuesPropertySet[i]->getUuid();
 
-				parent->addChild(treeItem);
+					QTreeWidgetItem *treeItem = new QTreeWidgetItem();
+					QRadioButton *radioButton = new QRadioButton(QString(valuesPropertySet[i]->getTitle().c_str()));
+
+					mapRadioButtonNo[radioButtonCount] = uuid;
+
+					buttonGroup->addButton(radioButton, radioButtonCount);
+					parent->addChild(treeItem);
+
+					treeWidget->setItemWidget(treeItem, 0, radioButton);
+					uuidItem[uuid] = treeItem;
+					uuidParentItem[uuid] = parent;
+					itemUuid[treeItem] = uuid;
+					uuidToFilename[uuid] = uuidToFilename[itemUuid[parent]];
+
+					radioButtonCount++;
+					radioButtonToUuid[radioButton] = uuid;
+					parent->setData(0, Qt::CheckStateRole, QVariant());
+				}
+				else
+				{
+					QTreeWidgetItem *treeItem = new QTreeWidgetItem();
+					treeItem->setText(0, QString(valuesPropertySet[i]->getTitle().c_str()));
+
+					parent->addChild(treeItem);
+				}
 			}
 		}
 	}
 	connect(buttonGroup, SIGNAL(buttonClicked(int)), this, SLOT(checkedRadioButton(int)));
 	uuidParentGroupButton[itemUuid[parent]] = buttonGroup;
 }
-
 //****************************************************************************
 void PQSelectionPanel::deleteUUID(QTreeWidgetItem *item)
 {

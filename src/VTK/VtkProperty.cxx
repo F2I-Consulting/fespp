@@ -47,7 +47,7 @@ void VtkProperty::visualize(const std::string & uuid)
 }
 
 //----------------------------------------------------------------------------
-void VtkProperty::createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, const Resqml2Type & resqmlType)
+void VtkProperty::createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, const VtkEpcTools::Resqml2Type & resqmlType)
 {
 }
 
@@ -666,7 +666,7 @@ vtkDataArray* VtkProperty::loadValuesPropertySet(std::vector<resqml2::AbstractVa
 return cellData;
 */
 }
-long VtkProperty::getAttachmentPropertyCount(const std::string & uuid, const FesppAttachmentProperty propertyUnit)
+long VtkProperty::getAttachmentPropertyCount(const std::string & uuid, const VtkEpcTools::FesppAttachmentProperty propertyUnit)
 {
 	return 0;
 }
