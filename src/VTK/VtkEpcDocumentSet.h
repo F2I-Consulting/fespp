@@ -81,6 +81,7 @@ public:
 	void unvisualize(const std::string & uuid);
 
 	VtkEpcTools::Resqml2Type getType(std::string uuid);
+	VtkEpcTools::infoUuid getInfoUuid(std::string);
 
 	/**
 	* method : getOutput
@@ -89,6 +90,8 @@ public:
 	*/
 	vtkSmartPointer<vtkMultiBlockDataSet> getVisualization() const;
 	std::vector<VtkEpcTools::infoUuid> getTreeView() const;
+
+	void setIndexTimeSeries(const int & index);
 
 	void addEpcDocument(const std::string & fileName);
 
@@ -114,6 +117,8 @@ private:
 
 	int procRank;
 	int nbProc;
+
+	int indexTimesSeries;
 
 	bool treeViewMode;
 	bool representationMode;

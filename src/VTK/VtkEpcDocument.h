@@ -73,6 +73,8 @@ public:
 	* create uuid representation.
 	*/
 	void visualize(const std::string & uuid);
+
+	void visualize(const std::string & uuid, int timeIndex);
 	
 	/**
 	* method : createTreeVtkPartialRep
@@ -90,6 +92,8 @@ public:
 	*/
 	void remove(const std::string & uuid);
 	
+	std::vector<VtkEpcTools::infoUuid> getTreeView() const;
+
 	/**
 	* method : attach
 	* variable : --
@@ -98,11 +102,14 @@ public:
 
 	std::string getFullUuid(std::string uuidPartial);
 
+	void setIndexTimeSeries(const int & index);
+
 	void addPartialUUid(const std::string & uuid, VtkEpcDocument *vtkEpcDowumentWithCompleteRep);
 
 	void addProperty(const std::string & uuidProperty, vtkDataArray* dataProperty);
 
 	VtkEpcTools::Resqml2Type getType(std::string);
+	VtkEpcTools::infoUuid getInfoUuid(std::string);
 
 	long getAttachmentPropertyCount(const std::string & uuid, const VtkEpcTools::FesppAttachmentProperty propertyUnit);
 
@@ -163,5 +170,9 @@ private:
 	std::vector<std::string> uuidRep;
 
 	VtkEpcDocumentSet * epcSet;
+
+	int indexTimesSeries;
+
+	std::vector<VtkEpcTools::infoUuid> treeView; // Tree
 };
 #endif

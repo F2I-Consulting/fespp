@@ -63,7 +63,6 @@ unsigned int VtkProperty::getSupport()
 	return support;
 }
 
-
 //----------------------------------------------------------------------------
 vtkDataArray* VtkProperty::visualize(const std::string & uuid, resqml2_0_1::PolylineSetRepresentation* polylineSetRepresentation)
 {

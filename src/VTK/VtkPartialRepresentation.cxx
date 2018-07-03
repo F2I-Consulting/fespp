@@ -126,6 +126,12 @@ VtkEpcTools::Resqml2Type VtkPartialRepresentation::getType()
 }
 
 //----------------------------------------------------------------------------
+VtkEpcTools::infoUuid VtkPartialRepresentation::getInfoUuid()
+{
+	return vtkEpcDocumentSource->getInfoUuid(vtkPartialReprUuid);
+}
+
+//----------------------------------------------------------------------------
 common::EpcDocument * VtkPartialRepresentation::getEpcSource()
 {
 	return vtkEpcDocumentSource->getEpcDocument();

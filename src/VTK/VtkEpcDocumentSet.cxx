@@ -27,6 +27,7 @@ procRank(idProc), nbProc(maxProc)
 	}
 
 	vtkOutput = vtkSmartPointer<vtkMultiBlockDataSet>::New();
+	treeView = {};
 }
 
 //----------------------------------------------------------------------------
@@ -90,6 +91,12 @@ VtkEpcTools::Resqml2Type VtkEpcDocumentSet::getType(std::string uuid)
 }
 
 //----------------------------------------------------------------------------
+VtkEpcTools::infoUuid VtkEpcDocumentSet::getInfoUuid(std::string uuid)
+{
+	return  uuidToVtkEpc[uuid]->getInfoUuid(uuid);
+}
+
+//----------------------------------------------------------------------------
 vtkSmartPointer<vtkMultiBlockDataSet> VtkEpcDocumentSet::getVisualization() const
 {
 if(representationMode)
@@ -109,6 +116,15 @@ if(representationMode)
 }
 
 //----------------------------------------------------------------------------
+void VtkEpcDocumentSet::setIndexTimeSeries(const int & index)
+{
+	indexTimesSeries = index;
+	for (auto &vtkEpc : vtkEpcList)
+	{
+		vtkEpc->setIndexTimeSeries(index);
+	}
+}
+//----------------------------------------------------------------------------
 void VtkEpcDocumentSet::addEpcDocument(const std::string & fileName)
 {
 	if (std::find(vtkEpcNameList.begin(), vtkEpcNameList.end(),fileName)==vtkEpcNameList.end())
@@ -121,6 +137,9 @@ void VtkEpcDocumentSet::addEpcDocument(const std::string & fileName)
 		}
 		vtkEpcList.push_back(vtkEpc);
 		vtkEpcNameList.push_back(fileName);
+
+		auto tmpTree = vtkEpc->getTreeView();
+		treeView.insert( treeView.end(), tmpTree.begin(), tmpTree.end() );
 	}
 }
 
@@ -129,4 +148,10 @@ VtkEpcDocument* VtkEpcDocumentSet::getVtkEpcDocument(const std::string & uuid)
 	if (uuidToVtkEpc[uuid])
 		return uuidToVtkEpc[uuid];
 	return nullptr;
+}
+
+//----------------------------------------------------------------------------
+std::vector<VtkEpcTools::infoUuid> VtkEpcDocumentSet::getTreeView() const
+{
+	return treeView;
 }

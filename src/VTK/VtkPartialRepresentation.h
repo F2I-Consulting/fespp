@@ -86,6 +86,7 @@ public:
 	void remove(const std::string & uuid);
 
 	VtkEpcTools::Resqml2Type getType();
+	VtkEpcTools::infoUuid getInfoUuid();
 
 	common::EpcDocument * getEpcSource();
 

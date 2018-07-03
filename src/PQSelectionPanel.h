@@ -51,10 +51,13 @@ knowledge of the CeCILL license and that you accept its terms.
 #include <string>
 #include <vector>
 
+#include "VTK/VtkEpcTools.h"
+
 class pqPipelineSource;
 class pqServer;
-class pqOutputPort;
-class pqView;
+//class pqOutputPort;
+//class pqView;
+class VtkEpcDocumentSet;
 
 #include "common/EpcDocument.h"
 
@@ -126,6 +129,8 @@ protected slots:
 	void checkedRadioButton(int);
 
 private:
+
+	void populateTreeView(std::string parent, VtkEpcTools::Resqml2Type parentType, std::string uuid, std::string name, VtkEpcTools::Resqml2Type type);
 	void deleteUUID(QTreeWidgetItem *item);
 
 	void constructor();
@@ -141,63 +146,9 @@ private:
     virtual pqServer * getActiveServer();
 
 	/**
-	* Add the first element of epcDocument tree
-	*/
-	void addTreeRoot(QString name, QString description);
-
-	/**
-	* Add Feature/Interpretation
-	*/
-    void addTreeChild(QTreeWidgetItem *parent, QString name, std::string uuid);
-	
-	/**
-	* Add Polylines Representation in TreeView
-	*/
-	void addTreePolylines(const std::string & fileName, std::vector<resqml2_0_1::PolylineSetRepresentation*> polylines);
-	
-	/**
-	* Add triangulated Representation in TreeView
-	*/
-	void addTreeTriangulated(const std::string & fileName, std::vector<resqml2_0_1::TriangulatedSetRepresentation*> triangulated);
-
-	/**
-	* Add grid2D Representation in TreeView
-	*/
-	void addTreeGrid2D(const std::string & fileName, std::vector<resqml2_0_1::Grid2dRepresentation*> grid2D);
-
-	/**
-	* Add ijkGrid Representation in TreeView
-	*/
-	void addTreeIjkGrid(const std::string & fileName, std::vector<resqml2_0_1::AbstractIjkGridRepresentation*> ijkGrid);
-
-	/**
-	* Add unstructuredGrid Representation in TreeView
-	*/
-	void addTreeUnstructuredGrid(const std::string & fileName, std::vector<resqml2_0_1::UnstructuredGridRepresentation*> unstructuredGrid);
-
-	/**
-	* Add WellboreTrajectoryRepresentation in TreeView
-	*/
-	void addTreeWellboreTrajectory(const std::string & fileName, std::vector<resqml2_0_1::WellboreTrajectoryRepresentation*> wellCubicParmLineTraj);
-
-	/**
-	* Add SubRepresentation in TreeView
-	*/
-	void addTreeSubRepresentation(const std::string & fileName, std::vector<resqml2::SubRepresentation*> subRepresentation);
-
-	/**
-	* Add Feature and Interpretation in TreeView
-	*/
-	std::string addFeatInterp(const std::string & fileName, resqml2::AbstractFeatureInterpretation * interpretation);
-	/**
-	* Add Representation in TreeView
-	*/
-    void addTreeRepresentation(QTreeWidgetItem *parent, QString name, std::string uuid, QIcon icon);
-
-	/**
 	* Add the Properties
 	*/
-	void addTreeProperty(QTreeWidgetItem *parent, std::vector<resqml2::AbstractValuesProperty*> valuesPropertySet);
+	void addTreeProperty(QTreeWidgetItem *parent, std::string parentUUid, QString name, std::string uuid);
 
 	/**
 	* Load representation/property uuid's
@@ -238,6 +189,8 @@ private:
 
 	QMap<std::string, QButtonGroup *> uuidParentGroupButton;
 	QMap<QAbstractButton *, std::string> radioButtonToUuid;
+
+	VtkEpcDocumentSet* vtkEpcDocumentSet;
 };
 
 #endif
