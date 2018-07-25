@@ -80,7 +80,7 @@ public:
 	/**
 	* create property
 	*/
-	void createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, const VtkEpcTools::Resqml2Type & resqmlType);
+	void createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, const VtkEpcCommon::Resqml2Type & resqmlType);
 	
 	/**
 	* createOutput the h5 data with vtk structure

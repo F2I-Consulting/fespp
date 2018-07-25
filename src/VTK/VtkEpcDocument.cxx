@@ -38,6 +38,7 @@
 #include "VtkIjkGridRepresentation.h"
 #include "VtkPartialRepresentation.h"
 #include "VtkSetPatch.h"
+#include "VtkEpcCommon.h"
 
 //----------------------------------------------------------------------------
 VtkEpcDocument::VtkEpcDocument(const std::string & fileName, const int & idProc, const int & maxProc, VtkEpcDocumentSet* epcDocSet) :
@@ -79,6 +80,7 @@ VtkResqml2MultiBlockDataSet(fileName, fileName, fileName, "", idProc, maxProc), 
 		for (auto iter = 0; iter < polylines.size(); ++iter)
 		{
 			auto interpretation = polylines[iter]->getInterpretation();
+			uuidIsChildOf[polylines[iter]->getUuid()] = new VtkEpcCommon();
 			std::string uuidParent;
 			if (interpretation)
 				uuidParent = interpretation->getUuid();
@@ -90,20 +92,12 @@ VtkResqml2MultiBlockDataSet(fileName, fileName, fileName, "", idProc, maxProc), 
 				if (vtkEpcSrc)
 				{
 					createTreeVtkPartialRep(polylines[iter]->getUuid(), vtkEpcSrc);
-					uuidPartialRep.push_back(polylines[iter]->getUuid());
-					uuidIsChildOf[polylines[iter]->getUuid()].myType = VtkEpcTools::PARTIAL;
-					uuidIsChildOf[polylines[iter]->getUuid()].uuid = polylines[iter]->getUuid();
+					uuidIsChildOf[polylines[iter]->getUuid()]->setParentType( VtkEpcCommon::POLYLINE_SET);
 				}
-				else
-				{
-					uuidIsChildOf[polylines[iter]->getUuid()].myType = VtkEpcTools::PARTIAL;
-					uuidIsChildOf[polylines[iter]->getUuid()].uuid = "UNKNOWN";
-				}
-
 			}
 			else
 			{
-				createTreeVtk(polylines[iter]->getUuid(), uuidParent, polylines[iter]->getTitle().c_str(), VtkEpcTools::POLYLINE_SET);
+				createTreeVtk(polylines[iter]->getUuid(), uuidParent, polylines[iter]->getTitle().c_str(), VtkEpcCommon::POLYLINE_SET);
 			}
 		}
 
@@ -118,6 +112,7 @@ VtkResqml2MultiBlockDataSet(fileName, fileName, fileName, "", idProc, maxProc), 
 		for (auto iter = 0; iter < polylines.size(); ++iter)
 		{
 			auto interpretation = polylines[iter]->getInterpretation();
+			uuidIsChildOf[polylines[iter]->getUuid()] = new VtkEpcCommon();
 			std::string uuidParent;
 			if (interpretation)
 				uuidParent = interpretation->getUuid();
@@ -129,25 +124,19 @@ VtkResqml2MultiBlockDataSet(fileName, fileName, fileName, "", idProc, maxProc), 
 				if (vtkEpcSrc)
 				{
 					createTreeVtkPartialRep(polylines[iter]->getUuid(), vtkEpcSrc);
-					uuidPartialRep.push_back(polylines[iter]->getUuid());
-					uuidIsChildOf[polylines[iter]->getUuid()].myType = VtkEpcTools::PARTIAL;
-					uuidIsChildOf[polylines[iter]->getUuid()].uuid = polylines[iter]->getUuid();
-				}
-				else
-				{
-					uuidIsChildOf[polylines[iter]->getUuid()].myType = VtkEpcTools::PARTIAL;
-					uuidIsChildOf[polylines[iter]->getUuid()].uuid = "UNKNOWN";
+					uuidIsChildOf[polylines[iter]->getUuid()]->setParentType( VtkEpcCommon::POLYLINE_SET);
 				}
 			}
 			else
 			{
-				createTreeVtk(polylines[iter]->getUuid(), uuidParent, polylines[iter]->getTitle().c_str(), VtkEpcTools::POLYLINE_SET);
+				createTreeVtk(polylines[iter]->getUuid(), uuidParent, polylines[iter]->getTitle().c_str(), VtkEpcCommon::POLYLINE_SET);
 			}
 			//property
 			auto valuesPropertySet = polylines[iter]->getValuesPropertySet();
 			for (unsigned int i = 0; i < valuesPropertySet.size(); ++i)
 			{
-				createTreeVtk(valuesPropertySet[i]->getUuid(), polylines[iter]->getUuid(), valuesPropertySet[i]->getTitle().c_str(), VtkEpcTools::PROPERTY);
+				uuidIsChildOf[valuesPropertySet[i]->getUuid()] = new VtkEpcCommon();
+				createTreeVtk(valuesPropertySet[i]->getUuid(), polylines[iter]->getUuid(), valuesPropertySet[i]->getTitle().c_str(), VtkEpcCommon::PROPERTY);
 			}
 		}
 		//**************
@@ -166,6 +155,7 @@ VtkResqml2MultiBlockDataSet(fileName, fileName, fileName, "", idProc, maxProc), 
 		for (auto iter = 0; iter < triangulated.size(); ++iter)
 		{
 			auto interpretation = triangulated[iter]->getInterpretation();
+			uuidIsChildOf[triangulated[iter]->getUuid()] = new VtkEpcCommon();
 			std::string uuidParent;
 			if (interpretation)
 				uuidParent = interpretation->getUuid();
@@ -177,25 +167,19 @@ VtkResqml2MultiBlockDataSet(fileName, fileName, fileName, "", idProc, maxProc), 
 				if (vtkEpcSrc)
 				{
 					createTreeVtkPartialRep(triangulated[iter]->getUuid(), vtkEpcSrc);
-					uuidPartialRep.push_back(triangulated[iter]->getUuid());
-					uuidIsChildOf[triangulated[iter]->getUuid()].myType = VtkEpcTools::PARTIAL;
-					uuidIsChildOf[triangulated[iter]->getUuid()].uuid = triangulated[iter]->getUuid();
-				}
-				else
-				{
-					uuidIsChildOf[triangulated[iter]->getUuid()].myType = VtkEpcTools::PARTIAL;
-					uuidIsChildOf[triangulated[iter]->getUuid()].uuid = "UNKNOWN";
+					uuidIsChildOf[triangulated[iter]->getUuid()]->setParentType( VtkEpcCommon::TRIANGULATED_SET);
 				}
 			}
 			else
 			{
-				createTreeVtk(triangulated[iter]->getUuid(), uuidParent, triangulated[iter]->getTitle().c_str(), VtkEpcTools::TRIANGULATED_SET);
+				createTreeVtk(triangulated[iter]->getUuid(), uuidParent, triangulated[iter]->getTitle().c_str(), VtkEpcCommon::TRIANGULATED_SET);
 			}
 			//property
 			auto valuesPropertySet = triangulated[iter]->getValuesPropertySet();
 			for (unsigned int i = 0; i < valuesPropertySet.size(); ++i)
 			{
-				createTreeVtk(valuesPropertySet[i]->getUuid(), triangulated[iter]->getUuid(), valuesPropertySet[i]->getTitle().c_str(), VtkEpcTools::PROPERTY);
+				uuidIsChildOf[valuesPropertySet[i]->getUuid()] = new VtkEpcCommon();
+				createTreeVtk(valuesPropertySet[i]->getUuid(), triangulated[iter]->getUuid(), valuesPropertySet[i]->getTitle().c_str(), VtkEpcCommon::PROPERTY);
 			}
 		}
 		//**************
@@ -214,6 +198,7 @@ VtkResqml2MultiBlockDataSet(fileName, fileName, fileName, "", idProc, maxProc), 
 		for (auto iter = 0; iter < grid2D.size(); ++iter)
 		{
 			auto interpretation = grid2D[iter]->getInterpretation();
+			uuidIsChildOf[grid2D[iter]->getUuid()] = new VtkEpcCommon();
 			std::string uuidParent;
 			if (interpretation)
 				uuidParent = interpretation->getUuid();
@@ -225,25 +210,19 @@ VtkResqml2MultiBlockDataSet(fileName, fileName, fileName, "", idProc, maxProc), 
 				if (vtkEpcSrc)
 				{
 					createTreeVtkPartialRep(grid2D[iter]->getUuid(), vtkEpcSrc);
-					uuidPartialRep.push_back(grid2D[iter]->getUuid());
-					uuidIsChildOf[grid2D[iter]->getUuid()].myType = VtkEpcTools::PARTIAL;
-					uuidIsChildOf[grid2D[iter]->getUuid()].uuid = grid2D[iter]->getUuid();
-				}
-				else
-				{
-					uuidIsChildOf[grid2D[iter]->getUuid()].myType = VtkEpcTools::PARTIAL;
-					uuidIsChildOf[grid2D[iter]->getUuid()].uuid = "UNKNOWN";
+					uuidIsChildOf[grid2D[iter]->getUuid()]->setParentType( VtkEpcCommon::GRID_2D);
 				}
 			}
 			else
 			{
-				createTreeVtk(grid2D[iter]->getUuid(), uuidParent, grid2D[iter]->getTitle().c_str(), VtkEpcTools::GRID_2D);
+				createTreeVtk(grid2D[iter]->getUuid(), uuidParent, grid2D[iter]->getTitle().c_str(), VtkEpcCommon::GRID_2D);
 			}
 			//property
 			auto valuesPropertySet = grid2D[iter]->getValuesPropertySet();
 			for (unsigned int i = 0; i < valuesPropertySet.size(); ++i)
 			{
-				createTreeVtk(valuesPropertySet[i]->getUuid(), grid2D[iter]->getUuid(), valuesPropertySet[i]->getTitle().c_str(), VtkEpcTools::PROPERTY);
+				uuidIsChildOf[valuesPropertySet[i]->getUuid()] = new VtkEpcCommon();
+				createTreeVtk(valuesPropertySet[i]->getUuid(), grid2D[iter]->getUuid(), valuesPropertySet[i]->getTitle().c_str(), VtkEpcCommon::PROPERTY);
 			}
 		}
 		//**************
@@ -263,6 +242,7 @@ VtkResqml2MultiBlockDataSet(fileName, fileName, fileName, "", idProc, maxProc), 
 		{
 			auto interpretation = ijkGrid[iter]->getInterpretation();
 			std::string uuidParent;
+			uuidIsChildOf[ijkGrid[iter]->getUuid()] = new VtkEpcCommon();
 			if (interpretation)
 				uuidParent = interpretation->getUuid();
 			else
@@ -273,26 +253,19 @@ VtkResqml2MultiBlockDataSet(fileName, fileName, fileName, "", idProc, maxProc), 
 				if (vtkEpcSrc)
 				{
 					createTreeVtkPartialRep(ijkGrid[iter]->getUuid(), vtkEpcSrc);
-					uuidPartialRep.push_back(ijkGrid[iter]->getUuid());
-					uuidIsChildOf[ijkGrid[iter]->getUuid()].myType = VtkEpcTools::PARTIAL;
-					uuidIsChildOf[ijkGrid[iter]->getUuid()].uuid = ijkGrid[iter]->getUuid();
+					uuidIsChildOf[ijkGrid[iter]->getUuid()]->setParentType( VtkEpcCommon::IJK_GRID);
 				}
-				else
-				{
-					uuidIsChildOf[ijkGrid[iter]->getUuid()].myType = VtkEpcTools::PARTIAL;
-					uuidIsChildOf[ijkGrid[iter]->getUuid()].uuid = "UNKNOWN";
-				}
-
 			}
 			else
 			{
-				createTreeVtk(ijkGrid[iter]->getUuid(), uuidParent, ijkGrid[iter]->getTitle().c_str(), VtkEpcTools::IJK_GRID);
+				createTreeVtk(ijkGrid[iter]->getUuid(), uuidParent, ijkGrid[iter]->getTitle().c_str(), VtkEpcCommon::IJK_GRID);
 			}
 			//property
 			auto valuesPropertySet = ijkGrid[iter]->getValuesPropertySet();
 			for (unsigned int i = 0; i < valuesPropertySet.size(); ++i)
 			{
-				createTreeVtk(valuesPropertySet[i]->getUuid(), ijkGrid[iter]->getUuid(), valuesPropertySet[i]->getTitle().c_str(), VtkEpcTools::PROPERTY);
+				uuidIsChildOf[valuesPropertySet[i]->getUuid()] = new VtkEpcCommon();
+				createTreeVtk(valuesPropertySet[i]->getUuid(), ijkGrid[iter]->getUuid(), valuesPropertySet[i]->getTitle().c_str(), VtkEpcCommon::PROPERTY);
 			}
 		}
 		//**************
@@ -312,6 +285,7 @@ VtkResqml2MultiBlockDataSet(fileName, fileName, fileName, "", idProc, maxProc), 
 		{
 			auto interpretation = unstructuredGrid[iter]->getInterpretation();
 			std::string uuidParent;
+			uuidIsChildOf[unstructuredGrid[iter]->getUuid()] = new VtkEpcCommon();
 			if (interpretation)
 				uuidParent = interpretation->getUuid();
 			else
@@ -322,25 +296,19 @@ VtkResqml2MultiBlockDataSet(fileName, fileName, fileName, "", idProc, maxProc), 
 				if (vtkEpcSrc)
 				{
 					createTreeVtkPartialRep(unstructuredGrid[iter]->getUuid(), vtkEpcSrc);
-					uuidPartialRep.push_back(unstructuredGrid[iter]->getUuid());
-					uuidIsChildOf[unstructuredGrid[iter]->getUuid()].myType = VtkEpcTools::PARTIAL;
-					uuidIsChildOf[unstructuredGrid[iter]->getUuid()].uuid = unstructuredGrid[iter]->getUuid();
-				}
-				else
-				{
-					uuidIsChildOf[unstructuredGrid[iter]->getUuid()].myType = VtkEpcTools::PARTIAL;
-					uuidIsChildOf[unstructuredGrid[iter]->getUuid()].uuid = "UNKNOWN";
+					uuidIsChildOf[unstructuredGrid[iter]->getUuid()]->setParentType( VtkEpcCommon::UNSTRUC_GRID);
 				}
 			}
 			else
 			{
-				createTreeVtk(unstructuredGrid[iter]->getUuid(), uuidParent, unstructuredGrid[iter]->getTitle().c_str(), VtkEpcTools::UNSTRUC_GRID);
+				createTreeVtk(unstructuredGrid[iter]->getUuid(), uuidParent, unstructuredGrid[iter]->getTitle().c_str(), VtkEpcCommon::UNSTRUC_GRID);
 			}
 			//property
 			auto valuesPropertySet = unstructuredGrid[iter]->getValuesPropertySet();
 			for (unsigned int i = 0; i < valuesPropertySet.size(); ++i)
 			{
-				createTreeVtk(valuesPropertySet[i]->getUuid(), unstructuredGrid[iter]->getUuid(), valuesPropertySet[i]->getTitle().c_str(), VtkEpcTools::PROPERTY);
+				uuidIsChildOf[valuesPropertySet[i]->getUuid()] = new VtkEpcCommon();
+				createTreeVtk(valuesPropertySet[i]->getUuid(), unstructuredGrid[iter]->getUuid(), valuesPropertySet[i]->getTitle().c_str(), VtkEpcCommon::PROPERTY);
 			}
 		}
 		//**************
@@ -360,6 +328,7 @@ VtkResqml2MultiBlockDataSet(fileName, fileName, fileName, "", idProc, maxProc), 
 		{
 			auto interpretation = WellboreTrajectory[iter]->getInterpretation();
 			std::string uuidParent;
+			uuidIsChildOf[WellboreTrajectory[iter]->getUuid()] = new VtkEpcCommon();
 			if (interpretation)
 				uuidParent = interpretation->getUuid();
 			else
@@ -370,25 +339,19 @@ VtkResqml2MultiBlockDataSet(fileName, fileName, fileName, "", idProc, maxProc), 
 				if (vtkEpcSrc)
 				{
 					createTreeVtkPartialRep(WellboreTrajectory[iter]->getUuid(), vtkEpcSrc);
-					uuidPartialRep.push_back(WellboreTrajectory[iter]->getUuid());
-					uuidIsChildOf[WellboreTrajectory[iter]->getUuid()].myType = VtkEpcTools::PARTIAL;
-					uuidIsChildOf[WellboreTrajectory[iter]->getUuid()].uuid = WellboreTrajectory[iter]->getUuid();
-				}
-				else
-				{
-					uuidIsChildOf[WellboreTrajectory[iter]->getUuid()].myType = VtkEpcTools::PARTIAL;
-					uuidIsChildOf[WellboreTrajectory[iter]->getUuid()].uuid = "UNKNOWN";
+					uuidIsChildOf[WellboreTrajectory[iter]->getUuid()]->setParentType( VtkEpcCommon::WELL_TRAJ);
 				}
 			}
 			else
 			{
-				createTreeVtk(WellboreTrajectory[iter]->getUuid(), uuidParent, WellboreTrajectory[iter]->getTitle().c_str(), VtkEpcTools::WELL_TRAJ);
+				createTreeVtk(WellboreTrajectory[iter]->getUuid(), uuidParent, WellboreTrajectory[iter]->getTitle().c_str(), VtkEpcCommon::WELL_TRAJ);
 			}
 			//property
 			auto valuesPropertySet = WellboreTrajectory[iter]->getValuesPropertySet();
 			for (unsigned int i = 0; i < valuesPropertySet.size(); ++i)
 			{
-				createTreeVtk(valuesPropertySet[i]->getUuid(), WellboreTrajectory[iter]->getUuid(), valuesPropertySet[i]->getTitle().c_str(), VtkEpcTools::PROPERTY);
+				uuidIsChildOf[valuesPropertySet[i]->getUuid()] = new VtkEpcCommon();
+				createTreeVtk(valuesPropertySet[i]->getUuid(), WellboreTrajectory[iter]->getUuid(), valuesPropertySet[i]->getTitle().c_str(), VtkEpcCommon::PROPERTY);
 			}
 		}
 		//**************
@@ -407,34 +370,27 @@ VtkResqml2MultiBlockDataSet(fileName, fileName, fileName, "", idProc, maxProc), 
 		}
 		for (auto iter = 0; iter < subRepresentation.size(); ++iter)
 		{
+			uuidIsChildOf[subRepresentation[iter]->getUuid()] = new VtkEpcCommon();
 			if (subRepresentation[iter]->isPartial())
 			{
 				auto vtkEpcSrc = epcSet->getVtkEpcDocument(subRepresentation[iter]->getUuid());
 				if (vtkEpcSrc)
 				{
 					createTreeVtkPartialRep(subRepresentation[iter]->getUuid(), vtkEpcSrc);
-					uuidPartialRep.push_back(subRepresentation[iter]->getUuid());
-					uuidIsChildOf[subRepresentation[iter]->getUuid()].myType = VtkEpcTools::PARTIAL;
-					uuidIsChildOf[subRepresentation[iter]->getUuid()].uuid = subRepresentation[iter]->getUuid();
+					uuidIsChildOf[subRepresentation[iter]->getUuid()]->setParentType( VtkEpcCommon::SUB_REP);
 				}
-				else
-				{
-					uuidIsChildOf[subRepresentation[iter]->getUuid()].myType = VtkEpcTools::PARTIAL;
-					uuidIsChildOf[subRepresentation[iter]->getUuid()].uuid = "UNKNOWN";
-				}
-
 			}
 			else
 			{
 				auto uuidParent = subRepresentation[iter]->getSupportingRepresentationUuid(0);
-
-				createTreeVtk(subRepresentation[iter]->getUuid(), uuidParent, subRepresentation[iter]->getTitle().c_str(), VtkEpcTools::SUB_REP);
+				createTreeVtk(subRepresentation[iter]->getUuid(), uuidParent, subRepresentation[iter]->getTitle().c_str(), VtkEpcCommon::SUB_REP);
 			}
 			//property
 			auto valuesPropertySet = subRepresentation[iter]->getValuesPropertySet();
 			for (unsigned int i = 0; i < valuesPropertySet.size(); ++i)
 			{
-				createTreeVtk(valuesPropertySet[i]->getUuid(), subRepresentation[iter]->getUuid(), valuesPropertySet[i]->getTitle().c_str(), VtkEpcTools::PROPERTY);
+				uuidIsChildOf[valuesPropertySet[i]->getUuid()] = new VtkEpcCommon();
+				createTreeVtk(valuesPropertySet[i]->getUuid(), subRepresentation[iter]->getUuid(), valuesPropertySet[i]->getTitle().c_str(), VtkEpcCommon::PROPERTY);
 			}
 		}
 		//**************
@@ -455,20 +411,25 @@ VtkResqml2MultiBlockDataSet(fileName, fileName, fileName, "", idProc, maxProc), 
 		for (auto iter = 0; iter < timeSeries.size(); ++iter)
 		{
 			auto propSeries = timeSeries[iter]->getPropertySet();
+			uuidIsChildOf[propSeries[iter]->getUuid()] = new VtkEpcCommon();
 			for (auto i = 0; i < propSeries.size(); ++i)
 			{
-				uuidIsChildOf[propSeries[i]->getUuid()].myType = VtkEpcTools::TIME_SERIES;
-				uuidIsChildOf[propSeries[i]->getUuid()].timeIndex = propSeries[i]->getTimeIndex();
+				uuidIsChildOf[propSeries[i]->getUuid()]->setType( VtkEpcCommon::TIME_SERIES);
+				uuidIsChildOf[propSeries[i]->getUuid()]->setTimeIndex( propSeries[i]->getTimeIndex());
+				uuidIsChildOf[propSeries[i]->getUuid()]->setTimestamp( propSeries[i]->getTimestamp());
+
 				/*
-				if (propSeries[i]->isAssociatedToOneStandardEnergisticsPropertyKind)
+				if (propSeries[i]->isAssociatedToOneStandardEnergisticsPropertyKind())
 				{
-					getEnergisticsPropertyKind
+					auto propKind = propSeries[i]->getEnergisticsPropertyKind();
 				}
 				else
 				{
-					getLocalPropertyKindUuid
+					auto propkindUuid = propSeries[i]->getLocalPropertyKindUuid();
+					cout << "name : " << propSeries[i]->getTitle() << " - " <<propkindUuid << "\n";
 				}
-				 */
+				*/
+
 			}
 		}
 
@@ -592,56 +553,62 @@ VtkEpcDocument::~VtkEpcDocument()
 }
 
 //----------------------------------------------------------------------------
-void VtkEpcDocument::createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, const VtkEpcTools::Resqml2Type & type)
+void VtkEpcDocument::createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, const VtkEpcCommon::Resqml2Type & type)
 {
-	uuidIsChildOf[uuid].myType = type;
-	uuidIsChildOf[uuid].uuid = "UNKNOWN";
-	uuidIsChildOf[uuid].parentType = uuidIsChildOf[parent].myType;
-	uuidIsChildOf[uuid].parent = parent;
-	uuidIsChildOf[uuid].name = name;
-	uuidIsChildOf[uuid].timeIndex = 0;
+	uuidIsChildOf[uuid]->setType( type);
+	uuidIsChildOf[uuid]->setUuid(uuid);
+	uuidIsChildOf[uuid]->setParent(parent);
+	uuidIsChildOf[uuid]->setName(name);
+	uuidIsChildOf[uuid]->setTimeIndex(-1);
+	uuidIsChildOf[uuid]->setTimestamp(0);
 
-	if (uuidIsChildOf[parent].uuid != "UNKNOWN")
+	if(uuidIsChildOf[parent])
 	{
-		uuidIsChildOf[uuid].uuid = uuid;
+		uuidIsChildOf[uuid]->setParentType( uuidIsChildOf[parent]->getType());
+	}
+	else
+	{
+		uuidIsChildOf[uuid]->setParentType( VtkEpcCommon::INTERPRETATION);
+	}
+
 	switch (type)
 	{
-	case VtkEpcTools::Resqml2Type::GRID_2D:
+	case VtkEpcCommon::Resqml2Type::GRID_2D:
 	{
 		addGrid2DTreeVtk(uuid, parent, name);
 		break;
 	}
-	case VtkEpcTools::Resqml2Type::POLYLINE_SET:
+	case VtkEpcCommon::Resqml2Type::POLYLINE_SET:
 	{
 		addPolylineSetTreeVtk(uuid, parent, name);
 		break;
 	}
-	case VtkEpcTools::Resqml2Type::TRIANGULATED_SET:
+	case VtkEpcCommon::Resqml2Type::TRIANGULATED_SET:
 	{
 		addTriangulatedSetTreeVtk(uuid, parent, name);
 		break;
 	}
-	case VtkEpcTools::Resqml2Type::WELL_TRAJ:
+	case VtkEpcCommon::Resqml2Type::WELL_TRAJ:
 	{
 		addWellTrajTreeVtk(uuid, parent, name);
 		break;
 	}
-	case VtkEpcTools::Resqml2Type::IJK_GRID:
+	case VtkEpcCommon::Resqml2Type::IJK_GRID:
 	{
 		addIjkGridTreeVtk(uuid, parent, name);
 		break;
 	}
-	case VtkEpcTools::Resqml2Type::UNSTRUC_GRID:
+	case VtkEpcCommon::Resqml2Type::UNSTRUC_GRID:
 	{
 		addUnstrucGridTreeVtk(uuid, parent, name);
 		break;
 	}
-	case VtkEpcTools::Resqml2Type::SUB_REP:
+	case VtkEpcCommon::Resqml2Type::SUB_REP:
 	{
 		addSubRepTreeVtk(uuid, parent, name);
 		break;
 	}
-	case VtkEpcTools::Resqml2Type::PROPERTY:
+	case VtkEpcCommon::Resqml2Type::PROPERTY:
 	{
 		addPropertyTreeVtk(uuid, parent, name);
 	}
@@ -649,7 +616,6 @@ void VtkEpcDocument::createTreeVtk(const std::string & uuid, const std::string &
 		break;
 	}
 	uuidRep.push_back(uuid);
-	}
 }
 
 //----------------------------------------------------------------------------
@@ -709,42 +675,38 @@ void VtkEpcDocument::addUnstrucGridTreeVtk(const std::string & uuid, const std::
 //----------------------------------------------------------------------------
 void VtkEpcDocument::addSubRepTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name)
 {
-	if (uuidIsChildOf[uuid].parentType == VtkEpcTools::Resqml2Type::IJK_GRID)
+	if (uuidIsChildOf[uuid]->getParentType() == VtkEpcCommon::IJK_GRID)
 	{
 		uuidToVtkIjkGridRepresentation[uuid] = new VtkIjkGridRepresentation(getFileName(), name, uuid, parent, epcPackage, epcPackage);
 	}
-	if (uuidIsChildOf[uuid].parentType == VtkEpcTools::Resqml2Type::UNSTRUC_GRID)
+	if (uuidIsChildOf[uuid]->getParentType() == VtkEpcCommon::UNSTRUC_GRID)
 	{
 		uuidToVtkUnstructuredGridRepresentation[uuid] = new VtkUnstructuredGridRepresentation(getFileName(), name, uuid, parent, epcPackage, epcPackage);
 	}
-	if (uuidIsChildOf[uuid].parentType == VtkEpcTools::Resqml2Type::PARTIAL)
+	if (uuidIsChildOf[uuid]->getParentType() == VtkEpcCommon::PARTIAL)
 	{
-		auto parentUuidType = uuidToVtkPartialRepresentation[parent]->getType();
+		auto parentUuidType = uuidIsChildOf[parent]->getParentType();
 		auto pckEPCsrc = uuidToVtkPartialRepresentation[parent]->getEpcSource();
 
 		switch (parentUuidType)
 		{
-		case VtkEpcTools::Resqml2Type::GRID_2D:
+		case VtkEpcCommon::GRID_2D:
 		{
-			uuidIsChildOf[uuid].parentType = VtkEpcTools::Resqml2Type::GRID_2D;
 			uuidToVtkGrid2DRepresentation[uuid] = new VtkGrid2DRepresentation(getFileName(), name, uuid, parent, pckEPCsrc, epcPackage);
 			break;
 		}
-		case VtkEpcTools::Resqml2Type::WELL_TRAJ:
+		case VtkEpcCommon::WELL_TRAJ:
 		{
-			uuidIsChildOf[uuid].parentType = VtkEpcTools::Resqml2Type::WELL_TRAJ;
 			uuidToVtkWellboreTrajectoryRepresentation[uuid] = new VtkWellboreTrajectoryRepresentation(getFileName(), name, uuid, parent, pckEPCsrc, epcPackage);
 			break;
 		}
-		case VtkEpcTools::Resqml2Type::IJK_GRID:
+		case VtkEpcCommon::IJK_GRID:
 		{
-			uuidIsChildOf[uuid].parentType = VtkEpcTools::Resqml2Type::IJK_GRID;
 			uuidToVtkIjkGridRepresentation[uuid] = new VtkIjkGridRepresentation(getFileName(), name, uuid, parent, pckEPCsrc, epcPackage);
 			break;
 		}
-		case VtkEpcTools::Resqml2Type::UNSTRUC_GRID:
+		case VtkEpcCommon::UNSTRUC_GRID:
 		{
-			uuidIsChildOf[uuid].parentType = VtkEpcTools::Resqml2Type::UNSTRUC_GRID;
 			uuidToVtkUnstructuredGridRepresentation[uuid] = new VtkUnstructuredGridRepresentation(getFileName(), name, uuid, parent, pckEPCsrc, epcPackage);
 			break;
 		}
@@ -755,151 +717,111 @@ void VtkEpcDocument::addSubRepTreeVtk(const std::string & uuid, const std::strin
 //----------------------------------------------------------------------------
 void VtkEpcDocument::addPropertyTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name)
 {
-	switch (uuidIsChildOf[uuid].parentType)
+	switch (uuidIsChildOf[parent]->getType())
 	{
-	case VtkEpcTools::GRID_2D:
+	case VtkEpcCommon::GRID_2D:
 	{
-		uuidToVtkGrid2DRepresentation[parent]->createTreeVtk(uuid, parent, name, uuidIsChildOf[uuid].myType);
+		uuidToVtkGrid2DRepresentation[parent]->createTreeVtk(uuid, parent, name, uuidIsChildOf[uuid]->getType());
 		break;
 	}
-	case VtkEpcTools::POLYLINE_SET:
+	case VtkEpcCommon::POLYLINE_SET:
 	{
 		auto object = epcPackage->getResqmlAbstractObjectByUuid(parent);
 		auto typeRepresentation = object->getXmlTag();
 		if (typeRepresentation == "PolylineRepresentation")
 		{
-			uuidToVtkPolylineRepresentation[parent]->createTreeVtk(uuid, parent, name, uuidIsChildOf[uuid].myType);
+			uuidToVtkPolylineRepresentation[parent]->createTreeVtk(uuid, parent, name, uuidIsChildOf[uuid]->getType());
 		}
 		else
 		{
-			uuidToVtkSetPatch[parent]->createTreeVtk(uuid, parent, name, uuidIsChildOf[uuid].myType);
+			uuidToVtkSetPatch[parent]->createTreeVtk(uuid, parent, name, uuidIsChildOf[uuid]->getType());
 		}
 		break;
 	}
-	case VtkEpcTools::TRIANGULATED_SET:
+	case VtkEpcCommon::TRIANGULATED_SET:
 	{
 		auto object = epcPackage->getResqmlAbstractObjectByUuid(uuid);
 		auto typeRepresentation = object->getXmlTag();
 		if (typeRepresentation == "TriangulatedRepresentation")
 		{
-			uuidToVtkTriangulatedRepresentation[parent]->createTreeVtk(uuid, parent, name, uuidIsChildOf[uuid].myType);
+			uuidToVtkTriangulatedRepresentation[parent]->createTreeVtk(uuid, parent, name, uuidIsChildOf[uuid]->getType());
 		}
 		else
 		{
-			uuidToVtkSetPatch[parent]->createTreeVtk(uuid, parent, name, uuidIsChildOf[uuid].myType);
+			uuidToVtkSetPatch[parent]->createTreeVtk(uuid, parent, name, uuidIsChildOf[uuid]->getType());
 		}
 		break;
 	}
-	case VtkEpcTools::WELL_TRAJ:
+	case VtkEpcCommon::WELL_TRAJ:
 	{
-		uuidToVtkWellboreTrajectoryRepresentation[parent]->createTreeVtk(uuid, parent, name, uuidIsChildOf[uuid].myType);
+		uuidToVtkWellboreTrajectoryRepresentation[parent]->createTreeVtk(uuid, parent, name, uuidIsChildOf[uuid]->getType());
 		break;
 	}
-	case VtkEpcTools::IJK_GRID:
+	case VtkEpcCommon::IJK_GRID:
 	{
-		uuidToVtkIjkGridRepresentation[parent]->createTreeVtk(uuid, parent, name, uuidIsChildOf[uuid].myType);
+		uuidToVtkIjkGridRepresentation[parent]->createTreeVtk(uuid, parent, name, uuidIsChildOf[uuid]->getType());
 		break;
 	}
-	case VtkEpcTools::UNSTRUC_GRID:
+	case VtkEpcCommon::UNSTRUC_GRID:
 	{
-		uuidToVtkUnstructuredGridRepresentation[parent]->createTreeVtk(uuid, parent, name, uuidIsChildOf[uuid].myType);
+		uuidToVtkUnstructuredGridRepresentation[parent]->createTreeVtk(uuid, parent, name, uuidIsChildOf[uuid]->getType());
 		break;
 	}
-	case VtkEpcTools::SUB_REP:
+	case VtkEpcCommon::SUB_REP:
 	{
-		if (uuidIsChildOf[parent].parentType == VtkEpcTools::Resqml2Type::IJK_GRID)
+		if (uuidIsChildOf[parent]->getParentType() == VtkEpcCommon::IJK_GRID)
 		{
-			uuidToVtkIjkGridRepresentation[uuidIsChildOf[parent].uuid]->createTreeVtk(uuid, parent, name, uuidIsChildOf[uuid].myType);
+			uuidToVtkIjkGridRepresentation[parent]->createTreeVtk(uuid, parent, name, uuidIsChildOf[uuid]->getType());
 		}
-		if (uuidIsChildOf[parent].parentType == VtkEpcTools::Resqml2Type::UNSTRUC_GRID)
+		if (uuidIsChildOf[parent]->getParentType() == VtkEpcCommon::UNSTRUC_GRID)
 		{
-			uuidToVtkUnstructuredGridRepresentation[uuidIsChildOf[parent].uuid]->createTreeVtk(uuid, parent, name, uuidIsChildOf[uuid].myType);
+			uuidToVtkUnstructuredGridRepresentation[parent]->createTreeVtk(uuid, parent, name, uuidIsChildOf[uuid]->getType());
 		}
-		if (uuidIsChildOf[parent].parentType == VtkEpcTools::Resqml2Type::PARTIAL)
+		if (uuidIsChildOf[parent]->getParentType() == VtkEpcCommon::PARTIAL)
 		{
-			uuidToVtkPartialRepresentation[uuidIsChildOf[parent].uuid]->createTreeVtk(uuid, parent, name, uuidIsChildOf[uuid].myType);
-		}
-		break;
-	}
-	case VtkEpcTools::PARTIAL:
-	{
-		auto parentInfoUuid = uuidToVtkPartialRepresentation[parent]->getInfoUuid();
-		auto pckEPCsrc = uuidToVtkPartialRepresentation[parent]->getEpcSource();
+			auto uuidPartial = uuidIsChildOf[parent]->getParent();
 
-		switch (parentInfoUuid.myType)
-		{
-		case VtkEpcTools::GRID_2D:
-		{
-			uuidIsChildOf[uuid].parentType = VtkEpcTools::Resqml2Type::GRID_2D;
-			if (!uuidToVtkGrid2DRepresentation[parentInfoUuid.uuid])
-				uuidToVtkGrid2DRepresentation[parentInfoUuid.uuid] = new VtkGrid2DRepresentation(getFileName(), name, parentInfoUuid.uuid, parentInfoUuid.parent, pckEPCsrc, epcPackage);
-			uuidToVtkGrid2DRepresentation[parent]->createTreeVtk(uuid, parentInfoUuid.uuid, name, uuidIsChildOf[uuid].myType);
-			break;
-		}
-		case VtkEpcTools::WELL_TRAJ:
-		{
-			uuidIsChildOf[uuid].parentType = VtkEpcTools::Resqml2Type::WELL_TRAJ;
-			if (!uuidToVtkWellboreTrajectoryRepresentation[parentInfoUuid.uuid])
-				uuidToVtkWellboreTrajectoryRepresentation[parentInfoUuid.uuid] = new VtkWellboreTrajectoryRepresentation(getFileName(), name, parentInfoUuid.uuid, parentInfoUuid.parent, pckEPCsrc, epcPackage);
-			uuidToVtkWellboreTrajectoryRepresentation[parent]->createTreeVtk(uuid, parentInfoUuid.uuid, name, uuidIsChildOf[uuid].myType);
-			break;
-		}
-		case VtkEpcTools::IJK_GRID:
-		{
-			uuidIsChildOf[uuid].parentType = VtkEpcTools::Resqml2Type::IJK_GRID;
-			if (!uuidToVtkIjkGridRepresentation[parentInfoUuid.uuid])
-				uuidToVtkIjkGridRepresentation[parentInfoUuid.uuid] = new VtkIjkGridRepresentation(getFileName(), name, parentInfoUuid.uuid, parentInfoUuid.parent, pckEPCsrc, epcPackage);
-			uuidToVtkIjkGridRepresentation[parent]->createTreeVtk(uuid, parentInfoUuid.uuid, name, uuidIsChildOf[uuid].myType);
-			break;
-		}
-		case VtkEpcTools::UNSTRUC_GRID:
-		{
-			uuidIsChildOf[uuid].parentType = VtkEpcTools::Resqml2Type::UNSTRUC_GRID;
-			if (!uuidToVtkUnstructuredGridRepresentation[parentInfoUuid.uuid])
-				uuidToVtkUnstructuredGridRepresentation[parentInfoUuid.uuid] = new VtkUnstructuredGridRepresentation(getFileName(), name, parentInfoUuid.uuid, parentInfoUuid.parent, pckEPCsrc, epcPackage);
-			uuidToVtkUnstructuredGridRepresentation[parent]->createTreeVtk(uuid, parentInfoUuid.uuid, name, uuidIsChildOf[uuid].myType);
-			break;
-		}
-		case VtkEpcTools::SUB_REP:
-		{
-			if (parentInfoUuid.parentType == VtkEpcTools::Resqml2Type::IJK_GRID)
+			switch (uuidIsChildOf[uuidPartial]->getParentType())
 			{
-				uuidIsChildOf[uuid].parentType = VtkEpcTools::Resqml2Type::IJK_GRID;
-				if (!uuidToVtkIjkGridRepresentation[parentInfoUuid.uuid])
-					uuidToVtkIjkGridRepresentation[parentInfoUuid.uuid] = new VtkIjkGridRepresentation(getFileName(), name, parentInfoUuid.uuid, parentInfoUuid.parent, pckEPCsrc, epcPackage);
-				uuidToVtkIjkGridRepresentation[parent]->createTreeVtk(uuid, parentInfoUuid.uuid, name, uuidIsChildOf[uuid].myType);
-			}
-			if (parentInfoUuid.parentType == VtkEpcTools::Resqml2Type::UNSTRUC_GRID)
+			case VtkEpcCommon::GRID_2D:
 			{
-				uuidIsChildOf[uuid].parentType = VtkEpcTools::Resqml2Type::UNSTRUC_GRID;
-				if (!uuidToVtkUnstructuredGridRepresentation[parentInfoUuid.uuid])
-					uuidToVtkUnstructuredGridRepresentation[parentInfoUuid.uuid] = new VtkUnstructuredGridRepresentation(getFileName(), name, parentInfoUuid.uuid, parentInfoUuid.parent, pckEPCsrc, epcPackage);
-				uuidToVtkUnstructuredGridRepresentation[parent]->createTreeVtk(uuid, parentInfoUuid.uuid, name, uuidIsChildOf[uuid].myType);
+				uuidToVtkGrid2DRepresentation[parent]->createTreeVtk(uuid, parent, name, uuidIsChildOf[uuid]->getType());
+				break;
 			}
-			if (parentInfoUuid.parentType == VtkEpcTools::Resqml2Type::GRID_2D)
+			case VtkEpcCommon::WELL_TRAJ:
 			{
-				uuidIsChildOf[uuid].parentType = VtkEpcTools::Resqml2Type::GRID_2D;
-				if (!uuidToVtkGrid2DRepresentation[parentInfoUuid.uuid])
-					uuidToVtkGrid2DRepresentation[parentInfoUuid.uuid] = new VtkGrid2DRepresentation(getFileName(), name, parentInfoUuid.uuid, parentInfoUuid.parent, pckEPCsrc, epcPackage);
-				uuidToVtkGrid2DRepresentation[parent]->createTreeVtk(uuid, parentInfoUuid.uuid, name, uuidIsChildOf[uuid].myType);
+				uuidToVtkWellboreTrajectoryRepresentation[parent]->createTreeVtk(uuid, parent, name, uuidIsChildOf[uuid]->getType());
+				break;
 			}
-			if (parentInfoUuid.parentType == VtkEpcTools::Resqml2Type::WELL_TRAJ)
+			case VtkEpcCommon::IJK_GRID:
 			{
-				uuidIsChildOf[uuid].parentType = VtkEpcTools::Resqml2Type::WELL_TRAJ;
-				if (!uuidToVtkWellboreTrajectoryRepresentation[parentInfoUuid.uuid])
-					uuidToVtkWellboreTrajectoryRepresentation[parentInfoUuid.uuid] = new VtkWellboreTrajectoryRepresentation(getFileName(), name, parentInfoUuid.uuid, parentInfoUuid.parent, pckEPCsrc, epcPackage);
-				uuidToVtkWellboreTrajectoryRepresentation[parent]->createTreeVtk(uuid, parentInfoUuid.uuid, name, uuidIsChildOf[uuid].myType);
+				uuidToVtkIjkGridRepresentation[parent]->createTreeVtk(uuid, parent, name, uuidIsChildOf[uuid]->getType());
+				break;
 			}
-			break;
+			case VtkEpcCommon::UNSTRUC_GRID:
+			{
+				uuidToVtkUnstructuredGridRepresentation[parent]->createTreeVtk(uuid, parent, name, uuidIsChildOf[uuid]->getType());
+				break;
+			}
+			}
 		}
-		default:
-		{
-			cout << " parent type unknown " << uuidIsChildOf[uuid].parentType << "\n";
-			break;
-		}
-		}
+
+
+		break;
+	}
+	case VtkEpcCommon::PARTIAL:
+	{
+		uuidToVtkPartialRepresentation[uuidIsChildOf[parent]->getUuid()]->createTreeVtk(uuid, parent, name, uuidIsChildOf[uuid]->getType());
+		break;
+	}
+
+	default:
+	{
+		cout << " parent type unknown " << uuidIsChildOf[uuid]->getParentType() << "\n";
+		break;
 	}
 	}
+
 }
 
 
@@ -907,8 +829,8 @@ void VtkEpcDocument::addPropertyTreeVtk(const std::string & uuid, const std::str
 //----------------------------------------------------------------------------
 void VtkEpcDocument::createTreeVtkPartialRep(const std::string & uuid, VtkEpcDocument *vtkEpcDowumentWithCompleteRep)
 {
-	uuidIsChildOf[uuid].myType = VtkEpcTools::Resqml2Type::PARTIAL;
-	uuidIsChildOf[uuid].uuid = uuid;
+	uuidIsChildOf[uuid]->setType( VtkEpcCommon::PARTIAL);
+	uuidIsChildOf[uuid]->setUuid(uuid);
 	uuidToVtkPartialRepresentation[uuid] = new VtkPartialRepresentation(getFileName(), uuid, vtkEpcDowumentWithCompleteRep, epcPackage);
 }
 
@@ -939,150 +861,267 @@ void VtkEpcDocument::setIndexTimeSeries(const int & index)
 //----------------------------------------------------------------------------
 void VtkEpcDocument::visualize(const std::string & uuid)
 {
-	auto uuidToAttach = uuidIsChildOf[uuid].uuid;
-	switch (uuidIsChildOf[uuid].myType)
+	cout << "visualize - " << uuid << " - \n";
+	auto uuidToAttach = uuidIsChildOf[uuid]->getUuid();
+	switch (uuidIsChildOf[uuid]->getType())
 	{
-	case VtkEpcTools::GRID_2D:
+	case VtkEpcCommon::GRID_2D:
 	{
-		uuidToVtkGrid2DRepresentation[uuidIsChildOf[uuid].uuid]->visualize(uuid);
+		uuidToVtkGrid2DRepresentation[uuidIsChildOf[uuid]->getUuid()]->visualize(uuid);
 		break;
 	}
-	case VtkEpcTools::POLYLINE_SET:
+	case VtkEpcCommon::POLYLINE_SET:
 	{
-		auto object = epcPackage->getResqmlAbstractObjectByUuid(uuidIsChildOf[uuid].uuid);
+		auto object = epcPackage->getResqmlAbstractObjectByUuid(uuidIsChildOf[uuid]->getUuid());
 		auto typeRepresentation = object->getXmlTag();
 		if (typeRepresentation == "PolylineRepresentation")
 		{
-			uuidToVtkPolylineRepresentation[uuidIsChildOf[uuid].uuid]->visualize(uuid);
+			uuidToVtkPolylineRepresentation[uuidIsChildOf[uuid]->getUuid()]->visualize(uuid);
 		}
 		else
 		{
-			uuidToVtkSetPatch[uuidIsChildOf[uuid].uuid]->visualize(uuid);
+			uuidToVtkSetPatch[uuidIsChildOf[uuid]->getUuid()]->visualize(uuid);
 		}
 		break;
 	}
-	case VtkEpcTools::TRIANGULATED_SET:
+	case VtkEpcCommon::TRIANGULATED_SET:
 	{
-		auto object = epcPackage->getResqmlAbstractObjectByUuid(uuidIsChildOf[uuid].uuid);
+		auto object = epcPackage->getResqmlAbstractObjectByUuid(uuidIsChildOf[uuid]->getUuid());
 		auto typeRepresentation = object->getXmlTag();
 		if (typeRepresentation == "TriangulatedRepresentation")
 		{
-			uuidToVtkTriangulatedRepresentation[uuidIsChildOf[uuid].uuid]->visualize(uuid);
+			uuidToVtkTriangulatedRepresentation[uuidIsChildOf[uuid]->getUuid()]->visualize(uuid);
 		}
 		else
 		{
-			uuidToVtkSetPatch[uuidIsChildOf[uuid].uuid]->visualize(uuid);
+			uuidToVtkSetPatch[uuidIsChildOf[uuid]->getUuid()]->visualize(uuid);
 		}
 		break;
 	}
-	case VtkEpcTools::WELL_TRAJ:
+	case VtkEpcCommon::WELL_TRAJ:
 	{
-		uuidToVtkWellboreTrajectoryRepresentation[uuidIsChildOf[uuid].uuid]->visualize(uuid);
+		uuidToVtkWellboreTrajectoryRepresentation[uuidIsChildOf[uuid]->getUuid()]->visualize(uuid);
 		break;
 	}
-	case VtkEpcTools::IJK_GRID:
+	case VtkEpcCommon::IJK_GRID:
 	{
-		uuidToVtkIjkGridRepresentation[uuidIsChildOf[uuid].uuid]->visualize(uuid);
+		uuidToVtkIjkGridRepresentation[uuidIsChildOf[uuid]->getUuid()]->visualize(uuid);
 		break;
 	}
-	case VtkEpcTools::UNSTRUC_GRID:
+	case VtkEpcCommon::UNSTRUC_GRID:
 	{
-		uuidToVtkUnstructuredGridRepresentation[uuidIsChildOf[uuid].uuid]->visualize(uuid);
+		uuidToVtkUnstructuredGridRepresentation[uuidIsChildOf[uuid]->getUuid()]->visualize(uuid);
 		break;
 	}
-	case VtkEpcTools::SUB_REP:
+	case VtkEpcCommon::SUB_REP:
 	{
-		if (uuidIsChildOf[uuid].parentType == VtkEpcTools::Resqml2Type::IJK_GRID)
+		if (uuidIsChildOf[uuid]->getParentType() == VtkEpcCommon::IJK_GRID)
 		{
-			uuidToVtkIjkGridRepresentation[uuidIsChildOf[uuid].uuid]->visualize(uuid);
+			uuidToVtkIjkGridRepresentation[uuidIsChildOf[uuid]->getUuid()]->visualize(uuid);
 		}
-		if (uuidIsChildOf[uuid].parentType == VtkEpcTools::Resqml2Type::UNSTRUC_GRID)
+		if (uuidIsChildOf[uuid]->getParentType() == VtkEpcCommon::UNSTRUC_GRID)
 		{
-			uuidToVtkUnstructuredGridRepresentation[uuidIsChildOf[uuid].uuid]->visualize(uuid);
+			uuidToVtkUnstructuredGridRepresentation[uuidIsChildOf[uuid]->getUuid()]->visualize(uuid);
 		}
-		if (uuidIsChildOf[uuid].parentType == VtkEpcTools::Resqml2Type::PARTIAL)
+		if (uuidIsChildOf[uuid]->getParentType() == VtkEpcCommon::PARTIAL)
 		{
-			uuidToVtkPartialRepresentation[uuidIsChildOf[uuid].uuid]->visualize(uuid);
+			auto parent = uuidIsChildOf[uuid]->getParent();
+
+			switch (uuidIsChildOf[parent]->getParentType() )
+			{
+			case VtkEpcCommon::GRID_2D:
+			{
+				uuidToVtkGrid2DRepresentation[uuid]->visualize(uuid);
+				break;
+			}
+			case VtkEpcCommon::WELL_TRAJ:
+			{
+				uuidToVtkWellboreTrajectoryRepresentation[uuid]->visualize(uuid);
+				break;
+			}
+			case VtkEpcCommon::IJK_GRID:
+			{
+				uuidToVtkIjkGridRepresentation[uuid]->visualize(uuid);
+				break;
+			}
+			case VtkEpcCommon::UNSTRUC_GRID:
+			{
+				uuidToVtkUnstructuredGridRepresentation[uuid]->visualize(uuid);
+				break;
+			}
+			}
 		}
 		break;
 	}
-	case VtkEpcTools::PARTIAL:
+	case VtkEpcCommon::PARTIAL:
 	{
-		uuidToVtkPartialRepresentation[uuidIsChildOf[uuid].uuid]->visualize(uuid);
+		uuidToVtkPartialRepresentation[uuidIsChildOf[uuid]->getUuid()]->visualize(uuid);
 		break;
 	}
-	case VtkEpcTools::PROPERTY:
-	{
-		uuidToAttach = uuidIsChildOf[uuid].parent;
-		switch (uuidIsChildOf[uuid].parentType)
+	case (VtkEpcCommon::TIME_SERIES):
+				{
+		uuidToAttach = uuidIsChildOf[uuid]->getParent();
+		switch (uuidIsChildOf[uuid]->getParentType())
 		{
-		case VtkEpcTools::Resqml2Type::GRID_2D:
+		case VtkEpcCommon::GRID_2D:
 		{
-			uuidToVtkGrid2DRepresentation[uuidIsChildOf[uuid].parent]->visualize(uuid);
+			uuidToVtkGrid2DRepresentation[uuidIsChildOf[uuid]->getParent()]->visualize(uuid);
 			break;
 		}
-		case VtkEpcTools::POLYLINE_SET:
+		case VtkEpcCommon::POLYLINE_SET:
 		{
-			auto object = epcPackage->getResqmlAbstractObjectByUuid(uuidIsChildOf[uuid].parent);
+			auto object = epcPackage->getResqmlAbstractObjectByUuid(uuidIsChildOf[uuid]->getParent());
 			auto typeRepresentation = object->getXmlTag();
 			if (typeRepresentation == "PolylineRepresentation")
 			{
-				uuidToVtkPolylineRepresentation[uuidIsChildOf[uuid].parent]->visualize(uuid);
+				uuidToVtkPolylineRepresentation[uuidIsChildOf[uuid]->getParent()]->visualize(uuid);
 			}
 			else
 			{
-				uuidToVtkSetPatch[uuidIsChildOf[uuid].parent]->visualize(uuid);
+				uuidToVtkSetPatch[uuidIsChildOf[uuid]->getParent()]->visualize(uuid);
 			}
 			break;
 		}
-		case VtkEpcTools::TRIANGULATED_SET:
+		case VtkEpcCommon::TRIANGULATED_SET:
 		{
 			auto object = epcPackage->getResqmlAbstractObjectByUuid(uuid);
 			auto typeRepresentation = object->getXmlTag();
 			if (typeRepresentation == "TriangulatedRepresentation")
 			{
-				uuidToVtkTriangulatedRepresentation[uuidIsChildOf[uuid].parent]->visualize(uuid);
+				uuidToVtkTriangulatedRepresentation[uuidIsChildOf[uuid]->getParent()]->visualize(uuid);
 			}
 			else
 			{
-				uuidToVtkSetPatch[uuidIsChildOf[uuid].parent]->visualize(uuid);
+				uuidToVtkSetPatch[uuidIsChildOf[uuid]->getParent()]->visualize(uuid);
 			}
 			break;
 		}
-		case VtkEpcTools::WELL_TRAJ:
+		case VtkEpcCommon::WELL_TRAJ:
 		{
-			uuidToVtkWellboreTrajectoryRepresentation[uuidIsChildOf[uuid].parent]->visualize(uuid);
+			uuidToVtkWellboreTrajectoryRepresentation[uuidIsChildOf[uuid]->getParent()]->visualize(uuid);
 			break;
 		}
-		case VtkEpcTools::IJK_GRID:
+		case VtkEpcCommon::IJK_GRID:
 		{
-			uuidToVtkIjkGridRepresentation[uuidIsChildOf[uuid].parent]->visualize(uuid);
+			uuidToVtkIjkGridRepresentation[uuidIsChildOf[uuid]->getParent()]->visualize(uuid);
 			break;
 		}
-		case VtkEpcTools::UNSTRUC_GRID:
+		case VtkEpcCommon::UNSTRUC_GRID:
 		{
-			uuidToVtkUnstructuredGridRepresentation[uuidIsChildOf[uuid].parent]->visualize(uuid);
+			uuidToVtkUnstructuredGridRepresentation[uuidIsChildOf[uuid]->getParent()]->visualize(uuid);
 			break;
 		}
-		case VtkEpcTools::SUB_REP:
+		case VtkEpcCommon::SUB_REP:
 		{
-			if (uuidIsChildOf[uuidIsChildOf[uuid].parent].parentType == VtkEpcTools::Resqml2Type::IJK_GRID)
+			if (uuidIsChildOf[uuidIsChildOf[uuid]->getParent()]->getParentType() == VtkEpcCommon::IJK_GRID)
 			{
-				uuidToVtkIjkGridRepresentation[uuidIsChildOf[uuidIsChildOf[uuid].parent].uuid]->visualize(uuid);
+				uuidToVtkIjkGridRepresentation[uuidIsChildOf[uuidIsChildOf[uuid]->getParent()]->getUuid()]->visualize(uuid);
 			}
-			if (uuidIsChildOf[uuidIsChildOf[uuid].parent].parentType == VtkEpcTools::Resqml2Type::UNSTRUC_GRID)
+			if (uuidIsChildOf[uuidIsChildOf[uuid]->getParent()]->getParentType() == VtkEpcCommon::UNSTRUC_GRID)
 			{
-				uuidToVtkUnstructuredGridRepresentation[uuidIsChildOf[uuidIsChildOf[uuid].parent].uuid]->visualize(uuid);
+				uuidToVtkUnstructuredGridRepresentation[uuidIsChildOf[uuidIsChildOf[uuid]->getParent()]->getUuid()]->visualize(uuid);
 			}
-			if (uuidIsChildOf[uuidIsChildOf[uuid].parent].parentType == VtkEpcTools::Resqml2Type::PARTIAL)
+			if (uuidIsChildOf[uuidIsChildOf[uuid]->getParent()]->getParentType() == VtkEpcCommon::PARTIAL)
 			{
-				uuidToVtkPartialRepresentation[uuidIsChildOf[uuidIsChildOf[uuid].parent].uuid]->visualize(uuid);
+				if (uuidIsChildOf[uuidIsChildOf[uuidIsChildOf[uuid]->getParent()]->getParent()]->getParentType() == VtkEpcCommon::IJK_GRID)
+				{
+					uuidToVtkIjkGridRepresentation[uuidIsChildOf[uuidIsChildOf[uuid]->getParent()]->getUuid()]->visualize(uuid);
+				}
+				if (uuidIsChildOf[uuidIsChildOf[uuidIsChildOf[uuid]->getParent()]->getParent()]->getParentType() == VtkEpcCommon::UNSTRUC_GRID)
+				{
+					uuidToVtkUnstructuredGridRepresentation[uuidIsChildOf[uuidIsChildOf[uuid]->getParent()]->getUuid()]->visualize(uuid);
+				}
 			}
 			break;
 		}
-		case VtkEpcTools::PARTIAL:
+		case VtkEpcCommon::PARTIAL:
 		{
-			uuidToVtkPartialRepresentation[uuidIsChildOf[uuid].uuid]->visualize(uuid);
+			uuidToVtkPartialRepresentation[uuidIsChildOf[uuid]->getParent()]->visualize(uuid);
+			break;
+		}
+		default:
+			break;
+		}
+				}
+	case VtkEpcCommon::PROPERTY:
+	{
+		uuidToAttach = uuidIsChildOf[uuid]->getParent();
+		switch (uuidIsChildOf[uuid]->getParentType())
+		{
+		case VtkEpcCommon::GRID_2D:
+		{
+			uuidToVtkGrid2DRepresentation[uuidIsChildOf[uuid]->getParent()]->visualize(uuid);
+			break;
+		}
+		case VtkEpcCommon::POLYLINE_SET:
+		{
+			auto object = epcPackage->getResqmlAbstractObjectByUuid(uuidIsChildOf[uuid]->getParent());
+			auto typeRepresentation = object->getXmlTag();
+			if (typeRepresentation == "PolylineRepresentation")
+			{
+				uuidToVtkPolylineRepresentation[uuidIsChildOf[uuid]->getParent()]->visualize(uuid);
+			}
+			else
+			{
+				uuidToVtkSetPatch[uuidIsChildOf[uuid]->getParent()]->visualize(uuid);
+			}
+			break;
+		}
+		case VtkEpcCommon::TRIANGULATED_SET:
+		{
+			auto object = epcPackage->getResqmlAbstractObjectByUuid(uuid);
+			auto typeRepresentation = object->getXmlTag();
+			if (typeRepresentation == "TriangulatedRepresentation")
+			{
+				uuidToVtkTriangulatedRepresentation[uuidIsChildOf[uuid]->getParent()]->visualize(uuid);
+			}
+			else
+			{
+				uuidToVtkSetPatch[uuidIsChildOf[uuid]->getParent()]->visualize(uuid);
+			}
+			break;
+		}
+		case VtkEpcCommon::WELL_TRAJ:
+		{
+			uuidToVtkWellboreTrajectoryRepresentation[uuidIsChildOf[uuid]->getParent()]->visualize(uuid);
+			break;
+		}
+		case VtkEpcCommon::IJK_GRID:
+		{
+			uuidToVtkIjkGridRepresentation[uuidIsChildOf[uuid]->getParent()]->visualize(uuid);
+			break;
+		}
+		case VtkEpcCommon::UNSTRUC_GRID:
+		{
+			uuidToVtkUnstructuredGridRepresentation[uuidIsChildOf[uuid]->getParent()]->visualize(uuid);
+			break;
+		}
+		case VtkEpcCommon::SUB_REP:
+		{
+			if (uuidIsChildOf[uuidIsChildOf[uuid]->getParent()]->getParentType() == VtkEpcCommon::IJK_GRID)
+			{
+				uuidToVtkIjkGridRepresentation[uuidIsChildOf[uuidIsChildOf[uuid]->getParent()]->getUuid()]->visualize(uuid);
+			}
+			if (uuidIsChildOf[uuidIsChildOf[uuid]->getParent()]->getParentType() == VtkEpcCommon::UNSTRUC_GRID)
+			{
+				uuidToVtkUnstructuredGridRepresentation[uuidIsChildOf[uuidIsChildOf[uuid]->getParent()]->getUuid()]->visualize(uuid);
+			}
+			if (uuidIsChildOf[uuidIsChildOf[uuid]->getParent()]->getParentType() == VtkEpcCommon::PARTIAL)
+			{
+				if (uuidIsChildOf[uuidIsChildOf[uuidIsChildOf[uuid]->getParent()]->getParent()]->getParentType() == VtkEpcCommon::IJK_GRID)
+				{
+					uuidToVtkIjkGridRepresentation[uuidIsChildOf[uuidIsChildOf[uuid]->getParent()]->getUuid()]->visualize(uuid);
+				}
+				if (uuidIsChildOf[uuidIsChildOf[uuidIsChildOf[uuid]->getParent()]->getParent()]->getParentType() == VtkEpcCommon::UNSTRUC_GRID)
+				{
+					uuidToVtkUnstructuredGridRepresentation[uuidIsChildOf[uuidIsChildOf[uuid]->getParent()]->getUuid()]->visualize(uuid);
+				}
+			}
+			break;
+		}
+		case VtkEpcCommon::PARTIAL:
+		{
+			uuidToVtkPartialRepresentation[uuidIsChildOf[uuid]->getParent()]->visualize(uuid);
 			break;
 		}
 		default:
@@ -1107,17 +1146,18 @@ void VtkEpcDocument::visualize(const std::string & uuid)
 //----------------------------------------------------------------------------
 void VtkEpcDocument::remove(const std::string & uuid)
 {
+	cout << "remove - " << uuid << " - \n";
 	auto uuidtoAttach = uuid;
-	if (uuidIsChildOf[uuid].myType == VtkEpcTools::Resqml2Type::PROPERTY)
+	if (uuidIsChildOf[uuid]->getType() == VtkEpcCommon::PROPERTY)
 	{
-		uuidtoAttach = uuidIsChildOf[uuid].parent;
+		uuidtoAttach = uuidIsChildOf[uuid]->getParent();
 	}
 
 	if (std::find(attachUuids.begin(), attachUuids.end(), uuidtoAttach) != attachUuids.end())
 	{
-		switch (uuidIsChildOf[uuidtoAttach].myType)
+		switch (uuidIsChildOf[uuidtoAttach]->getType())
 		{
-		case VtkEpcTools::Resqml2Type::GRID_2D:	{
+		case VtkEpcCommon::GRID_2D:	{
 			uuidToVtkGrid2DRepresentation[uuidtoAttach]->remove(uuid);
 			if (uuid == uuidtoAttach){
 				this->detach();
@@ -1126,11 +1166,11 @@ void VtkEpcDocument::remove(const std::string & uuid)
 			}
 			break;
 		}
-		case VtkEpcTools::Resqml2Type::POLYLINE_SET:	{
+		case VtkEpcCommon::POLYLINE_SET:	{
 			auto object = epcPackage->getResqmlAbstractObjectByUuid(uuidtoAttach);
 			auto typeRepresentation = object->getXmlTag();
 			if (typeRepresentation == "PolylineRepresentation") {
-				uuidToVtkPolylineRepresentation[uuidIsChildOf[uuidtoAttach].uuid]->remove(uuid);
+				uuidToVtkPolylineRepresentation[uuidIsChildOf[uuidtoAttach]->getUuid()]->remove(uuid);
 				if (uuid == uuidtoAttach){
 					this->detach();
 					attachUuids.erase(std::find(attachUuids.begin(), attachUuids.end(), uuid));
@@ -1147,7 +1187,7 @@ void VtkEpcDocument::remove(const std::string & uuid)
 			}
 			break;
 		}
-		case VtkEpcTools::Resqml2Type::TRIANGULATED_SET:	{
+		case VtkEpcCommon::TRIANGULATED_SET:	{
 			auto object = epcPackage->getResqmlAbstractObjectByUuid(uuidtoAttach);
 			auto typeRepresentation = object->getXmlTag();
 			if (typeRepresentation == "TriangulatedRepresentation")  {
@@ -1168,7 +1208,7 @@ void VtkEpcDocument::remove(const std::string & uuid)
 			}
 			break;
 		}
-		case VtkEpcTools::Resqml2Type::WELL_TRAJ:	{
+		case VtkEpcCommon::WELL_TRAJ:	{
 			uuidToVtkWellboreTrajectoryRepresentation[uuidtoAttach]->remove(uuid);
 			if (uuid == uuidtoAttach){
 				this->detach();
@@ -1177,7 +1217,7 @@ void VtkEpcDocument::remove(const std::string & uuid)
 			}
 			break;
 		}
-		case VtkEpcTools::Resqml2Type::IJK_GRID:
+		case VtkEpcCommon::IJK_GRID:
 		{
 			uuidToVtkIjkGridRepresentation[uuidtoAttach]->remove(uuid);
 			if (uuid == uuidtoAttach)
@@ -1188,7 +1228,7 @@ void VtkEpcDocument::remove(const std::string & uuid)
 			}
 			break;
 		}
-		case VtkEpcTools::Resqml2Type::UNSTRUC_GRID:
+		case VtkEpcCommon::UNSTRUC_GRID:
 		{
 			uuidToVtkUnstructuredGridRepresentation[uuidtoAttach]->remove(uuid);
 			if (uuid == uuidtoAttach)
@@ -1199,19 +1239,26 @@ void VtkEpcDocument::remove(const std::string & uuid)
 			}
 			break;
 		}
-		case VtkEpcTools::Resqml2Type::SUB_REP:
+		case VtkEpcCommon::SUB_REP:
 		{
-			if (uuidIsChildOf[uuidIsChildOf[uuid].parent].parentType == VtkEpcTools::Resqml2Type::IJK_GRID)
+			if (uuidIsChildOf[uuidIsChildOf[uuid]->getParent()]->getParentType() == VtkEpcCommon::Resqml2Type::IJK_GRID)
 			{
-				uuidToVtkIjkGridRepresentation[uuidIsChildOf[uuidIsChildOf[uuid].parent].uuid]->remove(uuid);
+				uuidToVtkIjkGridRepresentation[uuidIsChildOf[uuidIsChildOf[uuid]->getParent()]->getUuid()]->remove(uuid);
 			}
-			if (uuidIsChildOf[uuidIsChildOf[uuid].parent].parentType == VtkEpcTools::Resqml2Type::UNSTRUC_GRID)
+			if (uuidIsChildOf[uuidIsChildOf[uuid]->getParent()]->getParentType() == VtkEpcCommon::Resqml2Type::UNSTRUC_GRID)
 			{
-				uuidToVtkUnstructuredGridRepresentation[uuidIsChildOf[uuidIsChildOf[uuid].parent].uuid]->remove(uuid);
+				uuidToVtkUnstructuredGridRepresentation[uuidIsChildOf[uuidIsChildOf[uuid]->getParent()]->getUuid()]->remove(uuid);
 			}
-			if (uuidIsChildOf[uuidIsChildOf[uuid].parent].parentType == VtkEpcTools::Resqml2Type::PARTIAL)
+			if (uuidIsChildOf[uuidIsChildOf[uuid]->getParent()]->getParentType() == VtkEpcCommon::PARTIAL)
 			{
-				uuidToVtkPartialRepresentation[uuidIsChildOf[uuidIsChildOf[uuid].parent].uuid]->remove(uuid);
+				if (uuidIsChildOf[uuidIsChildOf[uuidIsChildOf[uuid]->getParent()]->getParent()]->getParentType() == VtkEpcCommon::IJK_GRID)
+				{
+					uuidToVtkIjkGridRepresentation[uuidIsChildOf[uuidIsChildOf[uuid]->getParent()]->getUuid()]->remove(uuid);
+				}
+				if (uuidIsChildOf[uuidIsChildOf[uuidIsChildOf[uuid]->getParent()]->getParent()]->getParentType() == VtkEpcCommon::UNSTRUC_GRID)
+				{
+					uuidToVtkUnstructuredGridRepresentation[uuidIsChildOf[uuidIsChildOf[uuid]->getParent()]->getUuid()]->remove(uuid);
+				}
 			}
 			if (uuid == uuidtoAttach)
 			{
@@ -1221,7 +1268,7 @@ void VtkEpcDocument::remove(const std::string & uuid)
 			}
 			break;
 		}
-		case VtkEpcTools::Resqml2Type::PARTIAL:
+		case VtkEpcCommon::PARTIAL:
 		{
 			uuidToVtkPartialRepresentation[uuidtoAttach]->remove(uuid);
 			break;
@@ -1238,12 +1285,12 @@ void VtkEpcDocument::attach()
 	for (unsigned int newBlockIndex = 0; newBlockIndex < attachUuids.size(); ++newBlockIndex)
 	{
 		std::string uuid = attachUuids[newBlockIndex];
-		if (uuidIsChildOf[uuid].myType == VtkEpcTools::GRID_2D)
+		if (uuidIsChildOf[uuid]->getType() == VtkEpcCommon::GRID_2D)
 		{
 			vtkOutput->SetBlock(newBlockIndex, uuidToVtkGrid2DRepresentation[uuid]->getOutput());
 			vtkOutput->GetMetaData(newBlockIndex)->Set(vtkCompositeDataSet::NAME(), uuidToVtkGrid2DRepresentation[uuid]->getUuid().c_str());
 		}
-		if (uuidIsChildOf[uuid].myType == VtkEpcTools::POLYLINE_SET)
+		if (uuidIsChildOf[uuid]->getType() == VtkEpcCommon::POLYLINE_SET)
 		{
 			auto object = epcPackage->getResqmlAbstractObjectByUuid(uuid);
 			auto typeRepresentation = object->getXmlTag();
@@ -1256,7 +1303,7 @@ void VtkEpcDocument::attach()
 				vtkOutput->GetMetaData(newBlockIndex)->Set(vtkCompositeDataSet::NAME(), uuidToVtkSetPatch[uuid]->getUuid().c_str());
 			}
 		}
-		if (uuidIsChildOf[uuid].myType == VtkEpcTools::TRIANGULATED_SET)
+		if (uuidIsChildOf[uuid]->getType() == VtkEpcCommon::TRIANGULATED_SET)
 		{
 			auto object = epcPackage->getResqmlAbstractObjectByUuid(uuid);
 			auto typeRepresentation = object->getXmlTag();
@@ -1269,61 +1316,61 @@ void VtkEpcDocument::attach()
 				vtkOutput->GetMetaData(newBlockIndex)->Set(vtkCompositeDataSet::NAME(), uuidToVtkSetPatch[uuid]->getUuid().c_str());
 			}
 		}
-		if (uuidIsChildOf[uuid].myType == VtkEpcTools::WELL_TRAJ)
+		if (uuidIsChildOf[uuid]->getType() == VtkEpcCommon::WELL_TRAJ)
 		{
 			vtkOutput->SetBlock(newBlockIndex, uuidToVtkWellboreTrajectoryRepresentation[uuid]->getOutput());
 			vtkOutput->GetMetaData(newBlockIndex)->Set(vtkCompositeDataSet::NAME(), uuidToVtkWellboreTrajectoryRepresentation[uuid]->getUuid().c_str());
 		}
-		if (uuidIsChildOf[uuid].myType == VtkEpcTools::IJK_GRID)
+		if (uuidIsChildOf[uuid]->getType() == VtkEpcCommon::IJK_GRID)
 		{
 			vtkOutput->SetBlock(newBlockIndex, uuidToVtkIjkGridRepresentation[uuid]->getOutput());
 			vtkOutput->GetMetaData(newBlockIndex)->Set(vtkCompositeDataSet::NAME(), uuidToVtkIjkGridRepresentation[uuid]->getUuid().c_str());
 		}
-		if (uuidIsChildOf[uuid].myType == VtkEpcTools::UNSTRUC_GRID)
+		if (uuidIsChildOf[uuid]->getType() == VtkEpcCommon::UNSTRUC_GRID)
 		{
 			vtkOutput->SetBlock(newBlockIndex, uuidToVtkUnstructuredGridRepresentation[uuid]->getOutput());
 			vtkOutput->GetMetaData(newBlockIndex)->Set(vtkCompositeDataSet::NAME(), uuidToVtkUnstructuredGridRepresentation[uuid]->getUuid().c_str());
 		}
-		if (uuidIsChildOf[uuid].myType == VtkEpcTools::SUB_REP)
+		if (uuidIsChildOf[uuid]->getType() == VtkEpcCommon::SUB_REP)
 		{
-			if (uuidIsChildOf[uuid].parentType == VtkEpcTools::IJK_GRID)
+			if (uuidIsChildOf[uuid]->getParentType() == VtkEpcCommon::IJK_GRID)
 			{
-				vtkOutput->SetBlock(newBlockIndex, uuidToVtkIjkGridRepresentation[uuidIsChildOf[uuid].uuid]->getOutput());
+				vtkOutput->SetBlock(newBlockIndex, uuidToVtkIjkGridRepresentation[uuidIsChildOf[uuid]->getUuid()]->getOutput());
 				vtkOutput->GetMetaData(newBlockIndex)->Set(vtkCompositeDataSet::NAME(), uuidToVtkIjkGridRepresentation[uuid]->getUuid().c_str());
 			}
-			if (uuidIsChildOf[uuid].parentType == VtkEpcTools::UNSTRUC_GRID)
+			if (uuidIsChildOf[uuid]->getParentType() == VtkEpcCommon::UNSTRUC_GRID)
 			{
-				vtkOutput->SetBlock(newBlockIndex, uuidToVtkUnstructuredGridRepresentation[uuidIsChildOf[uuid].uuid]->getOutput());
-				vtkOutput->GetMetaData(newBlockIndex)->Set(vtkCompositeDataSet::NAME(), uuidToVtkUnstructuredGridRepresentation[uuidIsChildOf[uuid].uuid]->getUuid().c_str());
+				vtkOutput->SetBlock(newBlockIndex, uuidToVtkUnstructuredGridRepresentation[uuidIsChildOf[uuid]->getUuid()]->getOutput());
+				vtkOutput->GetMetaData(newBlockIndex)->Set(vtkCompositeDataSet::NAME(), uuidToVtkUnstructuredGridRepresentation[uuidIsChildOf[uuid]->getUuid()]->getUuid().c_str());
 			}
-			if (uuidIsChildOf[uuid].parentType == VtkEpcTools::PARTIAL)
+			if (uuidIsChildOf[uuid]->getParentType() == VtkEpcCommon::PARTIAL)
 			{
-				auto parentUuidType = uuidToVtkPartialRepresentation[uuidIsChildOf[uuid].parent]->getType();
+				auto parentUuidType = uuidToVtkPartialRepresentation[uuidIsChildOf[uuid]->getParent()]->getType();
 
 				switch (parentUuidType)
 				{
-				case VtkEpcTools::GRID_2D:
+				case VtkEpcCommon::GRID_2D:
 				{
 					vtkOutput->SetBlock(newBlockIndex, uuidToVtkGrid2DRepresentation[uuid]->getOutput());
 					vtkOutput->GetMetaData(newBlockIndex)->Set(vtkCompositeDataSet::NAME(), uuidToVtkGrid2DRepresentation[uuid]->getUuid().c_str());
 					break;
 				}
-				case VtkEpcTools::WELL_TRAJ:
+				case VtkEpcCommon::WELL_TRAJ:
 				{
 					vtkOutput->SetBlock(newBlockIndex, uuidToVtkWellboreTrajectoryRepresentation[uuid]->getOutput());
 					vtkOutput->GetMetaData(newBlockIndex)->Set(vtkCompositeDataSet::NAME(), uuidToVtkWellboreTrajectoryRepresentation[uuid]->getUuid().c_str());
 					break;
 				}
-				case VtkEpcTools::IJK_GRID:
+				case VtkEpcCommon::IJK_GRID:
 				{
-					vtkOutput->SetBlock(newBlockIndex, uuidToVtkIjkGridRepresentation[uuidIsChildOf[uuid].uuid]->getOutput());
+					vtkOutput->SetBlock(newBlockIndex, uuidToVtkIjkGridRepresentation[uuidIsChildOf[uuid]->getUuid()]->getOutput());
 					vtkOutput->GetMetaData(newBlockIndex)->Set(vtkCompositeDataSet::NAME(), uuidToVtkIjkGridRepresentation[uuid]->getUuid().c_str());
 					break;
 				}
-				case VtkEpcTools::UNSTRUC_GRID:
+				case VtkEpcCommon::UNSTRUC_GRID:
 				{
-					vtkOutput->SetBlock(newBlockIndex, uuidToVtkUnstructuredGridRepresentation[uuidIsChildOf[uuid].uuid]->getOutput());
-					vtkOutput->GetMetaData(newBlockIndex)->Set(vtkCompositeDataSet::NAME(), uuidToVtkUnstructuredGridRepresentation[uuidIsChildOf[uuid].uuid]->getUuid().c_str());
+					vtkOutput->SetBlock(newBlockIndex, uuidToVtkUnstructuredGridRepresentation[uuidIsChildOf[uuid]->getUuid()]->getOutput());
+					vtkOutput->GetMetaData(newBlockIndex)->Set(vtkCompositeDataSet::NAME(), uuidToVtkUnstructuredGridRepresentation[uuidIsChildOf[uuid]->getUuid()]->getUuid().c_str());
 					break;
 				}
 				default:
@@ -1337,49 +1384,100 @@ void VtkEpcDocument::attach()
 //----------------------------------------------------------------------------
 void VtkEpcDocument::addProperty(const std::string & uuidProperty, vtkDataArray* dataProperty)
 {
-	switch (uuidIsChildOf[uuidProperty].myType)
+	switch (uuidIsChildOf[uuidProperty]->getType())
 	{
-	case VtkEpcTools::GRID_2D:	{
-		uuidToVtkGrid2DRepresentation[uuidIsChildOf[uuidProperty].uuid]->addProperty(uuidProperty, dataProperty);
+	case VtkEpcCommon::GRID_2D:
+	{
+		uuidToVtkGrid2DRepresentation[uuidIsChildOf[uuidProperty]->getUuid()]->addProperty(uuidProperty, dataProperty);
 		break;
 	}
-	case VtkEpcTools::POLYLINE_SET:	{
-		auto object = epcPackage->getResqmlAbstractObjectByUuid(uuidIsChildOf[uuidProperty].uuid);
+	case VtkEpcCommon::POLYLINE_SET:
+	{
+		auto object = epcPackage->getResqmlAbstractObjectByUuid(uuidIsChildOf[uuidProperty]->getUuid());
 		auto typeRepresentation = object->getXmlTag();
-		if (typeRepresentation == "PolylineRepresentation") {
-			uuidToVtkPolylineRepresentation[uuidIsChildOf[uuidProperty].uuid]->addProperty(uuidProperty, dataProperty);
+		if (typeRepresentation == "PolylineRepresentation")
+		{
+			uuidToVtkPolylineRepresentation[uuidIsChildOf[uuidProperty]->getUuid()]->addProperty(uuidProperty, dataProperty);
 		}
-		else  {
-			uuidToVtkSetPatch[uuidIsChildOf[uuidProperty].uuid]->addProperty(uuidProperty, dataProperty);
+		else
+		{
+			uuidToVtkSetPatch[uuidIsChildOf[uuidProperty]->getUuid()]->addProperty(uuidProperty, dataProperty);
 		}
 		break;
 	}
-	case VtkEpcTools::TRIANGULATED_SET:	{
-		auto object = epcPackage->getResqmlAbstractObjectByUuid(uuidIsChildOf[uuidProperty].uuid);
+	case VtkEpcCommon::TRIANGULATED_SET:
+	{
+		auto object = epcPackage->getResqmlAbstractObjectByUuid(uuidIsChildOf[uuidProperty]->getUuid());
 		auto typeRepresentation = object->getXmlTag();
-		if (typeRepresentation == "TriangulatedRepresentation")  {
-			uuidToVtkTriangulatedRepresentation[uuidIsChildOf[uuidProperty].uuid]->addProperty(uuidProperty, dataProperty);
+		if (typeRepresentation == "TriangulatedRepresentation")
+		{
+			uuidToVtkTriangulatedRepresentation[uuidIsChildOf[uuidProperty]->getUuid()]->addProperty(uuidProperty, dataProperty);
 		}
-		else  {
-			uuidToVtkSetPatch[uuidIsChildOf[uuidProperty].uuid]->addProperty(uuidProperty, dataProperty);
+		else
+		{
+			uuidToVtkSetPatch[uuidIsChildOf[uuidProperty]->getUuid()]->addProperty(uuidProperty, dataProperty);
 		}
 		break;
 	}
-	case VtkEpcTools::WELL_TRAJ:	{
-		uuidToVtkWellboreTrajectoryRepresentation[uuidIsChildOf[uuidProperty].uuid]->addProperty(uuidProperty, dataProperty);
+	case VtkEpcCommon::WELL_TRAJ:
+	{
+		uuidToVtkWellboreTrajectoryRepresentation[uuidIsChildOf[uuidProperty]->getUuid()]->addProperty(uuidProperty, dataProperty);
 		break;
 	}
-	case VtkEpcTools::IJK_GRID:
-		uuidToVtkIjkGridRepresentation[uuidIsChildOf[uuidProperty].uuid]->addProperty(uuidProperty, dataProperty);
+	case VtkEpcCommon::IJK_GRID:
+		uuidToVtkIjkGridRepresentation[uuidIsChildOf[uuidProperty]->getUuid()]->addProperty(uuidProperty, dataProperty);
 		break;
-	case VtkEpcTools::UNSTRUC_GRID:
-		uuidToVtkUnstructuredGridRepresentation[uuidIsChildOf[uuidProperty].uuid]->addProperty(uuidProperty, dataProperty);
+	case VtkEpcCommon::UNSTRUC_GRID:
+	{
+		uuidToVtkUnstructuredGridRepresentation[uuidIsChildOf[uuidProperty]->getUuid()]->addProperty(uuidProperty, dataProperty);
 		break;
+	}
+	case VtkEpcCommon::SUB_REP:
+	{
+		if (uuidIsChildOf[uuidProperty]->getParentType() == VtkEpcCommon::IJK_GRID)
+		{
+			uuidToVtkIjkGridRepresentation[uuidIsChildOf[uuidProperty]->getUuid()]->addProperty(uuidProperty, dataProperty);
+		}
+		if (uuidIsChildOf[uuidProperty]->getParentType() == VtkEpcCommon::UNSTRUC_GRID)
+		{
+			uuidToVtkUnstructuredGridRepresentation[uuidIsChildOf[uuidProperty]->getUuid()]->addProperty(uuidProperty, dataProperty);
+		}
+		if (uuidIsChildOf[uuidProperty]->getParentType() == VtkEpcCommon::PARTIAL)
+		{
+			auto parentUuidType = uuidToVtkPartialRepresentation[uuidIsChildOf[uuidProperty]->getParent()]->getType();
+
+			switch (parentUuidType)
+			{
+			case VtkEpcCommon::GRID_2D:
+			{
+				uuidToVtkGrid2DRepresentation[uuidIsChildOf[uuidProperty]->getUuid()]->addProperty(uuidProperty, dataProperty);
+				break;
+			}
+			case VtkEpcCommon::WELL_TRAJ:
+			{
+				uuidToVtkWellboreTrajectoryRepresentation[uuidIsChildOf[uuidProperty]->getUuid()]->addProperty(uuidProperty, dataProperty);
+				break;
+			}
+			case VtkEpcCommon::IJK_GRID:
+			{
+				uuidToVtkIjkGridRepresentation[uuidIsChildOf[uuidProperty]->getUuid()]->addProperty(uuidProperty, dataProperty);
+				break;
+			}
+			case VtkEpcCommon::UNSTRUC_GRID:
+			{
+				uuidToVtkUnstructuredGridRepresentation[uuidIsChildOf[uuidProperty]->getUuid()]->addProperty(uuidProperty, dataProperty);
+				break;
+			}
+			default:
+				break;
+			}
+		}
+	}
 	default:
 		break;
 	}
 	// attach representation to EpcDocument VtkMultiBlockDataSet
-	std::string parent = uuidIsChildOf[uuidProperty].uuid;
+	std::string parent = uuidIsChildOf[uuidProperty]->getUuid();
 	if (std::find(attachUuids.begin(), attachUuids.end(), parent) == attachUuids.end())
 	{
 		this->detach();
@@ -1388,31 +1486,166 @@ void VtkEpcDocument::addProperty(const std::string & uuidProperty, vtkDataArray*
 	}
 }
 
-long VtkEpcDocument::getAttachmentPropertyCount(const std::string & uuid, const VtkEpcTools::FesppAttachmentProperty propertyUnit)
+//----------------------------------------------------------------------------
+long VtkEpcDocument::getAttachmentPropertyCount(const std::string & uuid, const VtkEpcCommon::FesppAttachmentProperty propertyUnit)
 {
+	//	cout << " VtkEpcDocument::getAttachmentPropertyCount - " << getFileName() << " - " << uuid << " - " << uuidIsChildOf[uuid]->getType() << "\n";
 	long result = 0;
-	switch (uuidIsChildOf[uuid].myType)
+	switch (uuidIsChildOf[uuid]->getType())
 	{
-	case VtkEpcTools::Resqml2Type::IJK_GRID:
-		result = uuidToVtkIjkGridRepresentation[uuidIsChildOf[uuid].uuid]->getAttachmentPropertyCount(uuid, propertyUnit);
+	case VtkEpcCommon::Resqml2Type::IJK_GRID:
+		result = uuidToVtkIjkGridRepresentation[uuidIsChildOf[uuid]->getUuid()]->getAttachmentPropertyCount(uuid, propertyUnit);
 		break;
-	case VtkEpcTools::Resqml2Type::UNSTRUC_GRID:
-		result = uuidToVtkUnstructuredGridRepresentation[uuidIsChildOf[uuid].uuid]->getAttachmentPropertyCount(uuid, propertyUnit);
+	case VtkEpcCommon::Resqml2Type::UNSTRUC_GRID:
+		result = uuidToVtkUnstructuredGridRepresentation[uuidIsChildOf[uuid]->getUuid()]->getAttachmentPropertyCount(uuid, propertyUnit);
+		break;
+	case VtkEpcCommon::Resqml2Type::SUB_REP:
+		// cout << " VtkEpcDocument::getAttachmentPropertyCount SubRep - " << uuidIsChildOf[uuid]->getParentType() << "\n";
+		if (uuidIsChildOf[uuid]->getParentType() == VtkEpcCommon::IJK_GRID)
+		{
+			result = uuidToVtkIjkGridRepresentation[uuidIsChildOf[uuid]->getUuid()]->getAttachmentPropertyCount(uuid, propertyUnit);
+		}
+		if (uuidIsChildOf[uuid]->getParentType() == VtkEpcCommon::UNSTRUC_GRID)
+		{
+			result = uuidToVtkUnstructuredGridRepresentation[uuidIsChildOf[uuid]->getUuid()]->getAttachmentPropertyCount(uuid, propertyUnit);
+		}
+		if (uuidIsChildOf[uuid]->getParentType() == VtkEpcCommon::PARTIAL)
+		{
+			auto uuidPartial = uuidIsChildOf[uuid]->getParent();
+
+			if (uuidIsChildOf[uuidPartial]->getParentType() == VtkEpcCommon::IJK_GRID)
+			{
+				result = uuidToVtkIjkGridRepresentation[uuid]->getAttachmentPropertyCount(uuid, propertyUnit);
+			}
+			if (uuidIsChildOf[uuid]->getParentType() == VtkEpcCommon::UNSTRUC_GRID)
+			{
+				result = uuidToVtkUnstructuredGridRepresentation[uuid]->getAttachmentPropertyCount(uuid, propertyUnit);
+			}
+		}
 		break;
 	default:
 		break;
+	}
+	//cout << " VtkEpcDocument::getAttachmentPropertyCount RESULT - " << propertyUnit << result << "\n";
+	return result;
+}
+
+//----------------------------------------------------------------------------
+int VtkEpcDocument::getICellCount(const std::string & uuid)
+{
+	long result = 0;
+	if (uuidIsChildOf[uuid]->getType() == VtkEpcCommon::Resqml2Type::IJK_GRID)
+	{
+		result = uuidToVtkIjkGridRepresentation[uuidIsChildOf[uuid]->getUuid()]->getICellCount(uuid);
+	}
+	else if (uuidIsChildOf[uuid]->getType() == VtkEpcCommon::Resqml2Type::SUB_REP)
+	{
+		if (uuidIsChildOf[uuid]->getParentType() == VtkEpcCommon::IJK_GRID)
+		{
+			result = uuidToVtkIjkGridRepresentation[uuidIsChildOf[uuid]->getUuid()]->getICellCount(uuid);
+		}
+		if (uuidIsChildOf[uuid]->getParentType() == VtkEpcCommon::PARTIAL)
+		{
+			auto uuidPartial = uuidIsChildOf[uuid]->getParent();
+
+			if (uuidIsChildOf[uuidPartial]->getParentType() == VtkEpcCommon::IJK_GRID)
+			{
+				result = uuidToVtkIjkGridRepresentation[uuid]->getICellCount(uuid);
+			}
+		}
 	}
 	return result;
 }
 
 //----------------------------------------------------------------------------
-VtkEpcTools::Resqml2Type VtkEpcDocument::getType(std::string uuid)
+int VtkEpcDocument::getJCellCount(const std::string & uuid)
 {
-	return uuidIsChildOf[uuid].myType;
+	long result = 0;
+	if (uuidIsChildOf[uuid]->getType() == VtkEpcCommon::Resqml2Type::IJK_GRID)
+	{
+		result = uuidToVtkIjkGridRepresentation[uuidIsChildOf[uuid]->getUuid()]->getJCellCount(uuid);
+	}
+	else if (uuidIsChildOf[uuid]->getType() == VtkEpcCommon::Resqml2Type::SUB_REP)
+	{
+		if (uuidIsChildOf[uuid]->getParentType() == VtkEpcCommon::IJK_GRID)
+		{
+			result = uuidToVtkIjkGridRepresentation[uuidIsChildOf[uuid]->getUuid()]->getJCellCount(uuid);
+		}
+		if (uuidIsChildOf[uuid]->getParentType() == VtkEpcCommon::PARTIAL)
+		{
+			auto uuidPartial = uuidIsChildOf[uuid]->getParent();
+
+			if (uuidIsChildOf[uuidPartial]->getParentType() == VtkEpcCommon::IJK_GRID)
+			{
+				result = uuidToVtkIjkGridRepresentation[uuid]->getJCellCount(uuid);
+			}
+		}
+	}
+	return result;
 }
 
 //----------------------------------------------------------------------------
-VtkEpcTools::infoUuid VtkEpcDocument::getInfoUuid(std::string uuid)
+int VtkEpcDocument::getKCellCount(const std::string & uuid)
+{
+	long result = 0;
+	if (uuidIsChildOf[uuid]->getType() == VtkEpcCommon::Resqml2Type::IJK_GRID)
+	{
+		result = uuidToVtkIjkGridRepresentation[uuidIsChildOf[uuid]->getUuid()]->getKCellCount(uuid);
+	}
+	else if (uuidIsChildOf[uuid]->getType() == VtkEpcCommon::Resqml2Type::SUB_REP)
+	{
+		if (uuidIsChildOf[uuid]->getParentType() == VtkEpcCommon::IJK_GRID)
+		{
+			result = uuidToVtkIjkGridRepresentation[uuidIsChildOf[uuid]->getUuid()]->getKCellCount(uuid);
+		}
+		if (uuidIsChildOf[uuid]->getParentType() == VtkEpcCommon::PARTIAL)
+		{
+			auto uuidPartial = uuidIsChildOf[uuid]->getParent();
+
+			if (uuidIsChildOf[uuidPartial]->getParentType() == VtkEpcCommon::IJK_GRID)
+			{
+				result = uuidToVtkIjkGridRepresentation[uuid]->getKCellCount(uuid);
+			}
+		}
+	}
+	return result;
+}
+
+//----------------------------------------------------------------------------
+int VtkEpcDocument::getInitKIndex(const std::string & uuid)
+{
+	long result = 0;
+	if (uuidIsChildOf[uuid]->getType() == VtkEpcCommon::Resqml2Type::IJK_GRID)
+	{
+		result = uuidToVtkIjkGridRepresentation[uuidIsChildOf[uuid]->getUuid()]->getInitKIndex(uuid);
+	}
+	else if (uuidIsChildOf[uuid]->getType() == VtkEpcCommon::Resqml2Type::SUB_REP)
+	{
+		if (uuidIsChildOf[uuid]->getParentType() == VtkEpcCommon::IJK_GRID)
+		{
+			result = uuidToVtkIjkGridRepresentation[uuidIsChildOf[uuid]->getUuid()]->getInitKIndex(uuid);
+		}
+		if (uuidIsChildOf[uuid]->getParentType() == VtkEpcCommon::PARTIAL)
+		{
+			auto uuidPartial = uuidIsChildOf[uuid]->getParent();
+
+			if (uuidIsChildOf[uuidPartial]->getParentType() == VtkEpcCommon::IJK_GRID)
+			{
+				result = uuidToVtkIjkGridRepresentation[uuid]->getInitKIndex(uuid);
+			}
+		}
+	}
+	return result;
+}
+
+//----------------------------------------------------------------------------
+VtkEpcCommon::Resqml2Type VtkEpcDocument::getType(std::string uuid)
+{
+	return uuidIsChildOf[uuid]->getType();
+}
+
+//----------------------------------------------------------------------------
+VtkEpcCommon* VtkEpcDocument::getInfoUuid(std::string uuid)
 {
 	return uuidIsChildOf[uuid];
 }
@@ -1454,13 +1687,13 @@ std::string VtkEpcDocument::getFullUuid(std::string uuidPartial)
 
 void VtkEpcDocument::addPartialUUid(const std::string & uuid, VtkEpcDocument *vtkEpcDowumentWithCompleteRep)
 {
-	uuidIsChildOf[uuid].myType = VtkEpcTools::Resqml2Type::PARTIAL;
-	uuidIsChildOf[uuid].uuid = uuid;
+	uuidIsChildOf[uuid]->setType(VtkEpcCommon::PARTIAL);
+	uuidIsChildOf[uuid]->setUuid(uuid);
 	uuidToVtkPartialRepresentation[uuid] = new VtkPartialRepresentation(getFileName(), uuid, vtkEpcDowumentWithCompleteRep, epcPackage);
 }
 
 //----------------------------------------------------------------------------
-std::vector<VtkEpcTools::infoUuid> VtkEpcDocument::getTreeView() const
+std::vector<VtkEpcCommon*> VtkEpcDocument::getTreeView() const
 {
 	return treeView;
 }

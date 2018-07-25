@@ -47,7 +47,7 @@ void VtkProperty::visualize(const std::string & uuid)
 }
 
 //----------------------------------------------------------------------------
-void VtkProperty::createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, const VtkEpcTools::Resqml2Type & resqmlType)
+void VtkProperty::createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, const VtkEpcCommon::Resqml2Type & resqmlType)
 {
 }
 
@@ -495,6 +495,7 @@ vtkDataArray* VtkProperty::loadValuesPropertySet(std::vector<resqml2::AbstractVa
 vtkDataArray* VtkProperty::loadValuesPropertySet(std::vector<resqml2::AbstractValuesProperty*> valuesPropertySet, long cellCount, long pointCount,
 		int iCellCount, int jCellCount, int kCellCount, int initKIndex)
 {
+	cout << " chargement d'une propriété... UUID = " << getUuid() << "\n";
 	for (size_t i = 0; i < valuesPropertySet.size(); ++i)
 	{
 		if (valuesPropertySet[i]->getUuid() == getUuid())
@@ -518,22 +519,22 @@ vtkDataArray* VtkProperty::loadValuesPropertySet(std::vector<resqml2::AbstractVa
 				vtkOutputWindowDisplayDebugText("property not supported...  (resqml2__IndexableElements: not cells or nodes)");
 
 			auto typeProperty = valuesProperty->getXmlTag();
-			unsigned long long numValuesInEachDimension = iCellCount*jCellCount*kCellCount;
-			unsigned long long offsetInEachDimension = iCellCount*jCellCount*initKIndex;
-
+			unsigned long long numValuesInEachDimension = cellCount/kCellCount; //3834;//iCellCount*jCellCount*kCellCount;
+			unsigned long long offsetInEachDimension = initKIndex;//iCellCount*jCellCount*initKIndex;
 			if (typeProperty == "ContinuousProperty")
 			{
 				vtkSmartPointer<vtkFloatArray> cellDataFloat = vtkSmartPointer<vtkFloatArray>::New();
 				float* valuesFloatSet = new float[nbElement];
 				resqml2_0_1::ContinuousProperty *propertyValue = static_cast<resqml2_0_1::ContinuousProperty*>(valuesPropertySet[i]);
-
 				if (propertyValue->getElementCountPerValue() == 1)
 				{
 					if (propertyValue->getDimensionsCountOfPatch(0)==3)
 					{
+						cout << " chargement d'une propriété... appel getFloatValuesOf3dPatch avec UUID = " << propertyValue->getUuid() << "\n";
 						propertyValue->getFloatValuesOf3dPatch(0, valuesFloatSet,iCellCount, jCellCount, kCellCount, 0, 0, initKIndex);
 					}else if(propertyValue->getDimensionsCountOfPatch(0)==1)
 						{
+							cout << " chargement d'une propriété... appel getFloatValuesOfPatch avec UUID = " << propertyValue->getUuid() << "paramètres : 0 - " << numValuesInEachDimension << " - " << offsetInEachDimension << " - 1 "<<  " \n";
 							propertyValue->getFloatValuesOfPatch(0, valuesFloatSet, &numValuesInEachDimension, &offsetInEachDimension, 1);
 						}else
 							{
@@ -665,7 +666,7 @@ vtkDataArray* VtkProperty::loadValuesPropertySet(std::vector<resqml2::AbstractVa
 return cellData;
 */
 }
-long VtkProperty::getAttachmentPropertyCount(const std::string & uuid, const VtkEpcTools::FesppAttachmentProperty propertyUnit)
+long VtkProperty::getAttachmentPropertyCount(const std::string & uuid, const VtkEpcCommon::FesppAttachmentProperty propertyUnit)
 {
 	return 0;
 }

@@ -179,7 +179,7 @@ void VtkUnstructuredGridRepresentation::addProperty(const std::string & uuidProp
 	lastProperty = uuidProperty;
 }
 
-long VtkUnstructuredGridRepresentation::getAttachmentPropertyCount(const std::string & uuid, const VtkEpcTools::FesppAttachmentProperty propertyUnit)
+long VtkUnstructuredGridRepresentation::getAttachmentPropertyCount(const std::string & uuid, const VtkEpcCommon::FesppAttachmentProperty propertyUnit)
 {
 	long result = 0;
 	resqml2_0_1::UnstructuredGridRepresentation* unstructuredGridRep = nullptr;
@@ -187,12 +187,15 @@ long VtkUnstructuredGridRepresentation::getAttachmentPropertyCount(const std::st
 	if (obj != nullptr && obj->getXmlTag() == "UnstructuredGridRepresentation")
 	{
 		unstructuredGridRep = static_cast<resqml2_0_1::UnstructuredGridRepresentation*>(obj);
-		if (propertyUnit == VtkEpcTools::POINTS){
+		if (propertyUnit == VtkEpcCommon::POINTS)
+		{
 			result = unstructuredGridRep->getXyzPointCountOfAllPatches();
 		}
-		else if (propertyUnit==VtkEpcTools::CELLS){
+		else if (propertyUnit==VtkEpcCommon::CELLS)
+		{
 			result = unstructuredGridRep->getCellCount();
-					}
+		}
 	}
 	return result;
 }
+

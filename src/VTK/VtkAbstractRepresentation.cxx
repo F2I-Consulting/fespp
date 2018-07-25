@@ -41,9 +41,9 @@ VtkAbstractRepresentation::~VtkAbstractRepresentation()
 	points = NULL;
 }
 //----------------------------------------------------------------------------
-void VtkAbstractRepresentation::createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, const VtkEpcTools::Resqml2Type & resqmlType)
+void VtkAbstractRepresentation::createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, const VtkEpcCommon::Resqml2Type & resqmlType)
 {
-	if (resqmlType==VtkEpcTools::PROPERTY)
+	if (resqmlType==VtkEpcCommon::PROPERTY)
 	{
 		if (subRepresentation){
 			uuidToVtkProperty[uuid] = new VtkProperty(getFileName(), name, uuid, parent, epcPackageSubRepresentation);

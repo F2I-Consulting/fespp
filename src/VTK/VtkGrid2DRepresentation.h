@@ -65,7 +65,7 @@ public:
 	* variable : 
 	* prepare grid2D points and grid2D cells.
 	*/
-	void createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, const VtkEpcTools::Resqml2Type & resqmlType);
+	void createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, const VtkEpcCommon::Resqml2Type & resqmlType);
 
 	/**
 	* method : attach
@@ -90,7 +90,7 @@ public:
 
 	void addProperty(const std::string & uuidProperty, vtkDataArray* dataProperty);
 
-	long getAttachmentPropertyCount(const std::string & uuid, const VtkEpcTools::FesppAttachmentProperty propertyUnit);
+	long getAttachmentPropertyCount(const std::string & uuid, const VtkEpcCommon::FesppAttachmentProperty propertyUnit) ;
 	
 protected:
 	/**

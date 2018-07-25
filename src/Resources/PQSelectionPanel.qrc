@@ -14,5 +14,7 @@
     <file>vline.png</file>
 	<file>UnstructuredGrid.png</file>
 	<file>WellTraj.png</file>
+	<file>time-after.png</file>
+	<file>time-before.png</file>
   </qresource>
 </RCC>

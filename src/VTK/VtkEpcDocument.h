@@ -92,7 +92,13 @@ public:
 	*/
 	void remove(const std::string & uuid);
 	
-	std::vector<VtkEpcTools::infoUuid> getTreeView() const;
+	/**
+	* method : get TreeView
+	* variable :
+	*
+	* if timeIndex = -1 then no time series link.
+	*/
+	std::vector<VtkEpcCommon*> getTreeView() const;
 
 	/**
 	* method : attach
@@ -108,10 +114,14 @@ public:
 
 	void addProperty(const std::string & uuidProperty, vtkDataArray* dataProperty);
 
-	VtkEpcTools::Resqml2Type getType(std::string);
-	VtkEpcTools::infoUuid getInfoUuid(std::string);
+	VtkEpcCommon::Resqml2Type getType(std::string);
+	VtkEpcCommon* getInfoUuid(std::string);
 
-	long getAttachmentPropertyCount(const std::string & uuid, const VtkEpcTools::FesppAttachmentProperty propertyUnit);
+	long getAttachmentPropertyCount(const std::string & uuid, const VtkEpcCommon::FesppAttachmentProperty propertyUnit) ;
+	int getICellCount(const std::string & uuid) ;
+	int getJCellCount(const std::string & uuid) ;
+	int getKCellCount(const std::string & uuid) ;
+	int getInitKIndex(const std::string & uuid) ;
 
 	common::EpcDocument *getEpcDocument();
 	
@@ -137,7 +147,7 @@ private:
 	* variable : uuid, parent uuid, name, type
 	* prepare VtkEpcDocument & Children.
 	*/
-	void createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, const VtkEpcTools::Resqml2Type & resqmlType);
+	void createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, const VtkEpcCommon::Resqml2Type & resqmlType);
 
 
 
@@ -173,6 +183,6 @@ private:
 
 	int indexTimesSeries;
 
-	std::vector<VtkEpcTools::infoUuid> treeView; // Tree
+	std::vector<VtkEpcCommon*> treeView; // Tree
 };
 #endif

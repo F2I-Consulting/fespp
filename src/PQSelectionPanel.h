@@ -38,9 +38,12 @@ knowledge of the CeCILL license and that you accept its terms.
 #include <QDockWidget>
 #include <qprogressbar.h>
 #include <qpushbutton.h>
+#include <QComboBox>
+#include <QStringList>
 #include <qtreewidget.h>
 #include <qradiobutton.h>
 #include <QMap>
+#include <QHash>
 #include <QPointer>
 
 #include <qprogressdialog.h>
@@ -51,7 +54,7 @@ knowledge of the CeCILL license and that you accept its terms.
 #include <string>
 #include <vector>
 
-#include "VTK/VtkEpcTools.h"
+#include "VTK/VtkEpcCommon.h"
 
 class pqPipelineSource;
 class pqServer;
@@ -128,9 +131,14 @@ protected slots:
 	*/
 	void checkedRadioButton(int);
 
+	void handleButtonAfter();
+	void handleButtonBefore();
+
+	void timeChanged(int);
+
 private:
 
-	void populateTreeView(std::string parent, VtkEpcTools::Resqml2Type parentType, std::string uuid, std::string name, VtkEpcTools::Resqml2Type type);
+	void populateTreeView(std::string parent, VtkEpcCommon::Resqml2Type parentType, std::string uuid, std::string name, VtkEpcCommon::Resqml2Type type);
 	void deleteUUID(QTreeWidgetItem *item);
 
 	void constructor();
@@ -161,6 +169,11 @@ private:
 	void removeUuid(std::string uuid);
 	
 	QTreeWidget *treeWidget;
+	QPushButton *button_Time_After;
+	QPushButton *button_Time_Before;
+	QComboBox *time_series;
+
+	QStringList time_series_list;
 
 	unsigned int indexFile;
 	std::vector<std::string> allFileName;
@@ -181,14 +194,20 @@ private:
 
 	// radio-button
 	int radioButtonCount;
-	QMap<int, std::string> mapRadioButtonNo;
+	QMap<int, std::string> radioButton_to_id;
 	QMap<std::string, QRadioButton*> mapUuidParentButtonInvisible;
 
 
 	QMap<std::string, common::EpcDocument *> pcksave;
 
-	QMap<std::string, QButtonGroup *> uuidParentGroupButton;
-	QMap<QAbstractButton *, std::string> radioButtonToUuid;
+	QMap<std::string, QButtonGroup *> uuidParent_to_groupButton;
+	QMap<QAbstractButton *, std::string> radioButton_to_uuid;
+
+	QMap<std::string, QMap<time_t, std::string>> ts_timestamp_to_uuid;
+
+	time_t save_time;
+
+	QVector<std::string> ts_displayed;
 
 	VtkEpcDocumentSet* vtkEpcDocumentSet;
 };

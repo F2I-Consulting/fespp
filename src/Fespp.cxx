@@ -19,7 +19,6 @@
 #include <utility>
 #include <algorithm>
 
-
 #ifndef MPICH_IGNORE_CXX_SEEK
 #define MPICH_IGNORE_CXX_SEEK
 #endif
@@ -158,7 +157,7 @@ int Fespp::RequestInformation(
 		auto lengthFileName = stringFileName.length();
 		auto extension = stringFileName.substr(lengthFileName -3, lengthFileName);
 
-		vtkEpcDocumentSet = new VtkEpcDocumentSet(idProc, nbProc, VtkEpcTools::Both);
+		vtkEpcDocumentSet = new VtkEpcDocumentSet(idProc, nbProc, VtkEpcCommon::Both);
 		if (stringFileName != "EpcDocument")
 		{
 			if (extension=="epc")

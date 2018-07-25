@@ -93,7 +93,7 @@ public:
 	* method : createTreeVtk
 	* variable : std::string uuid, std::string parent, std::string name, Resqml2Type resqmlTypeParent
 	*/
-	void createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, const VtkEpcTools::Resqml2Type & resqmlTypeParent);
+	void createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, const VtkEpcCommon::Resqml2Type & resqmlTypeParent);
 	
 	/**
 	* method : remove
@@ -118,7 +118,7 @@ public:
 	vtkDataArray *loadValuesPropertySet(std::vector<resqml2::AbstractValuesProperty*> valuesPropertySet, long cellCount, long pointCount);
 	vtkDataArray *loadValuesPropertySet(std::vector<resqml2::AbstractValuesProperty*> valuesPropertySet, long cellCount, long pointCount, int iCellCount, int jCellCount, int kCellCount, int initKIndex);
 
-	long getAttachmentPropertyCount(const std::string & uuid, const VtkEpcTools::FesppAttachmentProperty propertyUnit);
+	long getAttachmentPropertyCount(const std::string & uuid, const VtkEpcCommon::FesppAttachmentProperty propertyUnit) ;
 
 protected:
 

@@ -64,7 +64,7 @@ public:
 
 	void addProperty(const std::string & uuidProperty, vtkDataArray* dataProperty);
 
-	long getAttachmentPropertyCount(const std::string & uuid, const VtkEpcTools::FesppAttachmentProperty propertyUnit);
+	long getAttachmentPropertyCount(const std::string & uuid, const VtkEpcCommon::FesppAttachmentProperty propertyUnit) ;
 
 private:
 	unsigned int patchIndex;

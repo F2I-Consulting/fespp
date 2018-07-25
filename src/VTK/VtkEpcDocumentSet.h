@@ -35,7 +35,7 @@ knowledge of the CeCILL license and that you accept its terms.
 #ifndef __VtkEpcDocumentSet_h
 #define __VtkEpcDocumentSet_h
 
-#include "VtkEpcTools.h"
+#include "VtkEpcCommon.h"
 
 // include VTK
 #include <vtkSmartPointer.h>
@@ -59,7 +59,7 @@ public:
 	/**
 	* Constructor
 	*/
-	VtkEpcDocumentSet (const int & idProc=0, const int & maxProc=0, const VtkEpcTools::modeVtkEpc & mode=VtkEpcTools::Both);
+	VtkEpcDocumentSet (const int & idProc=0, const int & maxProc=0, const VtkEpcCommon::modeVtkEpc & mode=VtkEpcCommon::Both);
 	/**
 	* Destructor
 	*/
@@ -80,8 +80,8 @@ public:
 	*/
 	void unvisualize(const std::string & uuid);
 
-	VtkEpcTools::Resqml2Type getType(std::string uuid);
-	VtkEpcTools::infoUuid getInfoUuid(std::string);
+	VtkEpcCommon::Resqml2Type getType(std::string uuid);
+	VtkEpcCommon* getInfoUuid(std::string);
 
 	/**
 	* method : getOutput
@@ -89,7 +89,7 @@ public:
 	* return the vtkMultiBlockDataSet for each epcdocument.
 	*/
 	vtkSmartPointer<vtkMultiBlockDataSet> getVisualization() const;
-	std::vector<VtkEpcTools::infoUuid> getTreeView() const;
+	std::vector<VtkEpcCommon*> getTreeView() const;
 
 	void setIndexTimeSeries(const int & index);
 
@@ -111,7 +111,7 @@ private:
 	std::unordered_map<std::string, VtkEpcDocument*> uuidToVtkEpc; // link uuid/VtkEpcdocument
 #endif
 
-	std::vector<VtkEpcTools::infoUuid> treeView; // Tree
+	std::vector<VtkEpcCommon*> treeView; // Tree
 
 	vtkSmartPointer<vtkMultiBlockDataSet> vtkOutput;
 

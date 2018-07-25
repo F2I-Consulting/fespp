@@ -76,7 +76,7 @@ public:
 	* method : createTreeVtk
 	* variable : std::string uuid, std::string parent, std::string name, Resqml2Type resqmlTypeParent
 	*/
-	void createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, const VtkEpcTools::Resqml2Type & resqmlTypeParent);
+	void createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, const VtkEpcCommon::Resqml2Type & resqmlTypeParent);
 	
 	/**
 	* method : remove
@@ -85,10 +85,12 @@ public:
 	*/
 	void remove(const std::string & uuid);
 
-	VtkEpcTools::Resqml2Type getType();
-	VtkEpcTools::infoUuid getInfoUuid();
+	VtkEpcCommon::Resqml2Type getType();
+	VtkEpcCommon* getInfoUuid();
 
 	common::EpcDocument * getEpcSource();
+
+	long getAttachmentPropertyCount(const std::string & uuid, const VtkEpcCommon::FesppAttachmentProperty propertyUnit);
 
 private:
 #if (defined(_WIN32) && _MSC_VER >= 1600)

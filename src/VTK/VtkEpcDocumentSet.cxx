@@ -12,16 +12,16 @@
 
 
 //----------------------------------------------------------------------------
-VtkEpcDocumentSet::VtkEpcDocumentSet(const int & idProc, const int & maxProc, const VtkEpcTools::modeVtkEpc & mode) :
+VtkEpcDocumentSet::VtkEpcDocumentSet(const int & idProc, const int & maxProc, const VtkEpcCommon::modeVtkEpc & mode) :
 procRank(idProc), nbProc(maxProc)
 {
 	treeViewMode = false;
 	representationMode = false;
-	if (mode==VtkEpcTools::Both || mode==VtkEpcTools::TreeView)
+	if (mode==VtkEpcCommon::Both || mode==VtkEpcCommon::TreeView)
 	{
 		treeViewMode=true;;
 	}
-	if (mode==VtkEpcTools::Both || mode==VtkEpcTools::Representation)
+	if (mode==VtkEpcCommon::Both || mode==VtkEpcCommon::Representation)
 	{
 		representationMode=true;
 	}
@@ -85,13 +85,13 @@ void VtkEpcDocumentSet::unvisualize(const std::string & uuid)
 }
 
 //----------------------------------------------------------------------------
-VtkEpcTools::Resqml2Type VtkEpcDocumentSet::getType(std::string uuid)
+VtkEpcCommon::Resqml2Type VtkEpcDocumentSet::getType(std::string uuid)
 {
 	return uuidToVtkEpc[uuid]->getType(uuid);
 }
 
 //----------------------------------------------------------------------------
-VtkEpcTools::infoUuid VtkEpcDocumentSet::getInfoUuid(std::string uuid)
+VtkEpcCommon* VtkEpcDocumentSet::getInfoUuid(std::string uuid)
 {
 	return  uuidToVtkEpc[uuid]->getInfoUuid(uuid);
 }
@@ -151,7 +151,7 @@ VtkEpcDocument* VtkEpcDocumentSet::getVtkEpcDocument(const std::string & uuid)
 }
 
 //----------------------------------------------------------------------------
-std::vector<VtkEpcTools::infoUuid> VtkEpcDocumentSet::getTreeView() const
+std::vector<VtkEpcCommon*> VtkEpcDocumentSet::getTreeView() const
 {
 	return treeView;
 }

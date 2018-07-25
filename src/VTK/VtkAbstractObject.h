@@ -37,7 +37,7 @@ knowledge of the CeCILL license and that you accept its terms.
 
 // include system
 #include <string>
-#include "VtkEpcTools.h"
+#include "VtkEpcCommon.h"
 
 #if (defined(_WIN32) && _MSC_VER < 1600) || (defined(__GNUC__) && (__GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 6)))
 #include "tools/nullptr_emulation.h"
@@ -73,7 +73,7 @@ public:
 	/**
 	* create vtk resqml2 element
 	*/
-	virtual void createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, const VtkEpcTools::Resqml2Type & resqmlType) =0;
+	virtual void createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, const VtkEpcCommon::Resqml2Type & resqmlType) =0;
 
 	/**
 	* remove representation uuid's
@@ -82,7 +82,7 @@ public:
 
 	/**
 	*/
-	virtual long getAttachmentPropertyCount(const std::string & uuid, const VtkEpcTools::FesppAttachmentProperty propertyUnit) = 0;
+	virtual long getAttachmentPropertyCount(const std::string & uuid, const VtkEpcCommon::FesppAttachmentProperty propertyUnit) = 0;
 protected:
 
 private:

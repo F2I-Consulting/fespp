@@ -92,9 +92,9 @@ protected:
 	vtkSmartPointer<vtkMultiBlockDataSet> vtkOutput;
 
 #if (defined(_WIN32) && _MSC_VER >= 1600)
-	std::unordered_map<std::string, VtkEpcTools::infoUuid> uuidIsChildOf;
+	std::unordered_map<std::string, VtkEpcCommon*> uuidIsChildOf;
 #else
-	std::tr1::unordered_map<std::string, VtkEpcTools::infoUuid> uuidIsChildOf;
+	std::tr1::unordered_map<std::string, VtkEpcCommon*> uuidIsChildOf;
 #endif
 	std::vector<std::string> attachUuids;
 };

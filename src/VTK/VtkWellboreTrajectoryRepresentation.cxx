@@ -62,7 +62,7 @@ VtkWellboreTrajectoryRepresentation::~VtkWellboreTrajectoryRepresentation()
 }
 
 //----------------------------------------------------------------------------
-void VtkWellboreTrajectoryRepresentation::createTreeVtk(const std::string & uuid, const std::string & uuidParent, const std::string & name, const VtkEpcTools::Resqml2Type & type)
+void VtkWellboreTrajectoryRepresentation::createTreeVtk(const std::string & uuid, const std::string & uuidParent, const std::string & name, const VtkEpcCommon::Resqml2Type & type)
 {
 	if (uuid != getUuid())
 	{
@@ -121,7 +121,7 @@ void VtkWellboreTrajectoryRepresentation::addProperty(const std::string & uuidPr
 	this->polyline->addProperty(uuidProperty, dataProperty);
 }
 
-long VtkWellboreTrajectoryRepresentation::getAttachmentPropertyCount(const std::string & uuid, const VtkEpcTools::FesppAttachmentProperty propertyUnit)
+long VtkWellboreTrajectoryRepresentation::getAttachmentPropertyCount(const std::string & uuid, const VtkEpcCommon::FesppAttachmentProperty propertyUnit)
 {
 	return 	this->polyline->getAttachmentPropertyCount(uuid, propertyUnit);
 	;
