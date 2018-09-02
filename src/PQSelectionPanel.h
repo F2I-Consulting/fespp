@@ -38,6 +38,8 @@ knowledge of the CeCILL license and that you accept its terms.
 #include <QDockWidget>
 #include <qprogressbar.h>
 #include <qpushbutton.h>
+#include <QTimer>
+#include <QSlider>
 #include <QComboBox>
 #include <QStringList>
 #include <qtreewidget.h>
@@ -133,6 +135,11 @@ protected slots:
 
 	void handleButtonAfter();
 	void handleButtonBefore();
+	void handleButtonPlay();
+	void handleButtonPause();
+	void handleButtonStop();
+
+	void updateTimer();
 
 	void timeChanged(int);
 
@@ -171,7 +178,15 @@ private:
 	QTreeWidget *treeWidget;
 	QPushButton *button_Time_After;
 	QPushButton *button_Time_Before;
+	QPushButton *button_Time_Play;
+	QPushButton *button_Time_Pause;
+	QPushButton *button_Time_Stop;
+	QSlider *slider_Time_Step;
 	QComboBox *time_series;
+	QTimer *timer;
+	int timerCount;
+
+	bool time_Changed;
 
 	QStringList time_series_list;
 

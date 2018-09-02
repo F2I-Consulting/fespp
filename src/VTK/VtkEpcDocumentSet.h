@@ -91,8 +91,6 @@ public:
 	vtkSmartPointer<vtkMultiBlockDataSet> getVisualization() const;
 	std::vector<VtkEpcCommon*> getTreeView() const;
 
-	void setIndexTimeSeries(const int & index);
-
 	void addEpcDocument(const std::string & fileName);
 
 	VtkEpcDocument* getVtkEpcDocument(const std::string & uuid);

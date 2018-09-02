@@ -834,7 +834,8 @@ void VtkEpcDocument::createTreeVtkPartialRep(const std::string & uuid, VtkEpcDoc
 	uuidToVtkPartialRepresentation[uuid] = new VtkPartialRepresentation(getFileName(), uuid, vtkEpcDowumentWithCompleteRep, epcPackage);
 }
 
-//----------------------------------------------------------------------------
+/* A DELETER
+ * //----------------------------------------------------------------------------
 void VtkEpcDocument::deleteTreeVtkPartial(const std::string & uuid)
 {
 	uuidIsChildOf.erase(uuid);
@@ -856,12 +857,11 @@ void VtkEpcDocument::setIndexTimeSeries(const int & index)
 		indexTimesSeries = index;
 	}
 
-}
+}*/
 
 //----------------------------------------------------------------------------
 void VtkEpcDocument::visualize(const std::string & uuid)
 {
-	cout << "visualize - " << uuid << " - \n";
 	auto uuidToAttach = uuidIsChildOf[uuid]->getUuid();
 	switch (uuidIsChildOf[uuid]->getType())
 	{
@@ -1146,7 +1146,6 @@ void VtkEpcDocument::visualize(const std::string & uuid)
 //----------------------------------------------------------------------------
 void VtkEpcDocument::remove(const std::string & uuid)
 {
-	cout << "remove - " << uuid << " - \n";
 	auto uuidtoAttach = uuid;
 	if (uuidIsChildOf[uuid]->getType() == VtkEpcCommon::PROPERTY)
 	{
@@ -1489,7 +1488,6 @@ void VtkEpcDocument::addProperty(const std::string & uuidProperty, vtkDataArray*
 //----------------------------------------------------------------------------
 long VtkEpcDocument::getAttachmentPropertyCount(const std::string & uuid, const VtkEpcCommon::FesppAttachmentProperty propertyUnit)
 {
-	//	cout << " VtkEpcDocument::getAttachmentPropertyCount - " << getFileName() << " - " << uuid << " - " << uuidIsChildOf[uuid]->getType() << "\n";
 	long result = 0;
 	switch (uuidIsChildOf[uuid]->getType())
 	{
@@ -1500,7 +1498,6 @@ long VtkEpcDocument::getAttachmentPropertyCount(const std::string & uuid, const 
 		result = uuidToVtkUnstructuredGridRepresentation[uuidIsChildOf[uuid]->getUuid()]->getAttachmentPropertyCount(uuid, propertyUnit);
 		break;
 	case VtkEpcCommon::Resqml2Type::SUB_REP:
-		// cout << " VtkEpcDocument::getAttachmentPropertyCount SubRep - " << uuidIsChildOf[uuid]->getParentType() << "\n";
 		if (uuidIsChildOf[uuid]->getParentType() == VtkEpcCommon::IJK_GRID)
 		{
 			result = uuidToVtkIjkGridRepresentation[uuidIsChildOf[uuid]->getUuid()]->getAttachmentPropertyCount(uuid, propertyUnit);
@@ -1526,7 +1523,6 @@ long VtkEpcDocument::getAttachmentPropertyCount(const std::string & uuid, const 
 	default:
 		break;
 	}
-	//cout << " VtkEpcDocument::getAttachmentPropertyCount RESULT - " << propertyUnit << result << "\n";
 	return result;
 }
 
@@ -1657,40 +1653,11 @@ common::EpcDocument * VtkEpcDocument::getEpcDocument()
 }
 
 //----------------------------------------------------------------------------
-int VtkEpcDocument::getCountPartialUuid()
-{
-	return uuidPartialRep.size();
-}
-
-//----------------------------------------------------------------------------
-std::vector<std::string> VtkEpcDocument::getPartialUuid()
-{
-	return uuidPartialRep;
-}
-//----------------------------------------------------------------------------
-int VtkEpcDocument::getCountUuid()
-{
-	return uuidRep.size();
-
-}
-
-//----------------------------------------------------------------------------
-std::vector<std::string> VtkEpcDocument::getUuid()
+std::vector<std::string> VtkEpcDocument::getListUuid()
 {
 	return uuidRep;
 }
 
-std::string VtkEpcDocument::getFullUuid(std::string uuidPartial)
-{
-	return uuidPartial;
-}
-
-void VtkEpcDocument::addPartialUUid(const std::string & uuid, VtkEpcDocument *vtkEpcDowumentWithCompleteRep)
-{
-	uuidIsChildOf[uuid]->setType(VtkEpcCommon::PARTIAL);
-	uuidIsChildOf[uuid]->setUuid(uuid);
-	uuidToVtkPartialRepresentation[uuid] = new VtkPartialRepresentation(getFileName(), uuid, vtkEpcDowumentWithCompleteRep, epcPackage);
-}
 
 //----------------------------------------------------------------------------
 std::vector<VtkEpcCommon*> VtkEpcDocument::getTreeView() const

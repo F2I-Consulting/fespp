@@ -16,5 +16,8 @@
 	<file>WellTraj.png</file>
 	<file>time-after.png</file>
 	<file>time-before.png</file>
+	<file>time-play.png</file>
+	<file>time-pause.png</file>
+	<file>time-stop.png</file>
   </qresource>
 </RCC>

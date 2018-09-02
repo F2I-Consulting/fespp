@@ -3,9 +3,6 @@
 #include <vtkIndent.h>
 #include <vtkInformation.h>
 #include <vtkInformationVector.h>
-#include <vtkMPI.h>
-#include <vtkMPICommunicator.h>
-#include <vtkMPIController.h>
 #include <vtkMultiBlockDataSet.h>
 #include <vtkMultiProcessController.h>
 #include <vtkObjectFactory.h>
@@ -18,6 +15,13 @@
 #include <iostream>
 #include <utility>
 #include <algorithm>
+
+#ifdef PARAVIEW_USE_MPI
+#include <vtkMPI.h>
+#include <vtkMPICommunicator.h>
+#include <vtkMPIController.h>
+#endif // PARAVIEW_USE_MPI
+
 
 #ifndef MPICH_IGNORE_CXX_SEEK
 #define MPICH_IGNORE_CXX_SEEK
@@ -40,12 +44,18 @@ FileName(nullptr), Controller(nullptr), loadedFile(false), idProc(0), nbProc(0),
 
 	this->SetController(vtkMultiProcessController::GetGlobalController());
 
+
+#ifdef PARAVIEW_USE_MPI
 	auto comm = GetMPICommunicator();
 	if (comm != MPI_COMM_NULL)
 	{
 		MPI_Comm_rank(comm, &this->idProc);
 		MPI_Comm_size(comm, &this->nbProc);
 	}
+#else
+	idProc = 0;
+	nbProc = 0;
+#endif
 
 	countTest = 0;
 	vtkEpcDocumentSet = nullptr;
@@ -114,6 +124,9 @@ const char* Fespp::GetuuidListArrayName(int index)
 	return this->uuidList->GetArrayName(index);
 }
 
+
+
+#ifdef PARAVIEW_USE_MPI
 //----------------------------------------------------------------------------
 MPI_Comm Fespp::GetMPICommunicator()
 {
@@ -132,6 +145,8 @@ MPI_Comm Fespp::GetMPICommunicator()
 	}
 	return comm;
 }
+#endif
+
 
 //----------------------------------------------------------------------------
 void Fespp::displayError(std::string msg)
@@ -183,10 +198,12 @@ int Fespp::RequestData(vtkInformation *request,
 		vtkInformationVector **inputVector,
 		vtkInformationVector *outputVector)
 {
+#ifdef PARAVIEW_USE_MPI
 	auto comm = GetMPICommunicator();
 	double t1;
 	if (comm != MPI_COMM_NULL)
 		t1 = MPI_Wtime();
+#endif
 
 	if (this->idProc == 0)
 		cout << "traitement fait avec " <<  this->nbProc << " processeur(s) \n";
@@ -194,8 +211,10 @@ int Fespp::RequestData(vtkInformation *request,
 	vtkInformation *outInfo = outputVector->GetInformationObject(0);
 	vtkMultiBlockDataSet *output = vtkMultiBlockDataSet::SafeDownCast(outInfo->Get(vtkMultiBlockDataSet::DATA_OBJECT()));
 
+#ifdef PARAVIEW_USE_MPI
 	if (comm != MPI_COMM_NULL)
 		MPI_Barrier(comm);
+#endif
 
 	if (loadedFile)
 	{
@@ -210,6 +229,7 @@ int Fespp::RequestData(vtkInformation *request,
 		}
 	}
 
+#ifdef PARAVIEW_USE_MPI
 	if (comm != MPI_COMM_NULL)
 	{
 		double t2;
@@ -218,6 +238,7 @@ int Fespp::RequestData(vtkInformation *request,
 		if (this->idProc == 0)
 			cout << "Elapsed time is " << (t2-t1) << "\n";
 	}
+#endif
 
 	return 1;
 }

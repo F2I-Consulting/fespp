@@ -66,7 +66,7 @@ void VtkEpcDocumentSet::visualizeFull()
 	{
 		for (auto &vtkEpcElem : vtkEpcList)
 		{
-			auto uuidList = vtkEpcElem->getUuid();
+			auto uuidList = vtkEpcElem->getListUuid();
 			for (auto &uuidListElem : uuidList)
 			{
 				vtkEpcElem->visualize(uuidListElem);
@@ -116,21 +116,12 @@ if(representationMode)
 }
 
 //----------------------------------------------------------------------------
-void VtkEpcDocumentSet::setIndexTimeSeries(const int & index)
-{
-	indexTimesSeries = index;
-	for (auto &vtkEpc : vtkEpcList)
-	{
-		vtkEpc->setIndexTimeSeries(index);
-	}
-}
-//----------------------------------------------------------------------------
 void VtkEpcDocumentSet::addEpcDocument(const std::string & fileName)
 {
 	if (std::find(vtkEpcNameList.begin(), vtkEpcNameList.end(),fileName)==vtkEpcNameList.end())
 	{
 		auto vtkEpc = new VtkEpcDocument(fileName, procRank, nbProc, this);
-		auto uuidList = vtkEpc->getUuid();
+		auto uuidList = vtkEpc->getListUuid();
 		for (auto &uuidListElem : uuidList)
 		{
 			uuidToVtkEpc[uuidListElem] = vtkEpc;

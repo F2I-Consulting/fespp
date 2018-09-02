@@ -51,7 +51,9 @@ class vtkCallbackCommand;
 class vtkMultiProcessController;
 class vtkDataArraySelection;
 
+#ifdef PARAVIEW_USE_MPI
 #include <mpi.h>
+#endif // PARAVIEW_USE_MPI
 
 class Fespp : public vtkMultiBlockDataSetAlgorithm
 {
@@ -110,7 +112,9 @@ private:
 	// number of process
 	int nbProc;
 
+#ifdef PARAVIEW_USE_MPI
 	MPI_Comm GetMPICommunicator();
+#endif // PARAVIEW_USE_MPI
 
 	VtkEpcDocumentSet* vtkEpcDocumentSet;
 

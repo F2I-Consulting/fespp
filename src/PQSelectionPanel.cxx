@@ -1,6 +1,5 @@
-#include "PQSelectionPanel.h"
 #include "ui_PQSelectionPanel.h"
-
+#include "PQSelectionPanel.h"
 // include API Resqml2
 #include "resqml2_0_1/PolylineSetRepresentation.h"
 #include "resqml2_0_1/TriangulatedSetRepresentation.h"
@@ -115,16 +114,32 @@ void PQSelectionPanel::constructor()
 	//*** bouton recule/avance
 	button_Time_After = ui.button_Time_After;
 	button_Time_Before = ui.button_Time_Before;
+	button_Time_Play = ui.button_Time_Play;
+	button_Time_Pause = ui.button_Time_Pause;
+	button_Time_Stop = ui.button_Time_Stop;
 	QIcon icon1;
 	icon1.addFile(QString::fromUtf8(":time-after.png"), QSize(), QIcon::Normal, QIcon::Off);
 	QIcon icon2;
 	icon2.addFile(QString::fromUtf8(":time-before.png"), QSize(), QIcon::Normal, QIcon::Off);
+	QIcon icon3;
+	icon3.addFile(QString::fromUtf8(":time-play.png"), QSize(), QIcon::Normal, QIcon::Off);
+	QIcon icon4;
+	icon4.addFile(QString::fromUtf8(":time-pause.png"), QSize(), QIcon::Normal, QIcon::Off);
+	QIcon icon5;
+	icon5.addFile(QString::fromUtf8(":time-stop.png"), QSize(), QIcon::Normal, QIcon::Off);
 
-	button_Time_After->setIcon(icon1);;
-	button_Time_Before->setIcon(icon2);;
+	button_Time_After->setIcon(icon1);
+	button_Time_Before->setIcon(icon2);
+	button_Time_Play->setIcon(icon3);
+	button_Time_Pause->setIcon(icon4);
+	button_Time_Stop->setIcon(icon5);
+
 
 	connect(button_Time_After, SIGNAL (released()), this, SLOT (handleButtonAfter()));
     connect(button_Time_Before, SIGNAL (released()), this, SLOT (handleButtonBefore()));
+	connect(button_Time_Play, SIGNAL (released()), this, SLOT (handleButtonPlay()));
+    connect(button_Time_Pause, SIGNAL (released()), this, SLOT (handleButtonPause()));
+	connect(button_Time_Stop, SIGNAL (released()), this, SLOT (handleButtonStop()));
 	//***
 
 	//*** combo Box des différents Time_series
@@ -133,8 +148,15 @@ void PQSelectionPanel::constructor()
 	time_series->addItems(time_series_list);
 
 	connect(time_series, SIGNAL (currentIndexChanged(int)), this, SLOT (timeChanged(int)));
-
 	//***
+
+	//*** Timer Play option
+	timer = new QTimer(this);
+    connect(timer, SIGNAL(timeout()), this, SLOT(updateTimer()));
+	//***
+
+    slider_Time_Step = ui.slider_Time_Step;
+
 	radioButtonCount = 0;
 
 	indexFile = 0;
@@ -172,7 +194,6 @@ void PQSelectionPanel::onItemCheckedUnchecked(QTreeWidgetItem * item, int column
 {
 	auto uuid = itemUuid[item];
 
-	cout << " press " << uuid << "\n";
 	if (!(uuid == ""))
 	{
 		if (item->checkState(0) == Qt::Checked)
@@ -238,11 +259,10 @@ void PQSelectionPanel::deleteTreeView()
 //----------------------------------------------------------------------------
 void PQSelectionPanel::checkedRadioButton(int rbNo)
 {
+	emit button_Time_Stop->released();
 	if (radioButton_to_id.contains(rbNo))
 	{
 		std::string uuid = radioButton_to_id[rbNo];
-
-		cout << " select " << uuid << "\n";
 
 		std::string uuidParent = itemUuid[uuidParentItem[uuid]];
 		uuidParentItem[uuid]->setCheckState(0, Qt::Checked);
@@ -289,11 +309,14 @@ void PQSelectionPanel::checkedRadioButton(int rbNo)
 void PQSelectionPanel::handleButtonAfter()
 {
    auto idx = time_series->currentIndex() ;
-   if (idx < time_series->count() )
+   if (++idx < time_series->count() )
    {
-	   ++idx;
 	   // change the TimeStamp
 	   time_series->setCurrentIndex(idx);
+   }
+   else
+   {
+	   time_Changed = false;
    }
 }
 
@@ -310,6 +333,39 @@ void PQSelectionPanel::handleButtonBefore()
 }
 
 //----------------------------------------------------------------------------
+void PQSelectionPanel::handleButtonPlay()
+{
+	timer->start(slider_Time_Step->value()*1000);
+	time_Changed = true;
+}
+
+//----------------------------------------------------------------------------
+void PQSelectionPanel::handleButtonPause()
+{
+	timer->stop();
+}
+
+//----------------------------------------------------------------------------
+void PQSelectionPanel::handleButtonStop()
+{
+	time_series->setCurrentIndex(0);
+	timer->stop();
+}
+
+//----------------------------------------------------------------------------
+void PQSelectionPanel::updateTimer()
+{
+	if (time_Changed)
+	{
+		emit button_Time_After->released();
+	}
+	else
+	{
+		timer->stop();
+	}
+}
+
+//----------------------------------------------------------------------------
 void PQSelectionPanel::timeChanged(int)
 {
 	//sam. janv. 2 01:00:00 1971
@@ -319,8 +375,6 @@ void PQSelectionPanel::timeChanged(int)
 
 	if (time != save_time)
 	{
-		cout << save_time << "\n";
-
 		// remove old time properties
 		if (save_time != 0)
 		{

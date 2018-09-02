@@ -495,7 +495,6 @@ vtkDataArray* VtkProperty::loadValuesPropertySet(std::vector<resqml2::AbstractVa
 vtkDataArray* VtkProperty::loadValuesPropertySet(std::vector<resqml2::AbstractValuesProperty*> valuesPropertySet, long cellCount, long pointCount,
 		int iCellCount, int jCellCount, int kCellCount, int initKIndex)
 {
-	cout << " chargement d'une propriété... UUID = " << getUuid() << "\n";
 	for (size_t i = 0; i < valuesPropertySet.size(); ++i)
 	{
 		if (valuesPropertySet[i]->getUuid() == getUuid())
@@ -509,18 +508,19 @@ vtkDataArray* VtkProperty::loadValuesPropertySet(std::vector<resqml2::AbstractVa
 				nbElement = cellCount;
 				support = typeSupport::CELLS;
 			}
+			else if (element == gsoap_resqml2_0_1::resqml2__IndexableElements::resqml2__IndexableElements__nodes )
+			{
+				support = typeSupport::POINTS ;
+				nbElement = pointCount;
+			}
 			else
-				if (element == gsoap_resqml2_0_1::resqml2__IndexableElements::resqml2__IndexableElements__nodes )
-				{
-					support = typeSupport::POINTS ;
-					nbElement = pointCount;
-				}
-				else
 				vtkOutputWindowDisplayDebugText("property not supported...  (resqml2__IndexableElements: not cells or nodes)");
 
 			auto typeProperty = valuesProperty->getXmlTag();
-			unsigned long long numValuesInEachDimension = cellCount/kCellCount; //3834;//iCellCount*jCellCount*kCellCount;
-			unsigned long long offsetInEachDimension = initKIndex;//iCellCount*jCellCount*initKIndex;
+
+			unsigned long long numValuesInEachDimension = cellCount; //cellCount/kCellCount; //3834;//iCellCount*jCellCount*kCellCount;
+			unsigned long long offsetInEachDimension = iCellCount*jCellCount*initKIndex; //initKIndex;//iCellCount*jCellCount*initKIndex;
+
 			if (typeProperty == "ContinuousProperty")
 			{
 				vtkSmartPointer<vtkFloatArray> cellDataFloat = vtkSmartPointer<vtkFloatArray>::New();
@@ -530,16 +530,16 @@ vtkDataArray* VtkProperty::loadValuesPropertySet(std::vector<resqml2::AbstractVa
 				{
 					if (propertyValue->getDimensionsCountOfPatch(0)==3)
 					{
-						cout << " chargement d'une propriété... appel getFloatValuesOf3dPatch avec UUID = " << propertyValue->getUuid() << "\n";
 						propertyValue->getFloatValuesOf3dPatch(0, valuesFloatSet,iCellCount, jCellCount, kCellCount, 0, 0, initKIndex);
-					}else if(propertyValue->getDimensionsCountOfPatch(0)==1)
-						{
-							cout << " chargement d'une propriété... appel getFloatValuesOfPatch avec UUID = " << propertyValue->getUuid() << "paramètres : 0 - " << numValuesInEachDimension << " - " << offsetInEachDimension << " - 1 "<<  " \n";
-							propertyValue->getFloatValuesOfPatch(0, valuesFloatSet, &numValuesInEachDimension, &offsetInEachDimension, 1);
-						}else
-							{
-								vtkOutputWindowDisplayDebugText("error in : propertyValue->getDimensionsCountOfPatch (values different of 1 or 3)");
-							}
+					}
+					else if(propertyValue->getDimensionsCountOfPatch(0)==1)
+					{
+						propertyValue->getFloatValuesOfPatch(0, valuesFloatSet, &numValuesInEachDimension, &offsetInEachDimension, 1);
+					}
+					else
+					{
+						vtkOutputWindowDisplayDebugText("error in : propertyValue->getDimensionsCountOfPatch (values different of 1 or 3)");
+					}
 				}
 				std::string name = valuesPropertySet[i]->getTitle();
 				cellDataFloat->SetName(name.c_str());

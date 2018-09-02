@@ -317,7 +317,6 @@ void VtkIjkGridRepresentation::createWithPoints(const vtkSmartPointer<vtkPoints>
 
 		ijkGridRepresentation->loadSplitInformation();
 
-		cout << "SubRepresentation " << iCellCount << " - " << jCellCount << " - "<< kCellCount << " - "<< "\n";
 		auto indice = 0;
 		unsigned int cellIndex = 0;
 

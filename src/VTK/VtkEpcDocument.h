@@ -73,17 +73,7 @@ public:
 	* create uuid representation.
 	*/
 	void visualize(const std::string & uuid);
-
-	void visualize(const std::string & uuid, int timeIndex);
 	
-	/**
-	* method : createTreeVtkPartialRep
-	* variable : uuid, VtkEpcDocument with complete representation
-	* prepare VtkEpcDocument & Children.
-	*/
-	void createTreeVtkPartialRep(const std::string & uuid, /*const std::string & parent,*/ VtkEpcDocument *vtkEpcDowumentWithCompleteRep);
-
-	void deleteTreeVtkPartial(const std::string & uuid);
 
 	/**
 	* method : remove
@@ -106,11 +96,7 @@ public:
 	*/
 	void attach();
 
-	std::string getFullUuid(std::string uuidPartial);
-
-	void setIndexTimeSeries(const int & index);
-
-	void addPartialUUid(const std::string & uuid, VtkEpcDocument *vtkEpcDowumentWithCompleteRep);
+	std::vector<std::string> getListUuid();
 
 	void addProperty(const std::string & uuidProperty, vtkDataArray* dataProperty);
 
@@ -125,11 +111,6 @@ public:
 
 	common::EpcDocument *getEpcDocument();
 	
-	std::vector<std::string> getPartialUuid();
-	int getCountPartialUuid();
-	std::vector<std::string> getUuid();
-	int getCountUuid();
-	
 protected:
 
 private:
@@ -142,6 +123,13 @@ private:
 	void addSubRepTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name);
 	void addPropertyTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name);
 	
+	/**
+	* method : createTreeVtkPartialRep
+	* variable : uuid, VtkEpcDocument with complete representation
+	* prepare VtkEpcDocument & Children.
+	*/
+	void createTreeVtkPartialRep(const std::string & uuid, /*const std::string & parent,*/ VtkEpcDocument *vtkEpcDowumentWithCompleteRep);
+
 	/**
 	* method : createTreeVtk
 	* variable : uuid, parent uuid, name, type
