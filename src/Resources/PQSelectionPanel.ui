@@ -14,7 +14,7 @@
    <string>Form</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <item row="4" column="0" colspan="15">
+   <item row="3" column="0" colspan="12">
     <widget class="QTreeWidget" name="treeWidget">
      <property name="enabled">
       <bool>true</bool>
@@ -169,7 +169,7 @@
       <number>1</number>
      </property>
      <property name="maximum">
-      <number>10</number>
+      <number>1</number>
      </property>
      <property name="pageStep">
       <number>1</number>
@@ -185,14 +185,7 @@
      </property>
     </widget>
    </item>
-   <item row="1" column="7">
-    <widget class="QLabel" name="label_2">
-     <property name="text">
-      <string>seconds                                     Current Time</string>
-     </property>
-    </widget>
-   </item>
-   <item row="1" column="8">
+   <item row="1" column="10">
     <widget class="QComboBox" name="time_series">
      <property name="minimumSize">
       <size>
@@ -205,25 +198,6 @@
        <width>300</width>
        <height>16</height>
       </size>
-     </property>
-    </widget>
-   </item>
-   <item row="2" column="6">
-    <widget class="QLabel" name="label_3">
-     <property name="minimumSize">
-      <size>
-       <width>125</width>
-       <height>16</height>
-      </size>
-     </property>
-     <property name="maximumSize">
-      <size>
-       <width>125</width>
-       <height>16</height>
-      </size>
-     </property>
-     <property name="text">
-      <string> 1 2 3 4  5 6 7 8 9 10</string>
      </property>
     </widget>
    </item>

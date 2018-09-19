@@ -41,6 +41,7 @@ knowledge of the CeCILL license and that you accept its terms.
 #include <QTimer>
 #include <QSlider>
 #include <QComboBox>
+#include <QLabel>
 #include <QStringList>
 #include <qtreewidget.h>
 #include <qradiobutton.h>
@@ -141,7 +142,9 @@ protected slots:
 
 	void updateTimer();
 
-	void timeChanged(int);
+	void timeChangedComboBox(int);
+	void sliderMoved(int);
+//	void slidervalueChanged(int);
 
 private:
 
@@ -225,6 +228,8 @@ private:
 	QVector<std::string> ts_displayed;
 
 	VtkEpcDocumentSet* vtkEpcDocumentSet;
+
+	bool debug_verif;
 };
 
 #endif

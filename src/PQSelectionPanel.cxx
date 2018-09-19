@@ -136,9 +136,9 @@ void PQSelectionPanel::constructor()
 
 
 	connect(button_Time_After, SIGNAL (released()), this, SLOT (handleButtonAfter()));
-    connect(button_Time_Before, SIGNAL (released()), this, SLOT (handleButtonBefore()));
+	connect(button_Time_Before, SIGNAL (released()), this, SLOT (handleButtonBefore()));
 	connect(button_Time_Play, SIGNAL (released()), this, SLOT (handleButtonPlay()));
-    connect(button_Time_Pause, SIGNAL (released()), this, SLOT (handleButtonPause()));
+	connect(button_Time_Pause, SIGNAL (released()), this, SLOT (handleButtonPause()));
 	connect(button_Time_Stop, SIGNAL (released()), this, SLOT (handleButtonStop()));
 	//***
 
@@ -147,15 +147,26 @@ void PQSelectionPanel::constructor()
 	QStringList time_series_list;
 	time_series->addItems(time_series_list);
 
-	connect(time_series, SIGNAL (currentIndexChanged(int)), this, SLOT (timeChanged(int)));
+	connect(time_series, SIGNAL (currentIndexChanged(int)), this, SLOT (timeChangedComboBox(int)));
 	//***
 
 	//*** Timer Play option
 	timer = new QTimer(this);
-    connect(timer, SIGNAL(timeout()), this, SLOT(updateTimer()));
+
+	connect(timer, SIGNAL(timeout()), this, SLOT(updateTimer()));
 	//***
 
-    slider_Time_Step = ui.slider_Time_Step;
+	//*** slider des différents Time_series
+	slider_Time_Step = ui.slider_Time_Step;
+	slider_Time_Step->setTickInterval(10);
+	slider_Time_Step->setSingleStep(1);
+	slider_Time_Step->setMinimum(0);
+
+//	connect(slider_Time_Step, SIGNAL (mouseReleaseEvent(int)), this, SLOT (sliderMoved(int)));
+	connect(slider_Time_Step, SIGNAL (sliderMoved(int)), this, SLOT (sliderMoved(int)));
+//	connect(slider_Time_Step, SIGNAL (valueChanged(int)), this, SLOT (slidervalueChanged(int)));
+
+	//***
 
 	radioButtonCount = 0;
 
@@ -165,6 +176,8 @@ void PQSelectionPanel::constructor()
 
 	//addTreeRoot("root", "epcdocument");
 	vtkEpcDocumentSet = new VtkEpcDocumentSet(0, 0, VtkEpcCommon::TreeView);
+
+	debug_verif = true;
 }
 
 //******************************* ACTIONS ************************************
@@ -259,7 +272,9 @@ void PQSelectionPanel::deleteTreeView()
 //----------------------------------------------------------------------------
 void PQSelectionPanel::checkedRadioButton(int rbNo)
 {
-	emit button_Time_Stop->released();
+	if (debug_verif)
+		cout << "Debug: PQSelectionPanel::checkedRadioButton("<< rbNo<< ") => IN" << endl;
+	emit button_Time_Pause->released();
 	if (radioButton_to_id.contains(rbNo))
 	{
 		std::string uuid = radioButton_to_id[rbNo];
@@ -276,7 +291,11 @@ void PQSelectionPanel::checkedRadioButton(int rbNo)
 				QDateTime date = QDateTime::fromString(time_series->currentText());
 				time_t time = date.toTime_t();
 
+				if (debug_verif)
+					cout << "Debug: PQSelectionPanel::removeUuid("<< ts_timestamp_to_uuid[uuidOld][time] << ") => IN" << endl;
 				this->removeUuid(ts_timestamp_to_uuid[uuidOld][time]);
+				if (debug_verif)
+					cout << "Debug: PQSelectionPanel::removeUuid("<< ts_timestamp_to_uuid[uuidOld][time] << ") => OUT" << endl;
 
 				auto index_to_delete = ts_displayed.indexOf(uuidOld);
 				ts_displayed.remove(index_to_delete);
@@ -294,8 +313,19 @@ void PQSelectionPanel::checkedRadioButton(int rbNo)
 			QDateTime date = QDateTime::fromString(time_series->currentText());
 			time_t time = date.toTime_t();
 
-			this->loadUuid(ts_timestamp_to_uuid[uuid][time]);
+			if (debug_verif)
+				cout << "Debug: " << time_series->currentText().toStdString().c_str() << endl;
+			if (debug_verif)
+				cout << "Debug: " << time << endl;
 
+			if(debug_verif)
+				cout << "Debug: PQSelectionPanel::loadUuid("<< uuid << "/" << time << " = " << ts_timestamp_to_uuid[uuid][time] << ") => IN" << endl;
+			this->loadUuid(ts_timestamp_to_uuid[uuid][time]);
+			if(debug_verif)
+				cout << "Debug: PQSelectionPanel::loadUuid("<< ts_timestamp_to_uuid[uuid][time] << ") => OUT" << endl;
+
+			if (debug_verif)
+				cout << "Debug: PQSelectionPanel::ts_displayed push : "<< uuid <<  endl;
 			ts_displayed.push_back(uuid);
 		}
 		else // basic property
@@ -303,53 +333,75 @@ void PQSelectionPanel::checkedRadioButton(int rbNo)
 			this->loadUuid(uuid);
 		}
 	}
+	if(debug_verif)
+		cout << "Debug: PQSelectionPanel::checkedRadioButton("<< rbNo<< ") => OUT" << endl;
 }
 
 //----------------------------------------------------------------------------
 void PQSelectionPanel::handleButtonAfter()
 {
-   auto idx = time_series->currentIndex() ;
-   if (++idx < time_series->count() )
-   {
-	   // change the TimeStamp
-	   time_series->setCurrentIndex(idx);
-   }
-   else
-   {
-	   time_Changed = false;
-   }
+	if(debug_verif)
+		cout << "Debug: PQSelectionPanel::handleButtonAfter() => IN" << endl;
+	auto idx = time_series->currentIndex() ;
+	if (++idx < time_series->count() )
+	{
+		// change the TimeStamp
+		time_series->setCurrentIndex(idx);
+	}
+	else
+	{
+		time_Changed = false;
+	}
+	if(debug_verif)
+		cout << "Debug: PQSelectionPanel::handleButtonAfter() => OUT" << endl;
 }
 
 //----------------------------------------------------------------------------
 void PQSelectionPanel::handleButtonBefore()
 {
-   auto idx = time_series->currentIndex() ;
-   if (idx != 0)
-   {
-	   --idx;
-	   // change the TimeStamp
-	   time_series->setCurrentIndex(idx);
-   }
+	if(debug_verif)
+		cout << "Debug: PQSelectionPanel::handleButtonBefore() => IN" << endl;
+	auto idx = time_series->currentIndex() ;
+	if (idx != 0)
+	{
+		--idx;
+		// change the TimeStamp
+		time_series->setCurrentIndex(idx);
+	}
+	if(debug_verif)
+		cout << "Debug: PQSelectionPanel::handleButtonBefore() => OUT" << endl;
 }
 
 //----------------------------------------------------------------------------
 void PQSelectionPanel::handleButtonPlay()
 {
-	timer->start(slider_Time_Step->value()*1000);
+	if(debug_verif)
+		cout << "Debug: PQSelectionPanel::handleButtonPlay() => IN" << endl;
+	timer->start(1000);
 	time_Changed = true;
+	if(debug_verif)
+		cout << "Debug: PQSelectionPanel::handleButtonPlay() => OUT" << endl;
 }
 
 //----------------------------------------------------------------------------
 void PQSelectionPanel::handleButtonPause()
 {
+	if(debug_verif)
+		cout << "Debug: PQSelectionPanel::handleButtonPause() => IN" << endl;
 	timer->stop();
+	if(debug_verif)
+		cout << "Debug: PQSelectionPanel::handleButtonPause() => OUT" << endl;
 }
 
 //----------------------------------------------------------------------------
 void PQSelectionPanel::handleButtonStop()
 {
+	if(debug_verif)
+		cout << "Debug: PQSelectionPanel::handleButtonStop() => IN" << endl;
 	time_series->setCurrentIndex(0);
 	timer->stop();
+	if(debug_verif)
+		cout << "Debug: PQSelectionPanel::handleButtonStop() => OUT" << endl;
 }
 
 //----------------------------------------------------------------------------
@@ -366,18 +418,32 @@ void PQSelectionPanel::updateTimer()
 }
 
 //----------------------------------------------------------------------------
-void PQSelectionPanel::timeChanged(int)
+void PQSelectionPanel::timeChangedComboBox(int)
 {
-	//sam. janv. 2 01:00:00 1971
+	slider_Time_Step->setValue(time_series->currentIndex());
+	if(debug_verif)
+		cout << "Debug: PQSelectionPanel::timeChangedComboBox() => IN  " << endl;
+	if(debug_verif)
+		cout << "Debug: index  " << time_series->currentIndex()<< endl;
 
 	QDateTime date = QDateTime::fromString(time_series->currentText());
 	time_t time = date.toTime_t();
+
+	if(debug_verif)
+		cout << "Debug: PQSelectionPanel::timeChangedComboBox() => time = " << time << endl;
+	if(debug_verif)
+		cout << "Debug: PQSelectionPanel::timeChangedComboBox() => save_time = " << save_time << endl;
 
 	if (time != save_time)
 	{
 		// remove old time properties
 		if (save_time != 0)
 		{
+			if(debug_verif)
+				cout << "Debug: PQSelectionPanel::timeChangedComboBox() => save_time != 0" << endl;
+			if(debug_verif)
+				cout << "Debug: PQSelectionPanel::timeChangedComboBox() => ts_displayed.size() = " << ts_displayed.size() << endl;
+
 			for (auto &ts :ts_displayed)
 			{
 				this->removeUuid(ts_timestamp_to_uuid[ts][save_time]);
@@ -386,6 +452,11 @@ void PQSelectionPanel::timeChanged(int)
 		}
 		else
 		{
+			if(debug_verif)
+				cout << "Debug: PQSelectionPanel::timeChangedComboBox() => save_time == 0" << endl;
+			if(debug_verif)
+				cout << "Debug: PQSelectionPanel::timeChangedComboBox() => ts_displayed.size() = " << ts_displayed.size() << endl;
+
 			// load time properties
 			for (auto &ts :ts_displayed)
 			{
@@ -395,14 +466,35 @@ void PQSelectionPanel::timeChanged(int)
 
 		save_time = time;
 	}
+	if(debug_verif)
+		cout << "Debug: PQSelectionPanel::timeChangedComboBox() => OUT" << endl;
 }
 
+//----------------------------------------------------------------------------
+void PQSelectionPanel::sliderMoved(int value)
+{
+	//slider_label->setText(time_series->currentText());
+	if(debug_verif)
+		cout << "Debug: IN sliderMoved index Qslider : " << value << endl;
+	time_series->setCurrentIndex(value);
+	if(debug_verif)
+		cout << "Debug: OUT sliderMoved index Qslider : " << value << endl;
+}
+/*
+//----------------------------------------------------------------------------
+void PQSelectionPanel::slidervalueChanged(int value)
+{
+	//time_series->setCurrentIndex(value);
+}
+*/
 //****************************************************************************
 
 //********************************* TreeView *********************************
 //----------------------------------------------------------------------------
 void PQSelectionPanel::addFileName(const std::string & fileName)
 {
+	if(debug_verif)
+		cout << "Debug: PQSelectionPanel::addFileName("<< fileName <<") => IN" << endl;
 	if (std::find(allFileName.begin(), allFileName.end(),fileName)==allFileName.end())
 	{
 		vtkEpcDocumentSet->addEpcDocument(fileName);
@@ -429,6 +521,8 @@ void PQSelectionPanel::addFileName(const std::string & fileName)
 				}
 
 				ts_timestamp_to_uuid[name_to_uuid[feuille->getName()]][feuille->getTimestamp()] = feuille->getUuid();
+				if(debug_verif)
+					cout << "Debug: PQSelectionPanel::addFileName(x) =>   " << name_to_uuid[feuille->getName()] << " ; "<< feuille->getTimestamp() << " " << feuille->getUuid() << endl;
 
 				list << feuille->getTimestamp();
 			}
@@ -445,13 +539,16 @@ void PQSelectionPanel::addFileName(const std::string & fileName)
 		}
 
 		large_list.removeDuplicates();
+		time_series->clear();
 
 		time_series_list = large_list;
-
-		time_series->clear();
 		time_series->addItems(time_series_list);
 
+		slider_Time_Step->setMaximum(time_series_list.size());
+
 	}
+	if(debug_verif)
+		cout << "Debug: PQSelectionPanel::addFileName("<< fileName <<") => OUT" << endl;
 }
 
 QMap<std::string, QMap<int, std::string>> ts_index_to_uuid;
@@ -459,89 +556,93 @@ QMap<std::string, QMap<time_t, std::string>> ts_timestamp_to_uuid;
 
 void PQSelectionPanel::populateTreeView(std::string parent, VtkEpcCommon::Resqml2Type parentType, std::string uuid, std::string name, VtkEpcCommon::Resqml2Type type)
 {
-	if (!uuidItem[uuid]){
-		if (parentType==VtkEpcCommon::Resqml2Type::PARTIAL && !uuidItem[parent])
-		{
-		}
-		else
-		{
-			if (!uuidItem[parent])
+	if (uuid != "")
+	{
+		if (!uuidItem[uuid]){
+			if (parentType==VtkEpcCommon::Resqml2Type::PARTIAL && !uuidItem[parent])
 			{
-				QTreeWidgetItem *treeItem = new QTreeWidgetItem(treeWidget);
-
-				treeItem->setExpanded(true);
-				treeItem->setText(0, parent.c_str());
-				treeItem->setText(1, "");
-				uuidItem[parent] = treeItem;
-				itemUuid[treeItem] = parent;
-			}
-
-			QIcon icon;
-			if (type==VtkEpcCommon::PROPERTY || type==VtkEpcCommon::TIME_SERIES)
-			{
-				addTreeProperty(uuidItem[parent], parent, name.c_str(), uuid);
 			}
 			else
 			{
-				switch (type)
+				if (!uuidItem[parent])
 				{
-				case VtkEpcCommon::Resqml2Type::GRID_2D:
-				{
-					icon.addFile(QString::fromUtf8(":Grid2D.png"), QSize(), QIcon::Normal, QIcon::Off);
-					break;
-				}
-				case VtkEpcCommon::Resqml2Type::POLYLINE_SET:
-				{
-					icon.addFile(QString::fromUtf8(":Polyline.png"), QSize(), QIcon::Normal, QIcon::Off);
-					break;
-				}
-				case VtkEpcCommon::Resqml2Type::TRIANGULATED_SET:
-				{
-					icon.addFile(QString::fromUtf8(":Triangulated.png"), QSize(), QIcon::Normal, QIcon::Off);
-					break;
-				}
-				case VtkEpcCommon::Resqml2Type::WELL_TRAJ:
-				{
-					icon.addFile(QString::fromUtf8(":WellTraj.png"), QSize(), QIcon::Normal, QIcon::Off);
-					break;
-				}
-				case VtkEpcCommon::Resqml2Type::IJK_GRID:
-				{
-					icon.addFile(QString::fromUtf8(":IjkGrid.png"), QSize(), QIcon::Normal, QIcon::Off);
-					break;
-				}
-				case VtkEpcCommon::Resqml2Type::UNSTRUC_GRID:
-				{
-					icon.addFile(QString::fromUtf8(":UnstructuredGrid.png"), QSize(), QIcon::Normal, QIcon::Off);
-					break;
-				}
-				case VtkEpcCommon::Resqml2Type::SUB_REP:
-				{
-					icon.addFile(QString::fromUtf8(":SubRepresentation.png"), QSize(), QIcon::Normal, QIcon::Off);
-					break;
-				}
-				default:
-					break;
+					QTreeWidgetItem *treeItem = new QTreeWidgetItem(treeWidget);
+
+					treeItem->setExpanded(true);
+					treeItem->setText(0, parent.c_str());
+					treeItem->setText(1, "");
+					uuidItem[parent] = treeItem;
+					itemUuid[treeItem] = parent;
 				}
 
-				QTreeWidgetItem *treeItem = new QTreeWidgetItem();
+				QIcon icon;
+				if (type==VtkEpcCommon::PROPERTY || type==VtkEpcCommon::TIME_SERIES)
+				{
+					if(debug_verif)
+						cout << "Debug:  type : " << type << " parent : " << parent << " name : " << name.c_str() << " uuid : " << uuid << endl;
+					addTreeProperty(uuidItem[parent], parent, name.c_str(), uuid);
+				}
+				else
+				{
+					switch (type)
+					{
+					case VtkEpcCommon::Resqml2Type::GRID_2D:
+					{
+						icon.addFile(QString::fromUtf8(":Grid2D.png"), QSize(), QIcon::Normal, QIcon::Off);
+						break;
+					}
+					case VtkEpcCommon::Resqml2Type::POLYLINE_SET:
+					{
+						icon.addFile(QString::fromUtf8(":Polyline.png"), QSize(), QIcon::Normal, QIcon::Off);
+						break;
+					}
+					case VtkEpcCommon::Resqml2Type::TRIANGULATED_SET:
+					{
+						icon.addFile(QString::fromUtf8(":Triangulated.png"), QSize(), QIcon::Normal, QIcon::Off);
+						break;
+					}
+					case VtkEpcCommon::Resqml2Type::WELL_TRAJ:
+					{
+						icon.addFile(QString::fromUtf8(":WellTraj.png"), QSize(), QIcon::Normal, QIcon::Off);
+						break;
+					}
+					case VtkEpcCommon::Resqml2Type::IJK_GRID:
+					{
+						icon.addFile(QString::fromUtf8(":IjkGrid.png"), QSize(), QIcon::Normal, QIcon::Off);
+						break;
+					}
+					case VtkEpcCommon::Resqml2Type::UNSTRUC_GRID:
+					{
+						icon.addFile(QString::fromUtf8(":UnstructuredGrid.png"), QSize(), QIcon::Normal, QIcon::Off);
+						break;
+					}
+					case VtkEpcCommon::Resqml2Type::SUB_REP:
+					{
+						icon.addFile(QString::fromUtf8(":SubRepresentation.png"), QSize(), QIcon::Normal, QIcon::Off);
+						break;
+					}
+					default:
+						break;
+					}
 
-				treeItem->setText(0, name.c_str());
-				treeItem->setIcon(0, icon);
-				treeItem->setCheckState(0, Qt::Unchecked);
-				treeItem->setFlags(treeItem->flags() | Qt::ItemIsUserCheckable | Qt::ItemIsSelectable);
+					QTreeWidgetItem *treeItem = new QTreeWidgetItem();
+
+					treeItem->setText(0, name.c_str());
+					treeItem->setIcon(0, icon);
+					treeItem->setCheckState(0, Qt::Unchecked);
+					treeItem->setFlags(treeItem->flags() | Qt::ItemIsUserCheckable | Qt::ItemIsSelectable);
 
 
-				uuidItem[parent]->addChild(treeItem);
+					uuidItem[parent]->addChild(treeItem);
 
-				uuidItem[uuid] = treeItem;
-				itemUuid[treeItem] = uuid;
+					uuidItem[uuid] = treeItem;
+					itemUuid[treeItem] = uuid;
 
-				filenameToUuids[uuidToFilename[uuid]].push_back(uuid);
+					filenameToUuids[uuidToFilename[uuid]].push_back(uuid);
+				}
 			}
 		}
 	}
-
 }
 
 //----------------------------------------------------------------------------
@@ -585,7 +686,7 @@ void PQSelectionPanel::addTreeProperty(QTreeWidgetItem *parent, std::string pare
 			parent->addChild(treeItem);
 		}
 	 */
-//	connect(buttonGroup, SIGNAL(buttonClicked(int)), this, SLOT(checkedRadioButton(int)));
+	//	connect(buttonGroup, SIGNAL(buttonClicked(int)), this, SLOT(checkedRadioButton(int)));
 	uuidParent_to_groupButton[itemUuid[parent]] = buttonGroup;
 }
 //****************************************************************************
