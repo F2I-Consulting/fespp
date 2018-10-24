@@ -56,6 +56,7 @@ public:
 	QAction* actionDataLoadManager();
 //	QAction* actionPanelSelection();
 	QAction* actionPanelMetadata();
+	QAction* actionEtpCommand();
 
 	pqPipelineSource* getFesppReader();
 
@@ -67,11 +68,15 @@ public:
 	bool existPipe();
 	void existPipe(bool value);
 
+	bool etp_existPipe();
+	void etp_existPipe(bool value);
+
 	void newFile(const std::string & fileName);
 
 public slots:
 	void showDataLoadManager();
 	void showPanelMetadata();
+	void showEtpConnectionManager();
 
 protected:
 	virtual pqPipelineSource* findPipelineSource(const char* SMName);
@@ -92,6 +97,7 @@ private:
 	pqInternal* Internal;
 
 	bool existEpcPipe;
+	bool existEtpPipe;
 	bool panelSelectionVisible;
 	bool panelMetadataVisible;
 	Q_DISABLE_COPY(PQToolsManager)

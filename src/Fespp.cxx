@@ -22,7 +22,6 @@
 #include <vtkMPIController.h>
 #endif // PARAVIEW_USE_MPI
 
-
 #ifndef MPICH_IGNORE_CXX_SEEK
 #define MPICH_IGNORE_CXX_SEEK
 #endif
@@ -30,10 +29,9 @@
 vtkStandardNewMacro(Fespp);
 vtkCxxSetObjectMacro(Fespp, Controller, vtkMultiProcessController);
 
-
 //----------------------------------------------------------------------------
 Fespp::Fespp() :
-FileName(nullptr), Controller(nullptr), loadedFile(false), idProc(0), nbProc(0), countTest(0)
+				FileName(nullptr), Controller(nullptr), loadedFile(false), idProc(0), nbProc(0), countTest(0)
 {
 	SetNumberOfInputPorts(0);
 	SetNumberOfOutputPorts(1);
@@ -59,6 +57,7 @@ FileName(nullptr), Controller(nullptr), loadedFile(false), idProc(0), nbProc(0),
 
 	countTest = 0;
 	vtkEpcDocumentSet = nullptr;
+	etpDocument=false;
 }
 
 //----------------------------------------------------------------------------
@@ -81,7 +80,16 @@ Fespp::~Fespp()
 //----------------------------------------------------------------------------
 void Fespp::SetSubFileName(const char* name)
 {
-	if (std::find(fileNameSet.begin(), fileNameSet.end(),std::string(name))==fileNameSet.end())
+	if(etpDocument)
+	{
+		auto it = std::string(name).find(":");
+		if(it != std::string::npos)
+		{
+			auto port = std::string(name).substr(it+1);
+			auto ip = std::string(name).substr(0,it);
+			cout << "Fespp ip : " << ip << " : " << port << endl;
+		}
+	} else if (std::find(fileNameSet.begin(), fileNameSet.end(),std::string(name))==fileNameSet.end())
 	{
 		fileNameSet.push_back(std::string(name));
 		openEpcDocument(name);
@@ -175,7 +183,11 @@ int Fespp::RequestInformation(
 		vtkEpcDocumentSet = new VtkEpcDocumentSet(idProc, nbProc, VtkEpcCommon::Both);
 		if (stringFileName != "EpcDocument")
 		{
-			if (extension=="epc")
+			if(stringFileName == "EtpDocument")
+			{
+				cout << "Fespp ETP !!\n";
+				etpDocument=true;
+			} else if (extension=="epc")
 			{
 				openEpcDocument(FileName);
 				vtkEpcDocumentSet->visualizeFull();

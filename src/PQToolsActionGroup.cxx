@@ -15,6 +15,7 @@ PQToolsActionGroup::PQToolsActionGroup(QObject* p)
 
 	this->addAction(manager->actionDataLoadManager());
 	this->addAction(manager->actionPanelMetadata());
+	this->addAction(manager->actionEtpCommand());
 
 	this->setExclusive(false);
 }

@@ -58,6 +58,7 @@ class vtkDataArraySelection;
 class Fespp : public vtkMultiBlockDataSetAlgorithm
 {
 public:
+
 	static Fespp *New();
 	vtkTypeMacro(Fespp, vtkMultiBlockDataSetAlgorithm);
 	void PrintSelf(ostream& os, vtkIndent indent);
@@ -121,6 +122,7 @@ private:
 	int countTest;
 
 	std::vector<std::string> fileNameSet;
+	bool etpDocument;
 };
 #endif
 

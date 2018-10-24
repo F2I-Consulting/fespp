@@ -1,9 +1,10 @@
 #include "PQToolsManager.h"
 
 #include "PQDataLoadManager.h"
+#include "PQEtpConnectionManager.h"
 #include "PQSelectionPanel.h"
+#include "PQEtpPanel.h"
 #include "PQMetaDataPanel.h"
-
 
 #include "pqActiveObjects.h"
 #include "pqApplicationCore.h"
@@ -12,7 +13,6 @@
 #include "pqRenderView.h"
 #include "pqPipelineSource.h"
 #include "pqPropertiesPanel.h"
-
 
 #include <QMainWindow>
 #include <QPointer>
@@ -23,7 +23,6 @@ namespace
 {
 pqPropertiesPanel* getpqPropertiesPanel()
 {
-	// get multi-block inspector panel
 	pqPropertiesPanel *panel = 0;
 	foreach(QWidget *widget, qApp->topLevelWidgets())
 	{
@@ -39,7 +38,6 @@ pqPropertiesPanel* getpqPropertiesPanel()
 
 PQSelectionPanel* getPQSelectionPanel()
 {
-	// get multi-block inspector panel
 	PQSelectionPanel *panel = 0;
 	foreach(QWidget *widget, qApp->topLevelWidgets())
 	{
@@ -53,9 +51,23 @@ PQSelectionPanel* getPQSelectionPanel()
 	return panel;
 }
 
+PQEtpPanel* getPQEtpPanel()
+{
+	PQEtpPanel *panel = 0;
+	foreach(QWidget *widget, qApp->topLevelWidgets())
+	{
+		panel = widget->findChild<PQEtpPanel *>();
+
+		if (panel)
+		{
+			break;
+		}
+	}
+	return panel;
+}
+
 PQMetaDataPanel* getPQMetadataPanel()
 {
-	// get multi-block inspector panel
 	PQMetaDataPanel *panel = 0;
 	foreach(QWidget *widget, qApp->topLevelWidgets())
 	{
@@ -113,12 +125,14 @@ PQToolsManager::PQToolsManager(QObject* p)
 	this->Internal->Actions.setupUi(this->Internal->ActionPlaceholder);
 
 	this->existEpcPipe = false;
+	this->existEtpPipe = false;
 	this->panelSelectionVisible = false;
 	this->panelMetadataVisible = false;
 
 	QObject::connect(this->actionDataLoadManager(), SIGNAL(triggered(bool)), this, SLOT(showDataLoadManager()));
 	//QObject::connect(this->actionPanelSelection(), SIGNAL(triggered(bool)), this, SLOT(showPanelSelection()));
 	QObject::connect(this->actionPanelMetadata(), SIGNAL(triggered(bool)), this, SLOT(showPanelMetadata()));
+	QObject::connect(this->actionEtpCommand(), SIGNAL(triggered(bool)), this, SLOT(showEtpConnectionManager()));
 
 	this->actionPanelMetadata()->setEnabled(false);
 	//	this->actionPanelSelection()->setEnabled(false);
@@ -152,12 +166,31 @@ QAction* PQToolsManager::actionPanelMetadata()
 }
 
 //-----------------------------------------------------------------------------
+QAction* PQToolsManager::actionEtpCommand()
+{
+	return this->Internal->Actions.actionEtpCommand;
+}
+
+//-----------------------------------------------------------------------------
 void PQToolsManager::showDataLoadManager()
 {
 	PQDataLoadManager* dialog = new PQDataLoadManager(this->getMainWindow());
 	dialog->setAttribute(Qt::WA_DeleteOnClose, true);
 
 	dialog->show();
+}
+
+//-----------------------------------------------------------------------------
+void PQToolsManager::showEtpConnectionManager()
+{
+	cout << "PQToolsManager::showPanelEtp() - IN"  << endl;
+	PQEtpConnectionManager* dialog = new PQEtpConnectionManager(this->getMainWindow());
+	dialog->setAttribute(Qt::WA_DeleteOnClose, true);
+
+	dialog->show();
+//	getPQEtpPanel()->setVisible(true);
+//	getPQEtpPanel()->etpClientConnect("127.0.0.1", "8080");
+	cout << "PQToolsManager::showPanelEtp() - OUT"  << endl;
 }
 
 //-----------------------------------------------------------------------------
@@ -278,6 +311,18 @@ bool PQToolsManager::existPipe()
 void PQToolsManager::existPipe(bool value)
 {
 	this->existEpcPipe = value;
+}
+
+//-----------------------------------------------------------------------------
+bool PQToolsManager::etp_existPipe()
+{
+	return this->existEtpPipe;
+}
+
+//-----------------------------------------------------------------------------
+void PQToolsManager::etp_existPipe(bool value)
+{
+	this->existEtpPipe = value;
 }
 
 //----------------------------------------------------------------------------
