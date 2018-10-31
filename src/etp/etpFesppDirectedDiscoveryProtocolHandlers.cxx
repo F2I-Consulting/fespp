@@ -18,7 +18,7 @@ under the License.
 -----------------------------------------------------------------------*/
 #include "etpFesppDirectedDiscoveryProtocolHandlers.h"
 #include "vtkEtpDocument.h"
-#include <QApplication>
+//#include <QApplication>
 
 void etpFesppDirectedDiscoveryProtocolHandlers::on_GetResourcesResponse(const Energistics::Etp::v12::Protocol::DirectedDiscovery::GetResourcesResponse & grr)
 {
@@ -34,7 +34,7 @@ void etpFesppDirectedDiscoveryProtocolHandlers::on_GetResourcesResponse(const En
 			graphResource.m_uuid,
 			graphResource.m_lastChanged
 			);
-
+/*
 	std::cout << "*************************************************" << std::endl;
 		std::cout << "GraphResource received : " << std::endl;
 		std::cout << "uri : " << graphResource.m_uri << std::endl;
@@ -47,6 +47,7 @@ void etpFesppDirectedDiscoveryProtocolHandlers::on_GetResourcesResponse(const En
 		std::cout << "uuid : " << graphResource.m_uuid << std::endl;
 		std::cout << "lastChanged : " << graphResource.m_lastChanged << std::endl;
 		std::cout << "*************************************************" << std::endl;
+		*/
 /*
 	if (getObjectWhenDiscovered) {
 		Energistics::Etp::v12::Protocol::Store::GetObject getO;

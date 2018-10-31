@@ -1,9 +1,12 @@
 
 #include <etp/etpClientSession.h>
 #include "etp/ProtocolHandlers/CoreHandlers.h"
+#include "etp/ProtocolHandlers/ProtocolHandlers.h"
 #include "etpFesppDirectedDiscoveryProtocolHandlers.h"
+#include "etp/ProtocolHandlers/DirectedDiscoveryHandlers.h"
 #include "etp/ProtocolHandlers/DataArrayHandlers.h"
 #include "etpFesppStoreProtocolHandlers.h"
+#include "etp/EtpMessages.h"
 
 
 
@@ -72,7 +75,7 @@ void etpClientSession::pushCommand(std::string command)
 		send(mb);
 	}
 	else if (command.substr(0, 9) == "GetObject") {
-		Energistics::Etp::v12::Protocol::Store::GetObject getO;
+		Energistics::Etp::v12::Protocol::Store::GetObject_ getO;
 		getO.m_uri = command.size() > 10 ? command.substr(10) : "";
 		send(getO);
 	}
