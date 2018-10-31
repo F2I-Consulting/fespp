@@ -573,7 +573,6 @@ void PQSelectionPanel::populateTreeView(std::string parent, VtkEpcCommon::Resqml
 //----------------------------------------------------------------------------
 void PQSelectionPanel::addTreeProperty(QTreeWidgetItem *parent, std::string parentUuid,QString name, std::string uuid)
 {
-	auto etape =0;
 	QButtonGroup *buttonGroup;
 	if (uuidParent_to_groupButton.count(parentUuid) < 1)
 	{

@@ -216,23 +216,19 @@ int VtkIjkGridRepresentation::getICellCount(const std::string & uuid) const
 {
 	long result = 0;
 
-	common::AbstractObject* obj;
 	if (subRepresentation)
 	{
 		// SubRep
-		obj = epcPackageSubRepresentation->getResqmlAbstractObjectByUuid(getUuid());
-		auto subRepresentation1 = static_cast<resqml2::SubRepresentation*>(obj);
 		result = iCellCount;
-		//result = subRepresentation1->getICellCount();
 	}else
 	{
+		common::AbstractObject* obj;
 		// Ijk Grid
 		obj = epcPackageRepresentation->getResqmlAbstractObjectByUuid(getUuid());
 		auto ijkGridRepresentation = static_cast<resqml2_0_1::AbstractIjkGridRepresentation*>(obj);
 		result = ijkGridRepresentation->getICellCount();
 	}
 	return result;
-//	return iCellCount;
 }
 
 //----------------------------------------------------------------------------
@@ -240,23 +236,19 @@ int VtkIjkGridRepresentation::getJCellCount(const std::string & uuid) const
 {
 	long result = 0;
 
-	common::AbstractObject* obj;
 	if (subRepresentation)
 	{
 		// SubRep
-		obj = epcPackageSubRepresentation->getResqmlAbstractObjectByUuid(getUuid());
-		auto subRepresentation1 = static_cast<resqml2::SubRepresentation*>(obj);
 		result = jCellCount;
-		//result = subRepresentation1->getJCellCount();
 	}else
 	{
+		common::AbstractObject* obj;
 		// Ijk Grid
 		obj = epcPackageRepresentation->getResqmlAbstractObjectByUuid(getUuid());
 		auto ijkGridRepresentation = static_cast<resqml2_0_1::AbstractIjkGridRepresentation*>(obj);
 		result = ijkGridRepresentation->getJCellCount();
 	}
 	return result;
-//	return jCellCount;
 }
 
 //----------------------------------------------------------------------------
@@ -264,16 +256,13 @@ int VtkIjkGridRepresentation::getKCellCount(const std::string & uuid) const
 {
 	long result = 0;
 
-	common::AbstractObject* obj;
 	if (subRepresentation)
 	{
 		// SubRep
-		obj = epcPackageSubRepresentation->getResqmlAbstractObjectByUuid(getUuid());
-		auto subRepresentation1 = static_cast<resqml2::SubRepresentation*>(obj);
 		result = kCellCount;
-		//result = subRepresentation1->getKCellCount();
 	}else
 	{
+		common::AbstractObject* obj;
 		// Ijk Grid
 		obj = epcPackageRepresentation->getResqmlAbstractObjectByUuid(getUuid());
 		auto ijkGridRepresentation = static_cast<resqml2_0_1::AbstractIjkGridRepresentation*>(obj);

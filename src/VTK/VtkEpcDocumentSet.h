@@ -116,8 +116,6 @@ private:
 	int procRank;
 	int nbProc;
 
-	int indexTimesSeries;
-
 	bool treeViewMode;
 	bool representationMode;
 
