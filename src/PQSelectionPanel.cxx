@@ -162,22 +162,17 @@ void PQSelectionPanel::constructor()
 	slider_Time_Step->setSingleStep(1);
 	slider_Time_Step->setMinimum(0);
 
-//	connect(slider_Time_Step, SIGNAL (mouseReleaseEvent(int)), this, SLOT (sliderMoved(int)));
 	connect(slider_Time_Step, SIGNAL (sliderMoved(int)), this, SLOT (sliderMoved(int)));
-//	connect(slider_Time_Step, SIGNAL (valueChanged(int)), this, SLOT (slidervalueChanged(int)));
 
 	//***
-
 	radioButtonCount = 0;
 
 	indexFile = 0;
 
 	save_time = 0;
 
-	//addTreeRoot("root", "epcdocument");
 	vtkEpcDocumentSet = new VtkEpcDocumentSet(0, 0, VtkEpcCommon::TreeView);
 
-	debug_verif = true;
 }
 
 //******************************* ACTIONS ************************************
@@ -264,16 +259,11 @@ void PQSelectionPanel::deleteTreeView()
 
 	delete vtkEpcDocumentSet;
 	vtkEpcDocumentSet = new VtkEpcDocumentSet(0, 0, VtkEpcCommon::TreeView);
-
-	//addTreeRoot("root", "epcdocument");
-
 }
 
 //----------------------------------------------------------------------------
 void PQSelectionPanel::checkedRadioButton(int rbNo)
 {
-	if (debug_verif)
-		cout << "Debug: PQSelectionPanel::checkedRadioButton("<< rbNo<< ") => IN" << endl;
 	emit button_Time_Pause->released();
 	if (radioButton_to_id.contains(rbNo))
 	{
@@ -291,14 +281,9 @@ void PQSelectionPanel::checkedRadioButton(int rbNo)
 				QDateTime date = QDateTime::fromString(time_series->currentText());
 				time_t time = date.toTime_t();
 
-				if (debug_verif)
-					cout << "Debug: PQSelectionPanel::removeUuid("<< ts_timestamp_to_uuid[uuidOld][time] << ") => IN" << endl;
 				this->removeUuid(ts_timestamp_to_uuid[uuidOld][time]);
-				if (debug_verif)
-					cout << "Debug: PQSelectionPanel::removeUuid("<< ts_timestamp_to_uuid[uuidOld][time] << ") => OUT" << endl;
 
-				auto index_to_delete = ts_displayed.indexOf(uuidOld);
-				ts_displayed.remove(index_to_delete);
+				this->updateTimeSeries(uuidOld, false);
 			}
 			else // basic property
 			{
@@ -310,38 +295,23 @@ void PQSelectionPanel::checkedRadioButton(int rbNo)
 
 		if (ts_timestamp_to_uuid.count(uuid) > 0) // time series
 		{
+			this->updateTimeSeries(uuid, true);
+
 			QDateTime date = QDateTime::fromString(time_series->currentText());
 			time_t time = date.toTime_t();
 
-			if (debug_verif)
-				cout << "Debug: " << time_series->currentText().toStdString().c_str() << endl;
-			if (debug_verif)
-				cout << "Debug: " << time << endl;
-
-			if(debug_verif)
-				cout << "Debug: PQSelectionPanel::loadUuid("<< uuid << "/" << time << " = " << ts_timestamp_to_uuid[uuid][time] << ") => IN" << endl;
 			this->loadUuid(ts_timestamp_to_uuid[uuid][time]);
-			if(debug_verif)
-				cout << "Debug: PQSelectionPanel::loadUuid("<< ts_timestamp_to_uuid[uuid][time] << ") => OUT" << endl;
-
-			if (debug_verif)
-				cout << "Debug: PQSelectionPanel::ts_displayed push : "<< uuid <<  endl;
-			ts_displayed.push_back(uuid);
 		}
 		else // basic property
 		{
 			this->loadUuid(uuid);
 		}
 	}
-	if(debug_verif)
-		cout << "Debug: PQSelectionPanel::checkedRadioButton("<< rbNo<< ") => OUT" << endl;
 }
 
 //----------------------------------------------------------------------------
 void PQSelectionPanel::handleButtonAfter()
 {
-	if(debug_verif)
-		cout << "Debug: PQSelectionPanel::handleButtonAfter() => IN" << endl;
 	auto idx = time_series->currentIndex() ;
 	if (++idx < time_series->count() )
 	{
@@ -352,15 +322,11 @@ void PQSelectionPanel::handleButtonAfter()
 	{
 		time_Changed = false;
 	}
-	if(debug_verif)
-		cout << "Debug: PQSelectionPanel::handleButtonAfter() => OUT" << endl;
 }
 
 //----------------------------------------------------------------------------
 void PQSelectionPanel::handleButtonBefore()
 {
-	if(debug_verif)
-		cout << "Debug: PQSelectionPanel::handleButtonBefore() => IN" << endl;
 	auto idx = time_series->currentIndex() ;
 	if (idx != 0)
 	{
@@ -368,40 +334,26 @@ void PQSelectionPanel::handleButtonBefore()
 		// change the TimeStamp
 		time_series->setCurrentIndex(idx);
 	}
-	if(debug_verif)
-		cout << "Debug: PQSelectionPanel::handleButtonBefore() => OUT" << endl;
 }
 
 //----------------------------------------------------------------------------
 void PQSelectionPanel::handleButtonPlay()
 {
-	if(debug_verif)
-		cout << "Debug: PQSelectionPanel::handleButtonPlay() => IN" << endl;
 	timer->start(1000);
 	time_Changed = true;
-	if(debug_verif)
-		cout << "Debug: PQSelectionPanel::handleButtonPlay() => OUT" << endl;
 }
 
 //----------------------------------------------------------------------------
 void PQSelectionPanel::handleButtonPause()
 {
-	if(debug_verif)
-		cout << "Debug: PQSelectionPanel::handleButtonPause() => IN" << endl;
 	timer->stop();
-	if(debug_verif)
-		cout << "Debug: PQSelectionPanel::handleButtonPause() => OUT" << endl;
 }
 
 //----------------------------------------------------------------------------
 void PQSelectionPanel::handleButtonStop()
 {
-	if(debug_verif)
-		cout << "Debug: PQSelectionPanel::handleButtonStop() => IN" << endl;
 	time_series->setCurrentIndex(0);
 	timer->stop();
-	if(debug_verif)
-		cout << "Debug: PQSelectionPanel::handleButtonStop() => OUT" << endl;
 }
 
 //----------------------------------------------------------------------------
@@ -421,29 +373,15 @@ void PQSelectionPanel::updateTimer()
 void PQSelectionPanel::timeChangedComboBox(int)
 {
 	slider_Time_Step->setValue(time_series->currentIndex());
-	if(debug_verif)
-		cout << "Debug: PQSelectionPanel::timeChangedComboBox() => IN  " << endl;
-	if(debug_verif)
-		cout << "Debug: index  " << time_series->currentIndex()<< endl;
 
 	QDateTime date = QDateTime::fromString(time_series->currentText());
 	time_t time = date.toTime_t();
-
-	if(debug_verif)
-		cout << "Debug: PQSelectionPanel::timeChangedComboBox() => time = " << time << endl;
-	if(debug_verif)
-		cout << "Debug: PQSelectionPanel::timeChangedComboBox() => save_time = " << save_time << endl;
 
 	if (time != save_time)
 	{
 		// remove old time properties
 		if (save_time != 0)
 		{
-			if(debug_verif)
-				cout << "Debug: PQSelectionPanel::timeChangedComboBox() => save_time != 0" << endl;
-			if(debug_verif)
-				cout << "Debug: PQSelectionPanel::timeChangedComboBox() => ts_displayed.size() = " << ts_displayed.size() << endl;
-
 			for (auto &ts :ts_displayed)
 			{
 				this->removeUuid(ts_timestamp_to_uuid[ts][save_time]);
@@ -452,57 +390,74 @@ void PQSelectionPanel::timeChangedComboBox(int)
 		}
 		else
 		{
-			if(debug_verif)
-				cout << "Debug: PQSelectionPanel::timeChangedComboBox() => save_time == 0" << endl;
-			if(debug_verif)
-				cout << "Debug: PQSelectionPanel::timeChangedComboBox() => ts_displayed.size() = " << ts_displayed.size() << endl;
-
 			// load time properties
 			for (auto &ts :ts_displayed)
 			{
 				this->loadUuid(ts_timestamp_to_uuid[ts][time]);
 			}
 		}
-
 		save_time = time;
 	}
-	if(debug_verif)
-		cout << "Debug: PQSelectionPanel::timeChangedComboBox() => OUT" << endl;
 }
 
 //----------------------------------------------------------------------------
 void PQSelectionPanel::sliderMoved(int value)
 {
-	//slider_label->setText(time_series->currentText());
-	if(debug_verif)
-		cout << "Debug: IN sliderMoved index Qslider : " << value << endl;
 	time_series->setCurrentIndex(value);
-	if(debug_verif)
-		cout << "Debug: OUT sliderMoved index Qslider : " << value << endl;
 }
-/*
+
 //----------------------------------------------------------------------------
-void PQSelectionPanel::slidervalueChanged(int value)
+void PQSelectionPanel::updateTimeSeries(std::string uuid, bool newUuid)
 {
-	//time_series->setCurrentIndex(value);
+	if (newUuid)
+	{
+		ts_displayed.push_back(uuid);
+	}else
+	{
+		auto index_to_delete = ts_displayed.indexOf(uuid);
+		ts_displayed.remove(index_to_delete);
+	}
+
+	QList<time_t> list;
+	QStringList large_list;
+
+	for (const auto &uuid_displayed : ts_displayed)
+	{
+		foreach(time_t t, ts_timestamp_to_uuid[uuid_displayed].keys())
+			list << t;
+	}
+
+	qSort(list.begin(), list.end());
+
+	for (auto &it : list)
+	{
+		QDateTime dt;
+		dt.setTime_t(it);
+		large_list << dt.toString();
+	}
+
+	large_list.removeDuplicates();
+
+	disconnect(time_series, SIGNAL (currentIndexChanged(int)), this, SLOT (timeChangedComboBox(int)));
+	time_series->clear();
+	time_series->addItems(large_list);
+	connect(time_series, SIGNAL (currentIndexChanged(int)), this, SLOT (timeChangedComboBox(int)));
+
+	slider_Time_Step->setMaximum(large_list.size());
 }
-*/
+
 //****************************************************************************
 
 //********************************* TreeView *********************************
 //----------------------------------------------------------------------------
 void PQSelectionPanel::addFileName(const std::string & fileName)
 {
-	if(debug_verif)
-		cout << "Debug: PQSelectionPanel::addFileName("<< fileName <<") => IN" << endl;
 	if (std::find(allFileName.begin(), allFileName.end(),fileName)==allFileName.end())
 	{
 		vtkEpcDocumentSet->addEpcDocument(fileName);
 		allFileName.push_back(fileName);
 		uuidToFilename[fileName] = fileName;
 
-		QList<time_t> list;
-		QStringList large_list;
 
 		QMap<std::string, std::string> name_to_uuid;
 		auto treeView = vtkEpcDocumentSet->getTreeView();
@@ -521,38 +476,10 @@ void PQSelectionPanel::addFileName(const std::string & fileName)
 				}
 
 				ts_timestamp_to_uuid[name_to_uuid[feuille->getName()]][feuille->getTimestamp()] = feuille->getUuid();
-				if(debug_verif)
-					cout << "Debug: PQSelectionPanel::addFileName(x) =>   " << name_to_uuid[feuille->getName()] << " ; "<< feuille->getTimestamp() << " " << feuille->getUuid() << endl;
-
-				list << feuille->getTimestamp();
 			}
 		}
-
-
-		qSort(list.begin(), list.end());
-
-		for (auto &it : list)
-		{
-			QDateTime dt;
-			dt.setTime_t(it);
-			large_list << dt.toString();
-		}
-
-		large_list.removeDuplicates();
-		time_series->clear();
-
-		time_series_list = large_list;
-		time_series->addItems(time_series_list);
-
-		slider_Time_Step->setMaximum(time_series_list.size());
-
 	}
-	if(debug_verif)
-		cout << "Debug: PQSelectionPanel::addFileName("<< fileName <<") => OUT" << endl;
 }
-
-QMap<std::string, QMap<int, std::string>> ts_index_to_uuid;
-QMap<std::string, QMap<time_t, std::string>> ts_timestamp_to_uuid;
 
 void PQSelectionPanel::populateTreeView(std::string parent, VtkEpcCommon::Resqml2Type parentType, std::string uuid, std::string name, VtkEpcCommon::Resqml2Type type)
 {
@@ -578,8 +505,6 @@ void PQSelectionPanel::populateTreeView(std::string parent, VtkEpcCommon::Resqml
 				QIcon icon;
 				if (type==VtkEpcCommon::PROPERTY || type==VtkEpcCommon::TIME_SERIES)
 				{
-					if(debug_verif)
-						cout << "Debug:  type : " << type << " parent : " << parent << " name : " << name.c_str() << " uuid : " << uuid << endl;
 					addTreeProperty(uuidItem[parent], parent, name.c_str(), uuid);
 				}
 				else
@@ -677,16 +602,7 @@ void PQSelectionPanel::addTreeProperty(QTreeWidgetItem *parent, std::string pare
 	radioButtonCount++;
 	radioButton_to_uuid[radioButton] = uuid;
 	parent->setData(0, Qt::CheckStateRole, QVariant());
-	/*
-		else
-		{
-			QTreeWidgetItem *treeItem = new QTreeWidgetItem();
-			treeItem->setText(0, QString(valuesPropertySet[i]->getTitle().c_str()));
 
-			parent->addChild(treeItem);
-		}
-	 */
-	//	connect(buttonGroup, SIGNAL(buttonClicked(int)), this, SLOT(checkedRadioButton(int)));
 	uuidParent_to_groupButton[itemUuid[parent]] = buttonGroup;
 }
 //****************************************************************************

@@ -149,6 +149,7 @@ protected slots:
 private:
 
 	void populateTreeView(std::string parent, VtkEpcCommon::Resqml2Type parentType, std::string uuid, std::string name, VtkEpcCommon::Resqml2Type type);
+	void updateTimeSeries(std::string uuid, bool isnew);
 	void deleteUUID(QTreeWidgetItem *item);
 
 	void constructor();
@@ -190,8 +191,6 @@ private:
 	int timerCount;
 
 	bool time_Changed;
-
-	QStringList time_series_list;
 
 	unsigned int indexFile;
 	std::vector<std::string> allFileName;
