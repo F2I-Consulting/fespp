@@ -207,7 +207,7 @@ long VtkIjkGridRepresentation::getAttachmentPropertyCount(const std::string & uu
 			result = ijkGridRepresentation->getCellCount();
 		}
 	}
-	return result;
+	return 0;
 
 }
 
