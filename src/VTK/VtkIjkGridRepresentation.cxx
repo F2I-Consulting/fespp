@@ -204,7 +204,7 @@ long VtkIjkGridRepresentation::getAttachmentPropertyCount(const std::string & uu
 			// Ijk Grid
 			obj = epcPackageRepresentation->getResqmlAbstractObjectByUuid(getUuid());
 			auto ijkGridRepresentation = static_cast<resqml2_0_1::AbstractIjkGridRepresentation*>(obj);
-			result = ijkGridRepresentation->getCellCount();
+			return ijkGridRepresentation->getCellCount();
 		}
 	}
 	return 0;
