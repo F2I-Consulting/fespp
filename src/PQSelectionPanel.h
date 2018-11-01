@@ -167,7 +167,7 @@ private:
 	/**
 	* Add the Properties
 	*/
-	void addTreeProperty(QTreeWidgetItem *parent, std::string parentUUid, QString name, std::string uuid);
+	void addTreeProperty(QTreeWidgetItem *parent, const std::string & parentUUid, QString name, const std::string & uuid);
 
 	/**
 	* Load representation/property uuid's
