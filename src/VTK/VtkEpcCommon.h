@@ -1,5 +1,5 @@
 ﻿/*-----------------------------------------------------------------------
-Copyright F2I-CONSULTING, (2014)
+Copyright F2I-CONSULTING, (2018)
 
 cedric.robert@f2i-consulting.com
 
