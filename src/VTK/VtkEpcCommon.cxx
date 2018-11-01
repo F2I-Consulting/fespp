@@ -2,9 +2,9 @@
 
 
 //----------------------------------------------------------------------------
-VtkEpcCommon::VtkEpcCommon()
+VtkEpcCommon::VtkEpcCommon() :
+uuid(""),parent(""),name(""),myType(VtkEpcCommon::UNKNOW),parentType(VtkEpcCommon::UNKNOW),timeIndex(0),timestamp(0)
 {
-	myType = VtkEpcCommon::UNKNOW;
 }
 
 //----------------------------------------------------------------------------

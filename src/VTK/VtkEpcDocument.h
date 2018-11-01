@@ -169,8 +169,6 @@ private:
 
 	VtkEpcDocumentSet * epcSet;
 
-	int indexTimesSeries;
-
 	std::vector<VtkEpcCommon*> treeView; // Tree
 };
 #endif

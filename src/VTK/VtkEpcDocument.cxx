@@ -834,31 +834,6 @@ void VtkEpcDocument::createTreeVtkPartialRep(const std::string & uuid, VtkEpcDoc
 	uuidToVtkPartialRepresentation[uuid] = new VtkPartialRepresentation(getFileName(), uuid, vtkEpcDowumentWithCompleteRep, epcPackage);
 }
 
-/* A DELETER
- * //----------------------------------------------------------------------------
-void VtkEpcDocument::deleteTreeVtkPartial(const std::string & uuid)
-{
-	uuidIsChildOf.erase(uuid);
-	delete uuidToVtkPartialRepresentation[uuid];
-	uuidToVtkPartialRepresentation.erase(uuid);
-}
-
-//----------------------------------------------------------------------------
-void VtkEpcDocument::visualize(const std::string & uuid, const int timeIndex)
-{
-
-}
-
-//----------------------------------------------------------------------------
-void VtkEpcDocument::setIndexTimeSeries(const int & index)
-{
-	if (indexTimesSeries != index)
-	{
-		indexTimesSeries = index;
-	}
-
-}*/
-
 //----------------------------------------------------------------------------
 void VtkEpcDocument::visualize(const std::string & uuid)
 {
