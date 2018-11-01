@@ -195,7 +195,7 @@ long VtkIjkGridRepresentation::getAttachmentPropertyCount(const std::string & uu
 			// SubRep
 			obj = epcPackageSubRepresentation->getResqmlAbstractObjectByUuid(getUuid());
 			auto subRepresentation1 = static_cast<resqml2::SubRepresentation*>(obj);
-			if (isHyperslabed)
+			return isHyperslabed ? iCellCount*jCellCount*(maxKIndex - initKIndex) : subRepresentation1->getElementCountOfPatch(0);
 				result = iCellCount*jCellCount*(maxKIndex - initKIndex);
 			else
 				result = subRepresentation1->getElementCountOfPatch(0);
