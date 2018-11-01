@@ -50,7 +50,7 @@ void VtkAbstractRepresentation::createTreeVtk(const std::string & uuid, const st
 		}
 		else{
 			uuidToVtkProperty[uuid] = new VtkProperty(getFileName(), name, uuid, parent, epcPackageRepresentation);
-		}
+		uuidToVtkProperty[uuid] = new VtkProperty(getFileName(), name, uuid, parent, subRepresentation ? epcPackageSubRepresentation : epcPackageRepresentation);
 	}
 }
 
