@@ -180,7 +180,6 @@ void PQSelectionPanel::constructor()
 //----------------------------------------------------------------------------
 void PQSelectionPanel::clicSelection(QTreeWidgetItem* item, int column)
 {
-	unsigned int cpt;
 	auto pickedBlocks = itemUuid[item];
 	if (pickedBlocks!="root")
 	{
@@ -407,7 +406,7 @@ void PQSelectionPanel::sliderMoved(int value)
 }
 
 //----------------------------------------------------------------------------
-void PQSelectionPanel::updateTimeSeries(std::string uuid, bool newUuid)
+void PQSelectionPanel::updateTimeSeries(const std::string & uuid, bool newUuid)
 {
 	if (newUuid)
 	{
@@ -481,7 +480,7 @@ void PQSelectionPanel::addFileName(const std::string & fileName)
 	}
 }
 
-void PQSelectionPanel::populateTreeView(std::string parent, VtkEpcCommon::Resqml2Type parentType, std::string uuid, std::string name, VtkEpcCommon::Resqml2Type type)
+void PQSelectionPanel::populateTreeView(const std::string & parent, VtkEpcCommon::Resqml2Type parentType, const std::string & uuid, const std::string &  name, VtkEpcCommon::Resqml2Type type)
 {
 	if (uuid != "")
 	{
@@ -505,7 +504,7 @@ void PQSelectionPanel::populateTreeView(std::string parent, VtkEpcCommon::Resqml
 				QIcon icon;
 				if (type==VtkEpcCommon::PROPERTY || type==VtkEpcCommon::TIME_SERIES)
 				{
-					addTreeProperty(uuidItem[parent], parent, name.c_str(), uuid);
+					addTreeProperty(uuidItem[parent], parent, name, uuid);
 				}
 				else
 				{
@@ -571,7 +570,7 @@ void PQSelectionPanel::populateTreeView(std::string parent, VtkEpcCommon::Resqml
 }
 
 //----------------------------------------------------------------------------
-void PQSelectionPanel::addTreeProperty(QTreeWidgetItem *parent, std::string parentUuid,QString name, std::string uuid)
+void PQSelectionPanel::addTreeProperty(QTreeWidgetItem *parent, const std::string & parentUuid,const std::string & name, const std::string & uuid)
 {
 	QButtonGroup *buttonGroup;
 	if (uuidParent_to_groupButton.count(parentUuid) < 1)
@@ -588,7 +587,7 @@ void PQSelectionPanel::addTreeProperty(QTreeWidgetItem *parent, std::string pare
 		buttonGroup = uuidParent_to_groupButton[itemUuid[parent]];
 	}
 	QTreeWidgetItem *treeItem = new QTreeWidgetItem();
-	QRadioButton *radioButton = new QRadioButton(name);
+	QRadioButton *radioButton = new QRadioButton(QString::fromStdString(name));
 	radioButton_to_id[radioButtonCount] = uuid;
 	buttonGroup->addButton(radioButton, radioButtonCount);
 	parent->addChild(treeItem);
@@ -615,7 +614,7 @@ void PQSelectionPanel::deleteUUID(QTreeWidgetItem *item)
 }
 //********************************* Interfacing ******************************
 //----------------------------------------------------------------------------
-void PQSelectionPanel::loadUuid(std::string uuid)
+void PQSelectionPanel::loadUuid(const std::string & uuid)
 {
 	pqPipelineSource * source = findPipelineSource("EpcDocument");
 	if (source)
@@ -645,7 +644,7 @@ void PQSelectionPanel::loadUuid(std::string uuid)
 }
 
 //----------------------------------------------------------------------------
-void PQSelectionPanel::removeUuid(std::string uuid)
+void PQSelectionPanel::removeUuid(const std::string & uuid)
 {
 	pqPipelineSource * source = findPipelineSource("EpcDocument");
 	if (source)

@@ -166,7 +166,7 @@ void VtkIjkGridRepresentation::checkHyperslabingCapacity(resqml2_0_1::AbstractIj
 		isHyperslabed = true;
 		delete[] allXyzPoints;
 	}
-	catch (const std::exception & e)
+	catch (const std::exception & )
 	{
 		isHyperslabed = false;
 		if (allXyzPoints != nullptr)
@@ -186,7 +186,6 @@ void VtkIjkGridRepresentation::addProperty(const std::string & uuidProperty, vtk
 //----------------------------------------------------------------------------
 long VtkIjkGridRepresentation::getAttachmentPropertyCount(const std::string & uuid, const VtkEpcCommon::FesppAttachmentProperty propertyUnit)
 {
-	long result = 0;
 	if (propertyUnit == VtkEpcCommon::CELLS)
 	{
 		common::AbstractObject* obj;
@@ -196,9 +195,6 @@ long VtkIjkGridRepresentation::getAttachmentPropertyCount(const std::string & uu
 			obj = epcPackageSubRepresentation->getResqmlAbstractObjectByUuid(getUuid());
 			auto subRepresentation1 = static_cast<resqml2::SubRepresentation*>(obj);
 			return isHyperslabed ? iCellCount*jCellCount*(maxKIndex - initKIndex) : subRepresentation1->getElementCountOfPatch(0);
-				result = iCellCount*jCellCount*(maxKIndex - initKIndex);
-			else
-				result = subRepresentation1->getElementCountOfPatch(0);
 		}else
 		{
 			// Ijk Grid

@@ -39,9 +39,9 @@ knowledge of the CeCILL license and that you accept its terms.
 
 #include <vtkDataArray.h>
 
-class VtkWellboreTrajectoryRepresentationPolyLine;
-class VtkWellboreTrajectoryRepresentationDatum;
-class VtkWellboreTrajectoryRepresentationText;
+#include "VtkWellboreTrajectoryRepresentationPolyLine.h"
+#include "VtkWellboreTrajectoryRepresentationDatum.h"
+#include "VtkWellboreTrajectoryRepresentationText.h"
 
 namespace resqml2_0_1
 {
@@ -112,8 +112,8 @@ private:
 	common::EpcDocument *epcPackageSubRepresentation;
 
 	// VTK object
-	VtkWellboreTrajectoryRepresentationPolyLine* polyline;
-	VtkWellboreTrajectoryRepresentationDatum* head;
-	VtkWellboreTrajectoryRepresentationText* text;
+	VtkWellboreTrajectoryRepresentationPolyLine polyline;
+	VtkWellboreTrajectoryRepresentationDatum head;
+	VtkWellboreTrajectoryRepresentationText text;
 };
 #endif

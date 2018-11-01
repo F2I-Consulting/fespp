@@ -36,10 +36,10 @@ knowledge of the CeCILL license and that you accept its terms.
 #define __VtkGrid2DRepresentation_h
 
 #include "VtkResqml2MultiBlockDataSet.h"
+#include "VtkGrid2DRepresentationPoints.h"
 
 #include <vtkDataArray.h>
 
-class VtkGrid2DRepresentationPoints;
 class VtkGrid2DRepresentationCells;
 
 namespace common
@@ -106,7 +106,7 @@ private:
 	common::EpcDocument *epcPackageRepresentation;
 	common::EpcDocument *epcPackageSubRepresentation;
 
-	VtkGrid2DRepresentationPoints* grid2DPoints;
+	VtkGrid2DRepresentationPoints grid2DPoints;
 //	VtkGrid2DRepresentationCells* grid2DCells;
 };
 #endif

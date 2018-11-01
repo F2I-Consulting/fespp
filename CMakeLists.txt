@@ -21,6 +21,10 @@ IF (UNIX)
 	add_compile_options(-fPIC)
 ENDIF (UNIX)
 
+IF (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+	SET (CMAKE_INSTALL_PREFIX ${FESPP_BINARY_DIR}/install CACHE PATH "Fespp install prefix" FORCE)
+ENDIF (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+
 # ============================================================================
 # checking for required dependencies
 # ============================================================================

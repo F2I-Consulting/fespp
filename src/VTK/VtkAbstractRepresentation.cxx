@@ -21,13 +21,12 @@ VtkAbstractRepresentation::~VtkAbstractRepresentation()
 {
 	// delete uuidToVtkProperty
 #if (defined(_WIN32) && _MSC_VER >= 1600)
-	for (std::unordered_map< std::string, VtkProperty* >::const_iterator it = uuidToVtkProperty.begin(); it != uuidToVtkProperty.end(); ++it)
+	for (std::unordered_map< std::string, VtkProperty* >::const_iterator it = uuidToVtkProperty.begin(); it != uuidToVtkProperty.end(); ++it) {
 #else
-		for (std::tr1::unordered_map< std::string, VtkProperty* >::const_iterator it = uuidToVtkProperty.begin(); it != uuidToVtkProperty.end(); ++it)
+	for (std::tr1::unordered_map< std::string, VtkProperty* >::const_iterator it = uuidToVtkProperty.begin(); it != uuidToVtkProperty.end(); ++it) {
 #endif
-		{
-			delete it->second;
-		}
+		delete it->second;
+	}
 	uuidToVtkProperty.clear();
 
 	if (epcPackageRepresentation != nullptr) {
@@ -43,13 +42,7 @@ VtkAbstractRepresentation::~VtkAbstractRepresentation()
 //----------------------------------------------------------------------------
 void VtkAbstractRepresentation::createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, const VtkEpcCommon::Resqml2Type & resqmlType)
 {
-	if (resqmlType==VtkEpcCommon::PROPERTY)
-	{
-		if (subRepresentation){
-			uuidToVtkProperty[uuid] = new VtkProperty(getFileName(), name, uuid, parent, epcPackageSubRepresentation);
-		}
-		else{
-			uuidToVtkProperty[uuid] = new VtkProperty(getFileName(), name, uuid, parent, epcPackageRepresentation);
+	if (resqmlType==VtkEpcCommon::PROPERTY)	{
 		uuidToVtkProperty[uuid] = new VtkProperty(getFileName(), name, uuid, parent, subRepresentation ? epcPackageSubRepresentation : epcPackageRepresentation);
 	}
 }
@@ -65,12 +58,10 @@ vtkSmartPointer<vtkPoints> VtkAbstractRepresentation::createVtkPoints(const ULON
 	points = vtkSmartPointer<vtkPoints>::New();
 	double zIndice = 1;
 
-	if (localCRS->isDepthOriented())
-	{
+	if (localCRS->isDepthOriented()) {
 		zIndice = -1;
 	}
-	for (auto nodeIndex = 0; nodeIndex < pointCount * 3; nodeIndex += 3)
-	{
+	for (auto nodeIndex = 0; nodeIndex < pointCount * 3; nodeIndex += 3) {
 		points->InsertNextPoint(allXyzPoints[nodeIndex], allXyzPoints[nodeIndex + 1], allXyzPoints[nodeIndex + 2] * zIndice);
 	}
 	return points;

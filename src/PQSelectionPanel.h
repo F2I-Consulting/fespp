@@ -115,7 +115,7 @@ signals:
 	/**
 	* Signal emit when a item is selected
 	*/
-	void selectionName(std::string, std::string, common::EpcDocument *);
+	void selectionName(const std::string &, const std::string &, common::EpcDocument *);
 
 protected slots:
 
@@ -144,12 +144,11 @@ protected slots:
 
 	void timeChangedComboBox(int);
 	void sliderMoved(int);
-//	void slidervalueChanged(int);
 
 private:
 
-	void populateTreeView(std::string parent, VtkEpcCommon::Resqml2Type parentType, std::string uuid, std::string name, VtkEpcCommon::Resqml2Type type);
-	void updateTimeSeries(std::string uuid, bool isnew);
+	void populateTreeView(const std::string &  parent, VtkEpcCommon::Resqml2Type parentType, const std::string &  uuid, const std::string &  name, VtkEpcCommon::Resqml2Type type);
+	void updateTimeSeries(const std::string & uuid, bool isnew);
 	void deleteUUID(QTreeWidgetItem *item);
 
 	void constructor();
@@ -167,17 +166,17 @@ private:
 	/**
 	* Add the Properties
 	*/
-	void addTreeProperty(QTreeWidgetItem *parent, const std::string & parentUUid, QString name, const std::string & uuid);
+	void addTreeProperty(QTreeWidgetItem *parent, const std::string & parentUUid, const std::string & name, const std::string & uuid);
 
 	/**
 	* Load representation/property uuid's
 	*/
-	void loadUuid(std::string uuid);
+	void loadUuid(const std::string & uuid);
 	
 	/**
 	* Remove representation/property uuid's
 	*/
-	void removeUuid(std::string uuid);
+	void removeUuid(const std::string & uuid);
 	
 	QTreeWidget *treeWidget;
 	QPushButton *button_Time_After;
