@@ -34,9 +34,6 @@ VtkGrid2DRepresentation::~VtkGrid2DRepresentation()
 		epcPackageSubRepresentation = nullptr;
 	}
 
-
-	grid2DPoints.~VtkGrid2DRepresentationPoints();
-
 	/*
 	if (grid2DCells != nullptr) {
 		delete grid2DCells;

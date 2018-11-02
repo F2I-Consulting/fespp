@@ -34,10 +34,6 @@ VtkWellboreTrajectoryRepresentation::~VtkWellboreTrajectoryRepresentation()
 	if (epcPackageSubRepresentation != nullptr) {
 		epcPackageSubRepresentation = nullptr;
 	}
-
-	polyline.~VtkWellboreTrajectoryRepresentationPolyLine();
-	head.~VtkWellboreTrajectoryRepresentationDatum();
-	text.~VtkWellboreTrajectoryRepresentationText();
 }
 
 //----------------------------------------------------------------------------
