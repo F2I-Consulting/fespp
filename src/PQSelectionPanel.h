@@ -38,9 +38,15 @@ knowledge of the CeCILL license and that you accept its terms.
 #include <QDockWidget>
 #include <qprogressbar.h>
 #include <qpushbutton.h>
+#include <QTimer>
+#include <QSlider>
+#include <QComboBox>
+#include <QLabel>
+#include <QStringList>
 #include <qtreewidget.h>
 #include <qradiobutton.h>
 #include <QMap>
+#include <QHash>
 #include <QPointer>
 
 #include <qprogressdialog.h>
@@ -51,10 +57,13 @@ knowledge of the CeCILL license and that you accept its terms.
 #include <string>
 #include <vector>
 
+#include "VTK/VtkEpcCommon.h"
+
 class pqPipelineSource;
 class pqServer;
-class pqOutputPort;
-class pqView;
+//class pqOutputPort;
+//class pqView;
+class VtkEpcDocumentSet;
 
 #include "common/EpcDocument.h"
 
@@ -95,8 +104,6 @@ public:
 	*/
 	void addFileName(const std::string & fileName);
 
-	bool canAddFile(const char* fileName);
-
 	void uuidKO(const std::string & uuid);
 
 	/**
@@ -108,7 +115,7 @@ signals:
 	/**
 	* Signal emit when a item is selected
 	*/
-	void selectionName(std::string, std::string, common::EpcDocument *);
+	void selectionName(const std::string &, const std::string &, common::EpcDocument *);
 
 protected slots:
 
@@ -127,7 +134,21 @@ protected slots:
 	*/
 	void checkedRadioButton(int);
 
+	void handleButtonAfter();
+	void handleButtonBefore();
+	void handleButtonPlay();
+	void handleButtonPause();
+	void handleButtonStop();
+
+	void updateTimer();
+
+	void timeChangedComboBox(int);
+	void sliderMoved(int);
+
 private:
+
+	void populateTreeView(const std::string &  parent, VtkEpcCommon::Resqml2Type parentType, const std::string &  uuid, const std::string &  name, VtkEpcCommon::Resqml2Type type);
+	void updateTimeSeries(const std::string & uuid, bool isnew);
 	void deleteUUID(QTreeWidgetItem *item);
 
 	void constructor();
@@ -143,75 +164,32 @@ private:
     virtual pqServer * getActiveServer();
 
 	/**
-	* Add the first element of epcDocument tree
-	*/
-	void addTreeRoot(QString name, QString description);
-
-	/**
-	* Add Feature/Interpretation
-	*/
-    void addTreeChild(QTreeWidgetItem *parent, QString name, std::string uuid);
-	
-	/**
-	* Add Polylines Representation in TreeView
-	*/
-	void addTreePolylines(const std::string & fileName, std::vector<resqml2_0_1::PolylineSetRepresentation*> polylines);
-	
-	/**
-	* Add triangulated Representation in TreeView
-	*/
-	void addTreeTriangulated(const std::string & fileName, std::vector<resqml2_0_1::TriangulatedSetRepresentation*> triangulated);
-
-	/**
-	* Add grid2D Representation in TreeView
-	*/
-	void addTreeGrid2D(const std::string & fileName, std::vector<resqml2_0_1::Grid2dRepresentation*> grid2D);
-
-	/**
-	* Add ijkGrid Representation in TreeView
-	*/
-	void addTreeIjkGrid(const std::string & fileName, std::vector<resqml2_0_1::AbstractIjkGridRepresentation*> ijkGrid);
-
-	/**
-	* Add unstructuredGrid Representation in TreeView
-	*/
-	void addTreeUnstructuredGrid(const std::string & fileName, std::vector<resqml2_0_1::UnstructuredGridRepresentation*> unstructuredGrid);
-
-	/**
-	* Add WellboreTrajectoryRepresentation in TreeView
-	*/
-	void addTreeWellboreTrajectory(const std::string & fileName, std::vector<resqml2_0_1::WellboreTrajectoryRepresentation*> wellCubicParmLineTraj);
-
-	/**
-	* Add SubRepresentation in TreeView
-	*/
-	void addTreeSubRepresentation(const std::string & fileName, std::vector<resqml2::SubRepresentation*> subRepresentation);
-
-	/**
-	* Add Feature and Interpretation in TreeView
-	*/
-	std::string addFeatInterp(const std::string & fileName, resqml2::AbstractFeatureInterpretation * interpretation);
-	/**
-	* Add Representation in TreeView
-	*/
-    void addTreeRepresentation(QTreeWidgetItem *parent, QString name, std::string uuid, QIcon icon);
-
-	/**
 	* Add the Properties
 	*/
-	void addTreeProperty(QTreeWidgetItem *parent, std::vector<resqml2::AbstractValuesProperty*> valuesPropertySet);
+	void addTreeProperty(QTreeWidgetItem *parent, const std::string & parentUUid, const std::string & name, const std::string & uuid);
 
 	/**
 	* Load representation/property uuid's
 	*/
-	void loadUuid(std::string uuid);
+	void loadUuid(const std::string & uuid);
 	
 	/**
 	* Remove representation/property uuid's
 	*/
-	void removeUuid(std::string uuid);
+	void removeUuid(const std::string & uuid);
 	
 	QTreeWidget *treeWidget;
+	QPushButton *button_Time_After;
+	QPushButton *button_Time_Before;
+	QPushButton *button_Time_Play;
+	QPushButton *button_Time_Pause;
+	QPushButton *button_Time_Stop;
+	QSlider *slider_Time_Step;
+	QComboBox *time_series;
+	QTimer *timer;
+	int timerCount;
+
+	bool time_Changed;
 
 	unsigned int indexFile;
 	std::vector<std::string> allFileName;
@@ -232,22 +210,24 @@ private:
 
 	// radio-button
 	int radioButtonCount;
-	QMap<int, std::string> mapRadioButtonNo;
+	QMap<int, std::string> radioButton_to_id;
 	QMap<std::string, QRadioButton*> mapUuidParentButtonInvisible;
 
-	// hide/show block
-	std::string pickedBlocks;
-	std::vector<std::string> uuidVisible;
-//	std::vector<std::string> uuidInvisible;
-
-	std::vector<std::string> uuidCheckable;
-
-//	QPointer<pqOutputPort> OutputPort;
 
 	QMap<std::string, common::EpcDocument *> pcksave;
 
-	QMap<std::string, QButtonGroup *> uuidParentGroupButton;
-	QMap<QAbstractButton *, std::string> radioButtonToUuid;
+	QMap<std::string, QButtonGroup *> uuidParent_to_groupButton;
+	QMap<QAbstractButton *, std::string> radioButton_to_uuid;
+
+	QMap<std::string, QMap<time_t, std::string>> ts_timestamp_to_uuid;
+
+	time_t save_time;
+
+	QVector<std::string> ts_displayed;
+
+	VtkEpcDocumentSet* vtkEpcDocumentSet;
+
+	bool debug_verif;
 };
 
 #endif

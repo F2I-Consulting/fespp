@@ -89,6 +89,11 @@ target_link_libraries(Fespp
 	LINK_PRIVATE
 	${FESAPI_LIBRARY})
 	
+INSTALL (
+	TARGETS Fespp
+	DESTINATION lib
+)
+	
 
 
 

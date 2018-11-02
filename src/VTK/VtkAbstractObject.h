@@ -37,6 +37,7 @@ knowledge of the CeCILL license and that you accept its terms.
 
 // include system
 #include <string>
+#include "VtkEpcCommon.h"
 
 #if (defined(_WIN32) && _MSC_VER < 1600) || (defined(__GNUC__) && (__GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 6)))
 #include "tools/nullptr_emulation.h"
@@ -45,17 +46,6 @@ knowledge of the CeCILL license and that you accept its terms.
 class VtkAbstractObject
 {
 public:
-	enum Resqml2Object {NONE=0, FAULT=1, HORIZON=2};
-	enum Resqml2Type { EPC_DOC = 0, FEATURE = 1, INTERPRETATION = 2, POLYLINE_SET = 3, TRIANGULATED_SET = 4, POLYLINE = 5, TRIANGULATED = 6, IJK_GRID = 7, GRID_2D = 8, PROPERTY = 9, UNSTRUC_GRID = 10, WELL_TRAJ = 11, PARTIAL = 12, SUB_REP = 13 };
-	enum FesppAttachmentProperty { POINTS = 0, CELLS = 1 };
-
-	typedef struct{
-		std::string	uuid;
-		std::string	parent;
-		Resqml2Type myType;
-		Resqml2Type parentType;
-	} infoUuid;
-
 	VtkAbstractObject (const std::string & fileName, const std::string & name="", const std::string & uuid="", const std::string & uuidParent="", const int & idProc=0, const int & maxProc=0);
 	/**
 	* Destructor
@@ -83,7 +73,7 @@ public:
 	/**
 	* create vtk resqml2 element
 	*/
-	virtual void createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, const Resqml2Type & resqmlType) =0;
+	virtual void createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, const VtkEpcCommon::Resqml2Type & resqmlType) =0;
 
 	/**
 	* remove representation uuid's
@@ -92,7 +82,7 @@ public:
 
 	/**
 	*/
-	virtual long getAttachmentPropertyCount(const std::string & uuid, const FesppAttachmentProperty propertyUnit) = 0;
+	virtual long getAttachmentPropertyCount(const std::string & uuid, const VtkEpcCommon::FesppAttachmentProperty propertyUnit) = 0;
 protected:
 
 private:

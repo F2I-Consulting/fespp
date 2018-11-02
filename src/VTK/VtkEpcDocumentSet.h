@@ -35,17 +35,31 @@ knowledge of the CeCILL license and that you accept its terms.
 #ifndef __VtkEpcDocumentSet_h
 #define __VtkEpcDocumentSet_h
 
-// include Resqml2.0 VTK
-#include "VtkEpcDocument.h"
+#include "VtkEpcCommon.h"
+
+// include VTK
+#include <vtkSmartPointer.h>
+#include <vtkMultiBlockDataSet.h>
+
+#include <vector>
+// include system
+#if (defined(_WIN32) && _MSC_VER >= 1600)
+	#include <unordered_map>
+#else
+	#include <tr1/unordered_map>
+#endif
+
+class VtkEpcDocument;
 
 class VtkEpcDocumentSet
 {
 
 public:
+
 	/**
 	* Constructor
 	*/
-	VtkEpcDocumentSet (const int & idProc=0, const int & maxProc=0, bool tree=false, bool visualization=false);
+	VtkEpcDocumentSet (const int & idProc=0, const int & maxProc=0, const VtkEpcCommon::modeVtkEpc & mode=VtkEpcCommon::Both);
 	/**
 	* Destructor
 	*/
@@ -66,7 +80,8 @@ public:
 	*/
 	void unvisualize(const std::string & uuid);
 
-	VtkAbstractObject::Resqml2Type getType(std::string uuid);
+	VtkEpcCommon::Resqml2Type getType(std::string uuid);
+	VtkEpcCommon* getInfoUuid(std::string);
 
 	/**
 	* method : getOutput
@@ -74,7 +89,7 @@ public:
 	* return the vtkMultiBlockDataSet for each epcdocument.
 	*/
 	vtkSmartPointer<vtkMultiBlockDataSet> getVisualization() const;
-	std::vector<vtkSmartPointer<vtkMultiBlockDataSet>> getTreeRepresentation() const;
+	std::vector<VtkEpcCommon*> getTreeView() const;
 
 	void addEpcDocument(const std::string & fileName);
 
@@ -94,15 +109,15 @@ private:
 	std::unordered_map<std::string, VtkEpcDocument*> uuidToVtkEpc; // link uuid/VtkEpcdocument
 #endif
 
-	std::vector<VtkAbstractObject::infoUuid> treeUuid; // Tree
+	std::vector<VtkEpcCommon*> treeView; // Tree
 
 	vtkSmartPointer<vtkMultiBlockDataSet> vtkOutput;
 
 	int procRank;
 	int nbProc;
 
-	bool treeRep;
-	bool visualization;
+	bool treeViewMode;
+	bool representationMode;
 
 };
 #endif

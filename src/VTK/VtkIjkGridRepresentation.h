@@ -82,8 +82,15 @@ public:
 	* variable : uuid,  support property (CELLS or POINTS)
 	* return : count 
 	*/
-	long getAttachmentPropertyCount(const std::string & uuid, const FesppAttachmentProperty propertyUnit);
+	long getAttachmentPropertyCount(const std::string & uuid, const VtkEpcCommon::FesppAttachmentProperty propertyUnit) ;
 
+	int getICellCount(const std::string & uuid) const;
+
+	int getJCellCount(const std::string & uuid) const;
+
+	int getKCellCount(const std::string & uuid) const;
+
+	int getInitKIndex(const std::string & uuid) const;
 	/**
 	* method : createWithPoints
 	* variable : points de l'ijkGrid,  ijkGrid or sub-rep

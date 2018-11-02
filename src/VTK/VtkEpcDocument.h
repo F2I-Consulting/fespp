@@ -38,8 +38,8 @@ knowledge of the CeCILL license and that you accept its terms.
 #include <vtkDataArray.h>
 
 #include "VtkResqml2MultiBlockDataSet.h"
+#include "VtkEpcDocumentSet.h"
 
-class VtkEpcDocumentSet;
 class VtkIjkGridRepresentation;
 class VtkUnstructuredGridRepresentation;
 class VtkPartialRepresentation;
@@ -74,14 +74,6 @@ public:
 	*/
 	void visualize(const std::string & uuid);
 	
-	/**
-	* method : createTreeVtkPartialRep
-	* variable : uuid, VtkEpcDocument with complete representation
-	* prepare VtkEpcDocument & Children.
-	*/
-	void createTreeVtkPartialRep(const std::string & uuid, const std::string & parent, VtkEpcDocument *vtkEpcDowumentWithCompleteRep);
-
-	void deleteTreeVtkPartial(const std::string & uuid);
 
 	/**
 	* method : remove
@@ -91,27 +83,33 @@ public:
 	void remove(const std::string & uuid);
 	
 	/**
+	* method : get TreeView
+	* variable :
+	*
+	* if timeIndex = -1 then no time series link.
+	*/
+	std::vector<VtkEpcCommon*> getTreeView() const;
+
+	/**
 	* method : attach
 	* variable : --
 	*/
 	void attach();
 
-	std::string getFullUuid(std::string uuidPartial);
-
-	void addPartialUUid(const std::string & uuid, VtkEpcDocument *vtkEpcDowumentWithCompleteRep);
+	std::vector<std::string> getListUuid();
 
 	void addProperty(const std::string & uuidProperty, vtkDataArray* dataProperty);
 
-	VtkAbstractObject::Resqml2Type getType(std::string);
+	VtkEpcCommon::Resqml2Type getType(std::string);
+	VtkEpcCommon* getInfoUuid(std::string);
 
-	long getAttachmentPropertyCount(const std::string & uuid, const FesppAttachmentProperty propertyUnit);
+	long getAttachmentPropertyCount(const std::string & uuid, const VtkEpcCommon::FesppAttachmentProperty propertyUnit) ;
+	int getICellCount(const std::string & uuid) ;
+	int getJCellCount(const std::string & uuid) ;
+	int getKCellCount(const std::string & uuid) ;
+	int getInitKIndex(const std::string & uuid) ;
 
 	common::EpcDocument *getEpcDocument();
-	
-	std::vector<std::string> getPartialUuid();
-	int getCountPartialUuid();
-	std::vector<std::string> getUuid();
-	int getCountUuid();
 	
 protected:
 
@@ -126,11 +124,18 @@ private:
 	void addPropertyTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name);
 	
 	/**
+	* method : createTreeVtkPartialRep
+	* variable : uuid, VtkEpcDocument with complete representation
+	* prepare VtkEpcDocument & Children.
+	*/
+	void createTreeVtkPartialRep(const std::string & uuid, /*const std::string & parent,*/ VtkEpcDocument *vtkEpcDowumentWithCompleteRep);
+
+	/**
 	* method : createTreeVtk
 	* variable : uuid, parent uuid, name, type
 	* prepare VtkEpcDocument & Children.
 	*/
-	void createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, const Resqml2Type & resqmlType);
+	void createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, const VtkEpcCommon::Resqml2Type & resqmlType);
 
 
 
@@ -163,5 +168,7 @@ private:
 	std::vector<std::string> uuidRep;
 
 	VtkEpcDocumentSet * epcSet;
+
+	std::vector<VtkEpcCommon*> treeView; // Tree
 };
 #endif

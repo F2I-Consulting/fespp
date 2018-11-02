@@ -1,7 +1,10 @@
 ﻿#include "VtkEpcDocumentSet.h"
+#include "VtkEpcDocument.h"
 
 // include Vtk
 #include <vtkInformation.h>
+#include <vtkSmartPointer.h>
+#include <vtkMultiBlockDataSet.h>
 
 // include system
 #include <algorithm>
@@ -9,10 +12,22 @@
 
 
 //----------------------------------------------------------------------------
-VtkEpcDocumentSet::VtkEpcDocumentSet(const int & idProc, const int & maxProc, bool tree, bool visu) :
-procRank(idProc), nbProc(maxProc), 	treeRep(tree), visualization(visu)
+VtkEpcDocumentSet::VtkEpcDocumentSet(const int & idProc, const int & maxProc, const VtkEpcCommon::modeVtkEpc & mode) :
+procRank(idProc), nbProc(maxProc)
 {
+	treeViewMode = false;
+	representationMode = false;
+	if (mode==VtkEpcCommon::Both || mode==VtkEpcCommon::TreeView)
+	{
+		treeViewMode=true;;
+	}
+	if (mode==VtkEpcCommon::Both || mode==VtkEpcCommon::Representation)
+	{
+		representationMode=true;
+	}
+
 	vtkOutput = vtkSmartPointer<vtkMultiBlockDataSet>::New();
+	treeView = {};
 }
 
 //----------------------------------------------------------------------------
@@ -22,12 +37,12 @@ VtkEpcDocumentSet::~VtkEpcDocumentSet()
 	uuidToVtkEpc.clear();
 
 	for (std::vector< VtkEpcDocument* >::const_iterator it = vtkEpcList.begin() ; it != vtkEpcList.end(); ++it)
-   {
-     delete (*it);
-   }
+	{
+		delete (*it);
+	}
 	vtkEpcList.clear();
 
-	treeUuid.clear(); // Tree
+	treeView.clear(); // Tree
 
 	vtkOutput = NULL;
 
@@ -38,7 +53,7 @@ VtkEpcDocumentSet::~VtkEpcDocumentSet()
 //----------------------------------------------------------------------------
 void VtkEpcDocumentSet::visualize(const std::string & uuid)
 {
-	if(visualization)
+	if(representationMode)
 	{
 		uuidToVtkEpc[uuid]->visualize(uuid);
 	}
@@ -47,11 +62,11 @@ void VtkEpcDocumentSet::visualize(const std::string & uuid)
 //----------------------------------------------------------------------------
 void VtkEpcDocumentSet::visualizeFull()
 {
-	if(visualization)
+	if(representationMode)
 	{
 		for (auto &vtkEpcElem : vtkEpcList)
 		{
-			auto uuidList = vtkEpcElem->getUuid();
+			auto uuidList = vtkEpcElem->getListUuid();
 			for (auto &uuidListElem : uuidList)
 			{
 				vtkEpcElem->visualize(uuidListElem);
@@ -63,22 +78,29 @@ void VtkEpcDocumentSet::visualizeFull()
 //----------------------------------------------------------------------------
 void VtkEpcDocumentSet::unvisualize(const std::string & uuid)
 {
-	if(visualization)
+	if(representationMode)
 	{
 		uuidToVtkEpc[uuid]->remove(uuid);
 	}
 }
 
 //----------------------------------------------------------------------------
-VtkAbstractObject::Resqml2Type VtkEpcDocumentSet::getType(std::string uuid)
+VtkEpcCommon::Resqml2Type VtkEpcDocumentSet::getType(std::string uuid)
 {
 	return uuidToVtkEpc[uuid]->getType(uuid);
 }
 
 //----------------------------------------------------------------------------
+VtkEpcCommon* VtkEpcDocumentSet::getInfoUuid(std::string uuid)
+{
+	return  uuidToVtkEpc[uuid]->getInfoUuid(uuid);
+}
+
+//----------------------------------------------------------------------------
 vtkSmartPointer<vtkMultiBlockDataSet> VtkEpcDocumentSet::getVisualization() const
 {
-
+if(representationMode)
+{
 	vtkOutput->Initialize();
 	auto index = 0;
 	for (auto i=0; i < vtkEpcList.size(); ++i)
@@ -89,6 +111,7 @@ vtkSmartPointer<vtkMultiBlockDataSet> VtkEpcDocumentSet::getVisualization() cons
 			vtkOutput->GetMetaData(index++)->Set(vtkCompositeDataSet::NAME(), vtkEpcList[i]->getFileName().c_str());
 		}
 	}
+}
 	return vtkOutput;
 }
 
@@ -98,13 +121,16 @@ void VtkEpcDocumentSet::addEpcDocument(const std::string & fileName)
 	if (std::find(vtkEpcNameList.begin(), vtkEpcNameList.end(),fileName)==vtkEpcNameList.end())
 	{
 		auto vtkEpc = new VtkEpcDocument(fileName, procRank, nbProc, this);
-		auto uuidList = vtkEpc->getUuid();
+		auto uuidList = vtkEpc->getListUuid();
 		for (auto &uuidListElem : uuidList)
 		{
 			uuidToVtkEpc[uuidListElem] = vtkEpc;
 		}
 		vtkEpcList.push_back(vtkEpc);
 		vtkEpcNameList.push_back(fileName);
+
+		auto tmpTree = vtkEpc->getTreeView();
+		treeView.insert( treeView.end(), tmpTree.begin(), tmpTree.end() );
 	}
 }
 
@@ -113,4 +139,10 @@ VtkEpcDocument* VtkEpcDocumentSet::getVtkEpcDocument(const std::string & uuid)
 	if (uuidToVtkEpc[uuid])
 		return uuidToVtkEpc[uuid];
 	return nullptr;
+}
+
+//----------------------------------------------------------------------------
+std::vector<VtkEpcCommon*> VtkEpcDocumentSet::getTreeView() const
+{
+	return treeView;
 }

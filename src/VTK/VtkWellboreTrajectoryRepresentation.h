@@ -39,9 +39,9 @@ knowledge of the CeCILL license and that you accept its terms.
 
 #include <vtkDataArray.h>
 
-class VtkWellboreTrajectoryRepresentationPolyLine;
-class VtkWellboreTrajectoryRepresentationDatum;
-class VtkWellboreTrajectoryRepresentationText;
+#include "VtkWellboreTrajectoryRepresentationPolyLine.h"
+#include "VtkWellboreTrajectoryRepresentationDatum.h"
+#include "VtkWellboreTrajectoryRepresentationText.h"
 
 namespace resqml2_0_1
 {
@@ -71,7 +71,7 @@ public:
 	* variable : std::string uuid (Wellbore trajectory representation UUID)
 	* create the vtk objects for represent Wellbore trajectory (polyline + datum + text).
 	*/
-	void createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, const Resqml2Type & resqmlType);
+	void createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, const VtkEpcCommon::Resqml2Type & resqmlType);
 	
 	/**
 	* method : visualize
@@ -89,7 +89,7 @@ public:
 
 	void addProperty(const std::string & uuidProperty, vtkDataArray* dataProperty);
 
-	long getAttachmentPropertyCount(const std::string & uuid, const FesppAttachmentProperty propertyUnit);
+	long getAttachmentPropertyCount(const std::string & uuid, const VtkEpcCommon::FesppAttachmentProperty propertyUnit) ;
 protected:
 	/**
 	* method : createOutput
@@ -112,8 +112,8 @@ private:
 	common::EpcDocument *epcPackageSubRepresentation;
 
 	// VTK object
-	VtkWellboreTrajectoryRepresentationPolyLine* polyline;
-	VtkWellboreTrajectoryRepresentationDatum* head;
-	VtkWellboreTrajectoryRepresentationText* text;
+	VtkWellboreTrajectoryRepresentationPolyLine polyline;
+	VtkWellboreTrajectoryRepresentationDatum head;
+	VtkWellboreTrajectoryRepresentationText text;
 };
 #endif

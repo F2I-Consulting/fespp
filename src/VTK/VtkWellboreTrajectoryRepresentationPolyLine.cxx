@@ -86,7 +86,7 @@ void VtkWellboreTrajectoryRepresentationPolyLine::addProperty(const std::string 
 	lastProperty = uuidProperty;
 }
 
-long VtkWellboreTrajectoryRepresentationPolyLine::getAttachmentPropertyCount(const std::string & uuid, const FesppAttachmentProperty propertyUnit)
+long VtkWellboreTrajectoryRepresentationPolyLine::getAttachmentPropertyCount(const std::string & uuid, const VtkEpcCommon::FesppAttachmentProperty propertyUnit)
 {
 	long result = 0;
 	resqml2_0_1::WellboreTrajectoryRepresentation* wellboreSetRepresentation = nullptr;

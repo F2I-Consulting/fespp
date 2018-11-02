@@ -36,6 +36,7 @@ knowledge of the CeCILL license and that you accept its terms.
 #define __VtkResqml2MultiBlockDataSet_h
 
 // include Resqml2.0 VTK
+#include "VtkEpcDocumentSet.h"
 #include "VtkAbstractObject.h"
 
 // include VTK
@@ -50,16 +51,11 @@ knowledge of the CeCILL license and that you accept its terms.
 #endif
 
 #include<vector>
-#include<string>
+
+
 
 class VtkResqml2MultiBlockDataSet : public VtkAbstractObject
 {
-	/*
-	typedef struct{
-		std::string	uuid;
-		Resqml2Type type;
-	} FirstChild;
-	 */
 public:
 	/**
 	* Constructor
@@ -96,9 +92,9 @@ protected:
 	vtkSmartPointer<vtkMultiBlockDataSet> vtkOutput;
 
 #if (defined(_WIN32) && _MSC_VER >= 1600)
-	std::unordered_map<std::string, VtkAbstractObject::infoUuid> uuidIsChildOf;
+	std::unordered_map<std::string, VtkEpcCommon*> uuidIsChildOf;
 #else
-	std::tr1::unordered_map<std::string, VtkAbstractObject::infoUuid> uuidIsChildOf;
+	std::tr1::unordered_map<std::string, VtkEpcCommon*> uuidIsChildOf;
 #endif
 	std::vector<std::string> attachUuids;
 };

@@ -36,10 +36,10 @@ knowledge of the CeCILL license and that you accept its terms.
 #define __VtkGrid2DRepresentation_h
 
 #include "VtkResqml2MultiBlockDataSet.h"
+#include "VtkGrid2DRepresentationPoints.h"
 
 #include <vtkDataArray.h>
 
-class VtkGrid2DRepresentationPoints;
 class VtkGrid2DRepresentationCells;
 
 namespace common
@@ -65,7 +65,7 @@ public:
 	* variable : 
 	* prepare grid2D points and grid2D cells.
 	*/
-	void createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, const Resqml2Type & resqmlType);
+	void createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, const VtkEpcCommon::Resqml2Type & resqmlType);
 
 	/**
 	* method : attach
@@ -90,7 +90,7 @@ public:
 
 	void addProperty(const std::string & uuidProperty, vtkDataArray* dataProperty);
 
-	long getAttachmentPropertyCount(const std::string & uuid, const FesppAttachmentProperty propertyUnit);
+	long getAttachmentPropertyCount(const std::string & uuid, const VtkEpcCommon::FesppAttachmentProperty propertyUnit) ;
 	
 protected:
 	/**
@@ -106,7 +106,7 @@ private:
 	common::EpcDocument *epcPackageRepresentation;
 	common::EpcDocument *epcPackageSubRepresentation;
 
-	VtkGrid2DRepresentationPoints* grid2DPoints;
+	VtkGrid2DRepresentationPoints grid2DPoints;
 //	VtkGrid2DRepresentationCells* grid2DCells;
 };
 #endif
