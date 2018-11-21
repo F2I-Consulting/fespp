@@ -42,6 +42,7 @@ class QAction;
 class pqPipelineSource;
 class pqServer;
 class pqView;
+class VtkEpcCommon;
 
 class PQToolsManager : public QObject
 {

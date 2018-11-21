@@ -14,6 +14,8 @@
 #include "pqPipelineSource.h"
 #include "pqPropertiesPanel.h"
 
+#include "VTK/VtkEpcCommon.h"
+
 #include <QMainWindow>
 #include <QPointer>
 
@@ -136,7 +138,6 @@ PQToolsManager::PQToolsManager(QObject* p)
 
 	this->actionPanelMetadata()->setEnabled(false);
 	//	this->actionPanelSelection()->setEnabled(false);
-
 }
 
 PQToolsManager::~PQToolsManager()
@@ -183,14 +184,10 @@ void PQToolsManager::showDataLoadManager()
 //-----------------------------------------------------------------------------
 void PQToolsManager::showEtpConnectionManager()
 {
-	cout << "PQToolsManager::showPanelEtp() - IN"  << endl;
 	PQEtpConnectionManager* dialog = new PQEtpConnectionManager(this->getMainWindow());
 	dialog->setAttribute(Qt::WA_DeleteOnClose, true);
 
 	dialog->show();
-//	getPQEtpPanel()->setVisible(true);
-//	getPQEtpPanel()->etpClientConnect("127.0.0.1", "8080");
-	cout << "PQToolsManager::showPanelEtp() - OUT"  << endl;
 }
 
 //-----------------------------------------------------------------------------
@@ -352,3 +349,4 @@ void PQToolsManager::newFile(const std::string & fileName)
 	connect(getpqPropertiesPanel(), SIGNAL(deleteRequested(pqPipelineSource*)), this, SLOT(deletePipelineSource(pqPipelineSource*)));
 
 }
+

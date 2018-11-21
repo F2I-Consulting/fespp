@@ -111,6 +111,10 @@ public:
 	*/
 	void deleteTreeView();
 
+	void connectPQEtpPanel();
+
+
+
 signals:
 	/**
 	* Signal emit when a item is selected
@@ -119,6 +123,7 @@ signals:
 
 protected slots:
 
+	void setEtpTreeView(std::vector<VtkEpcCommon*>);
 	/**
 	* When a line is selected.
 	*/
@@ -223,7 +228,7 @@ private:
 
 	time_t save_time;
 
-	QVector<std::string> ts_displayed;
+	std::vector<std::string> ts_displayed;
 
 	VtkEpcDocumentSet* vtkEpcDocumentSet;
 

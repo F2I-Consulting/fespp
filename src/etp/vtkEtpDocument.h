@@ -36,6 +36,9 @@ knowledge of the CeCILL license and that you accept its terms.
 #define __vtkEtpDocument_h
 
 #include <string>
+#include <vector>
+#include <list>
+#include "VTK/VtkEpcCommon.h"
 
 class etpClientSession;
 class vtkEtpDocument
@@ -78,13 +81,22 @@ public:
 	void setClientSession(etpClientSession * session) {client_session = session;}
 
 	void createTree();
+	void addTreeView(VtkEpcCommon* leaf,const std::string & content_type);
+
+	/**
+	* method : get TreeView
+	* variable :
+	*/
+	std::vector<VtkEpcCommon*> getTreeView() const;
 
 protected:
 
 private:
 
 	int response_waiting;
-	bool waiting;
+	std::list<VtkEpcCommon*> response_queue;
 	etpClientSession * client_session;
+
+	std::vector<VtkEpcCommon*> treeView; // Tree
 };
 #endif

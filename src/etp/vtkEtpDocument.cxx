@@ -1,19 +1,39 @@
 ﻿#include <etp/vtkEtpDocument.h>
 #include <algorithm>
-#include <sstream>
 #include <thread>
 
 // include Vtk
 #include <vtkInformation.h>
+#include <QApplication>
+//#include <QWidget>
 
 // include Fespp
 #include <etp/etpClientSession.h>
+#include <PQEtpPanel.h>
 
 // include FESAPI
 
 
 // include Vtk for Plugin
 
+namespace
+{
+PQEtpPanel* getPQEtpPanel()
+{
+	cout << "getpanel()" << endl;
+	PQEtpPanel *panel = 0;
+	foreach(QWidget *widget, qApp->topLevelWidgets())
+	{
+		panel = widget->findChild<PQEtpPanel *>();
+
+		if (panel)
+		{
+			break;
+		}
+	}
+	return panel;
+}
+}
 
 void startio(vtkEtpDocument *etp_document, std::string ipAddress, std::string port)
 {
@@ -59,15 +79,7 @@ void startio(vtkEtpDocument *etp_document, std::string ipAddress, std::string po
 //----------------------------------------------------------------------------
 vtkEtpDocument::vtkEtpDocument(const std::string & ipAddress, const std::string & port)
 {
-	cout <<"vtkEtpDocument::vtkEtpDocument - constructor\n";
-
 	response_waiting = 0;
-
-	cout <<"response_waiting = 0\n";
-	// Run the I/O service. The call will return when the socket is closed.
-	cout << ipAddress << " : " << port << "\n";
-
-
 
 	std::thread askUserThread(startio, this, ipAddress, port);
 	askUserThread.detach(); // Detach the thread since we don't want it to be a blocking one.
@@ -87,13 +99,7 @@ vtkEtpDocument::~vtkEtpDocument()
 //----------------------------------------------------------------------------
 void vtkEtpDocument::createTree()
 {
-	response_waiting = 2;
 	client_session->pushCommand("GetContent eml://");
-	while (waiting!=0)
-	{
-
-	}
-	cout << "\n\n\nlibérer\n\n\n\n";
 }
 
 //----------------------------------------------------------------------------
@@ -119,34 +125,77 @@ void vtkEtpDocument::receive_resources(const std::string & rec_uri,
 		const std::string & rec_uuid,
 		const int64_t & rec_lastChanged)
 {
-	response_waiting--;
-	if (rec_contentCount!=-1)
-	{
-		cout << "receive msg \n";
+	cout << "vtkEtpDocument::receive_resources(" << rec_uuid << ")" << endl;
+	if (response_waiting > 0){
+		response_waiting--;
+	}
+
+	auto leaf = new VtkEpcCommon();
+	leaf->setUuid(rec_uuid);
+	leaf->setParentType(VtkEpcCommon::Resqml2Type::INTERPRETATION);
+
+	if (response_queue.size() > 0) {
+		leaf->setParent(response_queue.front()->getUuid());
+		leaf->setParentType(response_queue.front()->getType());
+
+		response_queue.pop_front();
+	}
+	leaf->setName(rec_name);
+
+	if (rec_resourceType=="DataObject") {
+		this->addTreeView(leaf, rec_contentType);
+	}
+
+	if (rec_contentCount>0) {
+		for(auto i=0; i < rec_contentCount; ++i){
+			response_queue.push_back(leaf);
+		}
 		response_waiting += rec_contentCount;
 
-		std::stringstream ss;
-		ss << "GetContent " <<  rec_uri;
-
-		client_session->pushCommand(ss.str());
+		client_session->pushCommand("GetContent "+rec_uri);
 	}
-	if (rec_sourceCount!=-1)
-	{
-		cout << "receive msg \n";
+
+	if (rec_sourceCount>0) {
+		for(auto i=0; i < rec_sourceCount; ++i){
+			response_queue.push_back(leaf);
+		}
 		response_waiting += rec_sourceCount;
 
-		std::stringstream ss;
-		ss << "GetSources " <<  rec_uri;
-
-		client_session->pushCommand(ss.str());
+		client_session->pushCommand("GetSources "+rec_uri);
 	}
 
-
-	cout << "receive msg :" << response_waiting << "\n";
-
-	if (response_waiting == 0)
+	cout << "response_waiting = " << response_waiting << "\n";
+	if (response_waiting==0)
 	{
-		waiting = false;
+		getPQEtpPanel()->setEtpTreeView(this->getTreeView());
 	}
+}
 
+//----------------------------------------------------------------------------
+void vtkEtpDocument::addTreeView(VtkEpcCommon* leaf,const std::string & content_type)
+{
+	  std::size_t pos = content_type.find(";type=");
+	  std::string type = content_type.substr (pos+6);
+
+	  if(type=="obj_IjkGridRepresentation") {
+		  leaf->setType(VtkEpcCommon::Resqml2Type::IJK_GRID);
+
+		  treeView.push_back(leaf);
+	  }
+	  if(type=="obj_SubRepresentation") {
+		  leaf->setType(VtkEpcCommon::Resqml2Type::SUB_REP);
+
+		  treeView.push_back(leaf);
+	  }
+	  if(type=="obj_ContinuousProperty" || type=="obj_DiscreteProperty") {
+		  leaf->setType(VtkEpcCommon::Resqml2Type::PROPERTY);
+
+		  treeView.push_back(leaf);
+	  }
+}
+
+//----------------------------------------------------------------------------
+std::vector<VtkEpcCommon*> vtkEtpDocument::getTreeView() const
+{
+	return treeView;
 }

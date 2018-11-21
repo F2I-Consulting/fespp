@@ -59,6 +59,12 @@ public:
 	void setConnectionStatus(bool connect) { etp_connect = connect; }
 	void setVtkEtpDocuement(vtkEtpDocument* vtkEtp) { etp_document = vtkEtp; }
 
+
+	void setEtpTreeView(std::vector<VtkEpcCommon*>);
+
+signals:
+	void refreshTreeView(std::vector<VtkEpcCommon*>);
+
 protected slots:
 	void handleButtonSend();
 	void handleButtonStatus();
@@ -73,8 +79,6 @@ private:
 	QPushButton *EtpStatus_Button;
 
 	QStringList EtpCommand_list;
-
-	bool debug_verif;
 
 	vtkEtpDocument* etp_document;
 

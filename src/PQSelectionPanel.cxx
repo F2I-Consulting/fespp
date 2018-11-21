@@ -1,5 +1,8 @@
 #include "ui_PQSelectionPanel.h"
 #include "PQSelectionPanel.h"
+#include "PQToolsManager.h"
+#include "PQEtpPanel.h"
+
 // include API Resqml2
 #include "resqml2_0_1/PolylineSetRepresentation.h"
 #include "resqml2_0_1/TriangulatedSetRepresentation.h"
@@ -64,9 +67,39 @@
 
 namespace
 {
+
+PQEtpPanel* getPQEtpPanel()
+{
+	PQEtpPanel *panel = 0;
+	foreach(QWidget *widget, qApp->topLevelWidgets())
+	{
+		panel = widget->findChild<PQEtpPanel *>();
+
+		if (panel)
+		{
+			break;
+		}
+	}
+	return panel;
+}
+
+PQToolsManager* getPQToolsManager()
+{
+	PQToolsManager *panel = 0;
+	foreach(QWidget *widget, qApp->topLevelWidgets())
+	{
+		panel = widget->findChild<PQToolsManager *>();
+
+		if (panel)
+		{
+			break;
+		}
+	}
+	return panel;
+}
+
 pqPropertiesPanel* getpqPropertiesPanel()
 {
-	// get multi-block inspector panel
 	pqPropertiesPanel *panel = 0;
 	foreach(QWidget *widget, qApp->topLevelWidgets())
 	{
@@ -79,6 +112,7 @@ pqPropertiesPanel* getpqPropertiesPanel()
 	}
 	return panel;
 }
+
 }
 
 //----------------------------------------------------------------------------
@@ -413,8 +447,9 @@ void PQSelectionPanel::updateTimeSeries(const std::string & uuid, bool newUuid)
 		ts_displayed.push_back(uuid);
 	}else
 	{
-		auto index_to_delete = ts_displayed.indexOf(uuid);
-		ts_displayed.remove(index_to_delete);
+		auto index_to_delete = std::find(ts_displayed.begin(), ts_displayed.end(), uuid);
+//		auto index_to_delete = ts_displayed.indexOf(uuid);
+		ts_displayed.erase(index_to_delete);
 	}
 
 	QList<time_t> list;
@@ -482,6 +517,7 @@ void PQSelectionPanel::addFileName(const std::string & fileName)
 
 void PQSelectionPanel::populateTreeView(const std::string & parent, VtkEpcCommon::Resqml2Type parentType, const std::string & uuid, const std::string &  name, VtkEpcCommon::Resqml2Type type)
 {
+	cout << "PQSelectionPanel::populateTreeView IN " << parent << " -> " << uuid << "\n";
 	if (uuid != "")
 	{
 		if (!uuidItem[uuid]){
@@ -566,6 +602,7 @@ void PQSelectionPanel::populateTreeView(const std::string & parent, VtkEpcCommon
 				}
 			}
 		}
+		cout << "PQSelectionPanel::populateTreeView OUT\n";
 	}
 }
 
@@ -701,7 +738,7 @@ pqServer * PQSelectionPanel::getActiveServer()
 	return server;
 }
 
-//****************************************************************************//----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 void PQSelectionPanel::uuidKO(const std::string & uuid)
 {
 	uuidItem[uuid]->setDisabled(true);
@@ -709,4 +746,34 @@ void PQSelectionPanel::uuidKO(const std::string & uuid)
 	{
 		uuidItem[uuid]->child(idx_child)->setHidden(true);
 	}
+}
+
+
+//*************************************
+//*     ETP
+//*************************************
+
+//----------------------------------------------------------------------------
+void PQSelectionPanel::setEtpTreeView(std::vector<VtkEpcCommon*> treeView)
+{
+	cout << "PQSelectionPanel::setEtpTreeView " << treeView.size() << "\n";cout << "PQSelectionPanel::setEtpTreeView " << treeView.size() << "\n";cout << "PQSelectionPanel::setEtpTreeView " << treeView.size() << "\n";cout << "PQSelectionPanel::setEtpTreeView " << treeView.size() << "\n";cout << "PQSelectionPanel::setEtpTreeView " << treeView.size() << "\n";cout << "PQSelectionPanel::setEtpTreeView " << treeView.size() << "\n";cout << "PQSelectionPanel::setEtpTreeView " << treeView.size() << "\n";cout << "PQSelectionPanel::setEtpTreeView " << treeView.size() << "\n";cout << "PQSelectionPanel::setEtpTreeView " << treeView.size() << "\n";	cout << "PQSelectionPanel::setEtpTreeView " << treeView.size() << "\n";
+	QMap<std::string, std::string> name_to_uuid;
+	for (auto &feuille : treeView) {
+		if (feuille->getTimeIndex()<0 ) {
+			populateTreeView(feuille->getParent(), feuille->getParentType(), feuille->getUuid(), feuille->getName(), feuille->getType());
+		}else {
+			if(name_to_uuid.count(feuille->getName())<=0) {
+				populateTreeView(feuille->getParent(), feuille->getParentType(), feuille->getUuid(), feuille->getName(), feuille->getType());
+				name_to_uuid[feuille->getName()]=feuille->getUuid();
+			}
+			ts_timestamp_to_uuid[name_to_uuid[feuille->getName()]][feuille->getTimestamp()] = feuille->getUuid();
+		}
+	}
+	cout << "PQSelectionPanel::setEtpTreeView OUT\n";cout << "PQSelectionPanel::setEtpTreeView OUT\n";cout << "PQSelectionPanel::setEtpTreeView OUT\n";cout << "PQSelectionPanel::setEtpTreeView OUT\n";cout << "PQSelectionPanel::setEtpTreeView OUT\n";cout << "PQSelectionPanel::setEtpTreeView OUT\n";cout << "PQSelectionPanel::setEtpTreeView OUT\n";cout << "PQSelectionPanel::setEtpTreeView OUT\n";cout << "PQSelectionPanel::setEtpTreeView OUT\n";cout << "PQSelectionPanel::setEtpTreeView OUT\n";cout << "PQSelectionPanel::setEtpTreeView OUT\n";cout << "PQSelectionPanel::setEtpTreeView OUT\n";
+}
+
+void PQSelectionPanel::connectPQEtpPanel()
+{
+	qRegisterMetaType<std::vector<VtkEpcCommon*> >("std::vector<VtkEpcCommon*>");
+	connect(getPQEtpPanel(), SIGNAL(refreshTreeView(std::vector<VtkEpcCommon*>)), this, SLOT(setEtpTreeView(std::vector<VtkEpcCommon*>)));
 }
