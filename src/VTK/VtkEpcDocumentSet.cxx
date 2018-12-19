@@ -99,19 +99,19 @@ VtkEpcCommon* VtkEpcDocumentSet::getInfoUuid(std::string uuid)
 //----------------------------------------------------------------------------
 vtkSmartPointer<vtkMultiBlockDataSet> VtkEpcDocumentSet::getVisualization() const
 {
-if(representationMode)
-{
-	vtkOutput->Initialize();
-	auto index = 0;
-	for (auto i=0; i < vtkEpcList.size(); ++i)
+	if(representationMode)
 	{
-		if(vtkEpcList[i]->getOutput()->GetNumberOfBlocks()>0)
+		vtkOutput->Initialize();
+		auto index = 0;
+		for (auto i=0; i < vtkEpcList.size(); ++i)
 		{
-			vtkOutput->SetBlock(index, vtkEpcList[i]->getOutput());
-			vtkOutput->GetMetaData(index++)->Set(vtkCompositeDataSet::NAME(), vtkEpcList[i]->getFileName().c_str());
+			if(vtkEpcList[i]->getOutput()->GetNumberOfBlocks()>0)
+			{
+				vtkOutput->SetBlock(index, vtkEpcList[i]->getOutput());
+				vtkOutput->GetMetaData(index++)->Set(vtkCompositeDataSet::NAME(), vtkEpcList[i]->getFileName().c_str());
+			}
 		}
 	}
-}
 	return vtkOutput;
 }
 

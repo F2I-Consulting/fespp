@@ -152,6 +152,8 @@ protected slots:
 
 private:
 
+	std::string searchSource(const std::string & uuid);
+
 	void populateTreeView(const std::string &  parent, VtkEpcCommon::Resqml2Type parentType, const std::string &  uuid, const std::string &  name, VtkEpcCommon::Resqml2Type type);
 	void updateTimeSeries(const std::string & uuid, bool isnew);
 	void deleteUUID(QTreeWidgetItem *item);

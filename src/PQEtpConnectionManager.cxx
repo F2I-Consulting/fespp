@@ -110,8 +110,6 @@ void PQEtpConnectionManager::setupPipeline()
 	{
 		fesppReader = builder->createReader("sources", "Fespp", QStringList("EtpDocument"), this->Server);
 
-		getPQEtpPanel()->etpClientConnect(	this->ui->etp_ip->text().toStdString(), this->ui->etp_port->text().toStdString());
-
 		manager->etp_existPipe(true);
 	}
 
@@ -127,5 +125,6 @@ void PQEtpConnectionManager::setupPipeline()
 		vtkSMPropertyHelper( fesppReaderProxy, "SubFileName" ).Set(connection_parameter.toStdString().c_str());
 		fesppReaderProxy->UpdateSelfAndAllInputs();
 	}
+	getPQEtpPanel()->etpClientConnect(	this->ui->etp_ip->text().toStdString(), this->ui->etp_port->text().toStdString());
 END_UNDO_SET();
 }

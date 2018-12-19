@@ -32,27 +32,22 @@ The fact that you are presently reading this means that you have had
 knowledge of the CeCILL license and that you accept its terms.
 -----------------------------------------------------------------------*/
 
-#ifndef _etpFesppDirectedDiscoveryProtocolHandlers_h
-#define _etpFesppDirectedDiscoveryProtocolHandlers_h
+#ifndef _EtpFesppStoreProtocolHandlers_h
+#define _EtpFesppStoreProtocolHandlers_h
 
-#include "etp/ProtocolHandlers/DirectedDiscoveryHandlers.h"
+#include <etp/ProtocolHandlers/StoreHandlers.h>
+#include <common/AbstractObject.h>
 
-#include "etpClientSession.h"
-#include "vtkEtpDocument.h"
+#include <etp/EtpClientSession.h>
 
-#include "common/AbstractObject.h"
-
-class etpFesppDirectedDiscoveryProtocolHandlers : public ETP_NS::DirectedDiscoveryHandlers
+class EtpFesppStoreProtocolHandlers : public ETP_NS::StoreHandlers
 {
 public:
-	etpFesppDirectedDiscoveryProtocolHandlers(etpClientSession* my_session, vtkEtpDocument* my_etp_document): ETP_NS::DirectedDiscoveryHandlers(my_session), getObjectWhenDiscovered(false), etp_document(my_etp_document) {}
-	~etpFesppDirectedDiscoveryProtocolHandlers() {}
+	EtpFesppStoreProtocolHandlers(EtpClientSession* mySession, VtkEtpDocument* my_etp_document): ETP_NS::StoreHandlers(mySession), etp_document(my_etp_document) {}
+	~EtpFesppStoreProtocolHandlers() {}
 
-	bool getObjectWhenDiscovered;
-
-	void on_GetResourcesResponse(const Energistics::Etp::v12::Protocol::DirectedDiscovery::GetResourcesResponse & grr);
-
+	void on_Object(const Energistics::Etp::v12::Protocol::Store::Object & obj);
 private:
-	vtkEtpDocument* etp_document;
+	VtkEtpDocument* etp_document;
 };
 #endif

@@ -35,21 +35,15 @@ knowledge of the CeCILL license and that you accept its terms.
 #ifndef _etpClientSession_h_
 #define _etpClientSession_h_
 
-#include "etp/ClientSession.h"
-#include "etp/vtkEtpDocument.h"
+// include FESAPI
+#include <etp/ClientSession.h>
+#include <common/EpcDocument.h>
 
-#include "common/EpcDocument.h"
+//include Fespp
+#include "VTK/VtkEpcCommon.h"
 
-// include system
-#include <string>
-#include <vector>
-
-
-#include <ctime>
-#include <iostream>
-
-
-class etpClientSession : public ETP_NS::ClientSession
+class VtkEtpDocument;
+class EtpClientSession : public ETP_NS::ClientSession
 {
 public:
 	/**
@@ -58,19 +52,15 @@ public:
 	 * @param requestedProtocols An array of protocol IDs that the client expects to communicate on for this session. If the server does not support all of the protocols, the client may or may not continue with the protocols that are supported.
 	 * @param supportedObjects		A list of the Data Objects supported by the client. This list MUST be empty if the client is a customer. This field MUST be supplied if the client is a Store and is requesting a customer role for the server.
 	 */
-	etpClientSession(boost::asio::io_context& ioc,
+	EtpClientSession(boost::asio::io_context& ioc,
 			const std::string & host, const std::string & port,
 			const std::vector<Energistics::Etp::v12::Datatypes::SupportedProtocol> & requestedProtocols,
-			const std::vector<std::string>& supportedObjects, vtkEtpDocument* my_etp_document );
+			const std::vector<std::string>& supportedObjects,
+			VtkEtpDocument* my_etp_document,
+			const VtkEpcCommon::modeVtkEpc & mode);
 
-	~etpClientSession();
+	~EtpClientSession() {};
 
-	std::vector<std::string> listCommand();
-	void pushCommand(std::string);
-
-private:
 	COMMON_NS::EpcDocument epcDoc;
-
-	std::time_t id;
 };
 #endif

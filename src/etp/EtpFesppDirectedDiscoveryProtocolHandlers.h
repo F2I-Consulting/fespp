@@ -32,21 +32,28 @@ The fact that you are presently reading this means that you have had
 knowledge of the CeCILL license and that you accept its terms.
 -----------------------------------------------------------------------*/
 
-#ifndef _etpFesppStoreProtocolHandlers_h
-#define _etpFesppStoreProtocolHandlers_h
+#ifndef _EtpFesppDirectedDiscoveryProtocolHandlers_h
+#define _EtpFesppDirectedDiscoveryProtocolHandlers_h
 
-#include "etp/ProtocolHandlers/StoreHandlers.h"
+#include <etp/ProtocolHandlers/DirectedDiscoveryHandlers.h>
+#include <common/AbstractObject.h>
 
-#include "etpClientSession.h"
+#include <etp/EtpClientSession.h>
+class VtkEtpDocument;
 
-#include "common/AbstractObject.h"
-
-class etpFesppStoreProtocolHandlers : public ETP_NS::StoreHandlers
+class EtpFesppDirectedDiscoveryProtocolHandlers : public ETP_NS::DirectedDiscoveryHandlers
 {
 public:
-	etpFesppStoreProtocolHandlers(etpClientSession* mySession): ETP_NS::StoreHandlers(mySession) {}
-	~etpFesppStoreProtocolHandlers() {}
+	EtpFesppDirectedDiscoveryProtocolHandlers(EtpClientSession* my_session, VtkEtpDocument* my_etp_document, const VtkEpcCommon::modeVtkEpc & mode);
+	~EtpFesppDirectedDiscoveryProtocolHandlers() {}
 
-	void on_Object(const Energistics::Etp::v12::Protocol::Store::Object & obj);
+	std::vector<int64_t> getObjectWhenDiscovered; // all message id in this vector will result in response where the objects are going to be get in addition to be discovered
+
+	void on_GetResourcesResponse(const Energistics::Etp::v12::Protocol::DirectedDiscovery::GetResourcesResponse & grr, int64_t correlationId);
+
+private:
+	VtkEtpDocument* etp_document;
+	bool treeViewMode;
+	bool representationMode;
 };
 #endif

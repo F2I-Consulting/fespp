@@ -517,7 +517,6 @@ void PQSelectionPanel::addFileName(const std::string & fileName)
 
 void PQSelectionPanel::populateTreeView(const std::string & parent, VtkEpcCommon::Resqml2Type parentType, const std::string & uuid, const std::string &  name, VtkEpcCommon::Resqml2Type type)
 {
-	cout << "PQSelectionPanel::populateTreeView IN " << parent << " -> " << uuid << "\n";
 	if (uuid != "")
 	{
 		if (!uuidItem[uuid]){
@@ -602,7 +601,6 @@ void PQSelectionPanel::populateTreeView(const std::string & parent, VtkEpcCommon
 				}
 			}
 		}
-		cout << "PQSelectionPanel::populateTreeView OUT\n";
 	}
 }
 
@@ -640,6 +638,7 @@ void PQSelectionPanel::addTreeProperty(QTreeWidgetItem *parent, const std::strin
 
 	uuidParent_to_groupButton[itemUuid[parent]] = buttonGroup;
 }
+
 //****************************************************************************
 void PQSelectionPanel::deleteUUID(QTreeWidgetItem *item)
 {
@@ -651,9 +650,16 @@ void PQSelectionPanel::deleteUUID(QTreeWidgetItem *item)
 }
 //********************************* Interfacing ******************************
 //----------------------------------------------------------------------------
+std::string PQSelectionPanel::searchSource(const std::string & uuid)
+{
+	return "EtpDocument";
+}
+
+//----------------------------------------------------------------------------
 void PQSelectionPanel::loadUuid(const std::string & uuid)
 {
-	pqPipelineSource * source = findPipelineSource("EpcDocument");
+	auto sourceName = searchSource(uuid);
+	pqPipelineSource * source = findPipelineSource(sourceName.c_str());
 	if (source)
 	{
 		pqActiveObjects *activeObjects = &pqActiveObjects::instance();
@@ -756,7 +762,6 @@ void PQSelectionPanel::uuidKO(const std::string & uuid)
 //----------------------------------------------------------------------------
 void PQSelectionPanel::setEtpTreeView(std::vector<VtkEpcCommon*> treeView)
 {
-	cout << "PQSelectionPanel::setEtpTreeView " << treeView.size() << "\n";cout << "PQSelectionPanel::setEtpTreeView " << treeView.size() << "\n";cout << "PQSelectionPanel::setEtpTreeView " << treeView.size() << "\n";cout << "PQSelectionPanel::setEtpTreeView " << treeView.size() << "\n";cout << "PQSelectionPanel::setEtpTreeView " << treeView.size() << "\n";cout << "PQSelectionPanel::setEtpTreeView " << treeView.size() << "\n";cout << "PQSelectionPanel::setEtpTreeView " << treeView.size() << "\n";cout << "PQSelectionPanel::setEtpTreeView " << treeView.size() << "\n";cout << "PQSelectionPanel::setEtpTreeView " << treeView.size() << "\n";	cout << "PQSelectionPanel::setEtpTreeView " << treeView.size() << "\n";
 	QMap<std::string, std::string> name_to_uuid;
 	for (auto &feuille : treeView) {
 		if (feuille->getTimeIndex()<0 ) {
@@ -769,7 +774,33 @@ void PQSelectionPanel::setEtpTreeView(std::vector<VtkEpcCommon*> treeView)
 			ts_timestamp_to_uuid[name_to_uuid[feuille->getName()]][feuille->getTimestamp()] = feuille->getUuid();
 		}
 	}
-	cout << "PQSelectionPanel::setEtpTreeView OUT\n";cout << "PQSelectionPanel::setEtpTreeView OUT\n";cout << "PQSelectionPanel::setEtpTreeView OUT\n";cout << "PQSelectionPanel::setEtpTreeView OUT\n";cout << "PQSelectionPanel::setEtpTreeView OUT\n";cout << "PQSelectionPanel::setEtpTreeView OUT\n";cout << "PQSelectionPanel::setEtpTreeView OUT\n";cout << "PQSelectionPanel::setEtpTreeView OUT\n";cout << "PQSelectionPanel::setEtpTreeView OUT\n";cout << "PQSelectionPanel::setEtpTreeView OUT\n";cout << "PQSelectionPanel::setEtpTreeView OUT\n";cout << "PQSelectionPanel::setEtpTreeView OUT\n";
+
+	pqPipelineSource * source = findPipelineSource("EtpDocument");
+	if (source)
+	{
+		pqActiveObjects *activeObjects = &pqActiveObjects::instance();
+		activeObjects->setActiveSource(source);
+
+		PQToolsManager* manager = PQToolsManager::instance();
+		auto fesppReader = manager->getFesppReader();
+
+		if (fesppReader)
+		{
+			pqActiveObjects *activeObjects = &pqActiveObjects::instance();
+			activeObjects->setActiveSource(fesppReader);
+
+			// add file to property
+			vtkSMProxy* fesppReaderProxy = fesppReader->getProxy();
+
+			vtkSMPropertyHelper( fesppReaderProxy, "uuidList" ).SetStatus("connect",0);
+
+			fesppReaderProxy->UpdatePropertyInformation();
+			fesppReaderProxy->UpdateVTKObjects();
+			getpqPropertiesPanel()->update();
+			getpqPropertiesPanel()->apply();
+		}
+	}
+
 }
 
 void PQSelectionPanel::connectPQEtpPanel()

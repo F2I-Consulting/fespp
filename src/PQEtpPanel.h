@@ -35,6 +35,7 @@ knowledge of the CeCILL license and that you accept its terms.
 #ifndef _PQEtpPanel_h
 #define _PQEtpPanel_h
 
+#include <etp/VtkEtpDocument.h>
 #include <QDockWidget>
 #include <QComboBox>
 #include <QLineEdit>
@@ -42,7 +43,6 @@ knowledge of the CeCILL license and that you accept its terms.
 #include <QPushButton>
 #include <QStringList>
 
-#include "etp/vtkEtpDocument.h"
 
 
 class PQEtpPanel : public QDockWidget
@@ -57,7 +57,7 @@ public:
 	
 	void etpClientConnect(const std::string & ipAddress, const std::string & port);
 	void setConnectionStatus(bool connect) { etp_connect = connect; }
-	void setVtkEtpDocuement(vtkEtpDocument* vtkEtp) { etp_document = vtkEtp; }
+	void setVtkEtpDocuement(VtkEtpDocument* vtkEtp) { etp_document = vtkEtp; }
 
 
 	void setEtpTreeView(std::vector<VtkEpcCommon*>);
@@ -66,21 +66,16 @@ signals:
 	void refreshTreeView(std::vector<VtkEpcCommon*>);
 
 protected slots:
-	void handleButtonSend();
 	void handleButtonStatus();
+	void handleButtonRefresh();
   
 private:
 	void constructor();
 
-	QComboBox *EtpCommand;
-	QLineEdit *EtpCommandArgument;
-	QTextBrowser *EtpTextBrowser;
 	QPushButton *EtpSendButton;
 	QPushButton *EtpStatus_Button;
 
-	QStringList EtpCommand_list;
-
-	vtkEtpDocument* etp_document;
+	VtkEtpDocument* etp_document;
 
 	bool etp_connect;
 };

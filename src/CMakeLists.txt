@@ -28,7 +28,11 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${FESPP_ROOT_DIR}/cmake/modules)
 
 pv_process_modules()
 
-INCLUDE_DIRECTORIES(${FESAPI_INCLUDE} "/home/cedric_pro/Boost/install_1_68_0/include" "/home/cedric_pro/Avro/avro-cpp-1.8.2-install/include")
+INCLUDE_DIRECTORIES (
+	${FESAPI_INCLUDE} 
+	${AVRO_INCLUDE_DIR} 
+	${BOOST_INCLUDE_DIR}
+)
 
 IF(PARAVIEW_BUILD_QT_GUI)
 	IF(PARAVIEW_QT_VERSION VERSION_GREATER "4")
@@ -100,7 +104,7 @@ ENDIF(PARAVIEW_BUILD_QT_GUI)
 target_link_libraries(Fespp
 	LINK_PRIVATE
 	 ${FESAPI_LIBRARY})
-	
+
 INSTALL (
 	TARGETS Fespp
 	DESTINATION lib

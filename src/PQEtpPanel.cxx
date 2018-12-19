@@ -44,11 +44,11 @@ PQSelectionPanel* getPQSelectionPanel()
 	return panel;
 }
 
-void startEtpDocument(std::string ipAddress, std::string port)
-{
-	auto etp_document = new vtkEtpDocument(ipAddress, port);
-	getPQEtpPanel()->setVtkEtpDocuement(etp_document);
-}
+//void startEtpDocument(std::string ipAddress, std::string port)
+//{
+//	auto etp_document = new VtkEtpDocument(ipAddress, port, VtkEpcCommon::TreeView);
+//	getPQEtpPanel()->setVtkEtpDocuement(etp_document);
+//}
 }
 
 
@@ -60,23 +60,17 @@ void PQEtpPanel::constructor()
 	ui.setupUi(t_widget);
 	setWidget(t_widget);
 
-	EtpStatus_Button = ui.pushButton;
+	EtpStatus_Button = ui.status;
 	QIcon icon;
 	icon.addFile(QString::fromUtf8(":red_status.png"), QSize(), QIcon::Normal, QIcon::Off);
 	EtpStatus_Button->setIcon(icon);
 	etp_connect = false;
 	connect(EtpStatus_Button, SIGNAL (released()), this, SLOT (handleButtonStatus()));
 
-	EtpCommand = ui.EtpCommand;
-	QStringList EtpCommand_list;
-	EtpCommand->addItems(EtpCommand_list);
+	EtpSendButton = ui.refresh;
+	connect(EtpSendButton, SIGNAL (released()), this, SLOT (handleButtonRefresh()));
 
-	EtpCommandArgument = ui.EtpCommandArgument;
 
-	EtpSendButton = ui.EtpSendButton;
-	connect(EtpSendButton, SIGNAL (released()), this, SLOT (handleButtonSend()));
-
-	EtpTextBrowser = ui.EtpTextBrowser;
 }
 
 //******************************* ACTIONS ************************************
@@ -92,17 +86,25 @@ void PQEtpPanel::handleButtonStatus()
 		EtpStatus_Button->setIcon(icon);
 	}
 }
-//----------------------------------------------------------------------------
-void PQEtpPanel::handleButtonSend()
+void PQEtpPanel::handleButtonRefresh()
 {
-	etp_document->createTree();
-	getPQSelectionPanel()->connectPQEtpPanel();
+	cout << "PQEtpPanel::handleButtonRefresh()" << endl;
+	if (etp_connect)
+	{
+		etp_document->createTree();
+		getPQSelectionPanel()->connectPQEtpPanel();
+		EtpSendButton->setText("Refresh");
+		etp_connect=false;
+		QIcon icon;
+	}
+
+
 }
 
 //******************************* Etp Document ************************************
 void PQEtpPanel::etpClientConnect(const std::string & ipAddress, const std::string & port)
 {
-	etp_document = new vtkEtpDocument(ipAddress, port);
+	etp_document = new VtkEtpDocument(ipAddress, port, VtkEpcCommon::TreeView);
 
 	etp_connect=true;
 	QIcon icon;

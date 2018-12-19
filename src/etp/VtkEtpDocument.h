@@ -38,50 +38,65 @@ knowledge of the CeCILL license and that you accept its terms.
 #include <string>
 #include <vector>
 #include <list>
+// include VTK
+#include <vtkSmartPointer.h>
+#include <vtkMultiBlockDataSet.h>
+
+#include <etp/ProtocolHandlers/DirectedDiscoveryHandlers.h>
+
 #include "VTK/VtkEpcCommon.h"
 
-class etpClientSession;
-class vtkEtpDocument
+class EtpClientSession;
+
+class VtkEtpDocument
 {
 
 public:
+
 	/**
 	* Constructor
 	*/
-	vtkEtpDocument (const std::string & ipAddress, const std::string & port);
+	VtkEtpDocument (const std::string & ipAddress, const std::string & port, const VtkEpcCommon::modeVtkEpc & mode);
 	/**
 	* Destructor
 	*/
-	~vtkEtpDocument();
+	~VtkEtpDocument();
 
 	/**
-	* method : visualize
-	* variable : std::string uuid 
-	* create uuid representation.
-	*/
-	void visualize(const std::string & uuid);
-	
-	/**
 	* method : remove
-	* variable : std::string uuid 
+	* variable : std::string uuid
 	* delete uuid representation.
 	*/
 	void remove(const std::string & uuid);
-	
-	void receive_resources(const std::string & rec_uri,
+
+	void receive_resources_tree(const std::string & rec_uri,
 			const std::string & rec_contentType,
 			const std::string & rec_name,
-			const std::string & rec_resourceType,
+			Energistics::Etp::v12::Datatypes::Object::ResourceKind & rec_resourceType,
 			const int32_t & rec_sourceCount,
 			const int32_t & rec_targetCount,
 			const int32_t & rec_contentCount,
-			const std::string & rec_uuid,
 			const int64_t & rec_lastChanged);
-	
-	void setClientSession(etpClientSession * session) {client_session = session;}
+
+	void receive_resources_representation(const std::string & rec_uri,
+			const std::string & rec_contentType,
+			const std::string & rec_name,
+			Energistics::Etp::v12::Datatypes::Object::ResourceKind & rec_resourceType,
+			const int32_t & rec_sourceCount,
+			const int32_t & rec_targetCount,
+			const int32_t & rec_contentCount,
+			const int64_t & rec_lastChanged);
+
+	void add_command(const std::string & command);
+
+//	void receive_resources_new_ask(const std::string & ask);
+	void receive_resources_finished();
+
+	void setClientSession(EtpClientSession * session) {client_session = session;}
+
+
 
 	void createTree();
-	void addTreeView(VtkEpcCommon* leaf,const std::string & content_type);
 
 	/**
 	* method : get TreeView
@@ -89,14 +104,49 @@ public:
 	*/
 	std::vector<VtkEpcCommon*> getTreeView() const;
 
+	/**
+	* method : visualize
+	* variable : std::string uuid
+	* create uuid representation.
+	*/
+	void visualize(const std::string & uuid);
+
+	/**
+	* method : remove
+	* variable : std::string uuid
+	* delete uuid representation.
+	*/
+	void unvisualize(const std::string & uuid);
+
+	/**
+	* method : getOutput
+	* variable : --
+	* return the vtkMultiBlockDataSet for each epcdocument.
+	*/
+	vtkSmartPointer<vtkMultiBlockDataSet> getVisualization() const;
+
 protected:
 
+	VtkEpcCommon* firstLeafOfTreeView();
 private:
+
+	void push_command(const std::string & command);
+	void launch_command();
 
 	int response_waiting;
 	std::list<VtkEpcCommon*> response_queue;
-	etpClientSession * client_session;
+	std::list<std::string> response_queue_command;
+	std::list<std::string> wait_queue_command;
+	EtpClientSession * client_session;
+
+	bool all_sended;
+	bool all_received;
+
+	bool treeViewMode;
+	bool representationMode;
 
 	std::vector<VtkEpcCommon*> treeView; // Tree
+
+	vtkSmartPointer<vtkMultiBlockDataSet> vtkOutput;
 };
 #endif
