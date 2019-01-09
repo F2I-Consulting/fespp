@@ -240,7 +240,9 @@ int Fespp::RequestData(vtkInformation *request,
 		vtkInformationVector **inputVector,
 		vtkInformationVector *outputVector)
 {
-	if (isEpcDocument)
+
+	cout << " Fespp::RequestData "<< endl;
+	if (isEtpDocument)
 	{
 		RequestDataEtpDocument(request, inputVector, outputVector);
 	}

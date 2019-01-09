@@ -37,21 +37,6 @@ void EtpFesppDirectedDiscoveryProtocolHandlers::on_GetResourcesResponse(const En
 {
 	Energistics::Etp::v12::Datatypes::Object::GraphResource graphResource =  grr.m_resource;
 
-	std::cout << "*******EtpFesppDirectedDiscoveryProtocolHandlers*******" << std::endl;
-	std::cout << "GraphResource received : " << std::endl;
-	std::cout << "uri : " << graphResource.m_uri << std::endl;
-	std::cout << "contentType : " << graphResource.m_contentType << std::endl;
-	std::cout << "name : " << graphResource.m_name << std::endl;
-	std::cout << "type : " << static_cast<size_t>(graphResource.m_resourceType) << std::endl;
-	if (!graphResource.m_sourceCount.is_null())
-		std::cout << "sourceCount : " << graphResource.m_sourceCount.get_int() << std::endl;
-	if (!graphResource.m_targetCount.is_null())
-		std::cout << "targetCount : " << graphResource.m_targetCount.get_int() << std::endl;
-	if (!graphResource.m_contentCount.is_null())
-		std::cout << "contentCount : " << graphResource.m_contentCount.get_int() << std::endl;
-	std::cout << "lastChanged : " << graphResource.m_lastChanged << std::endl;
-	std::cout << "*************************************************" << std::endl;
-
 	int32_t sourceCount, targetCount, contentCount;
 	if (!graphResource.m_sourceCount.is_null())
 		sourceCount = graphResource.m_sourceCount.get_int();
@@ -71,18 +56,16 @@ void EtpFesppDirectedDiscoveryProtocolHandlers::on_GetResourcesResponse(const En
 		if (openingParenthesis != std::string::npos) {
 			auto resqmlObj = static_cast<EtpClientSession*>(session)->epcDoc.getResqmlAbstractObjectByUuid(graphResource.m_uri.substr(openingParenthesis + 1, 36));
 			if (resqmlObj == nullptr || resqmlObj->isPartial()) {
-				std::cout << "GET OBJECT -----------------------------------------------------------------------------------------------------------------------------------------------------------------------" << std::endl;
-				etp_document->add_command("Wait");
-				etp_document->add_command("Wait");
 				Energistics::Etp::v12::Protocol::Store::GetObject_ getO;
 				getO.m_uri = graphResource.m_uri;
 				session->send(getO);
-//				etp_document->add_command("GetObject "+graphResource.m_uri);
 
 			}
 		}
 	}
-//	etp_document->receive_resources_finished();
+
+	cout << "on_GetResourcesResponse" << endl;
+	static_cast<EtpClientSession*>(session)->answeredMessages[correlationId] = true;
 
 	if(treeViewMode)
 	{
@@ -96,17 +79,17 @@ void EtpFesppDirectedDiscoveryProtocolHandlers::on_GetResourcesResponse(const En
 				graphResource.m_lastChanged
 		);
 	}
-	if (representationMode)
-	{
-		etp_document->receive_resources_representation(graphResource.m_uri,
-				graphResource.m_contentType,
-				graphResource.m_name,
-				graphResource.m_resourceType,
-				sourceCount,
-				targetCount,
-				contentCount,
-				graphResource.m_lastChanged
-		);
-	}
+//	if (representationMode)
+//	{
+//		etp_document->receive_resources_representation(graphResource.m_uri,
+//				graphResource.m_contentType,
+//				graphResource.m_name,
+//				graphResource.m_resourceType,
+//				sourceCount,
+//				targetCount,
+//				contentCount,
+//				graphResource.m_lastChanged
+//		);
+//	}
 
 }

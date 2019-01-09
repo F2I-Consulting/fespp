@@ -61,6 +61,14 @@ public:
 
 	~EtpClientSession() {};
 
+#if _MSC_VER < 1600
+	std::tr1::unordered_map<int64_t, bool> answeredMessages;
+
+#else
+
+	std::unordered_map<int64_t, bool> answeredMessages;
+#endif
+
 	COMMON_NS::EpcDocument epcDoc;
 };
 #endif

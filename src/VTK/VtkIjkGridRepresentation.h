@@ -91,6 +91,16 @@ public:
 	int getKCellCount(const std::string & uuid) const;
 
 	int getInitKIndex(const std::string & uuid) const;
+
+	void setICellCount(const int & value) {	iCellCount = value; }
+
+	void setJCellCount(const int & value) { jCellCount = value; }
+
+	void setKCellCount(const int & value) { kCellCount = value; }
+
+	void setInitKIndex(const int & value) { initKIndex = value; }
+
+	void setMaxKIndex(const int & value) { maxKIndex = value; }
 	/**
 	* method : createWithPoints
 	* variable : points de l'ijkGrid,  ijkGrid or sub-rep

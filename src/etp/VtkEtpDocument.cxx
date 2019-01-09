@@ -13,7 +13,7 @@
 #include "PQEtpPanel.h"
 #include "etp/EtpFesppStoreProtocolHandlers.h"
 #include "etp/EtpFesppDirectedDiscoveryProtocolHandlers.h"
-#include "etp/EtpFesppCoreProtocolHandlers.h"
+#include "VTK/VtkIjkGridRepresentation.h"
 
 #include <etp/EtpHdfProxy.h>
 #include <resqml2_0_1/AbstractIjkGridRepresentation.h>
@@ -40,7 +40,7 @@ PQEtpPanel* getPQEtpPanel()
 void setSessionToEtpHdfProxy(EtpClientSession* myOwnEtpSession) {
 	COMMON_NS::EpcDocument& epcDoc = myOwnEtpSession->epcDoc;
 	cerr << "setSessionToEtpHdfProxy " << endl;
-		for (const auto & hdfProxy : epcDoc.getHdfProxySet())
+	for (const auto & hdfProxy : epcDoc.getHdfProxySet())
 	{
 		ETP_NS::EtpHdfProxy* etpHdfProxy = dynamic_cast<ETP_NS::EtpHdfProxy*>(hdfProxy);
 		if (etpHdfProxy != nullptr && etpHdfProxy->getSession() == nullptr) {
@@ -109,7 +109,8 @@ void startio(VtkEtpDocument *etp_document, std::string ipAddress, std::string po
 }
 
 //----------------------------------------------------------------------------
-VtkEtpDocument::VtkEtpDocument(const std::string & ipAddress, const std::string & port, const VtkEpcCommon::modeVtkEpc & mode)
+VtkEtpDocument::VtkEtpDocument(const std::string & ipAddress, const std::string & port, const VtkEpcCommon::modeVtkEpc & mode) :
+														VtkResqml2MultiBlockDataSet("EtpDocument", "EtpDocument", "EtpDocument", "", 0, 0)
 {
 	treeViewMode=false;
 	representationMode=false;
@@ -124,10 +125,10 @@ VtkEtpDocument::VtkEtpDocument(const std::string & ipAddress, const std::string 
 		representationMode=true;
 	}
 
-	response_waiting = 0;
+	idMessageCurrent = 0;
 
 	cout << "start thread mode "<<treeViewMode << " - "<<representationMode<< endl;
-//	startio(this, ipAddress, port, mode);
+	//	startio(this, ipAddress, port, mode);
 	std::thread askUserThread(startio, this, ipAddress, port, mode);
 	askUserThread.detach(); // Detach the thread since we don't want it to be a blocking one.
 
@@ -142,23 +143,17 @@ VtkEtpDocument::~VtkEtpDocument()
 {
 	if (client_session)
 	{
-	client_session->close();
-	client_session->epcDoc.close();
+		client_session->close();
+		client_session->epcDoc.close();
 	}
 	//	this->push_command("quit");
 }
 
 //----------------------------------------------------------------------------
-void VtkEtpDocument::add_command(const std::string & command)
-{
-	wait_queue_command.push_front(command);
-}
-
-
-//----------------------------------------------------------------------------
-void VtkEtpDocument::push_command(const std::string & command)
+int64_t VtkEtpDocument::push_command(const std::string & command)
 {
 
+	++idMessageCurrent;
 	cout << "void VtkEtpDocument::push_command(const std::string & " << command<< ")" <<endl;
 	auto commandTokens = tokenize(command, ' ');
 
@@ -189,71 +184,15 @@ void VtkEtpDocument::push_command(const std::string & command)
 				}
 			}
 		}
-		response_queue_command.push_back(command);
-		client_session->send(mb);
+		client_session->answeredMessages[idMessageCurrent] = false;
+		client_session->send(mb, idMessageCurrent);
+
+		return idMessageCurrent;
 	}
 
 	if (commandTokens.size() == 1) {
-		if (commandTokens[0] == "Wait") {
-			response_queue_command.push_back(command);
-		}
 		if (commandTokens[0] == "GetXyzOfIjkGrids") {
 			setSessionToEtpHdfProxy(client_session);
-			COMMON_NS::EpcDocument& epcDoc = client_session->epcDoc;
-			auto ijkGridSet = epcDoc.getIjkGridRepresentationSet();
-			for (const auto & ijkGrid : ijkGridSet) {
-				if (ijkGrid->isPartial()) {
-					std::cout << "Partial Ijk Grid " << ijkGrid->getTitle() << " : " << ijkGrid->getUuid() << std::endl;
-					continue;
-				}
-				else {
-					std::cout << "Ijk Grid " << ijkGrid->getTitle() << " : " << ijkGrid->getUuid() << std::endl;
-					if (ijkGrid->getGeometryKind() == RESQML2_0_1_NS::AbstractIjkGridRepresentation::NO_GEOMETRY) {
-						std::cout << "This IJK Grid has got no geometry." << std::endl;
-						continue;
-					}
-				}
-
-				//*****************
-				//*** GEOMETRY ****
-				//*****************
-				auto xyzPointCount = ijkGrid->getXyzPointCountOfPatch(0);
-				cout << "-----> xyzPointCount "<< xyzPointCount << endl;
-				std::unique_ptr<double[]> xyzPoints(new double[xyzPointCount * 3]);
-				ijkGrid->getXyzPointsOfPatchInGlobalCrs(0, xyzPoints.get());
-
-				cout << "-----> getXyzPointsOfPatchInGlobalCrs "<< endl;
-				for (auto xyzPointIndex = 0; xyzPointIndex < xyzPointCount && xyzPointIndex < 20; ++xyzPointIndex) {
-					std::cout << "XYZ Point Index " << xyzPointIndex << " : " << xyzPoints[xyzPointIndex * 3] << "," << xyzPoints[xyzPointIndex * 3 + 1] << "," << xyzPoints[xyzPointIndex * 3 + 2] << std::endl;
-				}
-
-				cout << "<----- AFTER GEOMETRY -----> "<< endl;
-				//*****************
-				//*** PROPERTY ****
-				//*****************
-				auto propSet = ijkGrid->getPropertySet();
-				for (const auto & prop : propSet) {
-					RESQML2_0_1_NS::ContinuousProperty* continuousProp = dynamic_cast<RESQML2_0_1_NS::ContinuousProperty*>(prop);
-					if (continuousProp != nullptr && dynamic_cast<RESQML2_0_1_NS::ContinuousPropertySeries*>(continuousProp) == nullptr &&
-							continuousProp->getAttachmentKind() == gsoap_resqml2_0_1::resqml2__IndexableElements::resqml2__IndexableElements__cells) {
-						std::cout << "Continuous property " << prop->getTitle() << " : " << prop->getUuid() << std::endl;
-						auto cellCount = ijkGrid->getCellCount();
-						std::unique_ptr<double[]> values(new double[cellCount * continuousProp->getElementCountPerValue()]);
-						continuousProp->getDoubleValuesOfPatch(0, values.get());
-						for (auto cellIndex = 0; cellIndex < cellCount; ++cellIndex) {
-							for (unsigned int elementIndex = 0; elementIndex < continuousProp->getElementCountPerValue(); ++elementIndex) {
-								std::cout << "Cell Index " << cellIndex << " : " << values[cellIndex] << std::endl;
-							}
-						}
-					}
-					else {
-						std::cout << "Non continuous property " << prop->getTitle() << " : " << prop->getUuid() << std::endl;
-					}
-				}
-				cout << "<----- AFTER PROPERTY -----> "<< endl;
-				std::cout << std::endl;
-			}
-			//			this->launch_command();
 		}
 		else if (commandTokens[0] == "List") {
 			std::cout << "*** START LISTING ***" << std::endl;
@@ -276,57 +215,63 @@ void VtkEtpDocument::push_command(const std::string & command)
 				}
 			}
 			std::cout << "*** END LISTING ***" << std::endl;
-			//			this->launch_command();
 		}
 	}
 	else if (commandTokens.size() == 2) {
 		if (commandTokens[0] == "GetContent") {
 			Energistics::Etp::v12::Protocol::DirectedDiscovery::GetContent mb;
 			mb.m_uri = commandTokens[1];
-			response_queue_command.push_back(command);
-			client_session->send(mb);
+			client_session->answeredMessages[idMessageCurrent] = false;
+			client_session->send(mb, idMessageCurrent);
+			return idMessageCurrent;
 		}
 		else if (commandTokens[0] == "GetSources") {
 			Energistics::Etp::v12::Protocol::DirectedDiscovery::GetSources mb;
 			mb.m_uri = commandTokens[1];
-			response_queue_command.push_back(command);
-			client_session->send(mb);
+			client_session->answeredMessages[idMessageCurrent] = false;
+			client_session->send(mb, idMessageCurrent);
+			return idMessageCurrent;
 		}
 		else if (commandTokens[0] == "GetTargets") {
 			Energistics::Etp::v12::Protocol::DirectedDiscovery::GetTargets mb;
 			mb.m_uri = commandTokens[1];
-			response_queue_command.push_back(command);
-			client_session->send(mb);
+			client_session->answeredMessages[idMessageCurrent] = false;
+			client_session->send(mb, idMessageCurrent);
+			return idMessageCurrent;
 		}
 		else if (commandTokens[0] == "GetObject") {
 			Energistics::Etp::v12::Protocol::Store::GetObject_ getO;
 			getO.m_uri = commandTokens[1];
-			response_queue_command.push_back(command);
-			client_session->send(getO);
+			client_session->answeredMessages[idMessageCurrent] = false;
+			client_session->send(getO, idMessageCurrent);
+			return idMessageCurrent;
 		}
 		else if (commandTokens[0] == "GetSourceObjects") {
 			Energistics::Etp::v12::Protocol::DirectedDiscovery::GetSources mb;
 			mb.m_uri = commandTokens[1];
-			response_queue_command.push_back("GetSources");
-			std::static_pointer_cast<EtpFesppDirectedDiscoveryProtocolHandlers>(client_session->getDirectedDiscoveryProtocolHandlers())->getObjectWhenDiscovered.push_back(client_session->send(mb));
+			client_session->answeredMessages[idMessageCurrent] = false;
+			std::static_pointer_cast<EtpFesppDirectedDiscoveryProtocolHandlers>(client_session->getDirectedDiscoveryProtocolHandlers())->getObjectWhenDiscovered.push_back(client_session->send(mb, idMessageCurrent));
+			return idMessageCurrent;
 		}
 		else if (commandTokens[0] == "GetTargetObjects") {
 			Energistics::Etp::v12::Protocol::DirectedDiscovery::GetTargets mb;
 			mb.m_uri = commandTokens[1];
-			response_queue_command.push_back("GetTargets");
-			std::static_pointer_cast<EtpFesppDirectedDiscoveryProtocolHandlers>(client_session->getDirectedDiscoveryProtocolHandlers())->getObjectWhenDiscovered.push_back(client_session->send(mb));
+			client_session->answeredMessages[idMessageCurrent] = false;
+			std::static_pointer_cast<EtpFesppDirectedDiscoveryProtocolHandlers>(client_session->getDirectedDiscoveryProtocolHandlers())->getObjectWhenDiscovered.push_back(client_session->send(mb, idMessageCurrent));
+			return idMessageCurrent;
 		}
 		else if (commandTokens[0] == "GetResourceObjects") {
 			Energistics::Etp::v12::Protocol::Discovery::GetResources2 mb;
 			mb.m_context.m_uri = commandTokens[1];
 			mb.m_context.m_scope = Energistics::Etp::v12::Datatypes::Object::ContextScopeKind::targetsOrSelf;
 			mb.m_context.m_depth = 1;
-			response_queue_command.push_back("GetResources2");
-			std::static_pointer_cast<EtpFesppDirectedDiscoveryProtocolHandlers>(client_session->getDiscoveryProtocolHandlers())->getObjectWhenDiscovered.push_back(client_session->send(mb));
+			client_session->answeredMessages[idMessageCurrent] = false;
+			std::static_pointer_cast<EtpFesppDirectedDiscoveryProtocolHandlers>(client_session->getDiscoveryProtocolHandlers())->getObjectWhenDiscovered.push_back(client_session->send(mb, idMessageCurrent));
 
 			mb.m_context.m_scope = Energistics::Etp::v12::Datatypes::Object::ContextScopeKind::sources;
-			response_queue_command.push_back("GetResources2");
-			std::static_pointer_cast<EtpFesppDirectedDiscoveryProtocolHandlers>(client_session->getDiscoveryProtocolHandlers())->getObjectWhenDiscovered.push_back(client_session->send(mb));
+			client_session->answeredMessages[++idMessageCurrent] = false;
+			std::static_pointer_cast<EtpFesppDirectedDiscoveryProtocolHandlers>(client_session->getDiscoveryProtocolHandlers())->getObjectWhenDiscovered.push_back(client_session->send(mb, idMessageCurrent));
+			return idMessageCurrent;
 		}
 	}
 	else if (commandTokens.size() == 3) {
@@ -335,35 +280,26 @@ void VtkEtpDocument::push_command(const std::string & command)
 			gda.m_uri = commandTokens[1];
 			gda.m_pathInResource = commandTokens[2];
 			std::cout << gda.m_pathInResource << std::endl;
-			response_queue_command.push_back(command);
-			client_session->send(gda);
+			client_session->answeredMessages[idMessageCurrent] = false;
+			client_session->send(gda, idMessageCurrent);
+			return idMessageCurrent;
 		}
 	}
-	else if (commandTokens.empty() || commandTokens[0] != "quit") {
-		std::cout << "List of available commands :" << std::endl;
-		std::cout << "\tList" << std::endl << "\t\tList the objects which have been got from ETP to the in memory epc" << std::endl << std::endl;
-		std::cout << "\tGetContent folderUri" << std::endl << "\t\tGet content of a folder in an ETP store" << std::endl << std::endl;
-		std::cout << "\tGetSources dataObjectURI" << std::endl << "\t\tGet dataobject sources of a dataobject in an ETP store" << std::endl << std::endl;
-		std::cout << "\tGetTargets dataObjectURI" << std::endl << "\t\tGet dataobject targets of a dataobject in an ETP store" << std::endl << std::endl;
-		std::cout << "\tGetResources dataObjectURI scope(default self) depth(default 1) contentTypeFilter,contentTypeFilter,...(default noFilter)" << std::endl << "\t\tSame as GetContent, GetSources and GetTargets but in the Discovery protocol instead of the directed discovery protocol." << std::endl << std::endl;
-		std::cout << "\tGetObject dataObjectURI" << std::endl << "\t\tGet the object from an ETP store and store it into the in memory epc (only create partial TARGET relationships, not any SOURCE relationships)" << std::endl << std::endl;
-		std::cout << "\tGetSourceObjects dataObjectURI" << std::endl << "\t\tGet the source objects of another object from an ETP store and put it into the in memory epc" << std::endl << std::endl;
-		std::cout << "\tGetTargetObjects dataObjectURI" << std::endl << "\t\tGet the target objects of another object from an ETP store and put it into the in memory epc" << std::endl << std::endl;
-		std::cout << "\tGetResourceObjects dataObjectURI" << std::endl << "\t\tGet the object, its source and its target objects from an ETP store and put it into the in memory epc" << std::endl << std::endl;
-		std::cout << "\tGetDataArray epcExternalPartURI datasetPathInEpcExternalPart" << std::endl << "\t\tGet the numerical values from a dataset included in an EpcExternalPart over ETP." << std::endl << std::endl;
-		std::cout << "\tGetXyzOfIjkGrids" << std::endl << "\t\tGet all the XYZ points of the retrieved IJK grids and also their continuous property values." << std::endl << std::endl;
-		std::cout << "\tquit" << std::endl << "\t\tQuit the session." << std::endl << std::endl;
-	}
+
+	return idMessageCurrent;
 }
 
 
 //----------------------------------------------------------------------------
 void VtkEtpDocument::createTree()
 {
-	cout << "VtkEtpDocument::createTree()" << endl;
-	wait_queue_command.push_back("GetContent eml://");
-	this->launch_command();
-
+	auto last_EpcCommon = new VtkEpcCommon();
+	last_EpcCommon->setUuid("eml://");
+	last_EpcCommon->setType(VtkEpcCommon::Resqml2Type::INTERPRETATION);
+	last_EpcCommon->setName("eml://");
+	response_queue.push_back(last_EpcCommon);
+	number_response_wait_queue.push_back(2);
+	last_id = push_command("GetContent eml://");
 }
 
 //----------------------------------------------------------------------------
@@ -373,20 +309,124 @@ void VtkEtpDocument::visualize(const std::string & rec_uri)
 	auto lenght = rec_uri.find_last_of("(") - pos1;
 	std::string type = rec_uri.substr(pos1,lenght);
 
+	std::string uuidToAttach = "";
 	if(type=="obj_IjkGridRepresentation")
 	{
-		wait_queue_command.push_back("GetObject "+rec_uri);
-		wait_queue_command.push_back("GetSourceObjects "+rec_uri);
-		wait_queue_command.push_back("GetTargetObjects "+rec_uri);
-		wait_queue_command.push_back("GetXyzOfIjkGrids");
+		auto idMessage0 = push_command("GetObject "+rec_uri);
+
+		cout << "all push" << endl;
+		while(client_session->answeredMessages[idMessage0] == false) {
+//			cout << "In wait loop" << endl;
+//			client_session->printansweredMessages();
+		} // wait answers
+
+		idMessage0 = push_command("GetSourceObjects "+rec_uri);
+
+		cout << "all push" << endl;
+		while(client_session->answeredMessages[idMessage0] == false){
+//			cout << "In wait loop" << endl;
+//			client_session->printansweredMessages();
+		} // wait answers
+
+		idMessage0 = push_command("GetTargetObjects "+rec_uri);
+
+
+		cout << "all push" << endl;
+//		client_session->printansweredMessages();
+		while(client_session->answeredMessages[idMessage0] == false){
+//			cout << "In wait loop" << endl;
+//			client_session->printansweredMessages();
+		} // wait answers
+
+		push_command("GetXyzOfIjkGrids");
+
+//		while(client_session->answeredMessages[idMessage0] == false &&
+//				client_session->answeredMessages[idMessage1] == false &&
+//					client_session->answeredMessages[idMessage2] == false){
+//		}  // wait answers
+
+		//
+		//
+		// Visu
+		//
+		//
+
+		COMMON_NS::EpcDocument& epcDoc = client_session->epcDoc;
+		auto ijkGridSet = epcDoc.getIjkGridRepresentationSet();
+
+		for (const auto & ijkGrid : ijkGridSet) {
+			if (ijkGrid->isPartial()) {
+				std::cout << "Partial Ijk Grid " << ijkGrid->getTitle() << " : " << ijkGrid->getUuid() << std::endl;
+				continue;
+			}
+			else {
+				uuidToAttach = ijkGrid->getUuid();
+				uuidToVtkIjkGridRepresentation[uuidToAttach] = new VtkIjkGridRepresentation(std::string("EtpDocument"), ijkGrid->getTitle(), ijkGrid->getUuid(), ijkGrid->getParentGridUuid(), nullptr, nullptr);
+
+				if (ijkGrid->getGeometryKind() == RESQML2_0_1_NS::AbstractIjkGridRepresentation::NO_GEOMETRY) {
+					std::cout << "This IJK Grid has got no geometry." << std::endl;
+					continue;
+				}
+			}
+
+			//*****************
+			//*** GEOMETRY ****
+			//*****************
+			auto xyzPointCount = ijkGrid->getXyzPointCountOfPatch(0);
+			auto xyzPoints = new double[xyzPointCount * 3];
+			ijkGrid->getXyzPointsOfPatchInGlobalCrs(0, xyzPoints);
+
+			uuidToVtkIjkGridRepresentation[uuidToAttach]->createVtkPoints(xyzPointCount, xyzPoints, ijkGrid->getLocalCrs() );
+			uuidToVtkIjkGridRepresentation[uuidToAttach]->setICellCount(ijkGrid->getICellCount());
+			uuidToVtkIjkGridRepresentation[uuidToAttach]->setJCellCount(ijkGrid->getJCellCount());
+			uuidToVtkIjkGridRepresentation[uuidToAttach]->setKCellCount(ijkGrid->getKCellCount());
+			uuidToVtkIjkGridRepresentation[uuidToAttach]->setInitKIndex(0);
+			uuidToVtkIjkGridRepresentation[uuidToAttach]->setMaxKIndex(ijkGrid->getKCellCount());
+			uuidToVtkIjkGridRepresentation[uuidToAttach]->createWithPoints(uuidToVtkIjkGridRepresentation[uuidToAttach]->getVtkPoints(), ijkGrid);
+
+			//			//*****************
+			//			//*** PROPERTY ****
+			//			//*****************
+			//			auto propSet = ijkGrid->getPropertySet();
+			//			for (const auto & prop : propSet) {
+			//				RESQML2_0_1_NS::ContinuousProperty* continuousProp = dynamic_cast<RESQML2_0_1_NS::ContinuousProperty*>(prop);
+			//				if (continuousProp != nullptr && dynamic_cast<RESQML2_0_1_NS::ContinuousPropertySeries*>(continuousProp) == nullptr &&
+			//						continuousProp->getAttachmentKind() == gsoap_resqml2_0_1::resqml2__IndexableElements::resqml2__IndexableElements__cells) {
+			//					std::cout << "Continuous property " << prop->getTitle() << " : " << prop->getUuid() << std::endl;
+			//					auto cellCount = ijkGrid->getCellCount();
+			//					std::unique_ptr<double[]> values(new double[cellCount * continuousProp->getElementCountPerValue()]);
+			//					continuousProp->getDoubleValuesOfPatch(0, values.get());
+			//					for (auto cellIndex = 0; cellIndex < cellCount; ++cellIndex) {
+			//						for (unsigned int elementIndex = 0; elementIndex < continuousProp->getElementCountPerValue(); ++elementIndex) {
+			//							std::cout << "Cell Index " << cellIndex << " : " << values[cellIndex] << std::endl;
+			//						}
+			//					}
+			//				}
+			//				else {
+			//					std::cout << "Non continuous property " << prop->getTitle() << " : " << prop->getUuid() << std::endl;
+			//				}
+			//			}
+			//			cout << "<----- AFTER PROPERTY -----> "<< endl;
+			//			std::cout << std::endl;
+		}
 	}
-	this->launch_command();
+
+	// attach representation to EtpDocument VtkMultiBlockDataSet
+	if (std::find(attachUuids.begin(), attachUuids.end(), uuidToAttach) == attachUuids.end())
+	{
+		this->detach();
+		attachUuids.push_back(uuidToAttach);
+		this->attach();
+	}
+}
+void VtkEtpDocument::createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, const VtkEpcCommon::Resqml2Type & type)
+{
+
 }
 
 //----------------------------------------------------------------------------
 void VtkEtpDocument::unvisualize(const std::string & uuid)
 {
-	cout << "VtkEtpDocument::unvisualize = " << uuid << endl;
 }
 
 //----------------------------------------------------------------------------
@@ -394,33 +434,21 @@ void VtkEtpDocument::remove(const std::string & uuid)
 {
 
 }
-
-void VtkEtpDocument::launch_command()
+long VtkEtpDocument::getAttachmentPropertyCount(const std::string & uuid, const VtkEpcCommon::FesppAttachmentProperty propertyUnit)
 {
-	if (wait_queue_command.size() > 0)
+
+}
+
+
+//----------------------------------------------------------------------------
+void VtkEtpDocument::attach()
+{
+	for (unsigned int newBlockIndex = 0; newBlockIndex < attachUuids.size(); ++newBlockIndex)
 	{
-		cout << "------------ AFFICHAGE QUEUE command ------------------" << endl<< endl;
-		for (std::list<std::string>::iterator it= wait_queue_command.begin(); it != wait_queue_command.end();)
-		{
-			cout << *it << endl;
-			++it;
-		}
-		cout << "------------ AFFICHAGE QUEUE command ------------------" << endl<<endl;
+		std::string uuid = attachUuids[newBlockIndex];
 
-		bool firstWait = false;
-
-		if (wait_queue_command.front() == "Wait")
-			firstWait = true;
-
-		this->push_command(wait_queue_command.front());
-
-		wait_queue_command.pop_front();
-
-		if (wait_queue_command.size() > 0)
-			if (wait_queue_command.front() != "Wait" && firstWait){
-				this->push_command(wait_queue_command.front());
-				wait_queue_command.pop_front();
-			}
+		vtkOutput->SetBlock(newBlockIndex, uuidToVtkIjkGridRepresentation[uuid]->getOutput());
+		vtkOutput->GetMetaData(newBlockIndex)->Set(vtkCompositeDataSet::NAME(), uuidToVtkIjkGridRepresentation[uuid]->getUuid().c_str());
 	}
 }
 
@@ -434,104 +462,79 @@ void VtkEtpDocument::receive_resources_tree(const std::string & rec_uri,
 		const int32_t & rec_contentCount,
 		const int64_t & rec_lastChanged)
 {
-	if(treeViewMode)
-	{
-		cout << "VtkEtpDocument::receive_resources_tree"<<endl;
-		bool executed_next_command = true;
+	auto leaf = new VtkEpcCommon();
 
-		if (response_waiting > 0){
-			response_waiting--;
+	leaf->setUuid(rec_uri);
+	//		leaf->setName(rec_name);
+	leaf->setName(rec_uri);
+	leaf->setType(VtkEpcCommon::Resqml2Type::INTERPRETATION);
+	leaf->setParentType(response_queue.front()->getType());
+	leaf->setParent(response_queue.front()->getUuid());
+
+	if (rec_contentCount>0) {
+		response_queue.push_back(leaf);
+		number_response_wait_queue.push_back(rec_contentCount);
+		command_queue.push_back("GetContent "+rec_uri);
+	}
+
+	if (rec_resourceType==Energistics::Etp::v12::Datatypes::Object::ResourceKind::DataObject) {
+		std::size_t pos = rec_contentType.find(";type=");
+		std::string type = rec_contentType.substr (pos+6);
+
+		if(type=="obj_TriangulatedSetRepresentation") {
 		}
-
-		auto leaf = new VtkEpcCommon();
-
-		leaf->setUuid(rec_uri);
-		leaf->setParentType(VtkEpcCommon::Resqml2Type::INTERPRETATION);
-
-		if (response_queue.size() > 0) {
-			leaf->setParent(response_queue.front()->getUuid());
-			leaf->setParentType(response_queue.front()->getType());
-
-			response_queue.pop_front();
+		if(type=="obj_Grid2dRepresentation") {
 		}
-		//		leaf->setName(rec_name);
-		leaf->setName(rec_uri);
-
-		if (rec_resourceType==Energistics::Etp::v12::Datatypes::Object::ResourceKind::UriProtocol) {
-			executed_next_command = false;
+		if(type=="obj_WellboreTrajectoryRepresentation") {
 		}
-
-		if (rec_resourceType==Energistics::Etp::v12::Datatypes::Object::ResourceKind::DataObject) {
-			std::size_t pos = rec_contentType.find(";type=");
-			std::string type = rec_contentType.substr (pos+6);
-
-			if(type=="obj_TriangulatedSetRepresentation") {
-			}
-			if(type=="obj_Grid2dRepresentation") {
-			}
-			if(type=="obj_WellboreTrajectoryRepresentation") {
-			}
-			if(type=="obj_PolylineSetRepresentation") {
-			}
-			if(type=="obj_IjkGridRepresentation") {
-				leaf->setType(VtkEpcCommon::Resqml2Type::IJK_GRID);
-
-				treeView.push_back(leaf);
-
-				if (rec_sourceCount>0) {
-					for(auto i=0; i < rec_sourceCount; ++i){
-						response_queue.push_back(leaf);
-					}
-					response_waiting += rec_sourceCount;
-
-					wait_queue_command.push_back("GetSources "+rec_uri);
-				}
-
-			}
-			if(type=="obj_SubRepresentation") {
-				leaf->setType(VtkEpcCommon::Resqml2Type::SUB_REP);
-
-				treeView.push_back(leaf);
-
-				if (rec_sourceCount>0) {
-					for(auto i=0; i < rec_sourceCount; ++i){
-						response_queue.push_back(leaf);
-					}
-					response_waiting += rec_sourceCount;
-
-					wait_queue_command.push_back("GetSources "+rec_uri);
-				}
-
-			}
-			if(type=="obj_ContinuousProperty" || type=="obj_DiscreteProperty") {
-				leaf->setType(VtkEpcCommon::Resqml2Type::PROPERTY);
-
-				treeView.push_back(leaf);
-			}
+		if(type=="obj_PolylineSetRepresentation") {
 		}
+		if(type=="obj_IjkGridRepresentation") {
+			leaf->setType(VtkEpcCommon::Resqml2Type::IJK_GRID);
 
-		if (rec_contentCount>0) {
-			for(auto i=0; i < rec_contentCount; ++i){
+			treeView.push_back(leaf);
+
+			if (rec_sourceCount>0) {
 				response_queue.push_back(leaf);
+				number_response_wait_queue.push_back(rec_sourceCount);
+				command_queue.push_back("GetSources "+rec_uri);
 			}
-			response_waiting += rec_contentCount;
 
-			wait_queue_command.push_back("GetContent "+rec_uri);
 		}
+		if(type=="obj_SubRepresentation") {
+			leaf->setType(VtkEpcCommon::Resqml2Type::SUB_REP);
 
-		cout << "response_waiting = " << response_waiting << "\n";
+			treeView.push_back(leaf);
 
-		if (response_waiting==0)
-		{
+			if (rec_sourceCount>0) {
+				response_queue.push_back(leaf);
+				number_response_wait_queue.push_back(rec_sourceCount);
+				command_queue.push_back("GetSources "+rec_uri);
+			}
 
+		}
+		if(type=="obj_ContinuousProperty" || type=="obj_DiscreteProperty") {
+			leaf->setType(VtkEpcCommon::Resqml2Type::PROPERTY);
+
+			treeView.push_back(leaf);
+		}
+	}
+
+	--number_response_wait_queue.front();
+	if(number_response_wait_queue.front() == 0) {
+		number_response_wait_queue.pop_front();
+		if (command_queue.size() > 0) {
+			response_queue.pop_front();
+			last_id = push_command(command_queue.front());
+			command_queue.pop_front();
+		}
+		else {
 			client_session->close();
 			client_session->epcDoc.close();
-			//while(!client_session->isClosed()) {cout << "wait close"<<endl;}
 			getPQEtpPanel()->setEtpTreeView(this->getTreeView());
 
 		}
 
-		this->launch_command();
 	}
 }
 
@@ -551,34 +554,12 @@ void VtkEtpDocument::receive_resources_representation(const std::string & rec_ur
 		const int32_t & rec_contentCount,
 		const int64_t & rec_lastChanged)
 {
-	cout << "VtkEtpDocument::receive_resources_representation" << endl;
-
-	//	if (all_sended && response_queue_command.size()==0)
-	//		all_received = true;
-
-
-	this->launch_command();
-}
-
-//----------------------------------------------------------------------------
-//void VtkEtpDocument::receive_resources_new_ask(const std::string & ask)
-//{
-//	cout << "VtkEtpDocument::receive_resources_new_ask" << endl;
-//	cout << ask << endl;
-//	response_queue_command.push_back(ask);
-//}
-
-//----------------------------------------------------------------------------
-void VtkEtpDocument::receive_resources_finished()
-{
-	//	cout << "VtkEtpDocument::receive_resources_finished" << endl;
-	//	response_queue_command.pop_front();
-	//	all_sended = true;
-	this->launch_command();
+//		cout << "VtkEtpDocument::receive_resources_representation" << endl;
 }
 
 //----------------------------------------------------------------------------
 vtkSmartPointer<vtkMultiBlockDataSet> VtkEtpDocument::getVisualization() const
 {
+	cout << "return ?" << endl;
 	return vtkOutput;
 }

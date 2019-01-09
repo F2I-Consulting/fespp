@@ -40,33 +40,50 @@ knowledge of the CeCILL license and that you accept its terms.
 #include <list>
 // include VTK
 #include <vtkSmartPointer.h>
-#include <vtkMultiBlockDataSet.h>
+
+#include "VTK/VtkResqml2MultiBlockDataSet.h"
 
 #include <etp/ProtocolHandlers/DirectedDiscoveryHandlers.h>
 
 #include "VTK/VtkEpcCommon.h"
 
+// include system
+#if (defined(_WIN32) && _MSC_VER >= 1600)
+#include <unordered_map>
+#else
+#include <tr1/unordered_map>
+#endif
+
 class EtpClientSession;
 
-class VtkEtpDocument
+class VtkIjkGridRepresentation;
+class VtkUnstructuredGridRepresentation;
+class VtkPartialRepresentation;
+class VtkGrid2DRepresentation;
+class VtkPolylineRepresentation;
+class VtkTriangulatedRepresentation;
+class VtkSetPatch;
+class VtkWellboreTrajectoryRepresentation;
+
+class VtkEtpDocument  : public VtkResqml2MultiBlockDataSet
 {
 
 public:
 
 	/**
-	* Constructor
-	*/
+	 * Constructor
+	 */
 	VtkEtpDocument (const std::string & ipAddress, const std::string & port, const VtkEpcCommon::modeVtkEpc & mode);
 	/**
-	* Destructor
-	*/
+	 * Destructor
+	 */
 	~VtkEtpDocument();
 
 	/**
-	* method : remove
-	* variable : std::string uuid
-	* delete uuid representation.
-	*/
+	 * method : remove
+	 * variable : std::string uuid
+	 * delete uuid representation.
+	 */
 	void remove(const std::string & uuid);
 
 	void receive_resources_tree(const std::string & rec_uri,
@@ -87,66 +104,89 @@ public:
 			const int32_t & rec_contentCount,
 			const int64_t & rec_lastChanged);
 
-	void add_command(const std::string & command);
-
-//	void receive_resources_new_ask(const std::string & ask);
+	//	void receive_resources_new_ask(const std::string & ask);
 	void receive_resources_finished();
 
 	void setClientSession(EtpClientSession * session) {client_session = session;}
 
-
-
 	void createTree();
+	void attach();
 
 	/**
-	* method : get TreeView
-	* variable :
-	*/
+	 * method : get TreeView
+	 * variable :
+	 */
 	std::vector<VtkEpcCommon*> getTreeView() const;
 
 	/**
-	* method : visualize
-	* variable : std::string uuid
-	* create uuid representation.
-	*/
+	 * method : visualize
+	 * variable : std::string uuid
+	 * create uuid representation.
+	 */
 	void visualize(const std::string & uuid);
 
 	/**
-	* method : remove
-	* variable : std::string uuid
-	* delete uuid representation.
-	*/
+	 * method : remove
+	 * variable : std::string uuid
+	 * delete uuid representation.
+	 */
 	void unvisualize(const std::string & uuid);
 
 	/**
-	* method : getOutput
-	* variable : --
-	* return the vtkMultiBlockDataSet for each epcdocument.
-	*/
+	 * method : getOutput
+	 * variable : --
+	 * return the vtkMultiBlockDataSet for each epcdocument.
+	 */
 	vtkSmartPointer<vtkMultiBlockDataSet> getVisualization() const;
+
+	long getAttachmentPropertyCount(const std::string & uuid, const VtkEpcCommon::FesppAttachmentProperty propertyUnit) ;
 
 protected:
 
 	VtkEpcCommon* firstLeafOfTreeView();
 private:
 
-	void push_command(const std::string & command);
-	void launch_command();
+	int64_t push_command(const std::string & command);
 
-	int response_waiting;
+	void createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, const VtkEpcCommon::Resqml2Type & resqmlType);
+
+	std::list<int> number_response_wait_queue;
 	std::list<VtkEpcCommon*> response_queue;
-	std::list<std::string> response_queue_command;
-	std::list<std::string> wait_queue_command;
-	EtpClientSession * client_session;
+	std::list<std::string> command_queue;
 
-	bool all_sended;
-	bool all_received;
+	EtpClientSession * client_session;
 
 	bool treeViewMode;
 	bool representationMode;
 
 	std::vector<VtkEpcCommon*> treeView; // Tree
 
-	vtkSmartPointer<vtkMultiBlockDataSet> vtkOutput;
+	int64_t idMessageCurrent;
+	int64_t last_id;
+
+#if _MSC_VER < 1600
+	//std::tr1::unordered_map<std::string, VtkFeature*> uuidToVtKFeature;
+	std::tr1::unordered_map<std::string, VtkGrid2DRepresentation*> uuidToVtkGrid2DRepresentation;
+	std::tr1::unordered_map<std::string, VtkPolylineRepresentation*> uuidToVtkPolylineRepresentation;
+	std::tr1::unordered_map<std::string, VtkTriangulatedRepresentation*> uuidToVtkTriangulatedRepresentation;
+	std::tr1::unordered_map<std::string, VtkSetPatch*> uuidToVtkSetPatch;
+	std::tr1::unordered_map<std::string, VtkWellboreTrajectoryRepresentation*> uuidToVtkWellboreTrajectoryRepresentation;
+	std::tr1::unordered_map<std::string, VtkIjkGridRepresentation*> uuidToVtkIjkGridRepresentation;
+	std::tr1::unordered_map<std::string, VtkUnstructuredGridRepresentation*> uuidToVtkUnstructuredGridRepresentation;
+	std::tr1::unordered_map<std::string, VtkPartialRepresentation*> uuidToVtkPartialRepresentation;
+#else
+	//std::unordered_map<std::string, VtkFeature*> uuidToVtKFeature;
+	std::unordered_map<std::string, VtkGrid2DRepresentation*> uuidToVtkGrid2DRepresentation;
+	std::unordered_map<std::string, VtkPolylineRepresentation*> uuidToVtkPolylineRepresentation;
+	std::unordered_map<std::string, VtkTriangulatedRepresentation*> uuidToVtkTriangulatedRepresentation;
+	std::unordered_map<std::string, VtkSetPatch*> uuidToVtkSetPatch;
+	std::unordered_map<std::string, VtkWellboreTrajectoryRepresentation*> uuidToVtkWellboreTrajectoryRepresentation;
+	std::unordered_map<std::string, VtkIjkGridRepresentation*> uuidToVtkIjkGridRepresentation;
+	std::unordered_map<std::string, VtkUnstructuredGridRepresentation*> uuidToVtkUnstructuredGridRepresentation;
+	std::unordered_map<std::string, VtkPartialRepresentation*> uuidToVtkPartialRepresentation;
+#endif
+
+	std::vector<std::string> attachUuids;
+
 };
 #endif
