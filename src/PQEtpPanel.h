@@ -32,76 +32,52 @@ The fact that you are presently reading this means that you have had
 knowledge of the CeCILL license and that you accept its terms.
 -----------------------------------------------------------------------*/
 
-#ifndef _PQToolsManager_H
-#define _PQToolsManager_H
+#ifndef _PQEtpPanel_h
+#define _PQEtpPanel_h
 
-#include <QObject>
+#include <etp/VtkEtpDocument.h>
+#include <QDockWidget>
+#include <QComboBox>
+#include <QLineEdit>
+#include <QTextBrowser>
+#include <QPushButton>
+#include <QStringList>
 
-class QAction;
 
-class pqPipelineSource;
-class pqServer;
-class pqView;
-class VtkEpcCommon;
 
-class PQToolsManager : public QObject
+class PQEtpPanel : public QDockWidget
 {
-	Q_OBJECT;
-
+	Q_OBJECT
+	typedef QDockWidget Superclass;
 public:
-	static PQToolsManager* instance();
+	PQEtpPanel(const QString &t, QWidget* p = 0, Qt::WindowFlags f=0):
+		Superclass(t, p, f) { this->constructor(); }
+	PQEtpPanel(QWidget *p=0, Qt::WindowFlags f=0):
+		Superclass(p, f) { this->constructor(); }
+	
+	void etpClientConnect(const std::string & ipAddress, const std::string & port);
+	void setConnectionStatus(bool connect) { etp_connect = connect; }
+	void setVtkEtpDocuement(VtkEtpDocument* vtkEtp) { etp_document = vtkEtp; }
 
-	~PQToolsManager();
 
-	// Get the action for the respective operation.
-	QAction* actionDataLoadManager();
-//	QAction* actionPanelSelection();
-	QAction* actionPanelMetadata();
-	QAction* actionEtpCommand();
+	void setEtpTreeView(std::vector<VtkEpcCommon*>);
 
-	pqPipelineSource* getFesppReader();
-
-	pqView* getFesppView();
-
-	QWidget* getMainWindow();
-	pqServer* getActiveServer();
-
-	bool existPipe();
-	void existPipe(bool value);
-
-	bool etp_existPipe();
-	void etp_existPipe(bool value);
-
-	void newFile(const std::string & fileName);
-
-public slots:
-	void showDataLoadManager();
-	void showPanelMetadata();
-	void showEtpConnectionManager();
-
-protected:
-	virtual pqPipelineSource* findPipelineSource(const char* SMName);
-	virtual pqView* findView(pqPipelineSource* source, int port, const QString& viewType);
-	void setVisibilityPanelSelection(bool visible);
-	void setVisibilityPanelMetadata(bool visible);
+signals:
+	void refreshTreeView(std::vector<VtkEpcCommon*>);
 
 protected slots:
-	/**
-	 * When a pipeline source is deleted
-	 */
-	void deletePipelineSource(pqPipelineSource*);
-
+	void handleButtonStatus();
+	void handleButtonRefresh();
+  
 private:
-	PQToolsManager(QObject* p);
+	void constructor();
 
-	class pqInternal;
-	pqInternal* Internal;
+	QPushButton *EtpSendButton;
+	QPushButton *EtpStatus_Button;
 
-	bool existEpcPipe;
-	bool existEtpPipe;
-	bool panelSelectionVisible;
-	bool panelMetadataVisible;
-	Q_DISABLE_COPY(PQToolsManager)
+	VtkEtpDocument* etp_document;
+
+	bool etp_connect;
 };
 
 #endif

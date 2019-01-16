@@ -3,7 +3,7 @@
 
 //----------------------------------------------------------------------------
 VtkEpcCommon::VtkEpcCommon() :
-uuid(""),parent(""),name(""),myType(VtkEpcCommon::UNKNOW),parentType(VtkEpcCommon::UNKNOW),timeIndex(0),timestamp(0)
+uuid(""),parent(""),name(""),myType(VtkEpcCommon::UNKNOW),parentType(VtkEpcCommon::UNKNOW),timeIndex(-1),timestamp(0)
 {
 }
 

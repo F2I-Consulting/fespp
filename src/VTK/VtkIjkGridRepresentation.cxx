@@ -276,7 +276,6 @@ int VtkIjkGridRepresentation::getInitKIndex(const std::string & uuid) const
 //----------------------------------------------------------------------------
 void VtkIjkGridRepresentation::createWithPoints(const vtkSmartPointer<vtkPoints> & pointsRepresentation, common::AbstractObject* obj)
 {
-
 	vtkOutput = vtkSmartPointer<vtkUnstructuredGrid>::New();
 	vtkOutput->SetPoints(pointsRepresentation);
 
@@ -368,6 +367,7 @@ void VtkIjkGridRepresentation::createWithPoints(const vtkSmartPointer<vtkPoints>
 						if (test[cellIndex])
 						{
 							vtkSmartPointer<vtkHexahedron> hex = vtkSmartPointer<vtkHexahedron>::New();
+
 							auto point0 = ijkGridRepresentation->getXyzPointIndexFromCellCorner(vtkICellIndex, vtkJCellIndex, vtkKCellIndex, 0);
 							hex->GetPointIds()->SetId(0, point0-translatePoint);
 

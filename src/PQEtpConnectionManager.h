@@ -32,77 +32,34 @@ The fact that you are presently reading this means that you have had
 knowledge of the CeCILL license and that you accept its terms.
 -----------------------------------------------------------------------*/
 
-#ifndef _PQToolsManager_H
-#define _PQToolsManager_H
+#ifndef _PQEtpConnectionManager_H
+#define _PQEtpConnectionManager_H
 
-#include <QObject>
+#include <QDialog>
 
-class QAction;
-
-class pqPipelineSource;
 class pqServer;
-class pqView;
-class VtkEpcCommon;
 
-class PQToolsManager : public QObject
+class PQEtpConnectionManager : public QDialog
 {
-	Q_OBJECT;
+  Q_OBJECT;
 
 public:
-	static PQToolsManager* instance();
-
-	~PQToolsManager();
-
-	// Get the action for the respective operation.
-	QAction* actionDataLoadManager();
-//	QAction* actionPanelSelection();
-	QAction* actionPanelMetadata();
-	QAction* actionEtpCommand();
-
-	pqPipelineSource* getFesppReader();
-
-	pqView* getFesppView();
-
-	QWidget* getMainWindow();
-	pqServer* getActiveServer();
-
-	bool existPipe();
-	void existPipe(bool value);
-
-	bool etp_existPipe();
-	void etp_existPipe(bool value);
-
-	void newFile(const std::string & fileName);
+  PQEtpConnectionManager(QWidget* p, Qt::WindowFlags f = 0);
+  ~PQEtpConnectionManager();
 
 public slots:
-	void showDataLoadManager();
-	void showPanelMetadata();
-	void showEtpConnectionManager();
+  virtual void checkInputValid();
+  virtual void setupPipeline();
 
 protected:
-	virtual pqPipelineSource* findPipelineSource(const char* SMName);
-	virtual pqView* findView(pqPipelineSource* source, int port, const QString& viewType);
-	void setVisibilityPanelSelection(bool visible);
-	void setVisibilityPanelMetadata(bool visible);
-
-protected slots:
-	/**
-	 * When a pipeline source is deleted
-	 */
-	void deletePipelineSource(pqPipelineSource*);
+  pqServer* Server;
 
 private:
-	PQToolsManager(QObject* p);
+  Q_DISABLE_COPY(PQEtpConnectionManager)
 
-	class pqInternal;
-	pqInternal* Internal;
+  class pqUI;
+  pqUI* ui;
 
-	bool existEpcPipe;
-	bool existEtpPipe;
-	bool panelSelectionVisible;
-	bool panelMetadataVisible;
-	Q_DISABLE_COPY(PQToolsManager)
 };
 
-#endif
-
+#endif 

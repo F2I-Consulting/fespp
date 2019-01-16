@@ -9,12 +9,14 @@
 #include <vtkOStreamWrapper.h>
 #include <vtkSetGet.h>
 #include <vtkSmartPointer.h>
-#include <VTK/VtkEpcDocument.h>
-#include <VTK/VtkEpcDocumentSet.h>
 #include <exception>
 #include <iostream>
 #include <utility>
 #include <algorithm>
+
+// Fespp include
+#include "VTK/VtkEpcDocument.h"
+#include "VTK/VtkEpcDocumentSet.h"
 
 #ifdef PARAVIEW_USE_MPI
 #include <vtkMPI.h>
@@ -22,14 +24,12 @@
 #include <vtkMPIController.h>
 #endif // PARAVIEW_USE_MPI
 
-
 #ifndef MPICH_IGNORE_CXX_SEEK
 #define MPICH_IGNORE_CXX_SEEK
 #endif
 
 vtkStandardNewMacro(Fespp);
 vtkCxxSetObjectMacro(Fespp, Controller, vtkMultiProcessController);
-
 
 //----------------------------------------------------------------------------
 Fespp::Fespp() :
@@ -58,33 +58,46 @@ FileName(nullptr), Controller(nullptr), loadedFile(false), idProc(0), nbProc(0),
 #endif
 
 	countTest = 0;
-	vtkEpcDocumentSet = nullptr;
+	epcDocumentSet = nullptr;
+	etpDocument = nullptr;
+	isEtpDocument=false;
+	isEpcDocument=false;
 }
 
 //----------------------------------------------------------------------------
 Fespp::~Fespp()
 {
-	SetFileName(nullptr); // Also delete FileName if not nullptr.
+	SetFileName(nullptr);
 	SetController(nullptr);
 	fileNameSet.clear();
 	uuidList->Delete();
-	idProc = 0;
-	nbProc = 0;
 
-	if (vtkEpcDocumentSet != nullptr) {
-		delete vtkEpcDocumentSet;
-		vtkEpcDocumentSet = nullptr;
+	if (epcDocumentSet != nullptr) {
+		delete epcDocumentSet;
+		epcDocumentSet = nullptr;
 	}
-	countTest = 0;
+
+	if (etpDocument != nullptr) {
+		delete etpDocument;
+		etpDocument = nullptr;
+	}
 }
 
 //----------------------------------------------------------------------------
 void Fespp::SetSubFileName(const char* name)
 {
-	if (std::find(fileNameSet.begin(), fileNameSet.end(),std::string(name))==fileNameSet.end())
-	{
-		fileNameSet.push_back(std::string(name));
-		openEpcDocument(name);
+	if(isEtpDocument) {
+		auto it = std::string(name).find(":");
+		if(it != std::string::npos) {
+			port = std::string(name).substr(it+1);
+			ip = std::string(name).substr(0,it);
+		}
+	}
+	if(isEpcDocument) {
+		if (std::find(fileNameSet.begin(), fileNameSet.end(),std::string(name))==fileNameSet.end())	{
+			fileNameSet.push_back(std::string(name));
+			this->OpenEpcDocument(name);
+		}
 	}
 }
 
@@ -96,13 +109,26 @@ int Fespp::GetuuidListArrayStatus(const char* uuid)
 //----------------------------------------------------------------------------
 void Fespp::SetUuidList(const char* uuid, int status)
 {
-	if (status != 0)
-	{
-		vtkEpcDocumentSet->visualize(std::string(uuid));
+	if (std::string(uuid)=="connect") {
+		if(etpDocument == nullptr) {
+			loadedFile = true;
+			etpDocument = new VtkEtpDocument(ip, port, VtkEpcCommon::Representation);
+		}
+	} else if (status != 0) {
+		if(isEpcDocument) {
+			epcDocumentSet->visualize(std::string(uuid));
+		}
+		if(isEtpDocument && etpDocument!=nullptr) {
+			etpDocument->visualize(std::string(uuid));
+		}
 	}
-	else
-	{
-		vtkEpcDocumentSet->unvisualize(std::string(uuid));
+	else {
+		if(isEpcDocument) {
+			epcDocumentSet->unvisualize(std::string(uuid));
+		}
+		if(isEtpDocument && etpDocument!=nullptr) {
+			etpDocument->unvisualize(std::string(uuid));
+		}
 	}
 
 	this->Modified();
@@ -166,35 +192,49 @@ int Fespp::RequestInformation(
 		vtkInformationVector **inputVector,
 		vtkInformationVector *outputVector)
 {
-	if ( !loadedFile )
-	{
+	if ( !loadedFile ) {
 		auto stringFileName = std::string(FileName);
 		auto lengthFileName = stringFileName.length();
 		auto extension = stringFileName.substr(lengthFileName -3, lengthFileName);
-
-		vtkEpcDocumentSet = new VtkEpcDocumentSet(idProc, nbProc, VtkEpcCommon::Both);
-		if (stringFileName != "EpcDocument")
-		{
-			if (extension=="epc")
-			{
-				openEpcDocument(FileName);
-				vtkEpcDocumentSet->visualizeFull();
-			}
+		if (stringFileName == "EpcDocument") {
+			isEpcDocument=true;
+			loadedFile = true;
+			epcDocumentSet = new VtkEpcDocumentSet(idProc, nbProc, VtkEpcCommon::Both);
+		}
+		if(stringFileName == "EtpDocument")	{
+			isEtpDocument=true;
+		}
+		if(extension=="epc") {
+			isEpcDocument=true;
+			loadedFile = true;
+			this->OpenEpcDocument(stringFileName);
+			epcDocumentSet->visualizeFull();
 		}
 	}
 	return 1;
 }
 
 //----------------------------------------------------------------------------
-void Fespp::openEpcDocument(const std::string & name)
+void Fespp::OpenEpcDocument(const std::string & name)
 {
-	vtkEpcDocumentSet->addEpcDocument(name);
-
-	loadedFile = true;
+	epcDocumentSet->addEpcDocument(name);
 }
 
 //----------------------------------------------------------------------------
 int Fespp::RequestData(vtkInformation *request,
+		vtkInformationVector **inputVector,
+		vtkInformationVector *outputVector)
+{
+	if (isEtpDocument)	{
+		RequestDataEtpDocument(request, inputVector, outputVector);
+	}
+	if (isEpcDocument)	{
+		RequestDataEpcDocument(request, inputVector, outputVector);
+	}
+	return 1;
+}
+//----------------------------------------------------------------------------
+void Fespp::RequestDataEpcDocument(vtkInformation *request,
 		vtkInformationVector **inputVector,
 		vtkInformationVector *outputVector)
 {
@@ -219,9 +259,7 @@ int Fespp::RequestData(vtkInformation *request,
 	if (loadedFile)
 	{
 		try{
-			auto outputSet = vtkEpcDocumentSet->getVisualization();
-
-			output->DeepCopy(vtkEpcDocumentSet->getVisualization());
+			output->DeepCopy(epcDocumentSet->getVisualization());
 		}
 		catch (const std::exception & e)
 		{
@@ -239,14 +277,25 @@ int Fespp::RequestData(vtkInformation *request,
 			cout << "Elapsed time is " << (t2-t1) << "\n";
 	}
 #endif
+}
 
-	return 1;
+//----------------------------------------------------------------------------
+void Fespp::RequestDataEtpDocument(vtkInformation *request,
+		vtkInformationVector **inputVector,
+		vtkInformationVector *outputVector)
+{
+	vtkInformation *outInfo = outputVector->GetInformationObject(0);
+	vtkMultiBlockDataSet *output = vtkMultiBlockDataSet::SafeDownCast(outInfo->Get(vtkMultiBlockDataSet::DATA_OBJECT()));
+	if (loadedFile)	{
+		output->DeepCopy(etpDocument->getVisualization());
+	}
+
 }
 
 //----------------------------------------------------------------------------
 void Fespp::PrintSelf(ostream& os, vtkIndent indent)
 {
-	cout<<"Fespp::PrintSelf\n";
+	cout<<"Fespp::PrintSelf" << endl;
 	Superclass::PrintSelf(os, indent);
-	os << indent << "fileName: " << (FileName ? FileName : "(none)") << "\n";
+	os << indent << "fileName: " << (FileName ? FileName : "(none)") << endl;
 }

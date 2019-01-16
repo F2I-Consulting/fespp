@@ -44,6 +44,8 @@ knowledge of the CeCILL license and that you accept its terms.
 
 #include <common/EpcDocument.h>
 
+#include "etp/VtkEtpDocument.h"
+
 class VtkEpcDocumentSet;
 class VtkEpcDocument;
 class vtkStdString;
@@ -58,6 +60,7 @@ class vtkDataArraySelection;
 class Fespp : public vtkMultiBlockDataSetAlgorithm
 {
 public:
+
 	static Fespp *New();
 	vtkTypeMacro(Fespp, vtkMultiBlockDataSetAlgorithm);
 	void PrintSelf(ostream& os, vtkIndent indent);
@@ -91,8 +94,11 @@ protected:
 
 	int RequestInformation(vtkInformation *, vtkInformationVector **, vtkInformationVector *);
 	int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *);
-					
-	void openEpcDocument(const std::string & fileName);
+
+	void RequestDataEpcDocument(vtkInformation *, vtkInformationVector **, vtkInformationVector *);
+	void RequestDataEtpDocument(vtkInformation *, vtkInformationVector **, vtkInformationVector *);
+
+	void OpenEpcDocument(const std::string &);
 
 	char*						FileName;
 	char*						SubFileName;
@@ -116,11 +122,17 @@ private:
 	MPI_Comm GetMPICommunicator();
 #endif // PARAVIEW_USE_MPI
 
-	VtkEpcDocumentSet* vtkEpcDocumentSet;
+	VtkEpcDocumentSet* epcDocumentSet;
+	VtkEtpDocument* etpDocument;
 
 	int countTest;
 
 	std::vector<std::string> fileNameSet;
+	std::string port;
+	std::string ip;
+
+	bool isEtpDocument;
+	bool isEpcDocument;
 };
 #endif
 

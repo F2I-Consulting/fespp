@@ -111,6 +111,10 @@ public:
 	*/
 	void deleteTreeView();
 
+	void connectPQEtpPanel();
+
+
+
 signals:
 	/**
 	* Signal emit when a item is selected
@@ -119,6 +123,7 @@ signals:
 
 protected slots:
 
+	void setEtpTreeView(std::vector<VtkEpcCommon*>);
 	/**
 	* When a line is selected.
 	*/
@@ -147,7 +152,9 @@ protected slots:
 
 private:
 
-	void populateTreeView(const std::string &  parent, VtkEpcCommon::Resqml2Type parentType, const std::string &  uuid, const std::string &  name, VtkEpcCommon::Resqml2Type type);
+	std::string searchSource(const std::string & uuid);
+
+	void populateTreeView(const std::string &  parent, VtkEpcCommon::Resqml2Type parentType, const std::string &  uuid, const std::string &  name, VtkEpcCommon::Resqml2Type type, const std::string & pipeOrigin);
 	void updateTimeSeries(const std::string & uuid, bool isnew);
 	void deleteUUID(QTreeWidgetItem *item);
 
@@ -194,6 +201,7 @@ private:
 	unsigned int indexFile;
 	std::vector<std::string> allFileName;
 	QMap<std::string, std::string> uuidToFilename;
+	QMap<std::string, std::string> uuidToPipeName;
 	QMap<std::string, std::vector<std::string> > filenameToUuids;
 	QMap<std::string, std::vector<std::string> > filenameToUuidsPartial;
 
@@ -223,7 +231,7 @@ private:
 
 	time_t save_time;
 
-	QVector<std::string> ts_displayed;
+	std::vector<std::string> ts_displayed;
 
 	VtkEpcDocumentSet* vtkEpcDocumentSet;
 

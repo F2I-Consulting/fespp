@@ -3,5 +3,6 @@
     <file>DataLoadManager.png</file>
     <file>PanelSelection.png</file>
     <file>PanelMetadata.png</file>
+    <file>EtpConnect.png</file>
   </qresource>
 </RCC>

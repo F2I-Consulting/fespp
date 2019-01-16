@@ -15,16 +15,8 @@
 VtkEpcDocumentSet::VtkEpcDocumentSet(const int & idProc, const int & maxProc, const VtkEpcCommon::modeVtkEpc & mode) :
 procRank(idProc), nbProc(maxProc)
 {
-	treeViewMode = false;
-	representationMode = false;
-	if (mode==VtkEpcCommon::Both || mode==VtkEpcCommon::TreeView)
-	{
-		treeViewMode=true;;
-	}
-	if (mode==VtkEpcCommon::Both || mode==VtkEpcCommon::Representation)
-	{
-		representationMode=true;
-	}
+	treeViewMode = (mode==VtkEpcCommon::Both || mode==VtkEpcCommon::TreeView);
+	representationMode = (mode==VtkEpcCommon::Both || mode==VtkEpcCommon::Representation);
 
 	vtkOutput = vtkSmartPointer<vtkMultiBlockDataSet>::New();
 	treeView = {};
@@ -35,13 +27,7 @@ VtkEpcDocumentSet::~VtkEpcDocumentSet()
 {
 	vtkEpcNameList.clear();
 	uuidToVtkEpc.clear();
-
-	for (std::vector< VtkEpcDocument* >::const_iterator it = vtkEpcList.begin() ; it != vtkEpcList.end(); ++it)
-	{
-		delete (*it);
-	}
 	vtkEpcList.clear();
-
 	treeView.clear(); // Tree
 
 	vtkOutput = NULL;
@@ -53,8 +39,7 @@ VtkEpcDocumentSet::~VtkEpcDocumentSet()
 //----------------------------------------------------------------------------
 void VtkEpcDocumentSet::visualize(const std::string & uuid)
 {
-	if(representationMode)
-	{
+	if(representationMode) {
 		uuidToVtkEpc[uuid]->visualize(uuid);
 	}
 }
@@ -62,13 +47,10 @@ void VtkEpcDocumentSet::visualize(const std::string & uuid)
 //----------------------------------------------------------------------------
 void VtkEpcDocumentSet::visualizeFull()
 {
-	if(representationMode)
-	{
-		for (auto &vtkEpcElem : vtkEpcList)
-		{
+	if(representationMode) {
+		for (auto &vtkEpcElem : vtkEpcList) {
 			auto uuidList = vtkEpcElem->getListUuid();
-			for (auto &uuidListElem : uuidList)
-			{
+			for (auto &uuidListElem : uuidList)	{
 				vtkEpcElem->visualize(uuidListElem);
 			}
 		}
@@ -78,8 +60,7 @@ void VtkEpcDocumentSet::visualizeFull()
 //----------------------------------------------------------------------------
 void VtkEpcDocumentSet::unvisualize(const std::string & uuid)
 {
-	if(representationMode)
-	{
+	if(representationMode) {
 		uuidToVtkEpc[uuid]->remove(uuid);
 	}
 }
@@ -99,31 +80,26 @@ VtkEpcCommon* VtkEpcDocumentSet::getInfoUuid(std::string uuid)
 //----------------------------------------------------------------------------
 vtkSmartPointer<vtkMultiBlockDataSet> VtkEpcDocumentSet::getVisualization() const
 {
-if(representationMode)
-{
-	vtkOutput->Initialize();
-	auto index = 0;
-	for (auto i=0; i < vtkEpcList.size(); ++i)
-	{
-		if(vtkEpcList[i]->getOutput()->GetNumberOfBlocks()>0)
-		{
-			vtkOutput->SetBlock(index, vtkEpcList[i]->getOutput());
-			vtkOutput->GetMetaData(index++)->Set(vtkCompositeDataSet::NAME(), vtkEpcList[i]->getFileName().c_str());
+	if(representationMode) {
+		vtkOutput->Initialize();
+		auto index = 0;
+		for (auto &vtkEpcElem : vtkEpcList) {
+			if(vtkEpcElem->getOutput()->GetNumberOfBlocks()>0) {
+				vtkOutput->SetBlock(index, vtkEpcElem->getOutput());
+				vtkOutput->GetMetaData(index++)->Set(vtkCompositeDataSet::NAME(), vtkEpcElem->getFileName().c_str());
+			}
 		}
 	}
-}
 	return vtkOutput;
 }
 
 //----------------------------------------------------------------------------
 void VtkEpcDocumentSet::addEpcDocument(const std::string & fileName)
 {
-	if (std::find(vtkEpcNameList.begin(), vtkEpcNameList.end(),fileName)==vtkEpcNameList.end())
-	{
+	if (std::find(vtkEpcNameList.begin(), vtkEpcNameList.end(),fileName)==vtkEpcNameList.end())	{
 		auto vtkEpc = new VtkEpcDocument(fileName, procRank, nbProc, this);
 		auto uuidList = vtkEpc->getListUuid();
-		for (auto &uuidListElem : uuidList)
-		{
+		for (auto &uuidListElem : uuidList) {
 			uuidToVtkEpc[uuidListElem] = vtkEpc;
 		}
 		vtkEpcList.push_back(vtkEpc);

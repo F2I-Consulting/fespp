@@ -1,9 +1,10 @@
 #include "PQToolsManager.h"
 
 #include "PQDataLoadManager.h"
+#include "PQEtpConnectionManager.h"
 #include "PQSelectionPanel.h"
+#include "PQEtpPanel.h"
 #include "PQMetaDataPanel.h"
-
 
 #include "pqActiveObjects.h"
 #include "pqApplicationCore.h"
@@ -13,6 +14,7 @@
 #include "pqPipelineSource.h"
 #include "pqPropertiesPanel.h"
 
+#include "VTK/VtkEpcCommon.h"
 
 #include <QMainWindow>
 #include <QPointer>
@@ -23,7 +25,6 @@ namespace
 {
 pqPropertiesPanel* getpqPropertiesPanel()
 {
-	// get multi-block inspector panel
 	pqPropertiesPanel *panel = 0;
 	foreach(QWidget *widget, qApp->topLevelWidgets())
 	{
@@ -39,7 +40,6 @@ pqPropertiesPanel* getpqPropertiesPanel()
 
 PQSelectionPanel* getPQSelectionPanel()
 {
-	// get multi-block inspector panel
 	PQSelectionPanel *panel = 0;
 	foreach(QWidget *widget, qApp->topLevelWidgets())
 	{
@@ -55,7 +55,6 @@ PQSelectionPanel* getPQSelectionPanel()
 
 PQMetaDataPanel* getPQMetadataPanel()
 {
-	// get multi-block inspector panel
 	PQMetaDataPanel *panel = 0;
 	foreach(QWidget *widget, qApp->topLevelWidgets())
 	{
@@ -113,16 +112,17 @@ PQToolsManager::PQToolsManager(QObject* p)
 	this->Internal->Actions.setupUi(this->Internal->ActionPlaceholder);
 
 	this->existEpcPipe = false;
+	this->existEtpPipe = false;
 	this->panelSelectionVisible = false;
 	this->panelMetadataVisible = false;
 
 	QObject::connect(this->actionDataLoadManager(), SIGNAL(triggered(bool)), this, SLOT(showDataLoadManager()));
 	//QObject::connect(this->actionPanelSelection(), SIGNAL(triggered(bool)), this, SLOT(showPanelSelection()));
 	QObject::connect(this->actionPanelMetadata(), SIGNAL(triggered(bool)), this, SLOT(showPanelMetadata()));
+	QObject::connect(this->actionEtpCommand(), SIGNAL(triggered(bool)), this, SLOT(showEtpConnectionManager()));
 
 	this->actionPanelMetadata()->setEnabled(false);
 	//	this->actionPanelSelection()->setEnabled(false);
-
 }
 
 PQToolsManager::~PQToolsManager()
@@ -152,9 +152,24 @@ QAction* PQToolsManager::actionPanelMetadata()
 }
 
 //-----------------------------------------------------------------------------
+QAction* PQToolsManager::actionEtpCommand()
+{
+	return this->Internal->Actions.actionEtpCommand;
+}
+
+//-----------------------------------------------------------------------------
 void PQToolsManager::showDataLoadManager()
 {
 	PQDataLoadManager* dialog = new PQDataLoadManager(this->getMainWindow());
+	dialog->setAttribute(Qt::WA_DeleteOnClose, true);
+
+	dialog->show();
+}
+
+//-----------------------------------------------------------------------------
+void PQToolsManager::showEtpConnectionManager()
+{
+	PQEtpConnectionManager* dialog = new PQEtpConnectionManager(this->getMainWindow());
 	dialog->setAttribute(Qt::WA_DeleteOnClose, true);
 
 	dialog->show();
@@ -271,13 +286,25 @@ pqView* PQToolsManager::findView(pqPipelineSource* source, int port, const QStri
 //-----------------------------------------------------------------------------
 bool PQToolsManager::existPipe()
 {
-	return this->existEpcPipe;
+	return this->existEpcPipe || this->existEtpPipe;
 }
 
 //-----------------------------------------------------------------------------
 void PQToolsManager::existPipe(bool value)
 {
 	this->existEpcPipe = value;
+}
+
+//-----------------------------------------------------------------------------
+bool PQToolsManager::etp_existPipe()
+{
+	return this->existEtpPipe;
+}
+
+//-----------------------------------------------------------------------------
+void PQToolsManager::etp_existPipe(bool value)
+{
+	this->existEtpPipe = value;
 }
 
 //----------------------------------------------------------------------------
@@ -290,6 +317,12 @@ void PQToolsManager::deletePipelineSource(pqPipelineSource* pipe)
 		{
 			getPQSelectionPanel()->deleteTreeView();
 			this->existEpcPipe = false;
+		}
+		source = findPipelineSource("EtpDocument");
+		if (!source)
+		{
+			getPQSelectionPanel()->deleteTreeView();
+			this->existEtpPipe = false;
 		}
 	}
 	this->actionPanelMetadata()->setEnabled(false);
@@ -307,3 +340,4 @@ void PQToolsManager::newFile(const std::string & fileName)
 	connect(getpqPropertiesPanel(), SIGNAL(deleteRequested(pqPipelineSource*)), this, SLOT(deletePipelineSource(pqPipelineSource*)));
 
 }
+

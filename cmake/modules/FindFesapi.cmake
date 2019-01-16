@@ -3,14 +3,11 @@
 
 IF(NOT FESAPI_FOUND)
 
-	find_path(FESAPI_INCLUDE NAMES common/EpcDocument.h
+	find_path(FESAPI_INCLUDE NAMES ${FESAPI_DIR}/include/common/EpcDocument.h
  		PATHS	${FESAPI_DIR}/include/)
-
-	find_library(FESAPI_LIBRARY NAMES FesapiCpp.0.11.1.1 FesapiCpp
+	
+	find_library(FESAPI_LIBRARY NAMES ${FESAPI_DIR}/lib/libFesapiCppUnderDev.so 
  		PATHS	${FESAPI_DIR}/lib/)
-	if(NOT FESAPI_LIBRARY)
-		message(FATAL_ERROR "FESAPI library not found")
-	endif()
 
 	mark_as_advanced(FESAPI_INCLUDE FESAPI_LIBRARY)
 
