@@ -65,53 +65,31 @@
 
 #include "VTK/VtkEpcDocumentSet.h"
 
-namespace
-{
+namespace {
 
-PQEtpPanel* getPQEtpPanel()
-{
-	PQEtpPanel *panel = 0;
-	foreach(QWidget *widget, qApp->topLevelWidgets())
-	{
-		panel = widget->findChild<PQEtpPanel *>();
+	PQEtpPanel* getPQEtpPanel() {
+		PQEtpPanel *panel = 0;
+		foreach(QWidget *widget, qApp->topLevelWidgets()) {
+			panel = widget->findChild<PQEtpPanel *>();
 
-		if (panel)
-		{
-			break;
+			if (panel) {
+				break;
+			}
 		}
+		return panel;
 	}
-	return panel;
-}
 
-PQToolsManager* getPQToolsManager()
-{
-	PQToolsManager *panel = 0;
-	foreach(QWidget *widget, qApp->topLevelWidgets())
-	{
-		panel = widget->findChild<PQToolsManager *>();
+	pqPropertiesPanel* getpqPropertiesPanel() {
+		pqPropertiesPanel *panel = 0;
+		foreach(QWidget *widget, qApp->topLevelWidgets()) {
+			panel = widget->findChild<pqPropertiesPanel *>();
 
-		if (panel)
-		{
-			break;
+			if (panel) {
+				break;
+			}
 		}
+		return panel;
 	}
-	return panel;
-}
-
-pqPropertiesPanel* getpqPropertiesPanel()
-{
-	pqPropertiesPanel *panel = 0;
-	foreach(QWidget *widget, qApp->topLevelWidgets())
-	{
-		panel = widget->findChild<pqPropertiesPanel *>();
-
-		if (panel)
-		{
-			break;
-		}
-	}
-	return panel;
-}
 
 }
 
@@ -215,16 +193,14 @@ void PQSelectionPanel::constructor()
 void PQSelectionPanel::clicSelection(QTreeWidgetItem* item, int column)
 {
 	auto pickedBlocks = itemUuid[item];
-	if (pickedBlocks!="root")
-	{
-		pqPipelineSource * source = findPipelineSource("EpcDocument");
-		if (source)
-		{
+	if (pickedBlocks!="root") {
+		auto pipe_name = searchSource(pickedBlocks);
+		pqPipelineSource * source = findPipelineSource(pipe_name.c_str());
+		if (source) {
 			pqActiveObjects *activeObjects = &pqActiveObjects::instance();
 			activeObjects->setActiveSource(source);
 		}
-		if (!(uuidToFilename[pickedBlocks] == pickedBlocks))
-		{
+		if (!(uuidToFilename[pickedBlocks] == pickedBlocks)) {
 			emit selectionName(uuidToFilename[pickedBlocks], pickedBlocks, pcksave[uuidToFilename[pickedBlocks]]);
 		}
 	}
@@ -235,17 +211,13 @@ void PQSelectionPanel::onItemCheckedUnchecked(QTreeWidgetItem * item, int column
 {
 	auto uuid = itemUuid[item];
 
-	if (!(uuid == ""))
-	{
-		if (item->checkState(0) == Qt::Checked)
-		{
+	if (!(uuid == ""))	{
+		if (item->checkState(0) == Qt::Checked)	{
 			this->loadUuid(uuid);
 		}
-		else
-		{
+		else {
 			// Property exist
-			if (uuidItem[uuid]->childCount() > 0 && mapUuidWithProperty[uuid] != "")
-			{
+			if (uuidItem[uuid]->childCount() > 0 && mapUuidWithProperty[uuid] != "") {
 				auto uuidProperty = mapUuidWithProperty[uuid];
 				this->removeUuid(uuidProperty);
 
@@ -253,53 +225,51 @@ void PQSelectionPanel::onItemCheckedUnchecked(QTreeWidgetItem * item, int column
 				mapUuidParentButtonInvisible[uuid]->setChecked(true);
 				uuidItem[uuid]->setData(0, Qt::CheckStateRole, QVariant());
 			}
-
 			this->removeUuid(uuid);
-
 		}
 	}
-
 }
 
 //----------------------------------------------------------------------------
 void PQSelectionPanel::deleteTreeView()
 {
-	treeWidget->clear();
+		treeWidget->clear();
 
-	indexFile = 0;
-	radioButtonCount = 0;
-	allFileName.clear();
-	uuidToFilename.clear();
-	filenameToUuids.clear();
-	filenameToUuidsPartial.clear();
+		indexFile = 0;
+		radioButtonCount = 0;
+		allFileName.clear();
+		uuidToFilename.clear();
+		filenameToUuids.clear();
+		filenameToUuidsPartial.clear();
 
-	uuidItem.clear();
-	itemUuid.clear();
-	uuidParentItem.clear();
+		uuidItem.clear();
+		itemUuid.clear();
+		uuidParentItem.clear();
 
-	mapUuidProperty.clear();
-	mapUuidWithProperty.clear();
+		mapUuidProperty.clear();
+		mapUuidWithProperty.clear();
 
-	displayUuid.clear();
+		displayUuid.clear();
 
-	radioButton_to_id.clear();
+		radioButton_to_id.clear();
 
-	mapUuidParentButtonInvisible.clear();
+		mapUuidParentButtonInvisible.clear();
 
-	pcksave.clear();
-	uuidParent_to_groupButton.clear();
-	radioButton_to_uuid.clear();
+		pcksave.clear();
+		uuidParent_to_groupButton.clear();
+		radioButton_to_uuid.clear();
 
-	delete vtkEpcDocumentSet;
-	vtkEpcDocumentSet = new VtkEpcDocumentSet(0, 0, VtkEpcCommon::TreeView);
+		if (vtkEpcDocumentSet){
+			delete vtkEpcDocumentSet;
+			vtkEpcDocumentSet = new VtkEpcDocumentSet(0, 0, VtkEpcCommon::TreeView);
+		}
 }
 
 //----------------------------------------------------------------------------
 void PQSelectionPanel::checkedRadioButton(int rbNo)
 {
 	emit button_Time_Pause->released();
-	if (radioButton_to_id.contains(rbNo))
-	{
+	if (radioButton_to_id.contains(rbNo)) {
 		std::string uuid = radioButton_to_id[rbNo];
 
 		std::string uuidParent = itemUuid[uuidParentItem[uuid]];
@@ -307,10 +277,8 @@ void PQSelectionPanel::checkedRadioButton(int rbNo)
 
 		std::string uuidOld = mapUuidWithProperty[uuidParent];
 
-		if (!(uuidOld == ""))
-		{
-			if (ts_timestamp_to_uuid.count(uuidOld) > 0) // time series
-			{
+		if (!(uuidOld == "")) {
+			if (ts_timestamp_to_uuid.count(uuidOld) > 0) {
 				QDateTime date = QDateTime::fromString(time_series->currentText());
 				time_t time = date.toTime_t();
 
@@ -318,16 +286,12 @@ void PQSelectionPanel::checkedRadioButton(int rbNo)
 
 				this->updateTimeSeries(uuidOld, false);
 			}
-			else // basic property
-			{
+			else {
 				this->removeUuid(uuidOld);
 			}
 		}
-
 		mapUuidWithProperty[uuidParent] = uuid;
-
-		if (ts_timestamp_to_uuid.count(uuid) > 0) // time series
-		{
+		if (ts_timestamp_to_uuid.count(uuid) > 0) {
 			this->updateTimeSeries(uuid, true);
 
 			QDateTime date = QDateTime::fromString(time_series->currentText());
@@ -335,8 +299,7 @@ void PQSelectionPanel::checkedRadioButton(int rbNo)
 
 			this->loadUuid(ts_timestamp_to_uuid[uuid][time]);
 		}
-		else // basic property
-		{
+		else {
 			this->loadUuid(uuid);
 		}
 	}
@@ -346,13 +309,11 @@ void PQSelectionPanel::checkedRadioButton(int rbNo)
 void PQSelectionPanel::handleButtonAfter()
 {
 	auto idx = time_series->currentIndex() ;
-	if (++idx < time_series->count() )
-	{
+	if (++idx < time_series->count() ) {
 		// change the TimeStamp
 		time_series->setCurrentIndex(idx);
 	}
-	else
-	{
+	else {
 		time_Changed = false;
 	}
 }
@@ -361,8 +322,7 @@ void PQSelectionPanel::handleButtonAfter()
 void PQSelectionPanel::handleButtonBefore()
 {
 	auto idx = time_series->currentIndex() ;
-	if (idx != 0)
-	{
+	if (idx != 0) {
 		--idx;
 		// change the TimeStamp
 		time_series->setCurrentIndex(idx);
@@ -392,12 +352,10 @@ void PQSelectionPanel::handleButtonStop()
 //----------------------------------------------------------------------------
 void PQSelectionPanel::updateTimer()
 {
-	if (time_Changed)
-	{
+	if (time_Changed) {
 		emit button_Time_After->released();
 	}
-	else
-	{
+	else {
 		timer->stop();
 	}
 }
@@ -410,22 +368,17 @@ void PQSelectionPanel::timeChangedComboBox(int)
 	QDateTime date = QDateTime::fromString(time_series->currentText());
 	time_t time = date.toTime_t();
 
-	if (time != save_time)
-	{
+	if (time != save_time) {
 		// remove old time properties
-		if (save_time != 0)
-		{
-			for (auto &ts :ts_displayed)
-			{
+		if (save_time != 0)	{
+			for (auto &ts :ts_displayed) {
 				this->removeUuid(ts_timestamp_to_uuid[ts][save_time]);
 				this->loadUuid(ts_timestamp_to_uuid[ts][time]);
 			}
 		}
-		else
-		{
+		else {
 			// load time properties
-			for (auto &ts :ts_displayed)
-			{
+			for (auto &ts :ts_displayed) {
 				this->loadUuid(ts_timestamp_to_uuid[ts][time]);
 			}
 		}
@@ -442,29 +395,25 @@ void PQSelectionPanel::sliderMoved(int value)
 //----------------------------------------------------------------------------
 void PQSelectionPanel::updateTimeSeries(const std::string & uuid, bool newUuid)
 {
-	if (newUuid)
-	{
+	if (newUuid) {
 		ts_displayed.push_back(uuid);
-	}else
-	{
+	}
+	else {
 		auto index_to_delete = std::find(ts_displayed.begin(), ts_displayed.end(), uuid);
-//		auto index_to_delete = ts_displayed.indexOf(uuid);
 		ts_displayed.erase(index_to_delete);
 	}
 
 	QList<time_t> list;
 	QStringList large_list;
 
-	for (const auto &uuid_displayed : ts_displayed)
-	{
+	for (const auto &uuid_displayed : ts_displayed) 	{
 		foreach(time_t t, ts_timestamp_to_uuid[uuid_displayed].keys())
 			list << t;
 	}
 
 	qSort(list.begin(), list.end());
 
-	for (auto &it : list)
-	{
+	for (auto &it : list) {
 		QDateTime dt;
 		dt.setTime_t(it);
 		large_list << dt.toString();
@@ -486,8 +435,7 @@ void PQSelectionPanel::updateTimeSeries(const std::string & uuid, bool newUuid)
 //----------------------------------------------------------------------------
 void PQSelectionPanel::addFileName(const std::string & fileName)
 {
-	if (std::find(allFileName.begin(), allFileName.end(),fileName)==allFileName.end())
-	{
+	if (std::find(allFileName.begin(), allFileName.end(),fileName)==allFileName.end())	{
 		vtkEpcDocumentSet->addEpcDocument(fileName);
 		allFileName.push_back(fileName);
 		uuidToFilename[fileName] = fileName;
@@ -495,17 +443,14 @@ void PQSelectionPanel::addFileName(const std::string & fileName)
 
 		QMap<std::string, std::string> name_to_uuid;
 		auto treeView = vtkEpcDocumentSet->getTreeView();
-		for (auto &feuille : treeView)
-		{
+		for (auto &feuille : treeView) {
 
-			if (feuille->getTimeIndex()<0 )
-			{
-				populateTreeView(feuille->getParent(), feuille->getParentType(), feuille->getUuid(), feuille->getName(), feuille->getType());
-			}else
-			{
-				if(name_to_uuid.count(feuille->getName())<=0)
-				{
-					populateTreeView(feuille->getParent(), feuille->getParentType(), feuille->getUuid(), feuille->getName(), feuille->getType());
+			if (feuille->getTimeIndex()<0 ) {
+				populateTreeView(feuille->getParent(), feuille->getParentType(), feuille->getUuid(), feuille->getName(), feuille->getType(), "EpcDocument");
+			}
+			else {
+				if(name_to_uuid.count(feuille->getName())<=0) {
+					populateTreeView(feuille->getParent(), feuille->getParentType(), feuille->getUuid(), feuille->getName(), feuille->getType(), "EpcDocument");
 					name_to_uuid[feuille->getName()]=feuille->getUuid();
 				}
 
@@ -515,18 +460,15 @@ void PQSelectionPanel::addFileName(const std::string & fileName)
 	}
 }
 
-void PQSelectionPanel::populateTreeView(const std::string & parent, VtkEpcCommon::Resqml2Type parentType, const std::string & uuid, const std::string &  name, VtkEpcCommon::Resqml2Type type)
+void PQSelectionPanel::populateTreeView(const std::string & parent, VtkEpcCommon::Resqml2Type parentType, const std::string & uuid, const std::string &  name, VtkEpcCommon::Resqml2Type type, const std::string & origin)
 {
-	if (uuid != "")
-	{
-		if (!uuidItem[uuid]){
-			if (parentType==VtkEpcCommon::Resqml2Type::PARTIAL && !uuidItem[parent])
-			{
+ 	if (uuid != "")	{
+		if (!uuidItem[uuid]) {
+			uuidToPipeName[uuid]=origin;
+			if (parentType==VtkEpcCommon::Resqml2Type::PARTIAL && !uuidItem[parent]){
 			}
-			else
-			{
-				if (!uuidItem[parent])
-				{
+			else {
+				if (!uuidItem[parent]) {
 					QTreeWidgetItem *treeItem = new QTreeWidgetItem(treeWidget);
 
 					treeItem->setExpanded(true);
@@ -537,51 +479,41 @@ void PQSelectionPanel::populateTreeView(const std::string & parent, VtkEpcCommon
 				}
 
 				QIcon icon;
-				if (type==VtkEpcCommon::PROPERTY || type==VtkEpcCommon::TIME_SERIES)
-				{
+				if (type==VtkEpcCommon::PROPERTY || type==VtkEpcCommon::TIME_SERIES) {
 					addTreeProperty(uuidItem[parent], parent, name, uuid);
 				}
-				else
-				{
-					switch (type)
-					{
-					case VtkEpcCommon::Resqml2Type::GRID_2D:
-					{
-						icon.addFile(QString::fromUtf8(":Grid2D.png"), QSize(), QIcon::Normal, QIcon::Off);
-						break;
-					}
-					case VtkEpcCommon::Resqml2Type::POLYLINE_SET:
-					{
-						icon.addFile(QString::fromUtf8(":Polyline.png"), QSize(), QIcon::Normal, QIcon::Off);
-						break;
-					}
-					case VtkEpcCommon::Resqml2Type::TRIANGULATED_SET:
-					{
-						icon.addFile(QString::fromUtf8(":Triangulated.png"), QSize(), QIcon::Normal, QIcon::Off);
-						break;
-					}
-					case VtkEpcCommon::Resqml2Type::WELL_TRAJ:
-					{
-						icon.addFile(QString::fromUtf8(":WellTraj.png"), QSize(), QIcon::Normal, QIcon::Off);
-						break;
-					}
-					case VtkEpcCommon::Resqml2Type::IJK_GRID:
-					{
-						icon.addFile(QString::fromUtf8(":IjkGrid.png"), QSize(), QIcon::Normal, QIcon::Off);
-						break;
-					}
-					case VtkEpcCommon::Resqml2Type::UNSTRUC_GRID:
-					{
-						icon.addFile(QString::fromUtf8(":UnstructuredGrid.png"), QSize(), QIcon::Normal, QIcon::Off);
-						break;
-					}
-					case VtkEpcCommon::Resqml2Type::SUB_REP:
-					{
-						icon.addFile(QString::fromUtf8(":SubRepresentation.png"), QSize(), QIcon::Normal, QIcon::Off);
-						break;
-					}
-					default:
-						break;
+				else {
+					switch (type) {
+						case VtkEpcCommon::Resqml2Type::GRID_2D: {
+							icon.addFile(QString::fromUtf8(":Grid2D.png"), QSize(), QIcon::Normal, QIcon::Off);
+							break;
+						}
+						case VtkEpcCommon::Resqml2Type::POLYLINE_SET: {
+							icon.addFile(QString::fromUtf8(":Polyline.png"), QSize(), QIcon::Normal, QIcon::Off);
+							break;
+						}
+						case VtkEpcCommon::Resqml2Type::TRIANGULATED_SET: {
+							icon.addFile(QString::fromUtf8(":Triangulated.png"), QSize(), QIcon::Normal, QIcon::Off);
+							break;
+						}
+						case VtkEpcCommon::Resqml2Type::WELL_TRAJ: {
+							icon.addFile(QString::fromUtf8(":WellTraj.png"), QSize(), QIcon::Normal, QIcon::Off);
+							break;
+						}
+						case VtkEpcCommon::Resqml2Type::IJK_GRID: {
+							icon.addFile(QString::fromUtf8(":IjkGrid.png"), QSize(), QIcon::Normal, QIcon::Off);
+							break;
+						}
+						case VtkEpcCommon::Resqml2Type::UNSTRUC_GRID: {
+							icon.addFile(QString::fromUtf8(":UnstructuredGrid.png"), QSize(), QIcon::Normal, QIcon::Off);
+							break;
+						}
+						case VtkEpcCommon::Resqml2Type::SUB_REP: {
+							icon.addFile(QString::fromUtf8(":SubRepresentation.png"), QSize(), QIcon::Normal, QIcon::Off);
+							break;
+						}
+						default:
+							break;
 					}
 
 					QTreeWidgetItem *treeItem = new QTreeWidgetItem();
@@ -608,8 +540,7 @@ void PQSelectionPanel::populateTreeView(const std::string & parent, VtkEpcCommon
 void PQSelectionPanel::addTreeProperty(QTreeWidgetItem *parent, const std::string & parentUuid,const std::string & name, const std::string & uuid)
 {
 	QButtonGroup *buttonGroup;
-	if (uuidParent_to_groupButton.count(parentUuid) < 1)
-	{
+	if (uuidParent_to_groupButton.count(parentUuid) < 1) {
 		buttonGroup = new QButtonGroup();
 		buttonGroup->setExclusive(true);
 		QRadioButton *radioButtonInvisible = new QRadioButton("invisible");
@@ -617,8 +548,7 @@ void PQSelectionPanel::addTreeProperty(QTreeWidgetItem *parent, const std::strin
 		mapUuidParentButtonInvisible[parentUuid] = radioButtonInvisible;
 		connect(buttonGroup, SIGNAL(buttonClicked(int)), this, SLOT(checkedRadioButton(int)));
 	}
-	else
-	{
+	else {
 		buttonGroup = uuidParent_to_groupButton[itemUuid[parent]];
 	}
 	QTreeWidgetItem *treeItem = new QTreeWidgetItem();
@@ -642,8 +572,7 @@ void PQSelectionPanel::addTreeProperty(QTreeWidgetItem *parent, const std::strin
 //****************************************************************************
 void PQSelectionPanel::deleteUUID(QTreeWidgetItem *item)
 {
-	for (int o = 0; item->childCount(); o++)
-	{
+	for (int o = 0; item->childCount(); o++) {
 		deleteUUID(item->child(0));
 	}
 	delete item;
@@ -652,24 +581,22 @@ void PQSelectionPanel::deleteUUID(QTreeWidgetItem *item)
 //----------------------------------------------------------------------------
 std::string PQSelectionPanel::searchSource(const std::string & uuid)
 {
-	return "EtpDocument";
+	return uuidToPipeName[uuid];
 }
 
 //----------------------------------------------------------------------------
 void PQSelectionPanel::loadUuid(const std::string & uuid)
 {
-	auto sourceName = searchSource(uuid);
-	pqPipelineSource * source = findPipelineSource(sourceName.c_str());
-	if (source)
-	{
+	auto pipe_name = searchSource(uuid);
+	pqPipelineSource * source = findPipelineSource(pipe_name.c_str());
+	if (source)	{
 		pqActiveObjects *activeObjects = &pqActiveObjects::instance();
 		activeObjects->setActiveSource(source);
 
 		PQToolsManager* manager = PQToolsManager::instance();
 		auto fesppReader = manager->getFesppReader();
 
-		if (fesppReader)
-		{
+		if (fesppReader) {
 			pqActiveObjects *activeObjects = &pqActiveObjects::instance();
 			activeObjects->setActiveSource(fesppReader);
 
@@ -689,17 +616,16 @@ void PQSelectionPanel::loadUuid(const std::string & uuid)
 //----------------------------------------------------------------------------
 void PQSelectionPanel::removeUuid(const std::string & uuid)
 {
-	pqPipelineSource * source = findPipelineSource("EpcDocument");
-	if (source)
-	{
+	auto sourceName = searchSource(uuid);
+	pqPipelineSource * source = findPipelineSource(sourceName.c_str());
+	if (source)	{
 		pqActiveObjects *activeObjects = &pqActiveObjects::instance();
 		activeObjects->setActiveSource(source);
 
 		PQToolsManager* manager = PQToolsManager::instance();
 		auto fesppReader = manager->getFesppReader();
 
-		if (fesppReader)
-		{
+		if (fesppReader) {
 			pqActiveObjects *activeObjects = &pqActiveObjects::instance();
 			activeObjects->setActiveSource(fesppReader);
 
@@ -727,8 +653,7 @@ pqPipelineSource * PQSelectionPanel::findPipelineSource(const char *SMName)
 	pqServerManagerModel *smModel = core->getServerManagerModel();
 
 	QList<pqPipelineSource*> sources = smModel->findItems<pqPipelineSource*>(this->getActiveServer());
-	foreach(pqPipelineSource *s, sources)
-	{
+	foreach(pqPipelineSource *s, sources) {
 		if (strcmp(s->getSMName().toStdString().c_str(), SMName) == 0) return s;
 	}
 	return nullptr;
@@ -748,8 +673,7 @@ pqServer * PQSelectionPanel::getActiveServer()
 void PQSelectionPanel::uuidKO(const std::string & uuid)
 {
 	uuidItem[uuid]->setDisabled(true);
-	for (int idx_child = 0; idx_child < uuidItem[uuid]->childCount(); ++idx_child)
-	{
+	for (int idx_child = 0; idx_child < uuidItem[uuid]->childCount(); ++idx_child) {
 		uuidItem[uuid]->child(idx_child)->setHidden(true);
 	}
 }
@@ -765,10 +689,11 @@ void PQSelectionPanel::setEtpTreeView(std::vector<VtkEpcCommon*> treeView)
 	QMap<std::string, std::string> name_to_uuid;
 	for (auto &feuille : treeView) {
 		if (feuille->getTimeIndex()<0 ) {
-			populateTreeView(feuille->getParent(), feuille->getParentType(), feuille->getUuid(), feuille->getName(), feuille->getType());
-		}else {
+			populateTreeView(feuille->getParent(), feuille->getParentType(), feuille->getUuid(), feuille->getName(), feuille->getType(), "EtpDocument");
+		}
+		else  {
 			if(name_to_uuid.count(feuille->getName())<=0) {
-				populateTreeView(feuille->getParent(), feuille->getParentType(), feuille->getUuid(), feuille->getName(), feuille->getType());
+				populateTreeView(feuille->getParent(), feuille->getParentType(), feuille->getUuid(), feuille->getName(), feuille->getType(), "EtpDocument");
 				name_to_uuid[feuille->getName()]=feuille->getUuid();
 			}
 			ts_timestamp_to_uuid[name_to_uuid[feuille->getName()]][feuille->getTimestamp()] = feuille->getUuid();
@@ -776,16 +701,14 @@ void PQSelectionPanel::setEtpTreeView(std::vector<VtkEpcCommon*> treeView)
 	}
 
 	pqPipelineSource * source = findPipelineSource("EtpDocument");
-	if (source)
-	{
+	if (source)	{
 		pqActiveObjects *activeObjects = &pqActiveObjects::instance();
 		activeObjects->setActiveSource(source);
 
 		PQToolsManager* manager = PQToolsManager::instance();
 		auto fesppReader = manager->getFesppReader();
 
-		if (fesppReader)
-		{
+		if (fesppReader) {
 			pqActiveObjects *activeObjects = &pqActiveObjects::instance();
 			activeObjects->setActiveSource(fesppReader);
 

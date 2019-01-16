@@ -95,18 +95,6 @@ public:
 			const int32_t & rec_contentCount,
 			const int64_t & rec_lastChanged);
 
-	void receive_resources_representation(const std::string & rec_uri,
-			const std::string & rec_contentType,
-			const std::string & rec_name,
-			Energistics::Etp::v12::Datatypes::Object::ResourceKind & rec_resourceType,
-			const int32_t & rec_sourceCount,
-			const int32_t & rec_targetCount,
-			const int32_t & rec_contentCount,
-			const int64_t & rec_lastChanged);
-
-	//	void receive_resources_new_ask(const std::string & ask);
-	void receive_resources_finished();
-
 	void setClientSession(EtpClientSession * session) {client_session = session;}
 
 	void createTree();
@@ -148,6 +136,9 @@ private:
 
 	int64_t push_command(const std::string & command);
 
+	void addPropertyTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name);
+
+
 	void createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, const VtkEpcCommon::Resqml2Type & resqmlType);
 
 	std::list<int> number_response_wait_queue;
@@ -161,32 +152,14 @@ private:
 
 	std::vector<VtkEpcCommon*> treeView; // Tree
 
-	int64_t idMessageCurrent;
 	int64_t last_id;
 
 #if _MSC_VER < 1600
-	//std::tr1::unordered_map<std::string, VtkFeature*> uuidToVtKFeature;
-	std::tr1::unordered_map<std::string, VtkGrid2DRepresentation*> uuidToVtkGrid2DRepresentation;
-	std::tr1::unordered_map<std::string, VtkPolylineRepresentation*> uuidToVtkPolylineRepresentation;
-	std::tr1::unordered_map<std::string, VtkTriangulatedRepresentation*> uuidToVtkTriangulatedRepresentation;
-	std::tr1::unordered_map<std::string, VtkSetPatch*> uuidToVtkSetPatch;
-	std::tr1::unordered_map<std::string, VtkWellboreTrajectoryRepresentation*> uuidToVtkWellboreTrajectoryRepresentation;
 	std::tr1::unordered_map<std::string, VtkIjkGridRepresentation*> uuidToVtkIjkGridRepresentation;
-	std::tr1::unordered_map<std::string, VtkUnstructuredGridRepresentation*> uuidToVtkUnstructuredGridRepresentation;
-	std::tr1::unordered_map<std::string, VtkPartialRepresentation*> uuidToVtkPartialRepresentation;
 #else
-	//std::unordered_map<std::string, VtkFeature*> uuidToVtKFeature;
-	std::unordered_map<std::string, VtkGrid2DRepresentation*> uuidToVtkGrid2DRepresentation;
-	std::unordered_map<std::string, VtkPolylineRepresentation*> uuidToVtkPolylineRepresentation;
-	std::unordered_map<std::string, VtkTriangulatedRepresentation*> uuidToVtkTriangulatedRepresentation;
-	std::unordered_map<std::string, VtkSetPatch*> uuidToVtkSetPatch;
-	std::unordered_map<std::string, VtkWellboreTrajectoryRepresentation*> uuidToVtkWellboreTrajectoryRepresentation;
-	std::unordered_map<std::string, VtkIjkGridRepresentation*> uuidToVtkIjkGridRepresentation;
-	std::unordered_map<std::string, VtkUnstructuredGridRepresentation*> uuidToVtkUnstructuredGridRepresentation;
-	std::unordered_map<std::string, VtkPartialRepresentation*> uuidToVtkPartialRepresentation;
+		std::unordered_map<std::string, VtkIjkGridRepresentation*> uuidToVtkIjkGridRepresentation;
 #endif
 
-	std::vector<std::string> attachUuids;
 
 };
 #endif

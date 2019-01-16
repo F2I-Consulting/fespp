@@ -30,36 +30,17 @@ class PQEtpConnectionManager::pqUI : public Ui::PQEtpConnectionManager
 
 namespace
 {
-pqPropertiesPanel* getpqPropertiesPanel()
-{
-	// get multi-block inspector panel
-	pqPropertiesPanel *panel = 0;
-	foreach(QWidget *widget, qApp->topLevelWidgets())
+	PQEtpPanel* getPQEtpPanel()
 	{
-		panel = widget->findChild<pqPropertiesPanel *>();
-
-		if (panel)
-		{
-			break;
+		PQEtpPanel *panel = 0;
+		foreach(QWidget *widget, qApp->topLevelWidgets()) {
+			panel = widget->findChild<PQEtpPanel *>();
+			if(panel) {
+				break;
+			}
 		}
+		return panel;
 	}
-	return panel;
-}
-PQEtpPanel* getPQEtpPanel()
-{
-	// get multi-block inspector panel
-	PQEtpPanel *panel = 0;
-	foreach(QWidget *widget, qApp->topLevelWidgets())
-	{
-		panel = widget->findChild<PQEtpPanel *>();
-
-		if(panel)
-		{
-			break;
-		}
-	}
-	return panel;
-}
 }
 
 //=============================================================================
@@ -86,7 +67,6 @@ PQEtpConnectionManager::~PQEtpConnectionManager()
 void PQEtpConnectionManager::checkInputValid()
 {
 	bool valid = true;
-
 	this->ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(valid);
 }
 
@@ -102,29 +82,23 @@ void PQEtpConnectionManager::setupPipeline()
 
 	pqPipelineSource* fesppReader;
 
-	if (manager->etp_existPipe())
-	{
+	if (manager->etp_existPipe()) 	{
 		fesppReader = manager->getFesppReader();
 	}
-	else
-	{
+	else {
 		fesppReader = builder->createReader("sources", "Fespp", QStringList("EtpDocument"), this->Server);
-
 		manager->etp_existPipe(true);
 	}
 
-	// active Pipeline
-	if (fesppReader)
-	{
+	if (fesppReader) {
 		pqActiveObjects *activeObjects = &pqActiveObjects::instance();
 		activeObjects->setActiveSource(fesppReader);
 
-		// add connection parameter to property
 		auto connection_parameter = this->ui->etp_ip->text()+":"+this->ui->etp_port->text();
 		vtkSMProxy* fesppReaderProxy = fesppReader->getProxy();
 		vtkSMPropertyHelper( fesppReaderProxy, "SubFileName" ).Set(connection_parameter.toStdString().c_str());
 		fesppReaderProxy->UpdateSelfAndAllInputs();
 	}
 	getPQEtpPanel()->etpClientConnect(	this->ui->etp_ip->text().toStdString(), this->ui->etp_port->text().toStdString());
-END_UNDO_SET();
+	END_UNDO_SET();
 }

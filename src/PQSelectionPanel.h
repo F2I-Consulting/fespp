@@ -154,7 +154,7 @@ private:
 
 	std::string searchSource(const std::string & uuid);
 
-	void populateTreeView(const std::string &  parent, VtkEpcCommon::Resqml2Type parentType, const std::string &  uuid, const std::string &  name, VtkEpcCommon::Resqml2Type type);
+	void populateTreeView(const std::string &  parent, VtkEpcCommon::Resqml2Type parentType, const std::string &  uuid, const std::string &  name, VtkEpcCommon::Resqml2Type type, const std::string & pipeOrigin);
 	void updateTimeSeries(const std::string & uuid, bool isnew);
 	void deleteUUID(QTreeWidgetItem *item);
 
@@ -201,6 +201,7 @@ private:
 	unsigned int indexFile;
 	std::vector<std::string> allFileName;
 	QMap<std::string, std::string> uuidToFilename;
+	QMap<std::string, std::string> uuidToPipeName;
 	QMap<std::string, std::vector<std::string> > filenameToUuids;
 	QMap<std::string, std::vector<std::string> > filenameToUuidsPartial;
 

@@ -38,6 +38,8 @@ knowledge of the CeCILL license and that you accept its terms.
 // include FESAPI
 #include <etp/ClientSession.h>
 #include <common/EpcDocument.h>
+#include <vector>
+#include <algorithm>
 
 //include Fespp
 #include "VTK/VtkEpcCommon.h"
@@ -61,14 +63,16 @@ public:
 
 	~EtpClientSession() {};
 
-#if _MSC_VER < 1600
-	std::tr1::unordered_map<int64_t, bool> answeredMessages;
-
-#else
-
-	std::unordered_map<int64_t, bool> answeredMessages;
-#endif
+	bool isTreeViewMode() { return treeViewMode;}
+	bool allReceived() { return answeredMessages.empty();}
+	void newAnsweredMessages(int64_t key) { answeredMessages.push_back(key);}
+	void receivedAnsweredMessages(int64_t key) { answeredMessages.erase(std::remove(answeredMessages.begin(), answeredMessages.end(), key), answeredMessages.end());}
 
 	COMMON_NS::EpcDocument epcDoc;
+
+private:
+	std::vector<int64_t> answeredMessages;
+	bool treeViewMode;
+	bool representationMode;
 };
 #endif

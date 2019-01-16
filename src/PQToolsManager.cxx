@@ -53,21 +53,6 @@ PQSelectionPanel* getPQSelectionPanel()
 	return panel;
 }
 
-PQEtpPanel* getPQEtpPanel()
-{
-	PQEtpPanel *panel = 0;
-	foreach(QWidget *widget, qApp->topLevelWidgets())
-	{
-		panel = widget->findChild<PQEtpPanel *>();
-
-		if (panel)
-		{
-			break;
-		}
-	}
-	return panel;
-}
-
 PQMetaDataPanel* getPQMetadataPanel()
 {
 	PQMetaDataPanel *panel = 0;
@@ -301,7 +286,7 @@ pqView* PQToolsManager::findView(pqPipelineSource* source, int port, const QStri
 //-----------------------------------------------------------------------------
 bool PQToolsManager::existPipe()
 {
-	return this->existEpcPipe;
+	return this->existEpcPipe || this->existEtpPipe;
 }
 
 //-----------------------------------------------------------------------------
@@ -332,6 +317,12 @@ void PQToolsManager::deletePipelineSource(pqPipelineSource* pipe)
 		{
 			getPQSelectionPanel()->deleteTreeView();
 			this->existEpcPipe = false;
+		}
+		source = findPipelineSource("EtpDocument");
+		if (!source)
+		{
+			getPQSelectionPanel()->deleteTreeView();
+			this->existEtpPipe = false;
 		}
 	}
 	this->actionPanelMetadata()->setEnabled(false);

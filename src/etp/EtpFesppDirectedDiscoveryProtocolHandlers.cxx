@@ -1,55 +1,16 @@
-/*-----------------------------------------------------------------------
-Licensed to the Apache Software Foundation (ASF) under one
-or more contributor license agceements.  See the NOTICE file
-distributed with this work for additional information
-regarding copyright ownership.  The ASF licenses this file
-to you under the Apache License, Version 2.0 (the
-"License"; you may not use this file except in compliance
-with the License.  You may obtain a copy of the License at
-
-  http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agceed to in writing,
-software distributed under the License is distributed on an
-"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-KIND, either express or implied.  See the License for the
-specific language governing permissions and limitations
-under the License.
------------------------------------------------------------------------*/
 #include <etp/VtkEtpDocument.h>
 #include "EtpFesppDirectedDiscoveryProtocolHandlers.h"
 #include <algorithm>
 
-EtpFesppDirectedDiscoveryProtocolHandlers::EtpFesppDirectedDiscoveryProtocolHandlers(EtpClientSession* my_session, VtkEtpDocument* my_etp_document, const VtkEpcCommon::modeVtkEpc & mode)
-: ETP_NS::DirectedDiscoveryHandlers(my_session), etp_document(my_etp_document)
-{
-	if (mode==VtkEpcCommon::Both || mode==VtkEpcCommon::TreeView)
-	{
-		treeViewMode=true;;
-	}
-	if (mode==VtkEpcCommon::Both || mode==VtkEpcCommon::Representation)
-	{
-		representationMode=true;
-	}
-}
 
 void EtpFesppDirectedDiscoveryProtocolHandlers::on_GetResourcesResponse(const Energistics::Etp::v12::Protocol::DirectedDiscovery::GetResourcesResponse & grr, int64_t correlationId)
 {
 	Energistics::Etp::v12::Datatypes::Object::GraphResource graphResource =  grr.m_resource;
 
 	int32_t sourceCount, targetCount, contentCount;
-	if (!graphResource.m_sourceCount.is_null())
-		sourceCount = graphResource.m_sourceCount.get_int();
-	else
-		sourceCount = 0;
-	if (!graphResource.m_targetCount.is_null())
-		targetCount = graphResource.m_targetCount.get_int();
-	else
-		targetCount = 0;
-	if (!graphResource.m_contentCount.is_null())
-		contentCount = graphResource.m_contentCount.get_int();
-	else
-		contentCount = 0;
+	sourceCount = (!graphResource.m_sourceCount.is_null()) ? graphResource.m_sourceCount.get_int() : 0;
+	targetCount = (!graphResource.m_targetCount.is_null()) ? graphResource.m_targetCount.get_int() : 0;
+	contentCount = (!graphResource.m_contentCount.is_null()) ? graphResource.m_contentCount.get_int() : 0;
 
 	if (std::find(getObjectWhenDiscovered.begin(), getObjectWhenDiscovered.end(), correlationId) != getObjectWhenDiscovered.end()) {
 		size_t openingParenthesis = graphResource.m_uri.find('(', 5);
@@ -58,17 +19,14 @@ void EtpFesppDirectedDiscoveryProtocolHandlers::on_GetResourcesResponse(const En
 			if (resqmlObj == nullptr || resqmlObj->isPartial()) {
 				Energistics::Etp::v12::Protocol::Store::GetObject_ getO;
 				getO.m_uri = graphResource.m_uri;
-				session->send(getO);
-
+				static_cast<EtpClientSession*>(session)->newAnsweredMessages(session->send(getO));
 			}
 		}
 	}
 
-	cout << "on_GetResourcesResponse" << endl;
-	static_cast<EtpClientSession*>(session)->answeredMessages[correlationId] = true;
+	static_cast<EtpClientSession*>(session)->receivedAnsweredMessages(correlationId);
 
-	if(treeViewMode)
-	{
+	if(static_cast<EtpClientSession*>(session)->isTreeViewMode()) {
 		etp_document->receive_resources_tree(graphResource.m_uri,
 				graphResource.m_contentType,
 				graphResource.m_name,
@@ -79,17 +37,5 @@ void EtpFesppDirectedDiscoveryProtocolHandlers::on_GetResourcesResponse(const En
 				graphResource.m_lastChanged
 		);
 	}
-//	if (representationMode)
-//	{
-//		etp_document->receive_resources_representation(graphResource.m_uri,
-//				graphResource.m_contentType,
-//				graphResource.m_name,
-//				graphResource.m_resourceType,
-//				sourceCount,
-//				targetCount,
-//				contentCount,
-//				graphResource.m_lastChanged
-//		);
-//	}
-
 }
+

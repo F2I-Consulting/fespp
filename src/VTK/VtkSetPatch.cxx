@@ -21,6 +21,7 @@
 VtkSetPatch::VtkSetPatch(const std::string & fileName, const std::string & name, const std:: string & uuid, const std::string & uuidParent, common::EpcDocument *pck, const int & idProc, const int & maxProc):
 VtkResqml2MultiBlockDataSet(fileName, name, uuid, uuidParent, idProc, maxProc), epcPackage(pck)
 {
+	uuidIsChildOf[uuid] = new VtkEpcCommon();
 	resqml2_0_1::PolylineSetRepresentation* polylineSetRep = nullptr;
 	resqml2_0_1::TriangulatedSetRepresentation * triangulatedSetRep = nullptr;
 	common::AbstractObject *object = epcPackage->getResqmlAbstractObjectByUuid(uuid);
@@ -66,15 +67,6 @@ VtkSetPatch::~VtkSetPatch()
 	uuidToVtkPolylineRepresentation.clear();
 	uuidToVtkTriangulatedRepresentation.clear();
 
-	// delete uuidToVtkProperty
-#if _MSC_VER < 1600
-	for (std::tr1::unordered_map< std::string, VtkProperty* >::const_iterator it = uuidToVtkProperty.begin(); it != uuidToVtkProperty.end(); ++it)
-#else
-	for (std::unordered_map< std::string, VtkProperty* >::const_iterator it = uuidToVtkProperty.begin(); it != uuidToVtkProperty.end(); ++it)
-#endif
-	{
-	  delete it->second;
-	}
 	uuidToVtkProperty.clear();
 
 }

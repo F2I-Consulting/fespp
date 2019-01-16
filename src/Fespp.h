@@ -128,6 +128,9 @@ private:
 	int countTest;
 
 	std::vector<std::string> fileNameSet;
+	std::string port;
+	std::string ip;
+
 	bool isEtpDocument;
 	bool isEpcDocument;
 };

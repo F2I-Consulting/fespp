@@ -10,45 +10,18 @@
 
 
 
-namespace
-{
-PQEtpPanel* getPQEtpPanel()
-{
-	// get multi-block inspector panel
-	PQEtpPanel *panel = 0;
-	foreach(QWidget *widget, qApp->topLevelWidgets())
+namespace {
+	PQSelectionPanel* getPQSelectionPanel()
 	{
-		panel = widget->findChild<PQEtpPanel *>();
-
-		if(panel)
-		{
-			break;
+		PQSelectionPanel *panel = 0;
+		foreach(QWidget *widget, qApp->topLevelWidgets()) {
+			panel = widget->findChild<PQSelectionPanel *>();
+			if(panel) {
+				break;
+			}
 		}
+		return panel;
 	}
-	return panel;
-}
-
-PQSelectionPanel* getPQSelectionPanel()
-{
-	// get multi-block inspector panel
-	PQSelectionPanel *panel = 0;
-	foreach(QWidget *widget, qApp->topLevelWidgets())
-	{
-		panel = widget->findChild<PQSelectionPanel *>();
-
-		if(panel)
-		{
-			break;
-		}
-	}
-	return panel;
-}
-
-//void startEtpDocument(std::string ipAddress, std::string port)
-//{
-//	auto etp_document = new VtkEtpDocument(ipAddress, port, VtkEpcCommon::TreeView);
-//	getPQEtpPanel()->setVtkEtpDocuement(etp_document);
-//}
 }
 
 
@@ -77,8 +50,7 @@ void PQEtpPanel::constructor()
 //----------------------------------------------------------------------------
 void PQEtpPanel::handleButtonStatus()
 {
-	if (etp_connect)
-	{
+	if (etp_connect) {
 		delete etp_document;
 		etp_connect=false;
 		QIcon icon;
@@ -88,17 +60,13 @@ void PQEtpPanel::handleButtonStatus()
 }
 void PQEtpPanel::handleButtonRefresh()
 {
-	cout << "PQEtpPanel::handleButtonRefresh()" << endl;
-	if (etp_connect)
-	{
+	if (etp_connect) {
 		etp_document->createTree();
 		getPQSelectionPanel()->connectPQEtpPanel();
 		EtpSendButton->setText("Refresh");
 		etp_connect=false;
 		QIcon icon;
 	}
-
-
 }
 
 //******************************* Etp Document ************************************
@@ -112,11 +80,9 @@ void PQEtpPanel::etpClientConnect(const std::string & ipAddress, const std::stri
 	EtpStatus_Button->setIcon(icon);
 }
 
-
+//----------------------------------------------------------------------------
 void PQEtpPanel::setEtpTreeView(std::vector<VtkEpcCommon*> tree)
 {
-
-		cout << "emit=================================================\n";
 	emit refreshTreeView(tree);
 }
 

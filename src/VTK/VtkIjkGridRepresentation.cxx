@@ -276,8 +276,6 @@ int VtkIjkGridRepresentation::getInitKIndex(const std::string & uuid) const
 //----------------------------------------------------------------------------
 void VtkIjkGridRepresentation::createWithPoints(const vtkSmartPointer<vtkPoints> & pointsRepresentation, common::AbstractObject* obj)
 {
-
-	cout << " VtkIjkGridRepresentation::createWithPoints    obj->getXmlTag() " << obj->getXmlTag() << endl;
 	vtkOutput = vtkSmartPointer<vtkUnstructuredGrid>::New();
 	vtkOutput->SetPoints(pointsRepresentation);
 
@@ -346,7 +344,6 @@ void VtkIjkGridRepresentation::createWithPoints(const vtkSmartPointer<vtkPoints>
 			auto test = new bool[ijkGridRepresentation->getCellCount()];
 			if (ijkGridRepresentation->hasEnabledCellInformation())
 			{
-				cout << "hasEnabledCellInformation " << endl;
 				ijkGridRepresentation->getEnabledCells(test);
 			}
 			else
@@ -370,6 +367,7 @@ void VtkIjkGridRepresentation::createWithPoints(const vtkSmartPointer<vtkPoints>
 						if (test[cellIndex])
 						{
 							vtkSmartPointer<vtkHexahedron> hex = vtkSmartPointer<vtkHexahedron>::New();
+
 							auto point0 = ijkGridRepresentation->getXyzPointIndexFromCellCorner(vtkICellIndex, vtkJCellIndex, vtkKCellIndex, 0);
 							hex->GetPointIds()->SetId(0, point0-translatePoint);
 

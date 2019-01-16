@@ -26,26 +26,6 @@ class PQDataLoadManager::pqUI : public Ui::PQDataLoadManager
 {
 };
 
-namespace
-{
-pqPropertiesPanel* getpqPropertiesPanel()
-{
-	// get multi-block inspector panel
-	pqPropertiesPanel *panel = 0;
-	foreach(QWidget *widget, qApp->topLevelWidgets())
-	{
-		panel = widget->findChild<pqPropertiesPanel *>();
-
-		if (panel)
-		{
-			break;
-		}
-	}
-	return panel;
-}
-}
-
-//=============================================================================
 PQDataLoadManager::PQDataLoadManager(QWidget* p, Qt::WindowFlags f /*=0*/)
 : QDialog(p, f)
 {
@@ -75,11 +55,7 @@ PQDataLoadManager::~PQDataLoadManager()
 //-----------------------------------------------------------------------------
 void PQDataLoadManager::checkInputValid()
 {
-	bool valid = true;
-
-	if (this->ui->epcFile->filenames().isEmpty())
-		valid = false;
-
+	auto valid = (this->ui->epcFile->filenames().isEmpty()) ? false : true;
 	this->ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(valid);
 }
 
@@ -95,27 +71,21 @@ void PQDataLoadManager::setupPipeline()
 
 	pqPipelineSource* fesppReader;
 
-	if (manager->existPipe())
-	{
+	if (manager->existPipe()) {
 		fesppReader = manager->getFesppReader();
 	}
-	else
-	{
+	else {
 		fesppReader = builder->createReader("sources", "Fespp", QStringList("EpcDocument"), this->Server);
 		manager->existPipe(true);
 	}
 
 	QString epcFiles = this->ui->epcFile->filenames().join("*");
 
-	if (!epcFiles.isEmpty())
-	{
-		// active Pipeline
-		if (fesppReader)
-		{
+	if (!epcFiles.isEmpty()) 	{
+		if (fesppReader) {
 			pqActiveObjects *activeObjects = &pqActiveObjects::instance();
 			activeObjects->setActiveSource(fesppReader);
 
-			// add file to property
 			vtkSMProxy* fesppReaderProxy = fesppReader->getProxy();
 			vtkSMPropertyHelper( fesppReaderProxy, "SubFileName" ).Set(epcFiles.toStdString().c_str());
 

@@ -19,13 +19,18 @@ EtpClientSession::EtpClientSession(boost::asio::io_context& ioc,
 : ETP_NS::ClientSession(ioc, host, port, "/", requestedProtocols, supportedObjects),
   epcDoc("/tmp/etp.epc", COMMON_NS::EpcDocument::ETP)
 {
+	treeViewMode = (mode==VtkEpcCommon::Both || mode==VtkEpcCommon::TreeView);
+	representationMode = (mode==VtkEpcCommon::Both || mode==VtkEpcCommon::Representation);
+
+	try{
 		setCoreProtocolHandlers(std::make_shared<ETP_NS::CoreHandlers>(this));
-	setDiscoveryProtocolHandlers(std::make_shared<ETP_NS::DiscoveryHandlers>(this));
-	setDirectedDiscoveryProtocolHandlers(std::make_shared<EtpFesppDirectedDiscoveryProtocolHandlers>(this, my_etp_document, mode));
-	setStoreProtocolHandlers(std::make_shared<EtpFesppStoreProtocolHandlers>(this, my_etp_document));
-	setDataArrayProtocolHandlers(std::make_shared<ETP_NS::DataArrayHandlers>(this));
+		setDiscoveryProtocolHandlers(std::make_shared<ETP_NS::DiscoveryHandlers>(this));
+		setDirectedDiscoveryProtocolHandlers(std::make_shared<EtpFesppDirectedDiscoveryProtocolHandlers>(this, my_etp_document));
+		setStoreProtocolHandlers(std::make_shared<EtpFesppStoreProtocolHandlers>(this, my_etp_document));
+		setDataArrayProtocolHandlers(std::make_shared<ETP_NS::DataArrayHandlers>(this));
+	}
+	catch   (const std::exception & e){
+		answeredMessages.clear();
+	}
 
 }
-
-
-

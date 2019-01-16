@@ -33,7 +33,7 @@ vtkCxxSetObjectMacro(Fespp, Controller, vtkMultiProcessController);
 
 //----------------------------------------------------------------------------
 Fespp::Fespp() :
-								FileName(nullptr), Controller(nullptr), loadedFile(false), idProc(0), nbProc(0), countTest(0)
+FileName(nullptr), Controller(nullptr), loadedFile(false), idProc(0), nbProc(0), countTest(0)
 {
 	SetNumberOfInputPorts(0);
 	SetNumberOfOutputPorts(1);
@@ -67,12 +67,10 @@ Fespp::Fespp() :
 //----------------------------------------------------------------------------
 Fespp::~Fespp()
 {
-	SetFileName(nullptr); // Also delete FileName if not nullptr.
+	SetFileName(nullptr);
 	SetController(nullptr);
 	fileNameSet.clear();
 	uuidList->Delete();
-	idProc = 0;
-	nbProc = 0;
 
 	if (epcDocumentSet != nullptr) {
 		delete epcDocumentSet;
@@ -83,27 +81,20 @@ Fespp::~Fespp()
 		delete etpDocument;
 		etpDocument = nullptr;
 	}
-
-	countTest = 0;
 }
 
 //----------------------------------------------------------------------------
 void Fespp::SetSubFileName(const char* name)
 {
-	if(isEtpDocument)
-	{
+	if(isEtpDocument) {
 		auto it = std::string(name).find(":");
-		if(it != std::string::npos)
-		{
-			auto port = std::string(name).substr(it+1);
-			auto ip = std::string(name).substr(0,it);
-			cout << "Fespp ip : " << ip << " : " << port << endl;
+		if(it != std::string::npos) {
+			port = std::string(name).substr(it+1);
+			ip = std::string(name).substr(0,it);
 		}
 	}
-	if(isEpcDocument)
-	{
-		if (std::find(fileNameSet.begin(), fileNameSet.end(),std::string(name))==fileNameSet.end())
-		{
+	if(isEpcDocument) {
+		if (std::find(fileNameSet.begin(), fileNameSet.end(),std::string(name))==fileNameSet.end())	{
 			fileNameSet.push_back(std::string(name));
 			this->OpenEpcDocument(name);
 		}
@@ -118,27 +109,26 @@ int Fespp::GetuuidListArrayStatus(const char* uuid)
 //----------------------------------------------------------------------------
 void Fespp::SetUuidList(const char* uuid, int status)
 {
-	if (std::string(uuid)=="connect")
-	{
-		if(etpDocument == nullptr)
-		{
-			cout << "Fespp ETP !! open session\n";
+	if (std::string(uuid)=="connect") {
+		if(etpDocument == nullptr) {
 			loadedFile = true;
-			etpDocument = new VtkEtpDocument("localhost", "8080", VtkEpcCommon::Representation);
+			etpDocument = new VtkEtpDocument(ip, port, VtkEpcCommon::Representation);
 		}
-	} else 	if (status != 0)
-	{
-		if(isEpcDocument)
+	} else if (status != 0) {
+		if(isEpcDocument) {
 			epcDocumentSet->visualize(std::string(uuid));
-		if(isEtpDocument)
+		}
+		if(isEtpDocument && etpDocument!=nullptr) {
 			etpDocument->visualize(std::string(uuid));
+		}
 	}
-	else
-	{
-		if(isEpcDocument)
+	else {
+		if(isEpcDocument) {
 			epcDocumentSet->unvisualize(std::string(uuid));
-		if(isEtpDocument)
+		}
+		if(isEtpDocument && etpDocument!=nullptr) {
 			etpDocument->unvisualize(std::string(uuid));
+		}
 	}
 
 	this->Modified();
@@ -202,24 +192,19 @@ int Fespp::RequestInformation(
 		vtkInformationVector **inputVector,
 		vtkInformationVector *outputVector)
 {
-	if ( !loadedFile )
-	{
+	if ( !loadedFile ) {
 		auto stringFileName = std::string(FileName);
 		auto lengthFileName = stringFileName.length();
 		auto extension = stringFileName.substr(lengthFileName -3, lengthFileName);
-
-		if (stringFileName == "EpcDocument")
-		{
+		if (stringFileName == "EpcDocument") {
 			isEpcDocument=true;
 			loadedFile = true;
 			epcDocumentSet = new VtkEpcDocumentSet(idProc, nbProc, VtkEpcCommon::Both);
 		}
-		if(stringFileName == "EtpDocument")
-		{
+		if(stringFileName == "EtpDocument")	{
 			isEtpDocument=true;
 		}
-		if(extension=="epc")
-		{
+		if(extension=="epc") {
 			isEpcDocument=true;
 			loadedFile = true;
 			this->OpenEpcDocument(stringFileName);
@@ -240,15 +225,10 @@ int Fespp::RequestData(vtkInformation *request,
 		vtkInformationVector **inputVector,
 		vtkInformationVector *outputVector)
 {
-
-	cout << " Fespp::RequestData "<< endl;
-	if (isEtpDocument)
-	{
+	if (isEtpDocument)	{
 		RequestDataEtpDocument(request, inputVector, outputVector);
 	}
-
-	if (isEpcDocument)
-	{
+	if (isEpcDocument)	{
 		RequestDataEpcDocument(request, inputVector, outputVector);
 	}
 	return 1;
@@ -279,7 +259,6 @@ void Fespp::RequestDataEpcDocument(vtkInformation *request,
 	if (loadedFile)
 	{
 		try{
-//			auto outputSet = epcDocumentSet->getVisualization();
 			output->DeepCopy(epcDocumentSet->getVisualization());
 		}
 		catch (const std::exception & e)
@@ -305,12 +284,9 @@ void Fespp::RequestDataEtpDocument(vtkInformation *request,
 		vtkInformationVector **inputVector,
 		vtkInformationVector *outputVector)
 {
-	cout<<"Fespp::RequestDataEtpDocument" << endl;
 	vtkInformation *outInfo = outputVector->GetInformationObject(0);
 	vtkMultiBlockDataSet *output = vtkMultiBlockDataSet::SafeDownCast(outInfo->Get(vtkMultiBlockDataSet::DATA_OBJECT()));
-	if (loadedFile)
-	{
-//		auto outputSet = etpDocument->getVisualization();
+	if (loadedFile)	{
 		output->DeepCopy(etpDocument->getVisualization());
 	}
 

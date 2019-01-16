@@ -44,7 +44,7 @@ class VtkEtpDocument;
 class EtpFesppDirectedDiscoveryProtocolHandlers : public ETP_NS::DirectedDiscoveryHandlers
 {
 public:
-	EtpFesppDirectedDiscoveryProtocolHandlers(EtpClientSession* my_session, VtkEtpDocument* my_etp_document, const VtkEpcCommon::modeVtkEpc & mode);
+	EtpFesppDirectedDiscoveryProtocolHandlers(EtpClientSession* my_session, VtkEtpDocument* my_etp_document):ETP_NS::DirectedDiscoveryHandlers(my_session), etp_document(my_etp_document) {}
 	~EtpFesppDirectedDiscoveryProtocolHandlers() {}
 
 	std::vector<int64_t> getObjectWhenDiscovered; // all message id in this vector will result in response where the objects are going to be get in addition to be discovered
@@ -53,7 +53,6 @@ public:
 
 private:
 	VtkEtpDocument* etp_document;
-	bool treeViewMode;
-	bool representationMode;
+
 };
 #endif
