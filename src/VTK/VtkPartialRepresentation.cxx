@@ -23,15 +23,6 @@ epcPackage(pck), vtkEpcDocumentSource(vtkEpcDowumentWithCompleteRep), vtkPartial
 
 VtkPartialRepresentation::~VtkPartialRepresentation()
 {
-	// delete uuidToVtkProperty
-#if (defined(_WIN32) && _MSC_VER >= 1600)
-	for (std::unordered_map< std::string, VtkProperty* >::const_iterator it = uuidToVtkProperty.begin(); it != uuidToVtkProperty.end(); ++it)
-#else
-	for (std::tr1::unordered_map< std::string, VtkProperty* >::const_iterator it = uuidToVtkProperty.begin(); it != uuidToVtkProperty.end(); ++it)
-#endif
-	{
-	  delete it->second;
-	}
 	uuidToVtkProperty.clear();
 
 	if (epcPackage != nullptr) {

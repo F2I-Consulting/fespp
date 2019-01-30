@@ -19,14 +19,6 @@ VtkAbstractObject(fileName, name, uuid, uuidParent, idProc, maxProc), epcPackage
 
 VtkAbstractRepresentation::~VtkAbstractRepresentation()
 {
-	// delete uuidToVtkProperty
-#if (defined(_WIN32) && _MSC_VER >= 1600)
-	for (std::unordered_map< std::string, VtkProperty* >::const_iterator it = uuidToVtkProperty.begin(); it != uuidToVtkProperty.end(); ++it) {
-#else
-	for (std::tr1::unordered_map< std::string, VtkProperty* >::const_iterator it = uuidToVtkProperty.begin(); it != uuidToVtkProperty.end(); ++it) {
-#endif
-		delete it->second;
-	}
 	uuidToVtkProperty.clear();
 
 	if (epcPackageRepresentation != nullptr) {
@@ -61,7 +53,7 @@ vtkSmartPointer<vtkPoints> VtkAbstractRepresentation::createVtkPoints(const ULON
 	if (localCRS->isDepthOriented()) {
 		zIndice = -1;
 	}
-	for (auto nodeIndex = 0; nodeIndex < pointCount * 3; nodeIndex += 3) {
+	for (ULONG64 nodeIndex = 0; nodeIndex < pointCount * 3; nodeIndex += 3) {
 		points->InsertNextPoint(allXyzPoints[nodeIndex], allXyzPoints[nodeIndex + 1], allXyzPoints[nodeIndex + 2] * zIndice);
 	}
 	return points;

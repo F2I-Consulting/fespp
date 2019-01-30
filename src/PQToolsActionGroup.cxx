@@ -15,7 +15,9 @@ PQToolsActionGroup::PQToolsActionGroup(QObject* p)
 
 	this->addAction(manager->actionDataLoadManager());
 	this->addAction(manager->actionPanelMetadata());
+#ifdef WITH_ETP
 	this->addAction(manager->actionEtpCommand());
+#endif // ETP support
 
 	this->setExclusive(false);
 }

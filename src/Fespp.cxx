@@ -59,8 +59,10 @@ FileName(nullptr), Controller(nullptr), loadedFile(false), idProc(0), nbProc(0),
 
 	countTest = 0;
 	epcDocumentSet = nullptr;
+#ifdef WITH_ETP
 	etpDocument = nullptr;
 	isEtpDocument=false;
+#endif
 	isEpcDocument=false;
 }
 
@@ -77,15 +79,18 @@ Fespp::~Fespp()
 		epcDocumentSet = nullptr;
 	}
 
+#ifdef WITH_ETP
 	if (etpDocument != nullptr) {
-		delete etpDocument;
+//		delete etpDocument;
 		etpDocument = nullptr;
 	}
+#endif
 }
 
 //----------------------------------------------------------------------------
 void Fespp::SetSubFileName(const char* name)
 {
+#ifdef WITH_ETP
 	if(isEtpDocument) {
 		auto it = std::string(name).find(":");
 		if(it != std::string::npos) {
@@ -93,6 +98,7 @@ void Fespp::SetSubFileName(const char* name)
 			ip = std::string(name).substr(0,it);
 		}
 	}
+#endif
 	if(isEpcDocument) {
 		if (std::find(fileNameSet.begin(), fileNameSet.end(),std::string(name))==fileNameSet.end())	{
 			fileNameSet.push_back(std::string(name));
@@ -110,25 +116,31 @@ int Fespp::GetuuidListArrayStatus(const char* uuid)
 void Fespp::SetUuidList(const char* uuid, int status)
 {
 	if (std::string(uuid)=="connect") {
+#ifdef WITH_ETP
 		if(etpDocument == nullptr) {
 			loadedFile = true;
 			etpDocument = new VtkEtpDocument(ip, port, VtkEpcCommon::Representation);
 		}
+#endif
 	} else if (status != 0) {
 		if(isEpcDocument) {
 			epcDocumentSet->visualize(std::string(uuid));
 		}
+#ifdef WITH_ETP
 		if(isEtpDocument && etpDocument!=nullptr) {
 			etpDocument->visualize(std::string(uuid));
 		}
+#endif
 	}
 	else {
 		if(isEpcDocument) {
 			epcDocumentSet->unvisualize(std::string(uuid));
 		}
+#ifdef WITH_ETP
 		if(isEtpDocument && etpDocument!=nullptr) {
 			etpDocument->unvisualize(std::string(uuid));
 		}
+#endif
 	}
 
 	this->Modified();
@@ -201,9 +213,11 @@ int Fespp::RequestInformation(
 			loadedFile = true;
 			epcDocumentSet = new VtkEpcDocumentSet(idProc, nbProc, VtkEpcCommon::Both);
 		}
+#ifdef WITH_ETP
 		if(stringFileName == "EtpDocument")	{
 			isEtpDocument=true;
 		}
+#endif
 		if(extension=="epc") {
 			isEpcDocument=true;
 			loadedFile = true;
@@ -225,9 +239,11 @@ int Fespp::RequestData(vtkInformation *request,
 		vtkInformationVector **inputVector,
 		vtkInformationVector *outputVector)
 {
+#ifdef WITH_ETP
 	if (isEtpDocument)	{
 		RequestDataEtpDocument(request, inputVector, outputVector);
 	}
+#endif
 	if (isEpcDocument)	{
 		RequestDataEpcDocument(request, inputVector, outputVector);
 	}
@@ -280,6 +296,7 @@ void Fespp::RequestDataEpcDocument(vtkInformation *request,
 }
 
 //----------------------------------------------------------------------------
+#ifdef WITH_ETP
 void Fespp::RequestDataEtpDocument(vtkInformation *request,
 		vtkInformationVector **inputVector,
 		vtkInformationVector *outputVector)
@@ -291,7 +308,7 @@ void Fespp::RequestDataEtpDocument(vtkInformation *request,
 	}
 
 }
-
+#endif
 //----------------------------------------------------------------------------
 void Fespp::PrintSelf(ostream& os, vtkIndent indent)
 {

@@ -1,9 +1,11 @@
 #include "PQToolsManager.h"
 
 #include "PQDataLoadManager.h"
-#include "PQEtpConnectionManager.h"
 #include "PQSelectionPanel.h"
+#ifdef WITH_ETP
 #include "PQEtpPanel.h"
+#include "PQEtpConnectionManager.h"
+#endif
 #include "PQMetaDataPanel.h"
 
 #include "pqActiveObjects.h"
@@ -112,14 +114,18 @@ PQToolsManager::PQToolsManager(QObject* p)
 	this->Internal->Actions.setupUi(this->Internal->ActionPlaceholder);
 
 	this->existEpcPipe = false;
+#ifdef WITH_ETP
 	this->existEtpPipe = false;
+#endif
 	this->panelSelectionVisible = false;
 	this->panelMetadataVisible = false;
 
 	QObject::connect(this->actionDataLoadManager(), SIGNAL(triggered(bool)), this, SLOT(showDataLoadManager()));
 	//QObject::connect(this->actionPanelSelection(), SIGNAL(triggered(bool)), this, SLOT(showPanelSelection()));
 	QObject::connect(this->actionPanelMetadata(), SIGNAL(triggered(bool)), this, SLOT(showPanelMetadata()));
+#ifdef WITH_ETP
 	QObject::connect(this->actionEtpCommand(), SIGNAL(triggered(bool)), this, SLOT(showEtpConnectionManager()));
+#endif
 
 	this->actionPanelMetadata()->setEnabled(false);
 	//	this->actionPanelSelection()->setEnabled(false);
@@ -152,10 +158,12 @@ QAction* PQToolsManager::actionPanelMetadata()
 }
 
 //-----------------------------------------------------------------------------
+#ifdef WITH_ETP
 QAction* PQToolsManager::actionEtpCommand()
 {
 	return this->Internal->Actions.actionEtpCommand;
 }
+#endif
 
 //-----------------------------------------------------------------------------
 void PQToolsManager::showDataLoadManager()
@@ -167,6 +175,7 @@ void PQToolsManager::showDataLoadManager()
 }
 
 //-----------------------------------------------------------------------------
+#ifdef WITH_ETP
 void PQToolsManager::showEtpConnectionManager()
 {
 	PQEtpConnectionManager* dialog = new PQEtpConnectionManager(this->getMainWindow());
@@ -174,6 +183,7 @@ void PQToolsManager::showEtpConnectionManager()
 
 	dialog->show();
 }
+#endif
 
 //-----------------------------------------------------------------------------
 void PQToolsManager::setVisibilityPanelSelection(bool visible)
@@ -286,7 +296,11 @@ pqView* PQToolsManager::findView(pqPipelineSource* source, int port, const QStri
 //-----------------------------------------------------------------------------
 bool PQToolsManager::existPipe()
 {
+#ifdef WITH_ETP
 	return this->existEpcPipe || this->existEtpPipe;
+#else
+	return this->existEpcPipe;
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -296,16 +310,20 @@ void PQToolsManager::existPipe(bool value)
 }
 
 //-----------------------------------------------------------------------------
+#ifdef WITH_ETP
 bool PQToolsManager::etp_existPipe()
 {
 	return this->existEtpPipe;
 }
+#endif
 
 //-----------------------------------------------------------------------------
+#ifdef WITH_ETP
 void PQToolsManager::etp_existPipe(bool value)
 {
 	this->existEtpPipe = value;
 }
+#endif
 
 //----------------------------------------------------------------------------
 void PQToolsManager::deletePipelineSource(pqPipelineSource* pipe)
@@ -318,12 +336,14 @@ void PQToolsManager::deletePipelineSource(pqPipelineSource* pipe)
 			getPQSelectionPanel()->deleteTreeView();
 			this->existEpcPipe = false;
 		}
+#ifdef WITH_ETP
 		source = findPipelineSource("EtpDocument");
 		if (!source)
 		{
 			getPQSelectionPanel()->deleteTreeView();
 			this->existEtpPipe = false;
 		}
+#endif
 	}
 	this->actionPanelMetadata()->setEnabled(false);
 	this->setVisibilityPanelMetadata(false);

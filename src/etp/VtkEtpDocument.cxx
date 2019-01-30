@@ -12,7 +12,7 @@
 #include "EtpClientSession.h"
 #include "PQEtpPanel.h"
 #include "etp/EtpFesppStoreProtocolHandlers.h"
-#include "etp/EtpFesppDirectedDiscoveryProtocolHandlers.h"
+#include "etp/EtpFesppDiscoveryProtocolHandlers.h"
 #include "VTK/VtkIjkGridRepresentation.h"
 
 #include <etp/EtpHdfProxy.h>
@@ -23,8 +23,6 @@
 #include <resqml2_0_1/AbstractIjkGridRepresentation.h>
 #include <resqml2_0_1/ContinuousPropertySeries.h>
 
-namespace
-{
 PQEtpPanel* getPQEtpPanel()
 {
 	PQEtpPanel *panel = 0;
@@ -35,7 +33,6 @@ PQEtpPanel* getPQEtpPanel()
 		}
 	}
 	return panel;
-}
 }
 
 void setSessionToEtpHdfProxy(EtpClientSession* myOwnEtpSession)
@@ -129,50 +126,85 @@ VtkEtpDocument::~VtkEtpDocument()
 //----------------------------------------------------------------------------
 int64_t VtkEtpDocument::push_command(const std::string & command)
 {
+	cout << endl << endl << "command : " << command << endl << endl;
 	auto commandTokens = tokenize(command, ' ');
 
-	if (commandTokens.size() == 2) {
-		if (commandTokens[0] == "GetContent") {
-			Energistics::Etp::v12::Protocol::DirectedDiscovery::GetContent mb;
-			mb.m_uri = commandTokens[1];
+	if (commandTokens[0] == "GetTreeResources") {
+		Energistics::Etp::v12::Protocol::Discovery::GetTreeResources mb;
+		mb.m_context.m_uri = commandTokens[1];
+		mb.m_context.m_depth = 1;
+
+		if (commandTokens.size() > 2) {
+			mb.m_context.m_depth = std::stoi(commandTokens[2]);
+
+			if (commandTokens.size() > 4) {
+				mb.m_context.m_contentTypes = tokenize(commandTokens[4], ',');
+			}
+		}
+		if (commandTokens.size() > 3 && (commandTokens[3] == "true" || commandTokens[3] == "True" || commandTokens[3] == "TRUE")) {
+			std::static_pointer_cast<EtpFesppDiscoveryProtocolHandlers>(client_session->getDiscoveryProtocolHandlers())->getObjectWhenDiscovered.push_back(client_session->send(mb));
+		}
+		else {
+			client_session->send(mb);
+		}
+	}
+	if (commandTokens[0] == "GetGraphResources") {
+		Energistics::Etp::v12::Protocol::Discovery::GetGraphResources mb;
+		mb.m_context.m_uri = commandTokens[1];
+		mb.m_scope = Energistics::Etp::v12::Datatypes::Object::ContextScopeKind::self;
+		mb.m_context.m_depth = 1;
+		mb.m_groupByType = false;
+
+		if (commandTokens.size() > 2) {
+			if (commandTokens[2] == "self")
+				mb.m_scope = Energistics::Etp::v12::Datatypes::Object::ContextScopeKind::self;
+			else if (commandTokens[2] == "sources")
+				mb.m_scope = Energistics::Etp::v12::Datatypes::Object::ContextScopeKind::sources;
+			else if (commandTokens[2] == "sourcesOrSelf")
+				mb.m_scope = Energistics::Etp::v12::Datatypes::Object::ContextScopeKind::sourcesOrSelf;
+			else if (commandTokens[2] == "targets")
+				mb.m_scope = Energistics::Etp::v12::Datatypes::Object::ContextScopeKind::targets;
+			else if (commandTokens[2] == "targetsOrSelf")
+				mb.m_scope = Energistics::Etp::v12::Datatypes::Object::ContextScopeKind::targetsOrSelf;
+
+			if (commandTokens.size() > 3) {
+				mb.m_context.m_depth = std::stoi(commandTokens[3]);
+
+				if (commandTokens.size() > 5) {
+					mb.m_context.m_contentTypes = tokenize(commandTokens[5], ',');
+				}
+			}
+		}
+
+		if (commandTokens.size() > 4 && (commandTokens[4] == "true" || commandTokens[4] == "True" || commandTokens[4] == "TRUE")) {
+			std::static_pointer_cast<EtpFesppDiscoveryProtocolHandlers>(client_session->getDiscoveryProtocolHandlers())->getObjectWhenDiscovered.push_back(client_session->send(mb));
+		}
+		else {
+			client_session->send(mb);
+		}
+	}
+	else if (commandTokens.size() == 2) {
+		if (commandTokens[0] == "GetSourceObjects") {
+			Energistics::Etp::v12::Protocol::Discovery::GetGraphResources mb;
+			mb.m_context.m_uri = commandTokens[1];
+			mb.m_scope = Energistics::Etp::v12::Datatypes::Object::ContextScopeKind::sources;
+			mb.m_context.m_depth = 1;
+			mb.m_groupByType = false;
+
 			auto id = client_session->send(mb);
+			std::static_pointer_cast<EtpFesppDiscoveryProtocolHandlers>(client_session->getDiscoveryProtocolHandlers())->getObjectWhenDiscovered.push_back(id);
 			client_session->newAnsweredMessages(id);
 			return id;
 		}
-		else if (commandTokens[0] == "GetSources") {
-			Energistics::Etp::v12::Protocol::DirectedDiscovery::GetSources mb;
-			mb.m_uri = commandTokens[1];
+		 if (commandTokens[0] == "GetTargetObjects") {
+			Energistics::Etp::v12::Protocol::Discovery::GetGraphResources mb;
+			mb.m_context.m_uri = commandTokens[1];
+			mb.m_scope = Energistics::Etp::v12::Datatypes::Object::ContextScopeKind::targets;
+			mb.m_context.m_depth = 1;
+			mb.m_groupByType = false;
+
 			auto id = client_session->send(mb);
-			client_session->newAnsweredMessages(id);
-			return id;
-		}
-		else if (commandTokens[0] == "GetTargets") {
-			Energistics::Etp::v12::Protocol::DirectedDiscovery::GetTargets mb;
-			mb.m_uri = commandTokens[1];
-			auto id = client_session->send(mb);
-			client_session->newAnsweredMessages(id);
-			return id;
-		}
-		else if (commandTokens[0] == "GetObject") {
-			Energistics::Etp::v12::Protocol::Store::GetObject_ getO;
-			getO.m_uri = commandTokens[1];
-			auto id = client_session->send(getO);
-			client_session->newAnsweredMessages(id);
-			return id;
-		}
-		else if (commandTokens[0] == "GetSourceObjects") {
-			Energistics::Etp::v12::Protocol::DirectedDiscovery::GetSources mb;
-			mb.m_uri = commandTokens[1];
-			auto id = client_session->send(mb);
-			std::static_pointer_cast<EtpFesppDirectedDiscoveryProtocolHandlers>(client_session->getDirectedDiscoveryProtocolHandlers())->getObjectWhenDiscovered.push_back(id);
-			client_session->newAnsweredMessages(id);
-			return id;
-		}
-		else if (commandTokens[0] == "GetTargetObjects") {
-			Energistics::Etp::v12::Protocol::DirectedDiscovery::GetTargets mb;
-			mb.m_uri = commandTokens[1];
-			auto id = client_session->send(mb);
-			std::static_pointer_cast<EtpFesppDirectedDiscoveryProtocolHandlers>(client_session->getDirectedDiscoveryProtocolHandlers())->getObjectWhenDiscovered.push_back(id);
+			std::static_pointer_cast<EtpFesppDiscoveryProtocolHandlers>(client_session->getDiscoveryProtocolHandlers())->getObjectWhenDiscovered.push_back(id);
 			client_session->newAnsweredMessages(id);
 			return id;
 		}
@@ -184,13 +216,8 @@ int64_t VtkEtpDocument::push_command(const std::string & command)
 //----------------------------------------------------------------------------
 void VtkEtpDocument::createTree()
 {
-	auto last_EpcCommon = new VtkEpcCommon();
-	last_EpcCommon->setUuid("eml://");
-	last_EpcCommon->setType(VtkEpcCommon::Resqml2Type::INTERPRETATION);
-	last_EpcCommon->setName("eml://");
-	response_queue.push_back(last_EpcCommon);
-	number_response_wait_queue.push_back(2);
-	last_id = push_command("GetContent eml://");
+	// filter: ijkGrid
+	push_command("GetTreeResources eml:// 3 false application/x-resqml+xml;version=2.0;type=obj_IjkGridRepresentation");
 }
 
 //----------------------------------------------------------------------------
@@ -384,72 +411,64 @@ void VtkEtpDocument::attach()
 }
 
 //----------------------------------------------------------------------------
-void VtkEtpDocument::receive_resources_tree(const std::string & rec_uri,
-		const std::string & rec_contentType,
-		const std::string & rec_name,
-		Energistics::Etp::v12::Datatypes::Object::ResourceKind & rec_resourceType,
-		const int32_t & rec_sourceCount,
-		const int32_t & rec_targetCount,
-		const int32_t & rec_contentCount,
-		const int64_t & rec_lastChanged)
+void VtkEtpDocument::receive_resources_tree(const std::string & rec_uri, const std::string & rec_name, const std::string & contentType, const int32_t & sourceCount)
 {
-	auto leaf = new VtkEpcCommon();
+	cout << "TreeView : " << rec_uri << " " << contentType << " " << sourceCount << endl;
 
-	leaf->setUuid(rec_uri);
-	leaf->setName(rec_name);
-	leaf->setType(VtkEpcCommon::Resqml2Type::INTERPRETATION);
-	leaf->setParentType(response_queue.front()->getType());
-	leaf->setParent(response_queue.front()->getUuid());
+	if (contentType == "application/x-resqml+xml;version=2.0;type=obj_IjkGridRepresentation"){
+		auto leaf = new VtkEpcCommon();
+		leaf->setName(rec_name);
+		leaf->setUuid(rec_uri);
+		leaf->setType(VtkEpcCommon::IJK_GRID);
+		leaf->setParent("EtpDoc");
+		leaf->setParentType(VtkEpcCommon::INTERPRETATION);
+		leaf->setTimeIndex(-1);
+		leaf->setTimestamp(0);
 
-	if (rec_contentCount>0) {
+		push_command("GetGraphResources "+rec_uri+" sources 1 false application/x-resqml+xml;version=2.0;type=obj_ContinuousProperty");
 		response_queue.push_back(leaf);
-		number_response_wait_queue.push_back(rec_contentCount);
-		command_queue.push_back("GetContent "+rec_uri);
+		treeView.push_back(leaf);
+	}
+	else if (contentType == "application/x-resqml+xml;version=2.0;type=obj_ContinuousProperty"){
+		auto leaf = new VtkEpcCommon();
+		leaf->setName(rec_name);
+		leaf->setUuid(rec_uri);
+		leaf->setType(VtkEpcCommon::PROPERTY);
+		leaf->setParent(response_queue.front()->getUuid());
+		leaf->setParentType(response_queue.front()->getType());
+		leaf->setTimeIndex(-1);
+		leaf->setTimestamp(0);
+
+		treeView.push_back(leaf);
+		response_queue.pop_front();
+	}
+	else {
+		response_queue.pop_front();
 	}
 
-	if (rec_resourceType==Energistics::Etp::v12::Datatypes::Object::ResourceKind::DataObject) {
-		std::size_t pos = rec_contentType.find(";type=");
-		std::string type = rec_contentType.substr (pos+6);
-
-		if(type=="obj_IjkGridRepresentation") {
-			leaf->setType(VtkEpcCommon::Resqml2Type::IJK_GRID);
-			treeView.push_back(leaf);
-			if (rec_sourceCount>0) {
-				response_queue.push_back(leaf);
-				number_response_wait_queue.push_back(rec_sourceCount);
-				command_queue.push_back("GetSources "+rec_uri);
-			}
-
-		}
-		if(type=="obj_SubRepresentation") {
-			leaf->setType(VtkEpcCommon::Resqml2Type::SUB_REP);
-			treeView.push_back(leaf);
-			if (rec_sourceCount>0) {
-				response_queue.push_back(leaf);
-				number_response_wait_queue.push_back(rec_sourceCount);
-				command_queue.push_back("GetSources "+rec_uri);
-			}
-
-		}
-		if(type=="obj_ContinuousProperty" || type=="obj_DiscreteProperty") {
-			leaf->setType(VtkEpcCommon::Resqml2Type::PROPERTY);
-
-			treeView.push_back(leaf);
-		}
+	if(response_queue.empty()) {
+		client_session->close();
+		client_session->epcDoc.close();
+		getPQEtpPanel()->setEtpTreeView(this->getTreeView());
 	}
+}
 
-	--number_response_wait_queue.front();
-	if(number_response_wait_queue.front() == 0) {
-		number_response_wait_queue.pop_front();
-		if (command_queue.size() > 0) {
-			response_queue.pop_front();
-			last_id = push_command(command_queue.front());
-			command_queue.pop_front();
+void VtkEtpDocument::receive_nbresources_tree(size_t nb_resources)
+{
+	if (!response_queue.empty()){
+		if (nb_resources > 0) {
+			auto copy = response_queue.front();
+			for (size_t nb = 1; nb < nb_resources; ++nb){
+				response_queue.push_front(copy);
+			}
 		}
 		else {
-			client_session->close();
-			client_session->epcDoc.close();
-			getPQEtpPanel()->setEtpTreeView(this->getTreeView());
+			response_queue.pop_front();
+			if(response_queue.empty()) {
+				client_session->close();
+				client_session->epcDoc.close();
+				getPQEtpPanel()->setEtpTreeView(this->getTreeView());
+			}
 		}
 	}
 }

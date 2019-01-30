@@ -55,7 +55,7 @@ vtkSmartPointer<vtkPoints> VtkIjkGridRepresentation::createpoint()
 		if (obj != nullptr && (obj->getXmlTag() == "IjkGridRepresentation" || obj->getXmlTag() == "TruncatedIjkGridRepresentation"))
 			ijkGridRepresentation = static_cast<resqml2_0_1::AbstractIjkGridRepresentation*>(obj);
 
-		const auto kInterfaceNodeCount = ijkGridRepresentation->getXyzPointCountOfKInterfaceOfPatch(0);
+		const ULONG64 kInterfaceNodeCount = ijkGridRepresentation->getXyzPointCountOfKInterfaceOfPatch(0);
 		iCellCount = ijkGridRepresentation->getICellCount();
 		jCellCount = ijkGridRepresentation->getJCellCount();
 		kCellCount = ijkGridRepresentation->getKCellCount();
@@ -80,7 +80,7 @@ vtkSmartPointer<vtkPoints> VtkIjkGridRepresentation::createpoint()
 				if (ijkGridRepresentation->getLocalCrs()->isDepthOriented())
 					zIndice = -1;
 
-				for (auto nodeIndex = 0; nodeIndex < kInterfaceNodeCount * 3; nodeIndex += 3)
+				for (ULONG64 nodeIndex = 0; nodeIndex < kInterfaceNodeCount * 3; nodeIndex += 3)
 				{
 					points->InsertNextPoint(allXyzPoints[nodeIndex], allXyzPoints[nodeIndex + 1], allXyzPoints[nodeIndex + 2] * zIndice);
 				}
@@ -348,7 +348,7 @@ void VtkIjkGridRepresentation::createWithPoints(const vtkSmartPointer<vtkPoints>
 			}
 			else
 			{
-				for (auto j = 0; j < ijkGridRepresentation->getCellCount(); ++j)
+				for (ULONG64 j = 0; j < ijkGridRepresentation->getCellCount(); ++j)
 				{
 					test[j] = true;
 				}

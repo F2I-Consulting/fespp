@@ -1,7 +1,9 @@
 #include "ui_PQSelectionPanel.h"
 #include "PQSelectionPanel.h"
 #include "PQToolsManager.h"
+#ifdef WITH_ETP
 #include "PQEtpPanel.h"
+#endif
 
 // include API Resqml2
 #include "resqml2_0_1/PolylineSetRepresentation.h"
@@ -66,7 +68,7 @@
 #include "VTK/VtkEpcDocumentSet.h"
 
 namespace {
-
+#ifdef WITH_ETP
 	PQEtpPanel* getPQEtpPanel() {
 		PQEtpPanel *panel = 0;
 		foreach(QWidget *widget, qApp->topLevelWidgets()) {
@@ -78,6 +80,7 @@ namespace {
 		}
 		return panel;
 	}
+#endif
 
 	pqPropertiesPanel* getpqPropertiesPanel() {
 		pqPropertiesPanel *panel = 0;
@@ -682,7 +685,7 @@ void PQSelectionPanel::uuidKO(const std::string & uuid)
 //*************************************
 //*     ETP
 //*************************************
-
+#ifdef WITH_ETP
 //----------------------------------------------------------------------------
 void PQSelectionPanel::setEtpTreeView(std::vector<VtkEpcCommon*> treeView)
 {
@@ -731,3 +734,4 @@ void PQSelectionPanel::connectPQEtpPanel()
 	qRegisterMetaType<std::vector<VtkEpcCommon*> >("std::vector<VtkEpcCommon*>");
 	connect(getPQEtpPanel(), SIGNAL(refreshTreeView(std::vector<VtkEpcCommon*>)), this, SLOT(setEtpTreeView(std::vector<VtkEpcCommon*>)));
 }
+#endif

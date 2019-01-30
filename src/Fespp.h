@@ -44,7 +44,9 @@ knowledge of the CeCILL license and that you accept its terms.
 
 #include <common/EpcDocument.h>
 
-#include "etp/VtkEtpDocument.h"
+#ifdef WITH_ETP
+	#include "etp/VtkEtpDocument.h"
+#endif
 
 class VtkEpcDocumentSet;
 class VtkEpcDocument;
@@ -96,7 +98,9 @@ protected:
 	int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *);
 
 	void RequestDataEpcDocument(vtkInformation *, vtkInformationVector **, vtkInformationVector *);
+#ifdef WITH_ETP
 	void RequestDataEtpDocument(vtkInformation *, vtkInformationVector **, vtkInformationVector *);
+#endif
 
 	void OpenEpcDocument(const std::string &);
 
@@ -123,7 +127,9 @@ private:
 #endif // PARAVIEW_USE_MPI
 
 	VtkEpcDocumentSet* epcDocumentSet;
+#ifdef WITH_ETP
 	VtkEtpDocument* etpDocument;
+#endif
 
 	int countTest;
 

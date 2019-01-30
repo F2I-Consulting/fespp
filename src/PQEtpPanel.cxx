@@ -51,7 +51,7 @@ void PQEtpPanel::constructor()
 void PQEtpPanel::handleButtonStatus()
 {
 	if (etp_connect) {
-		delete etp_document;
+//		delete etp_document;
 		etp_connect=false;
 		QIcon icon;
 		icon.addFile(QString::fromUtf8(":red_status.png"), QSize(), QIcon::Normal, QIcon::Off);

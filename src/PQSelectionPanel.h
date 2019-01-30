@@ -111,7 +111,9 @@ public:
 	*/
 	void deleteTreeView();
 
+#ifdef WITH_ETP
 	void connectPQEtpPanel();
+#endif
 
 
 
@@ -123,7 +125,9 @@ signals:
 
 protected slots:
 
+//#ifdef WITH_ETP
 	void setEtpTreeView(std::vector<VtkEpcCommon*>);
+//#endif
 	/**
 	* When a line is selected.
 	*/

@@ -43,7 +43,7 @@ knowledge of the CeCILL license and that you accept its terms.
 
 #include "VTK/VtkResqml2MultiBlockDataSet.h"
 
-#include <etp/ProtocolHandlers/DirectedDiscoveryHandlers.h>
+#include <etp/ProtocolHandlers/DiscoveryHandlers.h>
 
 #include "VTK/VtkEpcCommon.h"
 
@@ -86,14 +86,8 @@ public:
 	 */
 	void remove(const std::string & uuid);
 
-	void receive_resources_tree(const std::string & rec_uri,
-			const std::string & rec_contentType,
-			const std::string & rec_name,
-			Energistics::Etp::v12::Datatypes::Object::ResourceKind & rec_resourceType,
-			const int32_t & rec_sourceCount,
-			const int32_t & rec_targetCount,
-			const int32_t & rec_contentCount,
-			const int64_t & rec_lastChanged);
+	void receive_resources_tree(const std::string & rec_uri, const std::string & rec_name, const std::string & contentType, const int32_t & sourceCount);
+	void receive_nbresources_tree(size_t);
 
 	void setClientSession(EtpClientSession * session) {client_session = session;}
 
