@@ -108,10 +108,7 @@ VtkEtpDocument::VtkEtpDocument(const std::string & ipAddress, const std::string 
 	std::thread askUserThread(startio, this, ipAddress, port, mode);
 	askUserThread.detach(); // Detach the thread since we don't want it to be a blocking one.
 
-	last_id =0 ;
-#ifdef _WIN32
-	_CrtDumpMemoryLeaks();
-#endif
+	last_id = 0;
 }
 
 //----------------------------------------------------------------------------
@@ -148,7 +145,7 @@ int64_t VtkEtpDocument::push_command(const std::string & command)
 			client_session->send(mb);
 		}
 	}
-	if (commandTokens[0] == "GetGraphResources") {
+	else if (commandTokens[0] == "GetGraphResources") {
 		Energistics::Etp::v12::Protocol::Discovery::GetGraphResources mb;
 		mb.m_context.m_uri = commandTokens[1];
 		mb.m_scope = Energistics::Etp::v12::Datatypes::Object::ContextScopeKind::self;
@@ -182,6 +179,14 @@ int64_t VtkEtpDocument::push_command(const std::string & command)
 		else {
 			client_session->send(mb);
 		}
+	}
+	else if (commandTokens[0] == "GetDataObject") {
+		Energistics::Etp::v12::Protocol::Store::GetDataObjects getO;
+		getO.m_uris = tokenize(commandTokens[1], ',');
+		auto id = client_session->send(getO);
+		std::static_pointer_cast<EtpFesppDiscoveryProtocolHandlers>(client_session->getDiscoveryProtocolHandlers())->getObjectWhenDiscovered.push_back(id);
+		client_session->newAnsweredMessages(id);
+		return id;
 	}
 	else if (commandTokens.size() == 2) {
 		if (commandTokens[0] == "GetSourceObjects") {
@@ -233,7 +238,7 @@ void VtkEtpDocument::visualize(const std::string & rec_uri)
 	if(type=="obj_IjkGridRepresentation") {
 		auto it = uuidToVtkIjkGridRepresentation.find (uuid);
 		if ( it == uuidToVtkIjkGridRepresentation.end()){
-			push_command("GetObject "+rec_uri);
+			push_command("GetDataObject "+rec_uri);
 			push_command("GetSourceObjects "+rec_uri);
 			push_command("GetTargetObjects "+rec_uri);
 
@@ -263,7 +268,7 @@ void VtkEtpDocument::visualize(const std::string & rec_uri)
 				}
 				//property
 				auto valuesPropertySet = ijkGrid->getValuesPropertySet();
-				for (unsigned int i = 0; i < valuesPropertySet.size(); ++i)	{
+				for (size_t i = 0; i < valuesPropertySet.size(); ++i)	{
 					uuidIsChildOf[valuesPropertySet[i]->getUuid()] = new VtkEpcCommon();
 					createTreeVtk(valuesPropertySet[i]->getUuid(), ijkGrid->getUuid(), valuesPropertySet[i]->getTitle().c_str(), VtkEpcCommon::PROPERTY);
 				}
@@ -403,7 +408,7 @@ long VtkEtpDocument::getAttachmentPropertyCount(const std::string & uuid, const 
 //----------------------------------------------------------------------------
 void VtkEtpDocument::attach()
 {
-	for (unsigned int newBlockIndex = 0; newBlockIndex < attachUuids.size(); ++newBlockIndex) {
+	for (size_t newBlockIndex = 0; newBlockIndex < attachUuids.size(); ++newBlockIndex) {
 		std::string uuid = attachUuids[newBlockIndex];
 		vtkOutput->SetBlock(newBlockIndex, uuidToVtkIjkGridRepresentation[uuid]->getOutput());
 		vtkOutput->GetMetaData(newBlockIndex)->Set(vtkCompositeDataSet::NAME(), uuidToVtkIjkGridRepresentation[uuid]->getUuid().c_str());

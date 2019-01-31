@@ -23,13 +23,8 @@ EtpClientSession::EtpClientSession(boost::asio::io_context& ioc,
 	treeViewMode = (mode==VtkEpcCommon::Both || mode==VtkEpcCommon::TreeView);
 	representationMode = (mode==VtkEpcCommon::Both || mode==VtkEpcCommon::Representation);
 
-	try{
-		setCoreProtocolHandlers(std::make_shared<ETP_NS::CoreHandlers>(this));
-		setDiscoveryProtocolHandlers(std::make_shared<EtpFesppDiscoveryProtocolHandlers>(this, my_etp_document));
-		setStoreProtocolHandlers(std::make_shared<EtpFesppStoreProtocolHandlers>(this, my_etp_document));
-		setDataArrayProtocolHandlers(std::make_shared<ETP_NS::DataArrayHandlers>(this));
-	}
-	catch   (const std::exception & e){
-		answeredMessages.clear();
-	}
+	setCoreProtocolHandlers(std::make_shared<ETP_NS::CoreHandlers>(this));
+	setDiscoveryProtocolHandlers(std::make_shared<EtpFesppDiscoveryProtocolHandlers>(this, my_etp_document));
+	setStoreProtocolHandlers(std::make_shared<EtpFesppStoreProtocolHandlers>(this, my_etp_document));
+	setDataArrayProtocolHandlers(std::make_shared<ETP_NS::DataArrayHandlers>(this));
 }
