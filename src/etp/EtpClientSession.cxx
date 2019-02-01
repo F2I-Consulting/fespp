@@ -28,3 +28,15 @@ EtpClientSession::EtpClientSession(boost::asio::io_context& ioc,
 	setStoreProtocolHandlers(std::make_shared<EtpFesppStoreProtocolHandlers>(this, my_etp_document));
 	setDataArrayProtocolHandlers(std::make_shared<ETP_NS::DataArrayHandlers>(this));
 }
+
+bool EtpClientSession::isWaitingForAnswer() const {
+	return !messageIdToBeAnswered.empty();
+}
+
+void EtpClientSession::insertMessageIdTobeAnswered(int64_t messageId) {
+	messageIdToBeAnswered.insert(messageId);
+}
+
+void EtpClientSession::eraseMessageIdTobeAnswered(int64_t messageId) {
+	messageIdToBeAnswered.erase(messageId);
+}

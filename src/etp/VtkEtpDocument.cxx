@@ -184,8 +184,7 @@ int64_t VtkEtpDocument::push_command(const std::string & command)
 		Energistics::Etp::v12::Protocol::Store::GetDataObjects getO;
 		getO.m_uris = tokenize(commandTokens[1], ',');
 		auto id = client_session->send(getO);
-		std::static_pointer_cast<EtpFesppDiscoveryProtocolHandlers>(client_session->getDiscoveryProtocolHandlers())->getObjectWhenDiscovered.push_back(id);
-		client_session->newAnsweredMessages(id);
+		client_session->insertMessageIdTobeAnswered(id);
 		return id;
 	}
 	else if (commandTokens.size() == 2) {
@@ -198,7 +197,7 @@ int64_t VtkEtpDocument::push_command(const std::string & command)
 
 			auto id = client_session->send(mb);
 			std::static_pointer_cast<EtpFesppDiscoveryProtocolHandlers>(client_session->getDiscoveryProtocolHandlers())->getObjectWhenDiscovered.push_back(id);
-			client_session->newAnsweredMessages(id);
+			client_session->insertMessageIdTobeAnswered(id);
 			return id;
 		}
 		 if (commandTokens[0] == "GetTargetObjects") {
@@ -210,7 +209,7 @@ int64_t VtkEtpDocument::push_command(const std::string & command)
 
 			auto id = client_session->send(mb);
 			std::static_pointer_cast<EtpFesppDiscoveryProtocolHandlers>(client_session->getDiscoveryProtocolHandlers())->getObjectWhenDiscovered.push_back(id);
-			client_session->newAnsweredMessages(id);
+			client_session->insertMessageIdTobeAnswered(id);
 			return id;
 		}
 	}
@@ -242,7 +241,7 @@ void VtkEtpDocument::visualize(const std::string & rec_uri)
 			push_command("GetSourceObjects "+rec_uri);
 			push_command("GetTargetObjects "+rec_uri);
 
-			while(client_session->allReceived() == false){
+			while(client_session->isWaitingForAnswer()){
 			} // wait answers
 
 			setSessionToEtpHdfProxy(client_session);
@@ -288,7 +287,7 @@ void VtkEtpDocument::visualize(const std::string & rec_uri)
 			push_command("GetSourceObjects "+rec_uri);
 			push_command("GetTargetObjects "+rec_uri);
 
-			while(client_session->allReceived() == false){
+			while(client_session->isWaitingForAnswer()){
 			} // wait answers
 
 			setSessionToEtpHdfProxy(client_session);

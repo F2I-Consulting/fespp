@@ -123,9 +123,6 @@ public:
 
 	long getAttachmentPropertyCount(const std::string & uuid, const VtkEpcCommon::FesppAttachmentProperty propertyUnit) ;
 
-protected:
-
-	VtkEpcCommon* firstLeafOfTreeView();
 private:
 
 	int64_t push_command(const std::string & command);
@@ -148,12 +145,6 @@ private:
 
 	int64_t last_id;
 
-#if _MSC_VER < 1600
-	std::tr1::unordered_map<std::string, VtkIjkGridRepresentation*> uuidToVtkIjkGridRepresentation;
-#else
-		std::unordered_map<std::string, VtkIjkGridRepresentation*> uuidToVtkIjkGridRepresentation;
-#endif
-
-
+	std::unordered_map<std::string, VtkIjkGridRepresentation*> uuidToVtkIjkGridRepresentation;
 };
 #endif

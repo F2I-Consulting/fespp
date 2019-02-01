@@ -21,7 +21,7 @@ void EtpFesppDiscoveryProtocolHandlers::on_GetResourcesResponse(const Energistic
 				if (resqmlObj == nullptr || resqmlObj->isPartial()) {
 					Energistics::Etp::v12::Protocol::Store::GetDataObjects getO;
 					getO.m_uris.push_back(graphResource.m_uri);
-					static_cast<EtpClientSession*>(session)->newAnsweredMessages(session->send(getO));
+					static_cast<EtpClientSession*>(session)->insertMessageIdTobeAnswered(session->send(getO));
 				}
 			}
 		}
@@ -30,6 +30,6 @@ void EtpFesppDiscoveryProtocolHandlers::on_GetResourcesResponse(const Energistic
 			etp_document->receive_resources_tree(graphResource.m_uri, graphResource.m_name,graphResource.m_contentType, sourceCount);
 		}
 	}
-	static_cast<EtpClientSession*>(session)->receivedAnsweredMessages(correlationId);
+	static_cast<EtpClientSession*>(session)->eraseMessageIdTobeAnswered(correlationId);
 }
 
