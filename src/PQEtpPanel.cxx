@@ -49,28 +49,16 @@ void PQEtpPanel::constructor()
 
 	// Create treeview button
 	EtpSendButton = ui.refresh;
-	connect(EtpSendButton, SIGNAL (released()), this, SLOT (handleButtonRefresh()));
-
-
+	connect(EtpSendButton, &QAbstractButton::released, this, &PQEtpPanel::handleButtonRefresh);
 }
 
-//******************************* ACTIONS ************************************
-//----------------------------------------------------------------------------
-void PQEtpPanel::handleButtonStatus()
-{
-	if (etp_connect) {
-//		delete etp_document;
-		icon.addFile(QString::fromUtf8(":red_status.png"), QSize(), QIcon::Normal, QIcon::Off);
-		EtpStatus_Button->setIcon(icon);
-	}
-}
 void PQEtpPanel::handleButtonRefresh()
 {
 	if (etp_connect) {
 		etp_document->createTree();
 		getPQSelectionPanel()->connectPQEtpPanel();
 		EtpSendButton->setText("Refresh");
-		etp_connect=false;
+		etp_connect = false;
 		QIcon icon;
 	}
 }
