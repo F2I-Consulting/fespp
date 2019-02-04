@@ -90,7 +90,7 @@ void PQEtpConnectionManager::setupPipeline()
 		manager->etp_existPipe(true);
 	}
 
-	if (fesppReader) {
+	if (fesppReader != nullptr) {
 		pqActiveObjects *activeObjects = &pqActiveObjects::instance();
 		activeObjects->setActiveSource(fesppReader);
 

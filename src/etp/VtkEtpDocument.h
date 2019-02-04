@@ -89,6 +89,7 @@ public:
 	void receive_resources_tree(const std::string & rec_uri, const std::string & rec_name, const std::string & contentType, const int32_t & sourceCount);
 	void receive_nbresources_tree(size_t);
 
+	EtpClientSession* getClientSession();
 	void setClientSession(EtpClientSession * session) {client_session = session;}
 
 	void createTree();

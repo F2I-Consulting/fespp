@@ -76,8 +76,7 @@ void startio(VtkEtpDocument *etp_document, std::string ipAddress, std::string po
 	protocol.m_role = "store";
 	requestedProtocols.push_back(protocol);
 
-
-	protocol.m_protocol = Energistics::Etp::v12::Datatypes::Protocol::DirectedDiscovery;
+	protocol.m_protocol = Energistics::Etp::v12::Datatypes::Protocol::DataArray;
 	protocol.m_protocolVersion = protocolVersion;
 	protocol.m_role = "store";
 	requestedProtocols.push_back(protocol);
@@ -98,15 +97,15 @@ void startio(VtkEtpDocument *etp_document, std::string ipAddress, std::string po
 
 //----------------------------------------------------------------------------
 VtkEtpDocument::VtkEtpDocument(const std::string & ipAddress, const std::string & port, const VtkEpcCommon::modeVtkEpc & mode) :
-		VtkResqml2MultiBlockDataSet("EtpDocument", "EtpDocument", "EtpDocument", "", 0, 0)
+		VtkResqml2MultiBlockDataSet("EtpDocument", "EtpDocument", "EtpDocument", "", 0, 0), client_session(nullptr)
 {
 	treeViewMode = (mode==VtkEpcCommon::Both || mode==VtkEpcCommon::TreeView);
 	representationMode = (mode==VtkEpcCommon::Both || mode==VtkEpcCommon::Representation);
 
 	vtkOutput = vtkSmartPointer<vtkMultiBlockDataSet>::New();
 
-	std::thread askUserThread(startio, this, ipAddress, port, mode);
-	askUserThread.detach(); // Detach the thread since we don't want it to be a blocking one.
+	std::thread runSessionThread(startio, this, ipAddress, port, mode);
+	runSessionThread.detach(); // Detach the thread since we don't want it to be a blocking one.
 
 	last_id = 0;
 }
@@ -114,10 +113,15 @@ VtkEtpDocument::VtkEtpDocument(const std::string & ipAddress, const std::string 
 //----------------------------------------------------------------------------
 VtkEtpDocument::~VtkEtpDocument()
 {
-	if (client_session)	{
+	if (client_session != nullptr)	{
 		client_session->close();
 		client_session->epcDoc.close();
 	}
+}
+
+EtpClientSession* VtkEtpDocument::getClientSession()
+{
+	return client_session;
 }
 
 //----------------------------------------------------------------------------
@@ -234,9 +238,9 @@ void VtkEtpDocument::visualize(const std::string & rec_uri)
 	std::string uuid = rec_uri.substr(pos1, rec_uri.find_last_of(")") - pos1);
 
 	std::string uuidParent = "etpDocument";
-	if(type=="obj_IjkGridRepresentation") {
-		auto it = uuidToVtkIjkGridRepresentation.find (uuid);
-		if ( it == uuidToVtkIjkGridRepresentation.end()){
+	if(type == "obj_IjkGridRepresentation") {
+		if (uuidToVtkIjkGridRepresentation.find(uuid) == uuidToVtkIjkGridRepresentation.end() ||
+			uuidToVtkIjkGridRepresentation[uuid]->getOutput() == nullptr) {
 			push_command("GetDataObject "+rec_uri);
 			push_command("GetSourceObjects "+rec_uri);
 			push_command("GetTargetObjects "+rec_uri);
@@ -245,10 +249,8 @@ void VtkEtpDocument::visualize(const std::string & rec_uri)
 			} // wait answers
 
 			setSessionToEtpHdfProxy(client_session);
-			COMMON_NS::EpcDocument& epcDoc = client_session->epcDoc;
 
-			auto ijkGridSet = epcDoc.getIjkGridRepresentationSet();
-
+			auto ijkGridSet = client_session->epcDoc.getIjkGridRepresentationSet();
 			for (const auto & ijkGrid : ijkGridSet) {
 
 				auto interpretation = ijkGrid->getInterpretation();
@@ -256,62 +258,28 @@ void VtkEtpDocument::visualize(const std::string & rec_uri)
 					uuidParent = interpretation->getUuid();
 				}
 
-				uuidIsChildOf[ijkGrid->getUuid()] = new VtkEpcCommon();
+				if (uuidIsChildOf[ijkGrid->getUuid()] == nullptr) {
+					uuidIsChildOf[ijkGrid->getUuid()] = new VtkEpcCommon();
+				}
 
+				// If the grid is not partial, create a VTK object for the ijk grid and visualize it.
 				if (ijkGrid->isPartial()) {
 					std::cout << "Partial Ijk Grid " << ijkGrid->getTitle() << " : " << ijkGrid->getUuid() << std::endl;
 					createTreeVtk(ijkGrid->getUuid(), uuidParent, ijkGrid->getTitle().c_str(), VtkEpcCommon::PARTIAL);
 				}
 				else {
 					createTreeVtk(ijkGrid->getUuid(), uuidParent, ijkGrid->getTitle().c_str(), VtkEpcCommon::IJK_GRID);
+					uuidToVtkIjkGridRepresentation[uuid]->visualize(uuid);
 				}
-				//property
+
+				// property
 				auto valuesPropertySet = ijkGrid->getValuesPropertySet();
-				for (size_t i = 0; i < valuesPropertySet.size(); ++i)	{
-					uuidIsChildOf[valuesPropertySet[i]->getUuid()] = new VtkEpcCommon();
-					createTreeVtk(valuesPropertySet[i]->getUuid(), ijkGrid->getUuid(), valuesPropertySet[i]->getTitle().c_str(), VtkEpcCommon::PROPERTY);
-				}
-
-				uuidToVtkIjkGridRepresentation[uuid]->visualize(uuid);
-
-				// attach representation to EtpDocument VtkMultiBlockDataSet
-				if (std::find(attachUuids.begin(), attachUuids.end(), uuid) == attachUuids.end())	{
-					this->detach();
-					attachUuids.push_back(uuid);
-					this->attach();
-				}
-			}
-		}
-		else if (uuidToVtkIjkGridRepresentation[uuid]->getOutput()==nullptr) {
-			push_command("GetObject "+rec_uri);
-			push_command("GetSourceObjects "+rec_uri);
-			push_command("GetTargetObjects "+rec_uri);
-
-			while(client_session->isWaitingForAnswer()){
-			} // wait answers
-
-			setSessionToEtpHdfProxy(client_session);
-			COMMON_NS::EpcDocument& epcDoc = client_session->epcDoc;
-
-			auto ijkGridSet = epcDoc.getIjkGridRepresentationSet();
-
-			for (const auto & ijkGrid : ijkGridSet) {
-				auto interpretation = ijkGrid->getInterpretation();
-				if (interpretation!=nullptr) {
-					uuidParent = interpretation->getUuid();
-				}
-
-				uuidIsChildOf[ijkGrid->getUuid()] = new VtkEpcCommon();
-				createTreeVtk(ijkGrid->getUuid(), uuidParent, ijkGrid->getTitle().c_str(), ijkGrid->isPartial() ? VtkEpcCommon::PARTIAL : VtkEpcCommon::IJK_GRID);
-
-				//property
-				auto valuesPropertySet = ijkGrid->getValuesPropertySet();
-				for (const auto & valuesPropery : valuesPropertySet)	{
-					uuidIsChildOf[valuesPropery->getUuid()] = new VtkEpcCommon();
+				for (const auto & valuesPropery : valuesPropertySet) {
+					if (uuidIsChildOf[valuesPropery->getUuid()] == nullptr) {
+						uuidIsChildOf[valuesPropery->getUuid()] = new VtkEpcCommon();
+					}
 					createTreeVtk(valuesPropery->getUuid(), ijkGrid->getUuid(), valuesPropery->getTitle().c_str(), VtkEpcCommon::PROPERTY);
 				}
-
-				uuidToVtkIjkGridRepresentation[uuid]->visualize(uuid);
 
 				// attach representation to EtpDocument VtkMultiBlockDataSet
 				if (std::find(attachUuids.begin(), attachUuids.end(), uuid) == attachUuids.end())	{
@@ -335,17 +303,20 @@ void VtkEtpDocument::visualize(const std::string & rec_uri)
 //----------------------------------------------------------------------------
 void VtkEtpDocument::createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, const VtkEpcCommon::Resqml2Type & type)
 {
-	uuidIsChildOf[uuid]->setType( type);
-	uuidIsChildOf[uuid]->setUuid(uuid);
-	uuidIsChildOf[uuid]->setParent(parent);
-	uuidIsChildOf[uuid]->setName(name);
-	uuidIsChildOf[uuid]->setTimeIndex(-1);
-	uuidIsChildOf[uuid]->setTimestamp(0);
+	VtkEpcCommon* tmp = uuidIsChildOf[uuid];
+	tmp->setType( type);
+	tmp->setUuid(uuid);
+	tmp->setParent(parent);
+	tmp->setName(name);
+	tmp->setTimeIndex(-1);
+	tmp->setTimestamp(0);
 
-	uuidIsChildOf[uuid]->setParentType(uuidIsChildOf[parent] ? uuidIsChildOf[parent]->getType() : VtkEpcCommon::INTERPRETATION);
+	tmp->setParentType(uuidIsChildOf[parent] != nullptr ? uuidIsChildOf[parent]->getType() : VtkEpcCommon::INTERPRETATION);
 
 	if (type == VtkEpcCommon::Resqml2Type::IJK_GRID) {
-		uuidToVtkIjkGridRepresentation[uuid] = new VtkIjkGridRepresentation("etpDocument", name, uuid, parent, &client_session->epcDoc, nullptr);
+		if (uuidToVtkIjkGridRepresentation[uuid] == nullptr) {
+			uuidToVtkIjkGridRepresentation[uuid] = new VtkIjkGridRepresentation("etpDocument", name, uuid, parent, &client_session->epcDoc, nullptr);
+		}
 	}
 	else if (type == VtkEpcCommon::Resqml2Type::PROPERTY) {
 		addPropertyTreeVtk(uuid, parent, name);
@@ -362,8 +333,6 @@ void VtkEtpDocument::addPropertyTreeVtk(const std::string & uuid, const std::str
 		uuidToVtkIjkGridRepresentation[parent]->createTreeVtk(uuid, parent, name, uuidIsChildOf[uuid]->getType());
 	}
 }
-
-
 
 //----------------------------------------------------------------------------
 void VtkEtpDocument::unvisualize(const std::string & rec_uri)

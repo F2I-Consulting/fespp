@@ -732,6 +732,6 @@ void PQSelectionPanel::setEtpTreeView(std::vector<VtkEpcCommon*> treeView)
 void PQSelectionPanel::connectPQEtpPanel()
 {
 	qRegisterMetaType<std::vector<VtkEpcCommon*> >("std::vector<VtkEpcCommon*>");
-	connect(getPQEtpPanel(), SIGNAL(refreshTreeView(std::vector<VtkEpcCommon*>)), this, SLOT(setEtpTreeView(std::vector<VtkEpcCommon*>)));
+	connect(getPQEtpPanel(), &PQEtpPanel::refreshTreeView, this, &PQSelectionPanel::setEtpTreeView);
 }
 #endif

@@ -51,24 +51,25 @@ class PQEtpPanel : public QDockWidget
 	typedef QDockWidget Superclass;
 public:
 	PQEtpPanel(const QString &t, QWidget* p = 0, Qt::WindowFlags f=0):
-		Superclass(t, p, f) { this->constructor(); }
+		Superclass(t, p, f), etp_document(nullptr) { this->constructor(); }
 	PQEtpPanel(QWidget *p=0, Qt::WindowFlags f=0):
-		Superclass(p, f) { this->constructor(); }
+		Superclass(p, f), etp_document(nullptr) { this->constructor(); }
+
+	~PQEtpPanel() {}
 	
 	void etpClientConnect(const std::string & ipAddress, const std::string & port);
-	void setConnectionStatus(bool connect) { etp_connect = connect; }
-	void setVtkEtpDocuement(VtkEtpDocument* vtkEtp) { etp_document = vtkEtp; }
 
-
+	/**
+	* Emit a signal indicating to refresh the tree view
+	*/
 	void setEtpTreeView(std::vector<VtkEpcCommon*>);
 
 signals:
 	void refreshTreeView(std::vector<VtkEpcCommon*>);
 
 protected slots:
-	void handleButtonStatus();
 	void handleButtonRefresh();
-  
+
 private:
 	void constructor();
 

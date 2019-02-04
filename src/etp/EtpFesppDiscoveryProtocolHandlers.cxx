@@ -32,4 +32,3 @@ void EtpFesppDiscoveryProtocolHandlers::on_GetResourcesResponse(const Energistic
 	}
 	static_cast<EtpClientSession*>(session)->eraseMessageIdTobeAnswered(correlationId);
 }
-
