@@ -51,9 +51,9 @@ class PQEtpPanel : public QDockWidget
 	typedef QDockWidget Superclass;
 public:
 	PQEtpPanel(const QString &t, QWidget* p = 0, Qt::WindowFlags f=0):
-		Superclass(t, p, f), etp_document(nullptr) { this->constructor(); }
+		Superclass(t, p, f) { this->constructor(); }
 	PQEtpPanel(QWidget *p=0, Qt::WindowFlags f=0):
-		Superclass(p, f), etp_document(nullptr) { this->constructor(); }
+		Superclass(p, f) { this->constructor(); }
 
 	~PQEtpPanel() {}
 	
@@ -76,7 +76,8 @@ private:
 	QPushButton *EtpSendButton;
 	QPushButton *EtpStatus_Button;
 
-	VtkEtpDocument* etp_document;
+	std::string ipAddress;
+	std::string port;
 
 	bool etp_connect;
 };

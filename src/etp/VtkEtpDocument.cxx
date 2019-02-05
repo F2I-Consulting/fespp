@@ -224,8 +224,11 @@ int64_t VtkEtpDocument::push_command(const std::string & command)
 //----------------------------------------------------------------------------
 void VtkEtpDocument::createTree()
 {
-	// filter: ijkGrid
-	push_command("GetTreeResources eml:// 3 false application/x-resqml+xml;version=2.0;type=obj_IjkGridRepresentation");
+	Energistics::Etp::v12::Protocol::Discovery::GetTreeResources mb;
+	mb.m_context.m_uri = "eml://";
+	mb.m_context.m_depth = 3;
+	mb.m_context.m_contentTypes.push_back("application/x-resqml+xml;version=2.0;type=obj_IjkGridRepresentation");
+	client_session->send(mb);
 }
 
 //----------------------------------------------------------------------------
