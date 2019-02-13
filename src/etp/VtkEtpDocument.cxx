@@ -253,43 +253,44 @@ void VtkEtpDocument::visualize(const std::string & rec_uri)
 
 			setSessionToEtpHdfProxy(client_session);
 
-			auto ijkGridSet = client_session->epcDoc.getIjkGridRepresentationSet();
-			for (const auto & ijkGrid : ijkGridSet) {
+			RESQML2_0_1_NS::AbstractIjkGridRepresentation * ijkGrid = client_session->epcDoc.getResqmlAbstractObjectByUuid<RESQML2_0_1_NS::AbstractIjkGridRepresentation>(uuid);
+			if (ijkGrid == nullptr) { // Defensive code
+				std::cerr << "The requested ETP ijk grid " << uuid << " could not have been retrieved from the ETP server." << std::endl;
+			}
 
-				auto interpretation = ijkGrid->getInterpretation();
-				if (interpretation!=nullptr) {
-					uuidParent = interpretation->getUuid();
-				}
+			auto interpretation = ijkGrid->getInterpretation();
+			if (interpretation!=nullptr) {
+				uuidParent = interpretation->getUuid();
+			}
 
-				if (uuidIsChildOf[ijkGrid->getUuid()] == nullptr) {
-					uuidIsChildOf[ijkGrid->getUuid()] = new VtkEpcCommon();
-				}
+			if (uuidIsChildOf[ijkGrid->getUuid()] == nullptr) {
+				uuidIsChildOf[ijkGrid->getUuid()] = new VtkEpcCommon();
+			}
 
-				// If the grid is not partial, create a VTK object for the ijk grid and visualize it.
-				if (ijkGrid->isPartial()) {
-					std::cout << "Partial Ijk Grid " << ijkGrid->getTitle() << " : " << ijkGrid->getUuid() << std::endl;
-					createTreeVtk(ijkGrid->getUuid(), uuidParent, ijkGrid->getTitle().c_str(), VtkEpcCommon::PARTIAL);
-				}
-				else {
-					createTreeVtk(ijkGrid->getUuid(), uuidParent, ijkGrid->getTitle().c_str(), VtkEpcCommon::IJK_GRID);
-					uuidToVtkIjkGridRepresentation[uuid]->visualize(uuid);
-				}
+			// If the grid is not partial, create a VTK object for the ijk grid and visualize it.
+			if (ijkGrid->isPartial()) {
+				std::cout << "Partial Ijk Grid " << ijkGrid->getTitle() << " : " << ijkGrid->getUuid() << std::endl;
+				createTreeVtk(ijkGrid->getUuid(), uuidParent, ijkGrid->getTitle().c_str(), VtkEpcCommon::PARTIAL);
+			}
+			else {
+				createTreeVtk(ijkGrid->getUuid(), uuidParent, ijkGrid->getTitle().c_str(), VtkEpcCommon::IJK_GRID);
+				uuidToVtkIjkGridRepresentation[uuid]->visualize(uuid);
+			}
 
-				// property
-				auto valuesPropertySet = ijkGrid->getValuesPropertySet();
-				for (const auto & valuesPropery : valuesPropertySet) {
-					if (uuidIsChildOf[valuesPropery->getUuid()] == nullptr) {
-						uuidIsChildOf[valuesPropery->getUuid()] = new VtkEpcCommon();
-					}
-					createTreeVtk(valuesPropery->getUuid(), ijkGrid->getUuid(), valuesPropery->getTitle().c_str(), VtkEpcCommon::PROPERTY);
+			// property
+			auto valuesPropertySet = ijkGrid->getValuesPropertySet();
+			for (const auto & valuesPropery : valuesPropertySet) {
+				if (uuidIsChildOf[valuesPropery->getUuid()] == nullptr) {
+					uuidIsChildOf[valuesPropery->getUuid()] = new VtkEpcCommon();
 				}
+				createTreeVtk(valuesPropery->getUuid(), ijkGrid->getUuid(), valuesPropery->getTitle().c_str(), VtkEpcCommon::PROPERTY);
+			}
 
-				// attach representation to EtpDocument VtkMultiBlockDataSet
-				if (std::find(attachUuids.begin(), attachUuids.end(), uuid) == attachUuids.end())	{
-					this->detach();
-					attachUuids.push_back(uuid);
-					this->attach();
-				}
+			// attach representation to EtpDocument VtkMultiBlockDataSet
+			if (std::find(attachUuids.begin(), attachUuids.end(), uuid) == attachUuids.end())	{
+				this->detach();
+				attachUuids.push_back(uuid);
+				this->attach();
 			}
 		}
 	}
