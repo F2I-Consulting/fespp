@@ -65,7 +65,7 @@ public:
 	/**
 	* Destructor
 	*/
-	~VtkEpcDocument();
+	virtual ~VtkEpcDocument();
 
 	/**
 	* method : visualize
@@ -88,7 +88,7 @@ public:
 	*
 	* if timeIndex = -1 then no time series link.
 	*/
-	std::vector<VtkEpcCommon*> getTreeView() const;
+	std::vector<VtkEpcCommon> getTreeView() const;
 
 	/**
 	* method : attach
@@ -101,7 +101,7 @@ public:
 	void addProperty(const std::string & uuidProperty, vtkDataArray* dataProperty);
 
 	VtkEpcCommon::Resqml2Type getType(std::string);
-	VtkEpcCommon* getInfoUuid(std::string);
+	VtkEpcCommon getInfoUuid(std::string);
 
 	long getAttachmentPropertyCount(const std::string & uuid, const VtkEpcCommon::FesppAttachmentProperty propertyUnit) ;
 	int getICellCount(const std::string & uuid) ;
@@ -169,6 +169,6 @@ private:
 
 	VtkEpcDocumentSet * epcSet;
 
-	std::vector<VtkEpcCommon*> treeView; // Tree
+	std::vector<VtkEpcCommon> treeView; // Tree
 };
 #endif

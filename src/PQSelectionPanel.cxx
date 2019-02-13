@@ -190,6 +190,12 @@ void PQSelectionPanel::constructor()
 
 }
 
+PQSelectionPanel::~PQSelectionPanel()
+{
+	delete timer;
+	delete vtkEpcDocumentSet;
+}
+
 //******************************* ACTIONS ************************************
 
 //----------------------------------------------------------------------------
@@ -448,16 +454,16 @@ void PQSelectionPanel::addFileName(const std::string & fileName)
 		auto treeView = vtkEpcDocumentSet->getTreeView();
 		for (auto &feuille : treeView) {
 
-			if (feuille->getTimeIndex()<0 ) {
-				populateTreeView(feuille->getParent(), feuille->getParentType(), feuille->getUuid(), feuille->getName(), feuille->getType(), "EpcDocument");
+			if (feuille.getTimeIndex()<0 ) {
+				populateTreeView(feuille.getParent(), feuille.getParentType(), feuille.getUuid(), feuille.getName(), feuille.getType(), "EpcDocument");
 			}
 			else {
-				if(name_to_uuid.count(feuille->getName())<=0) {
-					populateTreeView(feuille->getParent(), feuille->getParentType(), feuille->getUuid(), feuille->getName(), feuille->getType(), "EpcDocument");
-					name_to_uuid[feuille->getName()]=feuille->getUuid();
+				if(name_to_uuid.count(feuille.getName())<=0) {
+					populateTreeView(feuille.getParent(), feuille.getParentType(), feuille.getUuid(), feuille.getName(), feuille.getType(), "EpcDocument");
+					name_to_uuid[feuille.getName()]=feuille.getUuid();
 				}
 
-				ts_timestamp_to_uuid[name_to_uuid[feuille->getName()]][feuille->getTimestamp()] = feuille->getUuid();
+				ts_timestamp_to_uuid[name_to_uuid[feuille.getName()]][feuille.getTimestamp()] = feuille.getUuid();
 			}
 		}
 	}
@@ -687,19 +693,19 @@ void PQSelectionPanel::uuidKO(const std::string & uuid)
 //*************************************
 #ifdef WITH_ETP
 //----------------------------------------------------------------------------
-void PQSelectionPanel::setEtpTreeView(std::vector<VtkEpcCommon*> treeView)
+void PQSelectionPanel::setEtpTreeView(std::vector<VtkEpcCommon> treeView)
 {
 	QMap<std::string, std::string> name_to_uuid;
 	for (auto &feuille : treeView) {
-		if (feuille->getTimeIndex()<0 ) {
-			populateTreeView(feuille->getParent(), feuille->getParentType(), feuille->getUuid(), feuille->getName(), feuille->getType(), "EtpDocument");
+		if (feuille.getTimeIndex()<0 ) {
+			populateTreeView(feuille.getParent(), feuille.getParentType(), feuille.getUuid(), feuille.getName(), feuille.getType(), "EtpDocument");
 		}
 		else  {
-			if(name_to_uuid.count(feuille->getName())<=0) {
-				populateTreeView(feuille->getParent(), feuille->getParentType(), feuille->getUuid(), feuille->getName(), feuille->getType(), "EtpDocument");
-				name_to_uuid[feuille->getName()]=feuille->getUuid();
+			if(name_to_uuid.count(feuille.getName())<=0) {
+				populateTreeView(feuille.getParent(), feuille.getParentType(), feuille.getUuid(), feuille.getName(), feuille.getType(), "EtpDocument");
+				name_to_uuid[feuille.getName()]=feuille.getUuid();
 			}
-			ts_timestamp_to_uuid[name_to_uuid[feuille->getName()]][feuille->getTimestamp()] = feuille->getUuid();
+			ts_timestamp_to_uuid[name_to_uuid[feuille.getName()]][feuille.getTimestamp()] = feuille.getUuid();
 		}
 	}
 
@@ -731,7 +737,7 @@ void PQSelectionPanel::setEtpTreeView(std::vector<VtkEpcCommon*> treeView)
 
 void PQSelectionPanel::connectPQEtpPanel()
 {
-	qRegisterMetaType<std::vector<VtkEpcCommon*> >("std::vector<VtkEpcCommon*>");
+	qRegisterMetaType<std::vector<VtkEpcCommon> >("std::vector<VtkEpcCommon>");
 	connect(getPQEtpPanel(), &PQEtpPanel::refreshTreeView, this, &PQSelectionPanel::setEtpTreeView);
 }
 #endif

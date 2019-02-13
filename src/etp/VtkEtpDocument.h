@@ -48,11 +48,9 @@ knowledge of the CeCILL license and that you accept its terms.
 #include "VTK/VtkEpcCommon.h"
 
 // include system
-#if (defined(_WIN32) && _MSC_VER >= 1600)
+
 #include <unordered_map>
-#else
-#include <tr1/unordered_map>
-#endif
+
 
 class EtpClientSession;
 
@@ -99,7 +97,7 @@ public:
 	 * method : get TreeView
 	 * variable :
 	 */
-	std::vector<VtkEpcCommon*> getTreeView() const;
+	std::vector<VtkEpcCommon> getTreeView() const;
 
 	/**
 	 * method : visualize
@@ -134,7 +132,7 @@ private:
 	void createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, const VtkEpcCommon::Resqml2Type & resqmlType);
 
 	std::list<int> number_response_wait_queue;
-	std::list<VtkEpcCommon*> response_queue;
+	std::list<VtkEpcCommon> response_queue;
 	std::list<std::string> command_queue;
 
 	EtpClientSession * client_session;
@@ -142,10 +140,13 @@ private:
 	bool treeViewMode;
 	bool representationMode;
 
-	std::vector<VtkEpcCommon*> treeView; // Tree
+	std::vector<VtkEpcCommon> treeView; // Tree
 
 	int64_t last_id;
 
+
 	std::unordered_map<std::string, VtkIjkGridRepresentation*> uuidToVtkIjkGridRepresentation;
+
+
 };
 #endif

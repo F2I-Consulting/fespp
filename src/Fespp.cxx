@@ -81,7 +81,7 @@ Fespp::~Fespp()
 
 #ifdef WITH_ETP
 	if (etpDocument != nullptr) {
-//		delete etpDocument;
+		delete etpDocument;
 		etpDocument = nullptr;
 	}
 #endif

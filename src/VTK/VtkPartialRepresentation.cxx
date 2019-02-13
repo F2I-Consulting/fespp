@@ -23,6 +23,9 @@ epcPackage(pck), vtkEpcDocumentSource(vtkEpcDowumentWithCompleteRep), vtkPartial
 
 VtkPartialRepresentation::~VtkPartialRepresentation()
 {
+	for(auto i : uuidToVtkProperty) {
+		delete i.second;
+	}
 	uuidToVtkProperty.clear();
 
 	if (epcPackage != nullptr) {
@@ -128,7 +131,7 @@ VtkEpcCommon::Resqml2Type VtkPartialRepresentation::getType()
 }
 
 //----------------------------------------------------------------------------
-VtkEpcCommon* VtkPartialRepresentation::getInfoUuid()
+VtkEpcCommon VtkPartialRepresentation::getInfoUuid()
 {
 	return vtkEpcDocumentSource->getInfoUuid(vtkPartialReprUuid);
 }

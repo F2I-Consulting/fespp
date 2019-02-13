@@ -63,7 +63,7 @@ public:
 	/**
 	* Destructor
 	*/
-	~VtkSetPatch();
+	virtual ~VtkSetPatch();
 
 	/**
 	* method : createTreeVtk

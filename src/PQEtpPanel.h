@@ -55,17 +55,17 @@ public:
 	PQEtpPanel(QWidget *p=0, Qt::WindowFlags f=0):
 		Superclass(p, f) { this->constructor(); }
 
-	~PQEtpPanel() {}
+	~PQEtpPanel();
 	
 	void etpClientConnect(const std::string & ipAddress, const std::string & port);
 
 	/**
 	* Emit a signal indicating to refresh the tree view
 	*/
-	void setEtpTreeView(std::vector<VtkEpcCommon*>);
+	void setEtpTreeView(std::vector<VtkEpcCommon>);
 
 signals:
-	void refreshTreeView(std::vector<VtkEpcCommon*>);
+	void refreshTreeView(std::vector<VtkEpcCommon>);
 
 protected slots:
 	void handleButtonRefresh();

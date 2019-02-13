@@ -84,6 +84,8 @@ vtkSmartPointer<vtkPoints> VtkIjkGridRepresentation::createpoint()
 				{
 					points->InsertNextPoint(allXyzPoints[nodeIndex], allXyzPoints[nodeIndex + 1], allXyzPoints[nodeIndex + 2] * zIndice);
 				}
+
+				delete[] allXyzPoints;
 			}
 			std::string s = "ijkGrid idProc-maxProc : " + std::to_string(getIdProc()) + "-" + std::to_string(getMaxProc()) + " Points " + std::to_string(kInterfaceNodeCount*(maxKIndex-initKIndex)) +"\n";
 			char const * pchar = s.c_str();
@@ -329,6 +331,8 @@ void VtkIjkGridRepresentation::createWithPoints(const vtkSmartPointer<vtkPoints>
 			}
 		}
 		ijkGridRepresentation->unloadSplitInformation();
+
+		delete[] elementIndices;
 	}
 	else{
 		if (obj != nullptr && (obj->getXmlTag() == "IjkGridRepresentation" || obj->getXmlTag() == "TruncatedIjkGridRepresentation"))

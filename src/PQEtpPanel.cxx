@@ -52,6 +52,10 @@ void PQEtpPanel::constructor()
 	connect(EtpSendButton, &QAbstractButton::released, this, &PQEtpPanel::handleButtonRefresh);
 }
 
+PQEtpPanel::~PQEtpPanel()
+{
+}
+
 void PQEtpPanel::handleButtonRefresh()
 {
 	VtkEtpDocument etp_document(ipAddress, port, VtkEpcCommon::TreeView);
@@ -86,7 +90,7 @@ void PQEtpPanel::etpClientConnect(const std::string & ipAddress, const std::stri
 }
 
 //----------------------------------------------------------------------------
-void PQEtpPanel::setEtpTreeView(std::vector<VtkEpcCommon*> tree)
+void PQEtpPanel::setEtpTreeView(std::vector<VtkEpcCommon> tree)
 {
 	emit refreshTreeView(tree);
 }

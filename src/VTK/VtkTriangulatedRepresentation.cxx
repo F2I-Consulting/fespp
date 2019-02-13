@@ -69,6 +69,8 @@ void VtkTriangulatedRepresentation::createOutput(const std::string &uuid)
 			vtkOutput->SetPolys(triangulatedRepresentationTriangles);
 
 			points = nullptr;
+
+			delete[] triangleIndices;
 		}
 		else
 		{

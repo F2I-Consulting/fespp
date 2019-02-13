@@ -26,8 +26,14 @@ procRank(idProc), nbProc(maxProc)
 VtkEpcDocumentSet::~VtkEpcDocumentSet()
 {
 	vtkEpcNameList.clear();
+
 	uuidToVtkEpc.clear();
+
+	for (const auto& vtkEpc : vtkEpcList) {
+		delete vtkEpc;
+	}
 	vtkEpcList.clear();
+
 	treeView.clear(); // Tree
 
 	vtkOutput = NULL;
@@ -72,7 +78,7 @@ VtkEpcCommon::Resqml2Type VtkEpcDocumentSet::getType(std::string uuid)
 }
 
 //----------------------------------------------------------------------------
-VtkEpcCommon* VtkEpcDocumentSet::getInfoUuid(std::string uuid)
+VtkEpcCommon VtkEpcDocumentSet::getInfoUuid(std::string uuid)
 {
 	return  uuidToVtkEpc[uuid]->getInfoUuid(uuid);
 }
@@ -118,7 +124,7 @@ VtkEpcDocument* VtkEpcDocumentSet::getVtkEpcDocument(const std::string & uuid)
 }
 
 //----------------------------------------------------------------------------
-std::vector<VtkEpcCommon*> VtkEpcDocumentSet::getTreeView() const
+std::vector<VtkEpcCommon> VtkEpcDocumentSet::getTreeView() const
 {
 	return treeView;
 }

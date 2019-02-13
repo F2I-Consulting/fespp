@@ -81,7 +81,7 @@ public:
 	void unvisualize(const std::string & uuid);
 
 	VtkEpcCommon::Resqml2Type getType(std::string uuid);
-	VtkEpcCommon* getInfoUuid(std::string);
+	VtkEpcCommon getInfoUuid(std::string);
 
 	/**
 	* method : getOutput
@@ -89,7 +89,7 @@ public:
 	* return the vtkMultiBlockDataSet for each epcdocument.
 	*/
 	vtkSmartPointer<vtkMultiBlockDataSet> getVisualization() const;
-	std::vector<VtkEpcCommon*> getTreeView() const;
+	std::vector<VtkEpcCommon> getTreeView() const;
 
 	void addEpcDocument(const std::string & fileName);
 
@@ -109,7 +109,7 @@ private:
 	std::unordered_map<std::string, VtkEpcDocument*> uuidToVtkEpc; // link uuid/VtkEpcdocument
 #endif
 
-	std::vector<VtkEpcCommon*> treeView; // Tree
+	std::vector<VtkEpcCommon> treeView; // Tree
 
 	vtkSmartPointer<vtkMultiBlockDataSet> vtkOutput;
 

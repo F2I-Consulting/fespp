@@ -49,6 +49,11 @@ void PQMetaDataPanel::constructor()
   this->setVisible(false);
 }
 
+PQMetaDataPanel::~PQMetaDataPanel()
+{
+	delete tableViewModel;
+}
+
 void PQMetaDataPanel::displayMetaData(const std::string & fileName, const std::string & uuid, common::EpcDocument *pck)
 {
 	common::AbstractObject *object = pck->getResqmlAbstractObjectByUuid(uuid);

@@ -117,6 +117,9 @@ VtkEtpDocument::~VtkEtpDocument()
 		client_session->close();
 		client_session->epcDoc.close();
 	}
+	for(auto i : uuidToVtkIjkGridRepresentation) {
+		delete i.second;
+	}
 }
 
 EtpClientSession* VtkEtpDocument::getClientSession()
@@ -263,10 +266,6 @@ void VtkEtpDocument::visualize(const std::string & rec_uri)
 				uuidParent = interpretation->getUuid();
 			}
 
-			if (uuidIsChildOf[ijkGrid->getUuid()] == nullptr) {
-				uuidIsChildOf[ijkGrid->getUuid()] = new VtkEpcCommon();
-			}
-
 			// If the grid is not partial, create a VTK object for the ijk grid and visualize it.
 			if (ijkGrid->isPartial()) {
 				std::cout << "Partial Ijk Grid " << ijkGrid->getTitle() << " : " << ijkGrid->getUuid() << std::endl;
@@ -280,9 +279,6 @@ void VtkEtpDocument::visualize(const std::string & rec_uri)
 			// property
 			auto valuesPropertySet = ijkGrid->getValuesPropertySet();
 			for (const auto & valuesPropery : valuesPropertySet) {
-				if (uuidIsChildOf[valuesPropery->getUuid()] == nullptr) {
-					uuidIsChildOf[valuesPropery->getUuid()] = new VtkEpcCommon();
-				}
 				createTreeVtk(valuesPropery->getUuid(), ijkGrid->getUuid(), valuesPropery->getTitle().c_str(), VtkEpcCommon::PROPERTY);
 			}
 
@@ -295,10 +291,10 @@ void VtkEtpDocument::visualize(const std::string & rec_uri)
 		}
 	}
 	else if(type=="obj_ContinuousProperty" || type=="obj_DiscreteProperty" ) {
-		if (uuidIsChildOf[uuid]->getParentType() == VtkEpcCommon::IJK_GRID)	{
-			uuidToVtkIjkGridRepresentation[uuidIsChildOf[uuid]->getParent()]->visualize(uuid);
+		if (uuidIsChildOf[uuid].getParentType() == VtkEpcCommon::IJK_GRID)	{
+			uuidToVtkIjkGridRepresentation[uuidIsChildOf[uuid].getParent()]->visualize(uuid);
 		}
-		else if (uuidIsChildOf[uuid]->getParentType() == VtkEpcCommon::PARTIAL)	{
+		else if (uuidIsChildOf[uuid].getParentType() == VtkEpcCommon::PARTIAL)	{
 			std::cout << "properties: " << uuid << " is on partial Grid and is not yet implemented " << std::endl;
 		}
 	}
@@ -307,15 +303,15 @@ void VtkEtpDocument::visualize(const std::string & rec_uri)
 //----------------------------------------------------------------------------
 void VtkEtpDocument::createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, const VtkEpcCommon::Resqml2Type & type)
 {
-	VtkEpcCommon* tmp = uuidIsChildOf[uuid];
-	tmp->setType( type);
-	tmp->setUuid(uuid);
-	tmp->setParent(parent);
-	tmp->setName(name);
-	tmp->setTimeIndex(-1);
-	tmp->setTimestamp(0);
+	auto tmp = uuidIsChildOf[uuid];
+	tmp.setType( type);
+	tmp.setUuid(uuid);
+	tmp.setParent(parent);
+	tmp.setName(name);
+	tmp.setTimeIndex(-1);
+	tmp.setTimestamp(0);
 
-	tmp->setParentType(uuidIsChildOf[parent] != nullptr ? uuidIsChildOf[parent]->getType() : VtkEpcCommon::INTERPRETATION);
+	tmp.setParentType(uuidIsChildOf[parent].getUuid().empty() ? VtkEpcCommon::INTERPRETATION : uuidIsChildOf[parent].getType());
 
 	if (type == VtkEpcCommon::Resqml2Type::IJK_GRID) {
 		if (uuidToVtkIjkGridRepresentation[uuid] == nullptr) {
@@ -328,13 +324,14 @@ void VtkEtpDocument::createTreeVtk(const std::string & uuid, const std::string &
 	else if (type == VtkEpcCommon::Resqml2Type::PARTIAL) {
 		cout << " PARTIAL : " << uuid << endl;
 	}
+	uuidIsChildOf[uuid] = tmp;
 }
 
 //----------------------------------------------------------------------------
 void VtkEtpDocument::addPropertyTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name)
 {
-	if (uuidIsChildOf[parent]->getType() == VtkEpcCommon::IJK_GRID) {
-		uuidToVtkIjkGridRepresentation[parent]->createTreeVtk(uuid, parent, name, uuidIsChildOf[uuid]->getType());
+	if (uuidIsChildOf[parent].getType() == VtkEpcCommon::IJK_GRID) {
+		uuidToVtkIjkGridRepresentation[parent]->createTreeVtk(uuid, parent, name, uuidIsChildOf[uuid].getType());
 	}
 }
 
@@ -354,13 +351,15 @@ void VtkEtpDocument::unvisualize(const std::string & rec_uri)
 void VtkEtpDocument::remove(const std::string & uuid)
 {
 	auto uuidtoAttach = uuid;
-	if (uuidIsChildOf[uuid]->getType() == VtkEpcCommon::PROPERTY) {
-		uuidtoAttach = uuidIsChildOf[uuid]->getParent();
+	if (uuidIsChildOf[uuid].getType() == VtkEpcCommon::PROPERTY) {
+		uuidtoAttach = uuidIsChildOf[uuid].getParent();
 	}
 
 	if (std::find(attachUuids.begin(), attachUuids.end(), uuidtoAttach) != attachUuids.end()) {
-		if (uuidIsChildOf[uuidtoAttach]->getType() == VtkEpcCommon::IJK_GRID) {
+		if (uuidIsChildOf[uuidtoAttach].getType() == VtkEpcCommon::IJK_GRID) {
 			uuidToVtkIjkGridRepresentation[uuidtoAttach]->remove(uuid);
+			delete uuidToVtkIjkGridRepresentation[uuidtoAttach];
+			uuidToVtkIjkGridRepresentation.erase(uuidtoAttach);
 			if (uuid == uuidtoAttach) {
 				this->detach();
 				attachUuids.erase(std::find(attachUuids.begin(), attachUuids.end(), uuid));
@@ -393,28 +392,28 @@ void VtkEtpDocument::receive_resources_tree(const std::string & rec_uri, const s
 	cout << "TreeView : " << rec_uri << " " << contentType << " " << sourceCount << endl;
 
 	if (contentType == "application/x-resqml+xml;version=2.0;type=obj_IjkGridRepresentation"){
-		auto leaf = new VtkEpcCommon();
-		leaf->setName(rec_name);
-		leaf->setUuid(rec_uri);
-		leaf->setType(VtkEpcCommon::IJK_GRID);
-		leaf->setParent("EtpDoc");
-		leaf->setParentType(VtkEpcCommon::INTERPRETATION);
-		leaf->setTimeIndex(-1);
-		leaf->setTimestamp(0);
+		VtkEpcCommon leaf;
+		leaf.setName(rec_name);
+		leaf.setUuid(rec_uri);
+		leaf.setType(VtkEpcCommon::IJK_GRID);
+		leaf.setParent("EtpDoc");
+		leaf.setParentType(VtkEpcCommon::INTERPRETATION);
+		leaf.setTimeIndex(-1);
+		leaf.setTimestamp(0);
 
 		push_command("GetGraphResources "+rec_uri+" sources 1 false application/x-resqml+xml;version=2.0;type=obj_ContinuousProperty");
 		response_queue.push_back(leaf);
 		treeView.push_back(leaf);
 	}
 	else if (contentType == "application/x-resqml+xml;version=2.0;type=obj_ContinuousProperty"){
-		auto leaf = new VtkEpcCommon();
-		leaf->setName(rec_name);
-		leaf->setUuid(rec_uri);
-		leaf->setType(VtkEpcCommon::PROPERTY);
-		leaf->setParent(response_queue.front()->getUuid());
-		leaf->setParentType(response_queue.front()->getType());
-		leaf->setTimeIndex(-1);
-		leaf->setTimestamp(0);
+		VtkEpcCommon leaf;
+		leaf.setName(rec_name);
+		leaf.setUuid(rec_uri);
+		leaf.setType(VtkEpcCommon::PROPERTY);
+		leaf.setParent(response_queue.front().getUuid());
+		leaf.setParentType(response_queue.front().getType());
+		leaf.setTimeIndex(-1);
+		leaf.setTimestamp(0);
 
 		treeView.push_back(leaf);
 		response_queue.pop_front();
@@ -451,7 +450,7 @@ void VtkEtpDocument::receive_nbresources_tree(size_t nb_resources)
 }
 
 //----------------------------------------------------------------------------
-std::vector<VtkEpcCommon*> VtkEtpDocument::getTreeView() const
+std::vector<VtkEpcCommon> VtkEtpDocument::getTreeView() const
 {
 	return treeView;
 }

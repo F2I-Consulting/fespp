@@ -19,8 +19,6 @@ VtkAbstractObject(fileName, name, uuid, uuidParent, idProc, maxProc), epcPackage
 
 VtkAbstractRepresentation::~VtkAbstractRepresentation()
 {
-	uuidToVtkProperty.clear();
-
 	if (epcPackageRepresentation != nullptr) {
 		epcPackageRepresentation = nullptr;
 	}
@@ -28,6 +26,11 @@ VtkAbstractRepresentation::~VtkAbstractRepresentation()
 	if (epcPackageSubRepresentation != nullptr) {
 		epcPackageSubRepresentation = nullptr;
 	}
+
+	for(auto i : uuidToVtkProperty) {
+		delete i.second;
+	}
+	uuidToVtkProperty.clear();
 
 	points = NULL;
 }

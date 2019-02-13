@@ -98,6 +98,8 @@ public:
 	PQSelectionPanel(QWidget *p=0, Qt::WindowFlags f=0):
     Superclass(p, f) { this->constructor(); }
 
+	~PQSelectionPanel();
+
 	/**
 	* Open an epc document and create the treeWidget in panel.
 	* @return informative message
@@ -126,7 +128,7 @@ signals:
 protected slots:
 
 //#ifdef WITH_ETP
-	void setEtpTreeView(std::vector<VtkEpcCommon*>);
+	void setEtpTreeView(std::vector<VtkEpcCommon>);
 //#endif
 	/**
 	* When a line is selected.
