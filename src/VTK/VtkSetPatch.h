@@ -42,11 +42,14 @@ knowledge of the CeCILL license and that you accept its terms.
 
 #include "VtkResqml2MultiBlockDataSet.h"
 
+// Fesapi namespaces
+#include "nsDefinitions.h"
+
 class VtkPolylineRepresentation;
 class VtkTriangulatedRepresentation;
 class VtkProperty;
 
-namespace common
+namespace COMMON_NS
 {
 	class EpcDocument;
 }
@@ -58,7 +61,7 @@ public:
 	/**
 	* Constructor
 	*/
-	VtkSetPatch (const std::string & fileName, const std::string & name, const std:: string & uuid, const std::string & uuidParent, common::EpcDocument *pckEPC, const int & idProc=0, const int & maxProc=0);
+	VtkSetPatch (const std::string & fileName, const std::string & name, const std:: string & uuid, const std::string & uuidParent, COMMON_NS::EpcDocument *pckEPC, const int & idProc=0, const int & maxProc=0);
 	
 	/**
 	* Destructor
@@ -100,17 +103,11 @@ protected:
 	
 private:
 	// EPC DOCUMENT
-	common::EpcDocument *epcPackage;
+	COMMON_NS::EpcDocument *epcPackage;
 	
 	// All representation
-#if _MSC_VER < 1600
-	std::tr1::unordered_map<std::string, std::vector<VtkPolylineRepresentation *>> uuidToVtkPolylineRepresentation;
-	std::tr1::unordered_map<std::string, std::vector<VtkTriangulatedRepresentation *>> uuidToVtkTriangulatedRepresentation;
-	std::tr1::unordered_map<std::string, VtkProperty *> uuidToVtkProperty;
-#else
 	std::unordered_map<std::string, std::vector<VtkPolylineRepresentation *>> uuidToVtkPolylineRepresentation;
 	std::unordered_map<std::string, std::vector<VtkTriangulatedRepresentation *>> uuidToVtkTriangulatedRepresentation;
 	std::unordered_map<std::string, VtkProperty *> uuidToVtkProperty;
-#endif
 };
 #endif

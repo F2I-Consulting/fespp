@@ -127,9 +127,9 @@ signals:
 
 protected slots:
 
-//#ifdef WITH_ETP
+#ifdef WITH_ETP
 	void setEtpTreeView(std::vector<VtkEpcCommon>);
-//#endif
+#endif
 	/**
 	* When a line is selected.
 	*/

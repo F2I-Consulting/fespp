@@ -81,9 +81,9 @@ public:
 public slots:
 	void showDataLoadManager();
 	void showPanelMetadata();
-//#ifdef WITH_ETP
+#ifdef WITH_ETP
 	void showEtpConnectionManager();
-//#endif
+#endif
 
 protected:
 	virtual pqPipelineSource* findPipelineSource(const char* SMName);

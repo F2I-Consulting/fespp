@@ -1,4 +1,37 @@
-﻿#include "VtkEpcDocument.h"
+﻿/*-----------------------------------------------------------------------
+Copyright F2I-CONSULTING, (2014)
+
+cedric.robert@f2i-consulting.com
+
+This software is a computer program whose purpose is to display data formatted using Energistics standards.
+
+This software is governed by the CeCILL license under French law and
+abiding by the rules of distribution of free software.  You can  use,
+modify and/ or redistribute the software under the terms of the CeCILL
+license as circulated by CEA, CNRS and INRIA at the following URL
+"http://www.cecill.info".
+
+As a counterpart to the access to the source code and  rights to copy,
+modify and redistribute granted by the license, users are provided only
+with a limited warranty  and the software's author,  the holder of the
+economic rights,  and the successive licensors  have only  limited
+liability.
+
+In this respect, the user's attention is drawn to the risks associated
+with loading,  using,  modifying and/or developing or reproducing the
+software by the user in light of its specific status of free software,
+that may mean  that it is complicated to manipulate,  and  that  also
+therefore means  that it is reserved for developers  and  experienced
+professionals having in-depth computer knowledge. Users are therefore
+encouraged to load and test the software's suitability as regards their
+requirements in conditions enabling the security of their systems and/or
+data to be ensured and,  more generally, to use and operate it in the
+same conditions as regards security.
+
+The fact that you are presently reading this means that you have had
+knowledge of the CeCILL license and that you accept its terms.
+-----------------------------------------------------------------------*/
+#include "VtkEpcDocument.h"
 
 // include system
 #include <algorithm>
@@ -42,25 +75,24 @@
 
 //----------------------------------------------------------------------------
 VtkEpcDocument::VtkEpcDocument(const std::string & fileName, const int & idProc, const int & maxProc, VtkEpcDocumentSet* epcDocSet) :
-VtkResqml2MultiBlockDataSet(fileName, fileName, fileName, "", idProc, maxProc), epcSet(epcDocSet)
+	VtkResqml2MultiBlockDataSet(fileName, fileName, fileName, "", idProc, maxProc),
+	epcPackage(nullptr), epcSet(epcDocSet)
 {
 	cout << " VtkEpcDocument ";
 	cout << fileName << endl;
-	common::EpcDocument *pck = nullptr;
 	try
 	{
-		pck = new common::EpcDocument(fileName, common::EpcDocument::READ_ONLY);
+		epcPackage = new common::EpcDocument(fileName, common::EpcDocument::READ_ONLY);
 	}
 	catch (const std::exception & e)
 	{
 		cout << "EXCEPTION in fesapi when reading file: " << fileName << " : " << e.what();
 	}
-	epcPackage = pck;
 
 	std::string result = "";
 	try
 	{
-		result = pck->deserialize();
+		result = epcPackage->deserialize();
 	}
 	catch (const std::exception & e)
 	{
@@ -73,13 +105,13 @@ VtkResqml2MultiBlockDataSet(fileName, fileName, fileName, "", idProc, maxProc), 
 		std::vector<resqml2_0_1::PolylineSetRepresentation*> polylines;
 		try
 		{
-			polylines = pck->getFaultPolylineSetRepSet();
+			polylines = epcPackage->getFaultPolylineSetRepSet();
 		}
 		catch  (const std::exception & e)
 		{
 			cout << "EXCEPTION in fesapi when call getFaultPolylineSetRepSet with file: " << fileName << " : " << e.what();
 		}
-		for (unsigned int idx = 0; idx < polylines.size(); ++idx)
+		for (size_t idx = 0; idx < polylines.size(); ++idx)
 		{
 			auto interpretation = polylines[idx]->getInterpretation();
 //			VtkEpcCommon uuidIsChildOf[polylines[idx]->getUuid()];
@@ -105,13 +137,13 @@ VtkResqml2MultiBlockDataSet(fileName, fileName, fileName, "", idProc, maxProc), 
 
 		try
 		{
-			polylines = pck->getHorizonPolylineSetRepSet();
+			polylines = epcPackage->getHorizonPolylineSetRepSet();
 		}
 		catch  (const std::exception & e)
 		{
 			cout << "EXCEPTION in fesapi when call getHorizonPolylineSetRepSet with file: " << fileName << " : " << e.what();
 		}
-		for (unsigned int idx = 0; idx < polylines.size(); ++idx)
+		for (size_t idx = 0; idx < polylines.size(); ++idx)
 		{
 			auto interpretation = polylines[idx]->getInterpretation();
 			std::string uuidParent;
@@ -134,7 +166,7 @@ VtkResqml2MultiBlockDataSet(fileName, fileName, fileName, "", idProc, maxProc), 
 			}
 			//property
 			auto valuesPropertySet = polylines[idx]->getValuesPropertySet();
-			for (unsigned int i = 0; i < valuesPropertySet.size(); ++i)
+			for (size_t i = 0; i < valuesPropertySet.size(); ++i)
 			{
 //				uuidIsChildOf[valuesPropertySet[i]->getUuid()] = new VtkEpcCommon();
 				createTreeVtk(valuesPropertySet[i]->getUuid(), polylines[idx]->getUuid(), valuesPropertySet[i]->getTitle().c_str(), VtkEpcCommon::PROPERTY);
@@ -147,13 +179,13 @@ VtkResqml2MultiBlockDataSet(fileName, fileName, fileName, "", idProc, maxProc), 
 		std::vector<resqml2_0_1::TriangulatedSetRepresentation*> triangulated;
 		try
 		{
-			triangulated = pck->getAllTriangulatedSetRepSet();
+			triangulated = epcPackage->getAllTriangulatedSetRepSet();
 		}
 		catch  (const std::exception & e)
 		{
 			cout << "EXCEPTION in fesapi when call getAllTriangulatedSetRepSet with file: " << fileName << " : " << e.what();
 		}
-		for (unsigned int iter = 0; iter < triangulated.size(); ++iter)
+		for (size_t iter = 0; iter < triangulated.size(); ++iter)
 		{
 			auto interpretation = triangulated[iter]->getInterpretation();
 			std::string uuidParent;
@@ -176,7 +208,7 @@ VtkResqml2MultiBlockDataSet(fileName, fileName, fileName, "", idProc, maxProc), 
 			}
 			//property
 			auto valuesPropertySet = triangulated[iter]->getValuesPropertySet();
-			for (unsigned int i = 0; i < valuesPropertySet.size(); ++i)
+			for (size_t i = 0; i < valuesPropertySet.size(); ++i)
 			{
 				createTreeVtk(valuesPropertySet[i]->getUuid(), triangulated[iter]->getUuid(), valuesPropertySet[i]->getTitle().c_str(), VtkEpcCommon::PROPERTY);
 			}
@@ -188,13 +220,13 @@ VtkResqml2MultiBlockDataSet(fileName, fileName, fileName, "", idProc, maxProc), 
 		std::vector<resqml2_0_1::Grid2dRepresentation*> grid2D;
 		try
 		{
-			grid2D = pck->getHorizonGrid2dRepSet();
+			grid2D = epcPackage->getHorizonGrid2dRepSet();
 		}
 		catch  (const std::exception & e)
 		{
 			cout << "EXCEPTION in fesapi when call getHorizonGrid2dRepSet with file: " << fileName << " : " << e.what();
 		}
-		for (unsigned int iter = 0; iter < grid2D.size(); ++iter)
+		for (size_t iter = 0; iter < grid2D.size(); ++iter)
 		{
 			auto interpretation = grid2D[iter]->getInterpretation();
 			std::string uuidParent;
@@ -217,7 +249,7 @@ VtkResqml2MultiBlockDataSet(fileName, fileName, fileName, "", idProc, maxProc), 
 			}
 			//property
 			auto valuesPropertySet = grid2D[iter]->getValuesPropertySet();
-			for (unsigned int i = 0; i < valuesPropertySet.size(); ++i)
+			for (size_t i = 0; i < valuesPropertySet.size(); ++i)
 			{
 				createTreeVtk(valuesPropertySet[i]->getUuid(), grid2D[iter]->getUuid(), valuesPropertySet[i]->getTitle().c_str(), VtkEpcCommon::PROPERTY);
 			}
@@ -229,13 +261,13 @@ VtkResqml2MultiBlockDataSet(fileName, fileName, fileName, "", idProc, maxProc), 
 		std::vector<resqml2_0_1::AbstractIjkGridRepresentation*> ijkGrid;
 		try
 		{
-			ijkGrid = pck->getIjkGridRepresentationSet();
+			ijkGrid = epcPackage->getIjkGridRepresentationSet();
 		}
 		catch  (const std::exception & e)
 		{
 			cout << "EXCEPTION in fesapi when call getIjkGridRepresentationSet with file: " << fileName << " : " << e.what();
 		}
-		for (unsigned int iter = 0; iter < ijkGrid.size(); ++iter)
+		for (size_t iter = 0; iter < ijkGrid.size(); ++iter)
 		{
 			auto interpretation = ijkGrid[iter]->getInterpretation();
 			std::string uuidParent;
@@ -258,7 +290,7 @@ VtkResqml2MultiBlockDataSet(fileName, fileName, fileName, "", idProc, maxProc), 
 			}
 			//property
 			auto valuesPropertySet = ijkGrid[iter]->getValuesPropertySet();
-			for (unsigned int i = 0; i < valuesPropertySet.size(); ++i)
+			for (size_t i = 0; i < valuesPropertySet.size(); ++i)
 			{
 				createTreeVtk(valuesPropertySet[i]->getUuid(), ijkGrid[iter]->getUuid(), valuesPropertySet[i]->getTitle().c_str(), VtkEpcCommon::PROPERTY);
 			}
@@ -270,13 +302,13 @@ VtkResqml2MultiBlockDataSet(fileName, fileName, fileName, "", idProc, maxProc), 
 		std::vector<resqml2_0_1::UnstructuredGridRepresentation*> unstructuredGrid;
 		try
 		{
-			unstructuredGrid = pck->getUnstructuredGridRepresentationSet();
+			unstructuredGrid = epcPackage->getUnstructuredGridRepresentationSet();
 		}
 		catch  (const std::exception & e)
 		{
 			cout << "EXCEPTION in fesapi when call getUnstructuredGridRepresentationSet with file: " << fileName << " : " << e.what();
 		}
-		for (unsigned int iter = 0; iter < unstructuredGrid.size(); ++iter)
+		for (size_t iter = 0; iter < unstructuredGrid.size(); ++iter)
 		{
 			auto interpretation = unstructuredGrid[iter]->getInterpretation();
 			std::string uuidParent;
@@ -299,7 +331,7 @@ VtkResqml2MultiBlockDataSet(fileName, fileName, fileName, "", idProc, maxProc), 
 			}
 			//property
 			auto valuesPropertySet = unstructuredGrid[iter]->getValuesPropertySet();
-			for (unsigned int i = 0; i < valuesPropertySet.size(); ++i)
+			for (size_t i = 0; i < valuesPropertySet.size(); ++i)
 			{
 				createTreeVtk(valuesPropertySet[i]->getUuid(), unstructuredGrid[iter]->getUuid(), valuesPropertySet[i]->getTitle().c_str(), VtkEpcCommon::PROPERTY);
 			}
@@ -311,13 +343,13 @@ VtkResqml2MultiBlockDataSet(fileName, fileName, fileName, "", idProc, maxProc), 
 		std::vector<resqml2_0_1::WellboreTrajectoryRepresentation*> WellboreTrajectory;
 		try
 		{
-			WellboreTrajectory = pck->getWellboreTrajectoryRepresentationSet();
+			WellboreTrajectory = epcPackage->getWellboreTrajectoryRepresentationSet();
 		}
 		catch  (const std::exception & e)
 		{
 			cout << "EXCEPTION in fesapi when call getWellboreTrajectoryRepresentationSet with file: " << fileName << " : " << e.what();
 		}
-		for (unsigned int iter = 0; iter < WellboreTrajectory.size(); ++iter)
+		for (size_t iter = 0; iter < WellboreTrajectory.size(); ++iter)
 		{
 			auto interpretation = WellboreTrajectory[iter]->getInterpretation();
 			std::string uuidParent;
@@ -340,7 +372,7 @@ VtkResqml2MultiBlockDataSet(fileName, fileName, fileName, "", idProc, maxProc), 
 			}
 			//property
 			auto valuesPropertySet = WellboreTrajectory[iter]->getValuesPropertySet();
-			for (unsigned int i = 0; i < valuesPropertySet.size(); ++i)
+			for (size_t i = 0; i < valuesPropertySet.size(); ++i)
 			{
 				createTreeVtk(valuesPropertySet[i]->getUuid(), WellboreTrajectory[iter]->getUuid(), valuesPropertySet[i]->getTitle().c_str(), VtkEpcCommon::PROPERTY);
 			}
@@ -353,13 +385,13 @@ VtkResqml2MultiBlockDataSet(fileName, fileName, fileName, "", idProc, maxProc), 
 		std::vector<resqml2::SubRepresentation*> subRepresentation;
 		try
 		{
-			subRepresentation = pck->getSubRepresentationSet();
+			subRepresentation = epcPackage->getSubRepresentationSet();
 		}
 		catch  (const std::exception & e)
 		{
 			cout << "EXCEPTION in fesapi when call getSubRepresentationSet with file: " << fileName << " : " << e.what();
 		}
-		for (unsigned int iter = 0; iter < subRepresentation.size(); ++iter)
+		for (size_t iter = 0; iter < subRepresentation.size(); ++iter)
 		{
 			if (subRepresentation[iter]->isPartial())
 			{
@@ -377,7 +409,7 @@ VtkResqml2MultiBlockDataSet(fileName, fileName, fileName, "", idProc, maxProc), 
 			}
 			//property
 			auto valuesPropertySet = subRepresentation[iter]->getValuesPropertySet();
-			for (unsigned int i = 0; i < valuesPropertySet.size(); ++i)
+			for (size_t i = 0; i < valuesPropertySet.size(); ++i)
 			{
 				createTreeVtk(valuesPropertySet[i]->getUuid(), subRepresentation[iter]->getUuid(), valuesPropertySet[i]->getTitle().c_str(), VtkEpcCommon::PROPERTY);
 			}
@@ -390,23 +422,26 @@ VtkResqml2MultiBlockDataSet(fileName, fileName, fileName, "", idProc, maxProc), 
 		std::vector<resqml2::TimeSeries*> timeSeries;
 		try
 		{
-			timeSeries = pck->getTimeSeriesSet();
+			timeSeries = epcPackage->getTimeSeriesSet();
 		}
 		catch  (const std::exception & e)
 		{
 			cout << "EXCEPTION in fesapi when call getTimeSeriesSet with file: " << fileName << " : " << e.what();
 		}
 
-		for (unsigned int iter = 0; iter < timeSeries.size(); ++iter)
+		for (size_t iter = 0; iter < timeSeries.size(); ++iter)
 		{
 			auto propSeries = timeSeries[iter]->getPropertySet();
-
-			for (unsigned int i = 0; i < propSeries.size(); ++i)
+			for (size_t i = 0; i < propSeries.size(); ++i)
 			{
 				auto prop_uuid = propSeries[i]->getUuid();
-				uuidIsChildOf[prop_uuid].setType( VtkEpcCommon::TIME_SERIES);
-				uuidIsChildOf[prop_uuid].setTimeIndex( propSeries[i]->getTimeIndex());
-				uuidIsChildOf[prop_uuid].setTimestamp( propSeries[i]->getTimestamp());
+				if (uuidIsChildOf.find(prop_uuid) == uuidIsChildOf.end()) {
+					std::cout << "The property " << prop_uuid << " is not supported and consequently cannot be associated to its time series." << std::endl;
+					continue;
+				}
+				uuidIsChildOf[prop_uuid].setType(VtkEpcCommon::TIME_SERIES);
+				uuidIsChildOf[prop_uuid].setTimeIndex(propSeries[i]->getTimeIndex());
+				uuidIsChildOf[prop_uuid].setTimestamp(propSeries[i]->getTimestamp());
 
 				/*
 				if (propSeries[i]->isAssociatedToOneStandardEnergisticsPropertyKind())
@@ -434,7 +469,7 @@ VtkResqml2MultiBlockDataSet(fileName, fileName, fileName, "", idProc, maxProc), 
 	{
 		try
 		{
-			pck->close();
+			epcPackage->close();
 		}
 		catch (const std::exception & e)
 		{

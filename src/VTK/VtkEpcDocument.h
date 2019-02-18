@@ -40,6 +40,9 @@ knowledge of the CeCILL license and that you accept its terms.
 #include "VtkResqml2MultiBlockDataSet.h"
 #include "VtkEpcDocumentSet.h"
 
+// Fesapi namespaces
+#include "nsDefinitions.h"
+
 class VtkIjkGridRepresentation;
 class VtkUnstructuredGridRepresentation;
 class VtkPartialRepresentation;
@@ -49,7 +52,7 @@ class VtkTriangulatedRepresentation;
 class VtkSetPatch;
 class VtkWellboreTrajectoryRepresentation;
 
-namespace common
+namespace COMMON_NS
 {
 	class EpcDocument;
 }
@@ -109,9 +112,7 @@ public:
 	int getKCellCount(const std::string & uuid) ;
 	int getInitKIndex(const std::string & uuid) ;
 
-	common::EpcDocument *getEpcDocument();
-	
-protected:
+	COMMON_NS::EpcDocument *getEpcDocument();
 
 private:
 	void addGrid2DTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name);
@@ -140,19 +141,8 @@ private:
 
 
 	// EPC DOCUMENT
-	common::EpcDocument *epcPackage;
+	COMMON_NS::EpcDocument *epcPackage;
 
-#if _MSC_VER < 1600
-	//std::tr1::unordered_map<std::string, VtkFeature*> uuidToVtKFeature;	
-	std::tr1::unordered_map<std::string, VtkGrid2DRepresentation*> uuidToVtkGrid2DRepresentation;
-	std::tr1::unordered_map<std::string, VtkPolylineRepresentation*> uuidToVtkPolylineRepresentation;
-	std::tr1::unordered_map<std::string, VtkTriangulatedRepresentation*> uuidToVtkTriangulatedRepresentation;
-	std::tr1::unordered_map<std::string, VtkSetPatch*> uuidToVtkSetPatch;
-	std::tr1::unordered_map<std::string, VtkWellboreTrajectoryRepresentation*> uuidToVtkWellboreTrajectoryRepresentation;
-	std::tr1::unordered_map<std::string, VtkIjkGridRepresentation*> uuidToVtkIjkGridRepresentation;
-	std::tr1::unordered_map<std::string, VtkUnstructuredGridRepresentation*> uuidToVtkUnstructuredGridRepresentation;
-	std::tr1::unordered_map<std::string, VtkPartialRepresentation*> uuidToVtkPartialRepresentation;
-#else
 	//std::unordered_map<std::string, VtkFeature*> uuidToVtKFeature;	
 	std::unordered_map<std::string, VtkGrid2DRepresentation*> uuidToVtkGrid2DRepresentation;
 	std::unordered_map<std::string, VtkPolylineRepresentation*> uuidToVtkPolylineRepresentation;
@@ -162,7 +152,6 @@ private:
 	std::unordered_map<std::string, VtkIjkGridRepresentation*> uuidToVtkIjkGridRepresentation;
 	std::unordered_map<std::string, VtkUnstructuredGridRepresentation*> uuidToVtkUnstructuredGridRepresentation;
 	std::unordered_map<std::string, VtkPartialRepresentation*> uuidToVtkPartialRepresentation;
-#endif
 
 	std::vector<std::string> uuidPartialRep;
 	std::vector<std::string> uuidRep;
