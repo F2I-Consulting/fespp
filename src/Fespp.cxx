@@ -157,11 +157,14 @@ void Fespp::SetUuidList(const char* uuid, int status)
 #endif
 	} else if (status != 0) {
 		if(isEpcDocument) {
-			epcDocumentSet->visualize(std::string(uuid));
+			auto msg = epcDocumentSet->visualize(std::string(uuid));
+			if  (!msg.empty()){
+				displayError(msg);
+			}
 		}
 #ifdef WITH_ETP
 		if(isEtpDocument && etpDocument!=nullptr) {
-			etpDocument->visualize(std::string(uuid));
+				etpDocument->visualize(std::string(uuid));
 		}
 #endif
 	}

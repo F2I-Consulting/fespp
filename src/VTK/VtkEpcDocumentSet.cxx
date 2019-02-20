@@ -76,11 +76,20 @@ VtkEpcDocumentSet::~VtkEpcDocumentSet()
 }
 
 //----------------------------------------------------------------------------
-void VtkEpcDocumentSet::visualize(const std::string & uuid)
+std::string VtkEpcDocumentSet::visualize(const std::string & uuid)
 {
 	if(representationMode) {
-		uuidToVtkEpc[uuid]->visualize(uuid);
+		try
+		{
+
+			uuidToVtkEpc[uuid]->visualize(uuid);
+		}
+		catch  (const std::exception & e)
+		{
+			return "EXCEPTION in fesapi " + uuidToVtkEpc[uuid]->getFileName() + " : " + e.what();
+		}
 	}
+	return std::string();
 }
 
 //----------------------------------------------------------------------------

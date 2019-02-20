@@ -49,7 +49,6 @@ knowledge of the CeCILL license and that you accept its terms.
 #endif
 
 class VtkEpcDocumentSet;
-class VtkEpcDocument;
 class vtkStdString;
 class vtkCallbackCommand;
 class vtkMultiProcessController;
@@ -127,6 +126,7 @@ private:
 #endif // PARAVIEW_USE_MPI
 
 	VtkEpcDocumentSet* epcDocumentSet;
+
 #ifdef WITH_ETP
 	VtkEtpDocument* etpDocument;
 #endif

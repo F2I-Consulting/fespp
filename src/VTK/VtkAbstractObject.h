@@ -50,7 +50,7 @@ public:
 	/**
 	* Destructor
 	*/
-	~VtkAbstractObject();
+	virtual ~VtkAbstractObject();
 
 	std::string getFileName() const;
 	std::string getName() const;

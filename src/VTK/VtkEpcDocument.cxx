@@ -770,7 +770,7 @@ void VtkEpcDocument::addPropertyTreeVtk(const std::string & uuid, const std::str
 		break;
 	}
 	default: {
-		cout << " parent type unknown " << uuidIsChildOf[uuid].getParentType() << "\n";
+		cout << " parent type unknown " << uuidIsChildOf[uuid].getParentType() << endl;
 		break;
 	}
 	}
@@ -788,222 +788,221 @@ void VtkEpcDocument::createTreeVtkPartialRep(const std::string & uuid, VtkEpcDoc
 //----------------------------------------------------------------------------
 void VtkEpcDocument::visualize(const std::string & uuid)
 {
-	auto uuidToAttach = uuidIsChildOf[uuid].getUuid();
-	switch (uuidIsChildOf[uuid].getType())	{
-	case VtkEpcCommon::GRID_2D:	{
-		uuidToVtkGrid2DRepresentation[uuidIsChildOf[uuid].getUuid()]->visualize(uuid);
-		break;
-	}
-	case VtkEpcCommon::POLYLINE_SET: {
-		auto object = epcPackage->getResqmlAbstractObjectByUuid(uuidIsChildOf[uuid].getUuid());
-		auto typeRepresentation = object->getXmlTag();
-		if (typeRepresentation == "PolylineRepresentation")	{
-			uuidToVtkPolylineRepresentation[uuidIsChildOf[uuid].getUuid()]->visualize(uuid);
-		}
-		else {
-			uuidToVtkSetPatch[uuidIsChildOf[uuid].getUuid()]->visualize(uuid);
-		}
-		break;
-	}
-	case VtkEpcCommon::TRIANGULATED_SET: {
-		auto object = epcPackage->getResqmlAbstractObjectByUuid(uuidIsChildOf[uuid].getUuid());
-		auto typeRepresentation = object->getXmlTag();
-		if (typeRepresentation == "TriangulatedRepresentation") {
-			uuidToVtkTriangulatedRepresentation[uuidIsChildOf[uuid].getUuid()]->visualize(uuid);
-		}
-		else {
-			uuidToVtkSetPatch[uuidIsChildOf[uuid].getUuid()]->visualize(uuid);
-		}
-		break;
-	}
-	case VtkEpcCommon::WELL_TRAJ: {
-		uuidToVtkWellboreTrajectoryRepresentation[uuidIsChildOf[uuid].getUuid()]->visualize(uuid);
-		break;
-	}
-	case VtkEpcCommon::IJK_GRID: {
-		uuidToVtkIjkGridRepresentation[uuidIsChildOf[uuid].getUuid()]->visualize(uuid);
-		break;
-	}
-	case VtkEpcCommon::UNSTRUC_GRID: {
-		uuidToVtkUnstructuredGridRepresentation[uuidIsChildOf[uuid].getUuid()]->visualize(uuid);
-		break;
-	}
-	case VtkEpcCommon::SUB_REP:	{
-		if (uuidIsChildOf[uuid].getParentType() == VtkEpcCommon::IJK_GRID) {
-			uuidToVtkIjkGridRepresentation[uuidIsChildOf[uuid].getUuid()]->visualize(uuid);
-		}
-		else if (uuidIsChildOf[uuid].getParentType() == VtkEpcCommon::UNSTRUC_GRID) {
-			uuidToVtkUnstructuredGridRepresentation[uuidIsChildOf[uuid].getUuid()]->visualize(uuid);
-		}
-		else if (uuidIsChildOf[uuid].getParentType() == VtkEpcCommon::PARTIAL) {
-			auto parent = uuidIsChildOf[uuid].getParent();
-
-			switch (uuidIsChildOf[parent].getParentType() ) {
-			case VtkEpcCommon::GRID_2D: {
-				uuidToVtkGrid2DRepresentation[uuid]->visualize(uuid);
-				break;
-			}
-			case VtkEpcCommon::WELL_TRAJ: {
-				uuidToVtkWellboreTrajectoryRepresentation[uuid]->visualize(uuid);
-				break;
-			}
-			case VtkEpcCommon::IJK_GRID: {
-				uuidToVtkIjkGridRepresentation[uuid]->visualize(uuid);
-				break;
-			}
-			case VtkEpcCommon::UNSTRUC_GRID: {
-				uuidToVtkUnstructuredGridRepresentation[uuid]->visualize(uuid);
-				break;
-			}
-			default: break;
-			}
-		}
-		break;
-	}
-	case VtkEpcCommon::PARTIAL:	{
-		uuidToVtkPartialRepresentation[uuidIsChildOf[uuid].getUuid()]->visualize(uuid);
-		break;
-	}
-	case (VtkEpcCommon::TIME_SERIES): {
-		uuidToAttach = uuidIsChildOf[uuid].getParent();
-		switch (uuidIsChildOf[uuid].getParentType()) {
-		case VtkEpcCommon::GRID_2D: {
-			uuidToVtkGrid2DRepresentation[uuidIsChildOf[uuid].getParent()]->visualize(uuid);
+		auto uuidToAttach = uuidIsChildOf[uuid].getUuid();
+		switch (uuidIsChildOf[uuid].getType())	{
+		case VtkEpcCommon::GRID_2D:	{
+			uuidToVtkGrid2DRepresentation[uuidIsChildOf[uuid].getUuid()]->visualize(uuid);
 			break;
 		}
 		case VtkEpcCommon::POLYLINE_SET: {
-			auto object = epcPackage->getResqmlAbstractObjectByUuid(uuidIsChildOf[uuid].getParent());
+			auto object = epcPackage->getResqmlAbstractObjectByUuid(uuidIsChildOf[uuid].getUuid());
 			auto typeRepresentation = object->getXmlTag();
 			if (typeRepresentation == "PolylineRepresentation")	{
-				uuidToVtkPolylineRepresentation[uuidIsChildOf[uuid].getParent()]->visualize(uuid);
+				uuidToVtkPolylineRepresentation[uuidIsChildOf[uuid].getUuid()]->visualize(uuid);
 			}
 			else {
-				uuidToVtkSetPatch[uuidIsChildOf[uuid].getParent()]->visualize(uuid);
+				uuidToVtkSetPatch[uuidIsChildOf[uuid].getUuid()]->visualize(uuid);
 			}
 			break;
 		}
 		case VtkEpcCommon::TRIANGULATED_SET: {
-			auto object = epcPackage->getResqmlAbstractObjectByUuid(uuid);
+			auto object = epcPackage->getResqmlAbstractObjectByUuid(uuidIsChildOf[uuid].getUuid());
 			auto typeRepresentation = object->getXmlTag();
 			if (typeRepresentation == "TriangulatedRepresentation") {
-				uuidToVtkTriangulatedRepresentation[uuidIsChildOf[uuid].getParent()]->visualize(uuid);
+				uuidToVtkTriangulatedRepresentation[uuidIsChildOf[uuid].getUuid()]->visualize(uuid);
 			}
 			else {
-				uuidToVtkSetPatch[uuidIsChildOf[uuid].getParent()]->visualize(uuid);
+				uuidToVtkSetPatch[uuidIsChildOf[uuid].getUuid()]->visualize(uuid);
 			}
 			break;
 		}
 		case VtkEpcCommon::WELL_TRAJ: {
-			uuidToVtkWellboreTrajectoryRepresentation[uuidIsChildOf[uuid].getParent()]->visualize(uuid);
+			uuidToVtkWellboreTrajectoryRepresentation[uuidIsChildOf[uuid].getUuid()]->visualize(uuid);
 			break;
 		}
 		case VtkEpcCommon::IJK_GRID: {
-			uuidToVtkIjkGridRepresentation[uuidIsChildOf[uuid].getParent()]->visualize(uuid);
+			uuidToVtkIjkGridRepresentation[uuidIsChildOf[uuid].getUuid()]->visualize(uuid);
 			break;
 		}
 		case VtkEpcCommon::UNSTRUC_GRID: {
-			uuidToVtkUnstructuredGridRepresentation[uuidIsChildOf[uuid].getParent()]->visualize(uuid);
+			uuidToVtkUnstructuredGridRepresentation[uuidIsChildOf[uuid].getUuid()]->visualize(uuid);
 			break;
 		}
-		case VtkEpcCommon::SUB_REP: {
-			if (uuidIsChildOf[uuidIsChildOf[uuid].getParent()].getParentType() == VtkEpcCommon::IJK_GRID)	{
-				uuidToVtkIjkGridRepresentation[uuidIsChildOf[uuidIsChildOf[uuid].getParent()].getUuid()]->visualize(uuid);
+		case VtkEpcCommon::SUB_REP:	{
+			if (uuidIsChildOf[uuid].getParentType() == VtkEpcCommon::IJK_GRID) {
+				uuidToVtkIjkGridRepresentation[uuidIsChildOf[uuid].getUuid()]->visualize(uuid);
 			}
-			else if (uuidIsChildOf[uuidIsChildOf[uuid].getParent()].getParentType() == VtkEpcCommon::UNSTRUC_GRID) {
-				uuidToVtkUnstructuredGridRepresentation[uuidIsChildOf[uuidIsChildOf[uuid].getParent()].getUuid()]->visualize(uuid);
+			else if (uuidIsChildOf[uuid].getParentType() == VtkEpcCommon::UNSTRUC_GRID) {
+				uuidToVtkUnstructuredGridRepresentation[uuidIsChildOf[uuid].getUuid()]->visualize(uuid);
 			}
-			else if (uuidIsChildOf[uuidIsChildOf[uuid].getParent()].getParentType() == VtkEpcCommon::PARTIAL)	{
-				if (uuidIsChildOf[uuidIsChildOf[uuidIsChildOf[uuid].getParent()].getParent()].getParentType() == VtkEpcCommon::IJK_GRID)	{
-					uuidToVtkIjkGridRepresentation[uuidIsChildOf[uuidIsChildOf[uuid].getParent()].getUuid()]->visualize(uuid);
+			else if (uuidIsChildOf[uuid].getParentType() == VtkEpcCommon::PARTIAL) {
+				auto parent = uuidIsChildOf[uuid].getParent();
+
+				switch (uuidIsChildOf[parent].getParentType() ) {
+				case VtkEpcCommon::GRID_2D: {
+					uuidToVtkGrid2DRepresentation[uuid]->visualize(uuid);
+					break;
 				}
-				else if (uuidIsChildOf[uuidIsChildOf[uuidIsChildOf[uuid].getParent()].getParent()].getParentType() == VtkEpcCommon::UNSTRUC_GRID) {
-					uuidToVtkUnstructuredGridRepresentation[uuidIsChildOf[uuidIsChildOf[uuid].getParent()].getUuid()]->visualize(uuid);
+				case VtkEpcCommon::WELL_TRAJ: {
+					uuidToVtkWellboreTrajectoryRepresentation[uuid]->visualize(uuid);
+					break;
 				}
-			}
-			break;
-		}
-		case VtkEpcCommon::PARTIAL: {
-			uuidToVtkPartialRepresentation[uuidIsChildOf[uuid].getParent()]->visualize(uuid);
-			break;
-		}
-		default:
-			break;
-		}
-	}
-	case VtkEpcCommon::PROPERTY: {
-		uuidToAttach = uuidIsChildOf[uuid].getParent();
-		switch (uuidIsChildOf[uuid].getParentType()) {
-		case VtkEpcCommon::GRID_2D: {
-			uuidToVtkGrid2DRepresentation[uuidIsChildOf[uuid].getParent()]->visualize(uuid);
-			break;
-		}
-		case VtkEpcCommon::POLYLINE_SET: {
-			auto object = epcPackage->getResqmlAbstractObjectByUuid(uuidIsChildOf[uuid].getParent());
-			auto typeRepresentation = object->getXmlTag();
-			if (typeRepresentation == "PolylineRepresentation")	{
-				uuidToVtkPolylineRepresentation[uuidIsChildOf[uuid].getParent()]->visualize(uuid);
-			}
-			else {
-				uuidToVtkSetPatch[uuidIsChildOf[uuid].getParent()]->visualize(uuid);
-			}
-			break;
-		}
-		case VtkEpcCommon::TRIANGULATED_SET: {
-			auto object = epcPackage->getResqmlAbstractObjectByUuid(uuid);
-			auto typeRepresentation = object->getXmlTag();
-			if (typeRepresentation == "TriangulatedRepresentation")	{
-				uuidToVtkTriangulatedRepresentation[uuidIsChildOf[uuid].getParent()]->visualize(uuid);
-			}
-			else {
-				uuidToVtkSetPatch[uuidIsChildOf[uuid].getParent()]->visualize(uuid);
-			}
-			break;
-		}
-		case VtkEpcCommon::WELL_TRAJ: {
-			uuidToVtkWellboreTrajectoryRepresentation[uuidIsChildOf[uuid].getParent()]->visualize(uuid);
-			break;
-		}
-		case VtkEpcCommon::IJK_GRID: {
-			uuidToVtkIjkGridRepresentation[uuidIsChildOf[uuid].getParent()]->visualize(uuid);
-			break;
-		}
-		case VtkEpcCommon::UNSTRUC_GRID: {
-			uuidToVtkUnstructuredGridRepresentation[uuidIsChildOf[uuid].getParent()]->visualize(uuid);
-			break;
-		}
-		case VtkEpcCommon::SUB_REP: {
-			if (uuidIsChildOf[uuidIsChildOf[uuid].getParent()].getParentType() == VtkEpcCommon::IJK_GRID)	{
-				uuidToVtkIjkGridRepresentation[uuidIsChildOf[uuidIsChildOf[uuid].getParent()].getUuid()]->visualize(uuid);
-			}
-			else if (uuidIsChildOf[uuidIsChildOf[uuid].getParent()].getParentType() == VtkEpcCommon::UNSTRUC_GRID) {
-				uuidToVtkUnstructuredGridRepresentation[uuidIsChildOf[uuidIsChildOf[uuid].getParent()].getUuid()]->visualize(uuid);
-			}
-			else if (uuidIsChildOf[uuidIsChildOf[uuid].getParent()].getParentType() == VtkEpcCommon::PARTIAL)	{
-				if (uuidIsChildOf[uuidIsChildOf[uuidIsChildOf[uuid].getParent()].getParent()].getParentType() == VtkEpcCommon::IJK_GRID)	{
-					uuidToVtkIjkGridRepresentation[uuidIsChildOf[uuidIsChildOf[uuid].getParent()].getUuid()]->visualize(uuid);
+				case VtkEpcCommon::IJK_GRID: {
+					uuidToVtkIjkGridRepresentation[uuid]->visualize(uuid);
+					break;
 				}
-				else if (uuidIsChildOf[uuidIsChildOf[uuidIsChildOf[uuid].getParent()].getParent()].getParentType() == VtkEpcCommon::UNSTRUC_GRID) {
-					uuidToVtkUnstructuredGridRepresentation[uuidIsChildOf[uuidIsChildOf[uuid].getParent()].getUuid()]->visualize(uuid);
+				case VtkEpcCommon::UNSTRUC_GRID: {
+					uuidToVtkUnstructuredGridRepresentation[uuid]->visualize(uuid);
+					break;
+				}
+				default: break;
 				}
 			}
 			break;
 		}
 		case VtkEpcCommon::PARTIAL:	{
-			uuidToVtkPartialRepresentation[uuidIsChildOf[uuid].getParent()]->visualize(uuid);
+			uuidToVtkPartialRepresentation[uuidIsChildOf[uuid].getUuid()]->visualize(uuid);
 			break;
 		}
-		default: break;
+		case (VtkEpcCommon::TIME_SERIES): {
+			uuidToAttach = uuidIsChildOf[uuid].getParent();
+			switch (uuidIsChildOf[uuid].getParentType()) {
+			case VtkEpcCommon::GRID_2D: {
+				uuidToVtkGrid2DRepresentation[uuidIsChildOf[uuid].getParent()]->visualize(uuid);
+				break;
+			}
+			case VtkEpcCommon::POLYLINE_SET: {
+				auto object = epcPackage->getResqmlAbstractObjectByUuid(uuidIsChildOf[uuid].getParent());
+				auto typeRepresentation = object->getXmlTag();
+				if (typeRepresentation == "PolylineRepresentation")	{
+					uuidToVtkPolylineRepresentation[uuidIsChildOf[uuid].getParent()]->visualize(uuid);
+				}
+				else {
+					uuidToVtkSetPatch[uuidIsChildOf[uuid].getParent()]->visualize(uuid);
+				}
+				break;
+			}
+			case VtkEpcCommon::TRIANGULATED_SET: {
+				auto object = epcPackage->getResqmlAbstractObjectByUuid(uuid);
+				auto typeRepresentation = object->getXmlTag();
+				if (typeRepresentation == "TriangulatedRepresentation") {
+					uuidToVtkTriangulatedRepresentation[uuidIsChildOf[uuid].getParent()]->visualize(uuid);
+				}
+				else {
+					uuidToVtkSetPatch[uuidIsChildOf[uuid].getParent()]->visualize(uuid);
+				}
+				break;
+			}
+			case VtkEpcCommon::WELL_TRAJ: {
+				uuidToVtkWellboreTrajectoryRepresentation[uuidIsChildOf[uuid].getParent()]->visualize(uuid);
+				break;
+			}
+			case VtkEpcCommon::IJK_GRID: {
+				uuidToVtkIjkGridRepresentation[uuidIsChildOf[uuid].getParent()]->visualize(uuid);
+				break;
+			}
+			case VtkEpcCommon::UNSTRUC_GRID: {
+				uuidToVtkUnstructuredGridRepresentation[uuidIsChildOf[uuid].getParent()]->visualize(uuid);
+				break;
+			}
+			case VtkEpcCommon::SUB_REP: {
+				if (uuidIsChildOf[uuidIsChildOf[uuid].getParent()].getParentType() == VtkEpcCommon::IJK_GRID)	{
+					uuidToVtkIjkGridRepresentation[uuidIsChildOf[uuidIsChildOf[uuid].getParent()].getUuid()]->visualize(uuid);
+				}
+				else if (uuidIsChildOf[uuidIsChildOf[uuid].getParent()].getParentType() == VtkEpcCommon::UNSTRUC_GRID) {
+					uuidToVtkUnstructuredGridRepresentation[uuidIsChildOf[uuidIsChildOf[uuid].getParent()].getUuid()]->visualize(uuid);
+				}
+				else if (uuidIsChildOf[uuidIsChildOf[uuid].getParent()].getParentType() == VtkEpcCommon::PARTIAL)	{
+					if (uuidIsChildOf[uuidIsChildOf[uuidIsChildOf[uuid].getParent()].getParent()].getParentType() == VtkEpcCommon::IJK_GRID)	{
+						uuidToVtkIjkGridRepresentation[uuidIsChildOf[uuidIsChildOf[uuid].getParent()].getUuid()]->visualize(uuid);
+					}
+					else if (uuidIsChildOf[uuidIsChildOf[uuidIsChildOf[uuid].getParent()].getParent()].getParentType() == VtkEpcCommon::UNSTRUC_GRID) {
+						uuidToVtkUnstructuredGridRepresentation[uuidIsChildOf[uuidIsChildOf[uuid].getParent()].getUuid()]->visualize(uuid);
+					}
+				}
+				break;
+			}
+			case VtkEpcCommon::PARTIAL: {
+				uuidToVtkPartialRepresentation[uuidIsChildOf[uuid].getParent()]->visualize(uuid);
+				break;
+			}
+			default:
+				break;
+			}
 		}
-		default: break;
-	}
-	}
-
-	// attach representation to EpcDocument VtkMultiBlockDataSet
-	if (std::find(attachUuids.begin(), attachUuids.end(), uuidToAttach) == attachUuids.end()) {
-		this->detach();
-		attachUuids.push_back(uuidToAttach);
-		this->attach();
-	}
+		case VtkEpcCommon::PROPERTY: {
+			uuidToAttach = uuidIsChildOf[uuid].getParent();
+			switch (uuidIsChildOf[uuid].getParentType()) {
+			case VtkEpcCommon::GRID_2D: {
+				uuidToVtkGrid2DRepresentation[uuidIsChildOf[uuid].getParent()]->visualize(uuid);
+				break;
+			}
+			case VtkEpcCommon::POLYLINE_SET: {
+				auto object = epcPackage->getResqmlAbstractObjectByUuid(uuidIsChildOf[uuid].getParent());
+				auto typeRepresentation = object->getXmlTag();
+				if (typeRepresentation == "PolylineRepresentation")	{
+					uuidToVtkPolylineRepresentation[uuidIsChildOf[uuid].getParent()]->visualize(uuid);
+				}
+				else {
+					uuidToVtkSetPatch[uuidIsChildOf[uuid].getParent()]->visualize(uuid);
+				}
+				break;
+			}
+			case VtkEpcCommon::TRIANGULATED_SET: {
+				auto object = epcPackage->getResqmlAbstractObjectByUuid(uuid);
+				auto typeRepresentation = object->getXmlTag();
+				if (typeRepresentation == "TriangulatedRepresentation")	{
+					uuidToVtkTriangulatedRepresentation[uuidIsChildOf[uuid].getParent()]->visualize(uuid);
+				}
+				else {
+					uuidToVtkSetPatch[uuidIsChildOf[uuid].getParent()]->visualize(uuid);
+				}
+				break;
+			}
+			case VtkEpcCommon::WELL_TRAJ: {
+				uuidToVtkWellboreTrajectoryRepresentation[uuidIsChildOf[uuid].getParent()]->visualize(uuid);
+				break;
+			}
+			case VtkEpcCommon::IJK_GRID: {
+				uuidToVtkIjkGridRepresentation[uuidIsChildOf[uuid].getParent()]->visualize(uuid);
+				break;
+			}
+			case VtkEpcCommon::UNSTRUC_GRID: {
+				uuidToVtkUnstructuredGridRepresentation[uuidIsChildOf[uuid].getParent()]->visualize(uuid);
+				break;
+			}
+			case VtkEpcCommon::SUB_REP: {
+				if (uuidIsChildOf[uuidIsChildOf[uuid].getParent()].getParentType() == VtkEpcCommon::IJK_GRID)	{
+					uuidToVtkIjkGridRepresentation[uuidIsChildOf[uuidIsChildOf[uuid].getParent()].getUuid()]->visualize(uuid);
+				}
+				else if (uuidIsChildOf[uuidIsChildOf[uuid].getParent()].getParentType() == VtkEpcCommon::UNSTRUC_GRID) {
+					uuidToVtkUnstructuredGridRepresentation[uuidIsChildOf[uuidIsChildOf[uuid].getParent()].getUuid()]->visualize(uuid);
+				}
+				else if (uuidIsChildOf[uuidIsChildOf[uuid].getParent()].getParentType() == VtkEpcCommon::PARTIAL)	{
+					if (uuidIsChildOf[uuidIsChildOf[uuidIsChildOf[uuid].getParent()].getParent()].getParentType() == VtkEpcCommon::IJK_GRID)	{
+						uuidToVtkIjkGridRepresentation[uuidIsChildOf[uuidIsChildOf[uuid].getParent()].getUuid()]->visualize(uuid);
+					}
+					else if (uuidIsChildOf[uuidIsChildOf[uuidIsChildOf[uuid].getParent()].getParent()].getParentType() == VtkEpcCommon::UNSTRUC_GRID) {
+						uuidToVtkUnstructuredGridRepresentation[uuidIsChildOf[uuidIsChildOf[uuid].getParent()].getUuid()]->visualize(uuid);
+					}
+				}
+				break;
+			}
+			case VtkEpcCommon::PARTIAL:	{
+				uuidToVtkPartialRepresentation[uuidIsChildOf[uuid].getParent()]->visualize(uuid);
+				break;
+			}
+			default: break;
+			}
+			default: break;
+		}
+		}
+		// attach representation to EpcDocument VtkMultiBlockDataSet
+		if (std::find(attachUuids.begin(), attachUuids.end(), uuidToAttach) == attachUuids.end()) {
+			this->detach();
+			attachUuids.push_back(uuidToAttach);
+			this->attach();
+		}
 }
 
 //----------------------------------------------------------------------------

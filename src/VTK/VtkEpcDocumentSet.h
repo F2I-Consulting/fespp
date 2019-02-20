@@ -49,6 +49,7 @@ knowledge of the CeCILL license and that you accept its terms.
 	#include <tr1/unordered_map>
 #endif
 
+
 class VtkEpcDocument;
 
 class VtkEpcDocumentSet
@@ -70,7 +71,7 @@ public:
 	* variable : std::string uuid 
 	* create uuid representation.
 	*/
-	void visualize(const std::string & uuid);
+	std::string visualize(const std::string & uuid);
 	void visualizeFull();
 	
 	/**
@@ -94,7 +95,6 @@ public:
 	void addEpcDocument(const std::string & fileName);
 
 	VtkEpcDocument* getVtkEpcDocument(const std::string & uuid);
-
 
 protected:
 
