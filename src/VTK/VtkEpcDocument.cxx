@@ -116,10 +116,13 @@ epcPackage(nullptr), epcSet(epcDocSet)
 			auto interpretation = polylines[idx]->getInterpretation();
 			//			VtkEpcCommon uuidIsChildOf[polylines[idx]->getUuid()];
 			std::string uuidParent;
-			if (interpretation)
+			if (interpretation) {
 				uuidParent = interpretation->getUuid();
-			else
+				createTreeVtk(uuidParent, fileName, interpretation->getTitle().c_str(), VtkEpcCommon::INTERPRETATION);
+			}
+			else {
 				uuidParent = fileName;
+			}
 			if (polylines[idx]->isPartial())
 			{
 				auto vtkEpcSrc = epcSet->getVtkEpcDocument(polylines[idx]->getUuid());
@@ -147,10 +150,13 @@ epcPackage(nullptr), epcSet(epcDocSet)
 		{
 			auto interpretation = polylines[idx]->getInterpretation();
 			std::string uuidParent;
-			if (interpretation)
+			if (interpretation) {
 				uuidParent = interpretation->getUuid();
-			else
+				createTreeVtk(uuidParent, fileName, interpretation->getTitle().c_str(), VtkEpcCommon::INTERPRETATION);
+			}
+			else {
 				uuidParent = fileName;
+			}
 			if (polylines[idx]->isPartial())
 			{
 				auto vtkEpcSrc = epcSet->getVtkEpcDocument(polylines[idx]->getUuid());
@@ -189,10 +195,13 @@ epcPackage(nullptr), epcSet(epcDocSet)
 		{
 			auto interpretation = triangulated[iter]->getInterpretation();
 			std::string uuidParent;
-			if (interpretation)
+			if (interpretation) {
 				uuidParent = interpretation->getUuid();
-			else
+				createTreeVtk(uuidParent, fileName, interpretation->getTitle().c_str(), VtkEpcCommon::INTERPRETATION);
+			}
+			else {
 				uuidParent = fileName;
+			}
 			if (triangulated[iter]->isPartial())
 			{
 				auto vtkEpcSrc = epcSet->getVtkEpcDocument(triangulated[iter]->getUuid());
@@ -230,10 +239,13 @@ epcPackage(nullptr), epcSet(epcDocSet)
 		{
 			auto interpretation = grid2D[iter]->getInterpretation();
 			std::string uuidParent;
-			if (interpretation)
+			if (interpretation) {
 				uuidParent = interpretation->getUuid();
-			else
+				createTreeVtk(uuidParent, fileName, interpretation->getTitle().c_str(), VtkEpcCommon::INTERPRETATION);
+			}
+			else {
 				uuidParent = fileName;
+			}
 			if (grid2D[iter]->isPartial())
 			{
 				auto vtkEpcSrc = epcSet->getVtkEpcDocument(grid2D[iter]->getUuid());
@@ -271,10 +283,13 @@ epcPackage(nullptr), epcSet(epcDocSet)
 		{
 			auto interpretation = ijkGrid[iter]->getInterpretation();
 			std::string uuidParent;
-			if (interpretation)
+			if (interpretation) {
 				uuidParent = interpretation->getUuid();
-			else
+				createTreeVtk(uuidParent, fileName, interpretation->getTitle().c_str(), VtkEpcCommon::INTERPRETATION);
+			}
+			else {
 				uuidParent = fileName;
+			}
 			if (ijkGrid[iter]->isPartial())
 			{
 				auto vtkEpcSrc = epcSet->getVtkEpcDocument(ijkGrid[iter]->getUuid());
@@ -312,10 +327,13 @@ epcPackage(nullptr), epcSet(epcDocSet)
 		{
 			auto interpretation = unstructuredGrid[iter]->getInterpretation();
 			std::string uuidParent;
-			if (interpretation)
+			if (interpretation) {
 				uuidParent = interpretation->getUuid();
-			else
+				createTreeVtk(uuidParent, fileName, interpretation->getTitle().c_str(), VtkEpcCommon::INTERPRETATION);
+			}
+			else {
 				uuidParent = fileName;
+			}
 			if (unstructuredGrid[iter]->isPartial())
 			{
 				auto vtkEpcSrc = epcSet->getVtkEpcDocument(unstructuredGrid[iter]->getUuid());
@@ -353,10 +371,13 @@ epcPackage(nullptr), epcSet(epcDocSet)
 		{
 			auto interpretation = WellboreTrajectory[iter]->getInterpretation();
 			std::string uuidParent;
-			if (interpretation)
+			if (interpretation) {
 				uuidParent = interpretation->getUuid();
-			else
+				createTreeVtk(uuidParent, fileName, interpretation->getTitle().c_str(), VtkEpcCommon::INTERPRETATION);
+			}
+			else {
 				uuidParent = fileName;
+			}
 			if (WellboreTrajectory[iter]->isPartial())
 			{
 				auto vtkEpcSrc = epcSet->getVtkEpcDocument(WellboreTrajectory[iter]->getUuid());

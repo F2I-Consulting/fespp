@@ -524,45 +524,57 @@ void PQSelectionPanel::populateTreeView(const std::string & parent, VtkEpcCommon
 					addTreeProperty(uuidItem[parent], parent, name, uuid);
 				}
 				else {
+
+					QTreeWidgetItem *treeItem = new QTreeWidgetItem();
+
+					treeItem->setText(0, name.c_str());
+					treeItem->setFlags(treeItem->flags() | Qt::ItemIsSelectable);
+
 					switch (type) {
+						case VtkEpcCommon::Resqml2Type::INTERPRETATION: {
+							icon.addFile(QString::fromUtf8(":Grid2D.png"), QSize(), QIcon::Normal, QIcon::Off);
+							break;
+						}
 						case VtkEpcCommon::Resqml2Type::GRID_2D: {
 							icon.addFile(QString::fromUtf8(":Grid2D.png"), QSize(), QIcon::Normal, QIcon::Off);
+							treeItem->setCheckState(0, Qt::Unchecked);
 							break;
 						}
 						case VtkEpcCommon::Resqml2Type::POLYLINE_SET: {
 							icon.addFile(QString::fromUtf8(":Polyline.png"), QSize(), QIcon::Normal, QIcon::Off);
+							treeItem->setCheckState(0, Qt::Unchecked);
 							break;
 						}
 						case VtkEpcCommon::Resqml2Type::TRIANGULATED_SET: {
 							icon.addFile(QString::fromUtf8(":Triangulated.png"), QSize(), QIcon::Normal, QIcon::Off);
+							treeItem->setCheckState(0, Qt::Unchecked);
 							break;
 						}
 						case VtkEpcCommon::Resqml2Type::WELL_TRAJ: {
 							icon.addFile(QString::fromUtf8(":WellTraj.png"), QSize(), QIcon::Normal, QIcon::Off);
+							treeItem->setCheckState(0, Qt::Unchecked);
 							break;
 						}
 						case VtkEpcCommon::Resqml2Type::IJK_GRID: {
 							icon.addFile(QString::fromUtf8(":IjkGrid.png"), QSize(), QIcon::Normal, QIcon::Off);
+							treeItem->setCheckState(0, Qt::Unchecked);
 							break;
 						}
 						case VtkEpcCommon::Resqml2Type::UNSTRUC_GRID: {
 							icon.addFile(QString::fromUtf8(":UnstructuredGrid.png"), QSize(), QIcon::Normal, QIcon::Off);
+							treeItem->setCheckState(0, Qt::Unchecked);
 							break;
 						}
 						case VtkEpcCommon::Resqml2Type::SUB_REP: {
 							icon.addFile(QString::fromUtf8(":SubRepresentation.png"), QSize(), QIcon::Normal, QIcon::Off);
+							treeItem->setCheckState(0, Qt::Unchecked);
 							break;
 						}
 						default:
 							break;
 					}
 
-					QTreeWidgetItem *treeItem = new QTreeWidgetItem();
-
-					treeItem->setText(0, name.c_str());
 					treeItem->setIcon(0, icon);
-					treeItem->setCheckState(0, Qt::Unchecked);
-					treeItem->setFlags(treeItem->flags() | Qt::ItemIsUserCheckable | Qt::ItemIsSelectable);
 
 
 					uuidItem[parent]->addChild(treeItem);
