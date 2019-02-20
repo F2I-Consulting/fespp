@@ -83,7 +83,6 @@ public:
 	/**
 	*/
 	virtual long getAttachmentPropertyCount(const std::string & uuid, const VtkEpcCommon::FesppAttachmentProperty propertyUnit) = 0;
-protected:
 
 private:
 	std::string fileName;
