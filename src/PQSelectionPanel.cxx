@@ -486,13 +486,13 @@ void PQSelectionPanel::addFileName(const std::string & fileName)
 		QMap<std::string, std::string> name_to_uuid;
 		auto treeView = vtkEpcDocumentSet->getTreeView();
 		for (auto &feuille : treeView) {
-
+			uuidToPipeName[feuille.getUuid()]="EpcDocument";
 			if (feuille.getTimeIndex()<0 ) {
-				populateTreeView(feuille.getParent(), feuille.getParentType(), feuille.getUuid(), feuille.getName(), feuille.getType(), "EpcDocument");
+				populateTreeView(feuille.getParent(), feuille.getParentType(), feuille.getUuid(), feuille.getName(), feuille.getType());
 			}
 			else {
 				if(name_to_uuid.count(feuille.getName())<=0) {
-					populateTreeView(feuille.getParent(), feuille.getParentType(), feuille.getUuid(), feuille.getName(), feuille.getType(), "EpcDocument");
+					populateTreeView(feuille.getParent(), feuille.getParentType(), feuille.getUuid(), feuille.getName(), feuille.getType());
 					name_to_uuid[feuille.getName()]=feuille.getUuid();
 				}
 
@@ -502,11 +502,10 @@ void PQSelectionPanel::addFileName(const std::string & fileName)
 	}
 }
 
-void PQSelectionPanel::populateTreeView(const std::string & parent, VtkEpcCommon::Resqml2Type parentType, const std::string & uuid, const std::string &  name, VtkEpcCommon::Resqml2Type type, const std::string & origin)
+void PQSelectionPanel::populateTreeView(const std::string & parent, VtkEpcCommon::Resqml2Type parentType, const std::string & uuid, const std::string &  name, VtkEpcCommon::Resqml2Type type)
 {
  	if (uuid != "")	{
 		if (!uuidItem[uuid]) {
-			uuidToPipeName[uuid]=origin;
 			if (parentType==VtkEpcCommon::Resqml2Type::PARTIAL && !uuidItem[parent]){
 			}
 			else {
@@ -730,12 +729,13 @@ void PQSelectionPanel::setEtpTreeView(std::vector<VtkEpcCommon> treeView)
 {
 	QMap<std::string, std::string> name_to_uuid;
 	for (auto &feuille : treeView) {
+		uuidToPipeName[feuille.getUuid()]="EtpDocument";
 		if (feuille.getTimeIndex()<0 ) {
-			populateTreeView(feuille.getParent(), feuille.getParentType(), feuille.getUuid(), feuille.getName(), feuille.getType(), "EtpDocument");
+			populateTreeView(feuille.getParent(), feuille.getParentType(), feuille.getUuid(), feuille.getName(), feuille.getType());
 		}
 		else  {
 			if(name_to_uuid.count(feuille.getName())<=0) {
-				populateTreeView(feuille.getParent(), feuille.getParentType(), feuille.getUuid(), feuille.getName(), feuille.getType(), "EtpDocument");
+				populateTreeView(feuille.getParent(), feuille.getParentType(), feuille.getUuid(), feuille.getName(), feuille.getType());
 				name_to_uuid[feuille.getName()]=feuille.getUuid();
 			}
 			ts_timestamp_to_uuid[name_to_uuid[feuille.getName()]][feuille.getTimestamp()] = feuille.getUuid();

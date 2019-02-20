@@ -92,7 +92,6 @@ VtkResqml2MultiBlockDataSet(fileName, name, uuid, uuidParent, idProc, maxProc), 
 //----------------------------------------------------------------------------
 VtkSetPatch::~VtkSetPatch()
 {
-	cout << "VtkSetPatch::~VtkSetPatch() " << getUuid() << "\n";
 	if (epcPackage != nullptr) {
 		epcPackage = nullptr;
 	}
