@@ -1,4 +1,37 @@
-﻿#include "VtkIjkGridRepresentation.h"
+﻿/*-----------------------------------------------------------------------
+Copyright F2I-CONSULTING, (2014)
+
+cedric.robert@f2i-consulting.com
+
+This software is a computer program whose purpose is to display data formatted using Energistics standards.
+
+This software is governed by the CeCILL license under French law and
+abiding by the rules of distribution of free software.  You can  use,
+modify and/ or redistribute the software under the terms of the CeCILL
+license as circulated by CEA, CNRS and INRIA at the following URL
+"http://www.cecill.info".
+
+As a counterpart to the access to the source code and  rights to copy,
+modify and redistribute granted by the license, users are provided only
+with a limited warranty  and the software's author,  the holder of the
+economic rights,  and the successive licensors  have only  limited
+liability.
+
+In this respect, the user's attention is drawn to the risks associated
+with loading,  using,  modifying and/or developing or reproducing the
+software by the user in light of its specific status of free software,
+that may mean  that it is complicated to manipulate,  and  that  also
+therefore means  that it is reserved for developers  and  experienced
+professionals having in-depth computer knowledge. Users are therefore
+encouraged to load and test the software's suitability as regards their
+requirements in conditions enabling the security of their systems and/or
+data to be ensured and,  more generally, to use and operate it in the
+same conditions as regards security.
+
+The fact that you are presently reading this means that you have had
+knowledge of the CeCILL license and that you accept its terms.
+-----------------------------------------------------------------------*/
+#include "VtkIjkGridRepresentation.h"
 
 // include VTK library
 #include <vtkHexahedron.h>
@@ -55,7 +88,7 @@ vtkSmartPointer<vtkPoints> VtkIjkGridRepresentation::createpoint()
 		if (obj != nullptr && (obj->getXmlTag() == "IjkGridRepresentation" || obj->getXmlTag() == "TruncatedIjkGridRepresentation"))
 			ijkGridRepresentation = static_cast<resqml2_0_1::AbstractIjkGridRepresentation*>(obj);
 
-		const auto kInterfaceNodeCount = ijkGridRepresentation->getXyzPointCountOfKInterfaceOfPatch(0);
+		const ULONG64 kInterfaceNodeCount = ijkGridRepresentation->getXyzPointCountOfKInterfaceOfPatch(0);
 		iCellCount = ijkGridRepresentation->getICellCount();
 		jCellCount = ijkGridRepresentation->getJCellCount();
 		kCellCount = ijkGridRepresentation->getKCellCount();
@@ -80,10 +113,12 @@ vtkSmartPointer<vtkPoints> VtkIjkGridRepresentation::createpoint()
 				if (ijkGridRepresentation->getLocalCrs()->isDepthOriented())
 					zIndice = -1;
 
-				for (auto nodeIndex = 0; nodeIndex < kInterfaceNodeCount * 3; nodeIndex += 3)
+				for (ULONG64 nodeIndex = 0; nodeIndex < kInterfaceNodeCount * 3; nodeIndex += 3)
 				{
 					points->InsertNextPoint(allXyzPoints[nodeIndex], allXyzPoints[nodeIndex + 1], allXyzPoints[nodeIndex + 2] * zIndice);
 				}
+
+				delete[] allXyzPoints;
 			}
 			std::string s = "ijkGrid idProc-maxProc : " + std::to_string(getIdProc()) + "-" + std::to_string(getMaxProc()) + " Points " + std::to_string(kInterfaceNodeCount*(maxKIndex-initKIndex)) +"\n";
 			char const * pchar = s.c_str();
@@ -329,6 +364,8 @@ void VtkIjkGridRepresentation::createWithPoints(const vtkSmartPointer<vtkPoints>
 			}
 		}
 		ijkGridRepresentation->unloadSplitInformation();
+
+		delete[] elementIndices;
 	}
 	else{
 		if (obj != nullptr && (obj->getXmlTag() == "IjkGridRepresentation" || obj->getXmlTag() == "TruncatedIjkGridRepresentation"))
@@ -348,7 +385,7 @@ void VtkIjkGridRepresentation::createWithPoints(const vtkSmartPointer<vtkPoints>
 			}
 			else
 			{
-				for (auto j = 0; j < ijkGridRepresentation->getCellCount(); ++j)
+				for (ULONG64 j = 0; j < ijkGridRepresentation->getCellCount(); ++j)
 				{
 					test[j] = true;
 				}

@@ -38,7 +38,7 @@ knowledge of the CeCILL license and that you accept its terms.
 // include FESAPI
 #include <etp/ClientSession.h>
 #include <common/EpcDocument.h>
-#include <vector>
+#include <set>
 #include <algorithm>
 
 //include Fespp
@@ -64,14 +64,34 @@ public:
 	~EtpClientSession() {};
 
 	bool isTreeViewMode() { return treeViewMode;}
-	bool allReceived() { return answeredMessages.empty();}
-	void newAnsweredMessages(int64_t key) { answeredMessages.push_back(key);}
-	void receivedAnsweredMessages(int64_t key) { answeredMessages.erase(std::remove(answeredMessages.begin(), answeredMessages.end(), key), answeredMessages.end());}
+
+	/**
+	* Indicates if the session is still waiting for answer or not.
+	* @return True if the session is not waiting for any message else False
+	*/
+	bool isWaitingForAnswer() const;
+
+	/**
+	* Insert a message id which requires an answer by the server.
+	* @param messageId	The message id which requires an answer from the server
+	*/
+	void insertMessageIdTobeAnswered(int64_t messageId);
+
+	/**
+	* Erase a message id from the list of message if to be answered.
+	* Generally it means that the associated message hase been answered by the server.
+	* @param messageId	The message id which must be removed
+	*/
+	void eraseMessageIdTobeAnswered(int64_t messageId);
 
 	COMMON_NS::EpcDocument epcDoc;
 
 private:
-	std::vector<int64_t> answeredMessages;
+	/**
+	* A set of message ids which has not been answered yet by the server
+	* Does not use a vector because we want direct access to messageId instead of direct access to index.
+	*/
+	std::set<int64_t> messageIdToBeAnswered;
 	bool treeViewMode;
 	bool representationMode;
 };

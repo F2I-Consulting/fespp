@@ -44,11 +44,7 @@ knowledge of the CeCILL license and that you accept its terms.
 #include <vtkMultiBlockDataSet.h>
 
 // include system
-#if (defined(_WIN32) && _MSC_VER >= 1600)
 #include <unordered_map>
-#else
-#include <tr1/unordered_map>
-#endif
 
 #include<vector>
 
@@ -91,11 +87,10 @@ public:
 protected:
 	vtkSmartPointer<vtkMultiBlockDataSet> vtkOutput;
 
-#if (defined(_WIN32) && _MSC_VER >= 1600)
-	std::unordered_map<std::string, VtkEpcCommon*> uuidIsChildOf;
-#else
-	std::tr1::unordered_map<std::string, VtkEpcCommon*> uuidIsChildOf;
-#endif
+
+	std::unordered_map<std::string, VtkEpcCommon> uuidIsChildOf;
+
+
 	std::vector<std::string> attachUuids;
 };
 #endif

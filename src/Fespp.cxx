@@ -1,4 +1,37 @@
-﻿#include <Fespp.h>
+﻿/*-----------------------------------------------------------------------
+Copyright F2I-CONSULTING, (2014)
+
+cedric.robert@f2i-consulting.com
+
+This software is a computer program whose purpose is to display data formatted using Energistics standards.
+
+This software is governed by the CeCILL license under French law and
+abiding by the rules of distribution of free software.  You can  use,
+modify and/ or redistribute the software under the terms of the CeCILL
+license as circulated by CEA, CNRS and INRIA at the following URL
+"http://www.cecill.info".
+
+As a counterpart to the access to the source code and  rights to copy,
+modify and redistribute granted by the license, users are provided only
+with a limited warranty  and the software's author,  the holder of the
+economic rights,  and the successive licensors  have only  limited
+liability.
+
+In this respect, the user's attention is drawn to the risks associated
+with loading,  using,  modifying and/or developing or reproducing the
+software by the user in light of its specific status of free software,
+that may mean  that it is complicated to manipulate,  and  that  also
+therefore means  that it is reserved for developers  and  experienced
+professionals having in-depth computer knowledge. Users are therefore
+encouraged to load and test the software's suitability as regards their
+requirements in conditions enabling the security of their systems and/or
+data to be ensured and,  more generally, to use and operate it in the
+same conditions as regards security.
+
+The fact that you are presently reading this means that you have had
+knowledge of the CeCILL license and that you accept its terms.
+-----------------------------------------------------------------------*/
+#include <Fespp.h>
 #include <vtkDataArraySelection.h>
 #include <vtkIndent.h>
 #include <vtkInformation.h>
@@ -59,8 +92,10 @@ FileName(nullptr), Controller(nullptr), loadedFile(false), idProc(0), nbProc(0),
 
 	countTest = 0;
 	epcDocumentSet = nullptr;
+#ifdef WITH_ETP
 	etpDocument = nullptr;
 	isEtpDocument=false;
+#endif
 	isEpcDocument=false;
 }
 
@@ -77,15 +112,18 @@ Fespp::~Fespp()
 		epcDocumentSet = nullptr;
 	}
 
+#ifdef WITH_ETP
 	if (etpDocument != nullptr) {
 		delete etpDocument;
 		etpDocument = nullptr;
 	}
+#endif
 }
 
 //----------------------------------------------------------------------------
 void Fespp::SetSubFileName(const char* name)
 {
+#ifdef WITH_ETP
 	if(isEtpDocument) {
 		auto it = std::string(name).find(":");
 		if(it != std::string::npos) {
@@ -93,6 +131,7 @@ void Fespp::SetSubFileName(const char* name)
 			ip = std::string(name).substr(0,it);
 		}
 	}
+#endif
 	if(isEpcDocument) {
 		if (std::find(fileNameSet.begin(), fileNameSet.end(),std::string(name))==fileNameSet.end())	{
 			fileNameSet.push_back(std::string(name));
@@ -110,25 +149,34 @@ int Fespp::GetuuidListArrayStatus(const char* uuid)
 void Fespp::SetUuidList(const char* uuid, int status)
 {
 	if (std::string(uuid)=="connect") {
+#ifdef WITH_ETP
 		if(etpDocument == nullptr) {
 			loadedFile = true;
 			etpDocument = new VtkEtpDocument(ip, port, VtkEpcCommon::Representation);
 		}
+#endif
 	} else if (status != 0) {
 		if(isEpcDocument) {
-			epcDocumentSet->visualize(std::string(uuid));
+			auto msg = epcDocumentSet->visualize(std::string(uuid));
+			if  (!msg.empty()){
+				displayError(msg);
+			}
 		}
+#ifdef WITH_ETP
 		if(isEtpDocument && etpDocument!=nullptr) {
-			etpDocument->visualize(std::string(uuid));
+				etpDocument->visualize(std::string(uuid));
 		}
+#endif
 	}
 	else {
 		if(isEpcDocument) {
 			epcDocumentSet->unvisualize(std::string(uuid));
 		}
+#ifdef WITH_ETP
 		if(isEtpDocument && etpDocument!=nullptr) {
 			etpDocument->unvisualize(std::string(uuid));
 		}
+#endif
 	}
 
 	this->Modified();
@@ -201,9 +249,11 @@ int Fespp::RequestInformation(
 			loadedFile = true;
 			epcDocumentSet = new VtkEpcDocumentSet(idProc, nbProc, VtkEpcCommon::Both);
 		}
+#ifdef WITH_ETP
 		if(stringFileName == "EtpDocument")	{
 			isEtpDocument=true;
 		}
+#endif
 		if(extension=="epc") {
 			isEpcDocument=true;
 			loadedFile = true;
@@ -217,7 +267,11 @@ int Fespp::RequestInformation(
 //----------------------------------------------------------------------------
 void Fespp::OpenEpcDocument(const std::string & name)
 {
-	epcDocumentSet->addEpcDocument(name);
+	auto msg = epcDocumentSet->addEpcDocument(name);
+	if  (!msg.empty()){
+		displayWarning(msg);
+	}
+
 }
 
 //----------------------------------------------------------------------------
@@ -225,9 +279,11 @@ int Fespp::RequestData(vtkInformation *request,
 		vtkInformationVector **inputVector,
 		vtkInformationVector *outputVector)
 {
+#ifdef WITH_ETP
 	if (isEtpDocument)	{
 		RequestDataEtpDocument(request, inputVector, outputVector);
 	}
+#endif
 	if (isEpcDocument)	{
 		RequestDataEpcDocument(request, inputVector, outputVector);
 	}
@@ -280,6 +336,7 @@ void Fespp::RequestDataEpcDocument(vtkInformation *request,
 }
 
 //----------------------------------------------------------------------------
+#ifdef WITH_ETP
 void Fespp::RequestDataEtpDocument(vtkInformation *request,
 		vtkInformationVector **inputVector,
 		vtkInformationVector *outputVector)
@@ -291,7 +348,7 @@ void Fespp::RequestDataEtpDocument(vtkInformation *request,
 	}
 
 }
-
+#endif
 //----------------------------------------------------------------------------
 void Fespp::PrintSelf(ostream& os, vtkIndent indent)
 {

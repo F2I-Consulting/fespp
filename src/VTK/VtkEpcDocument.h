@@ -40,6 +40,9 @@ knowledge of the CeCILL license and that you accept its terms.
 #include "VtkResqml2MultiBlockDataSet.h"
 #include "VtkEpcDocumentSet.h"
 
+// Fesapi namespaces
+#include "nsDefinitions.h"
+
 class VtkIjkGridRepresentation;
 class VtkUnstructuredGridRepresentation;
 class VtkPartialRepresentation;
@@ -49,7 +52,7 @@ class VtkTriangulatedRepresentation;
 class VtkSetPatch;
 class VtkWellboreTrajectoryRepresentation;
 
-namespace common
+namespace COMMON_NS
 {
 	class EpcDocument;
 }
@@ -65,7 +68,7 @@ public:
 	/**
 	* Destructor
 	*/
-	~VtkEpcDocument();
+	virtual ~VtkEpcDocument();
 
 	/**
 	* method : visualize
@@ -88,7 +91,7 @@ public:
 	*
 	* if timeIndex = -1 then no time series link.
 	*/
-	std::vector<VtkEpcCommon*> getTreeView() const;
+	std::vector<VtkEpcCommon> getTreeView() const;
 
 	/**
 	* method : attach
@@ -101,7 +104,7 @@ public:
 	void addProperty(const std::string & uuidProperty, vtkDataArray* dataProperty);
 
 	VtkEpcCommon::Resqml2Type getType(std::string);
-	VtkEpcCommon* getInfoUuid(std::string);
+	VtkEpcCommon getInfoUuid(std::string);
 
 	long getAttachmentPropertyCount(const std::string & uuid, const VtkEpcCommon::FesppAttachmentProperty propertyUnit) ;
 	int getICellCount(const std::string & uuid) ;
@@ -109,9 +112,9 @@ public:
 	int getKCellCount(const std::string & uuid) ;
 	int getInitKIndex(const std::string & uuid) ;
 
-	common::EpcDocument *getEpcDocument();
-	
-protected:
+	std::string getError() ;
+
+	COMMON_NS::EpcDocument *getEpcDocument();
 
 private:
 	void addGrid2DTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name);
@@ -120,8 +123,8 @@ private:
 	void addWellTrajTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name);
 	void addIjkGridTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name);
 	void addUnstrucGridTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name);
-	void addSubRepTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name);
-	void addPropertyTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name);
+	int addSubRepTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name);
+	int addPropertyTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name);
 	
 	/**
 	* method : createTreeVtkPartialRep
@@ -140,19 +143,8 @@ private:
 
 
 	// EPC DOCUMENT
-	common::EpcDocument *epcPackage;
+	COMMON_NS::EpcDocument *epcPackage;
 
-#if _MSC_VER < 1600
-	//std::tr1::unordered_map<std::string, VtkFeature*> uuidToVtKFeature;	
-	std::tr1::unordered_map<std::string, VtkGrid2DRepresentation*> uuidToVtkGrid2DRepresentation;
-	std::tr1::unordered_map<std::string, VtkPolylineRepresentation*> uuidToVtkPolylineRepresentation;
-	std::tr1::unordered_map<std::string, VtkTriangulatedRepresentation*> uuidToVtkTriangulatedRepresentation;
-	std::tr1::unordered_map<std::string, VtkSetPatch*> uuidToVtkSetPatch;
-	std::tr1::unordered_map<std::string, VtkWellboreTrajectoryRepresentation*> uuidToVtkWellboreTrajectoryRepresentation;
-	std::tr1::unordered_map<std::string, VtkIjkGridRepresentation*> uuidToVtkIjkGridRepresentation;
-	std::tr1::unordered_map<std::string, VtkUnstructuredGridRepresentation*> uuidToVtkUnstructuredGridRepresentation;
-	std::tr1::unordered_map<std::string, VtkPartialRepresentation*> uuidToVtkPartialRepresentation;
-#else
 	//std::unordered_map<std::string, VtkFeature*> uuidToVtKFeature;	
 	std::unordered_map<std::string, VtkGrid2DRepresentation*> uuidToVtkGrid2DRepresentation;
 	std::unordered_map<std::string, VtkPolylineRepresentation*> uuidToVtkPolylineRepresentation;
@@ -162,13 +154,14 @@ private:
 	std::unordered_map<std::string, VtkIjkGridRepresentation*> uuidToVtkIjkGridRepresentation;
 	std::unordered_map<std::string, VtkUnstructuredGridRepresentation*> uuidToVtkUnstructuredGridRepresentation;
 	std::unordered_map<std::string, VtkPartialRepresentation*> uuidToVtkPartialRepresentation;
-#endif
 
 	std::vector<std::string> uuidPartialRep;
 	std::vector<std::string> uuidRep;
 
 	VtkEpcDocumentSet * epcSet;
 
-	std::vector<VtkEpcCommon*> treeView; // Tree
+	std::vector<VtkEpcCommon> treeView; // Tree
+
+	std::string epc_error;
 };
 #endif

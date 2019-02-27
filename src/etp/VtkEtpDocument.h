@@ -43,16 +43,14 @@ knowledge of the CeCILL license and that you accept its terms.
 
 #include "VTK/VtkResqml2MultiBlockDataSet.h"
 
-#include <etp/ProtocolHandlers/DirectedDiscoveryHandlers.h>
+#include <etp/ProtocolHandlers/DiscoveryHandlers.h>
 
 #include "VTK/VtkEpcCommon.h"
 
 // include system
-#if (defined(_WIN32) && _MSC_VER >= 1600)
+
 #include <unordered_map>
-#else
-#include <tr1/unordered_map>
-#endif
+
 
 class EtpClientSession;
 
@@ -86,15 +84,10 @@ public:
 	 */
 	void remove(const std::string & uuid);
 
-	void receive_resources_tree(const std::string & rec_uri,
-			const std::string & rec_contentType,
-			const std::string & rec_name,
-			Energistics::Etp::v12::Datatypes::Object::ResourceKind & rec_resourceType,
-			const int32_t & rec_sourceCount,
-			const int32_t & rec_targetCount,
-			const int32_t & rec_contentCount,
-			const int64_t & rec_lastChanged);
+	void receive_resources_tree(const std::string & rec_uri, const std::string & rec_name, const std::string & contentType, const int32_t & sourceCount);
+	void receive_nbresources_tree(size_t);
 
+	EtpClientSession* getClientSession();
 	void setClientSession(EtpClientSession * session) {client_session = session;}
 
 	void createTree();
@@ -104,7 +97,7 @@ public:
 	 * method : get TreeView
 	 * variable :
 	 */
-	std::vector<VtkEpcCommon*> getTreeView() const;
+	std::vector<VtkEpcCommon> getTreeView() const;
 
 	/**
 	 * method : visualize
@@ -129,9 +122,6 @@ public:
 
 	long getAttachmentPropertyCount(const std::string & uuid, const VtkEpcCommon::FesppAttachmentProperty propertyUnit) ;
 
-protected:
-
-	VtkEpcCommon* firstLeafOfTreeView();
 private:
 
 	int64_t push_command(const std::string & command);
@@ -142,7 +132,7 @@ private:
 	void createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, const VtkEpcCommon::Resqml2Type & resqmlType);
 
 	std::list<int> number_response_wait_queue;
-	std::list<VtkEpcCommon*> response_queue;
+	std::list<VtkEpcCommon> response_queue;
 	std::list<std::string> command_queue;
 
 	EtpClientSession * client_session;
@@ -150,15 +140,12 @@ private:
 	bool treeViewMode;
 	bool representationMode;
 
-	std::vector<VtkEpcCommon*> treeView; // Tree
+	std::vector<VtkEpcCommon> treeView; // Tree
 
 	int64_t last_id;
 
-#if _MSC_VER < 1600
-	std::tr1::unordered_map<std::string, VtkIjkGridRepresentation*> uuidToVtkIjkGridRepresentation;
-#else
-		std::unordered_map<std::string, VtkIjkGridRepresentation*> uuidToVtkIjkGridRepresentation;
-#endif
+
+	std::unordered_map<std::string, VtkIjkGridRepresentation*> uuidToVtkIjkGridRepresentation;
 
 
 };

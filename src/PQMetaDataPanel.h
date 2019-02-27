@@ -52,6 +52,7 @@ public:
 		Superclass(t, p, f) { this->constructor(); }
 	PQMetaDataPanel(QWidget *p=0, Qt::WindowFlags f=0):
 		Superclass(p, f) { this->constructor(); }
+	~PQMetaDataPanel();
 	
 protected slots:
 	/**

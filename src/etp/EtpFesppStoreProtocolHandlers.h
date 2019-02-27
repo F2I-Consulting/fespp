@@ -46,7 +46,7 @@ public:
 	EtpFesppStoreProtocolHandlers(EtpClientSession* mySession, VtkEtpDocument* my_etp_document): ETP_NS::StoreHandlers(mySession), etp_document(my_etp_document) {}
 	~EtpFesppStoreProtocolHandlers() {}
 
-	void on_Object(const Energistics::Etp::v12::Protocol::Store::Object & obj, int64_t correlationId);
+	void on_GetDataObjectsResponse(const Energistics::Etp::v12::Protocol::Store::GetDataObjectsResponse & obj, int64_t correlationId);
 private:
 	VtkEtpDocument* etp_document;
 };

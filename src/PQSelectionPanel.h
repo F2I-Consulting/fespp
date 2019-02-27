@@ -98,6 +98,8 @@ public:
 	PQSelectionPanel(QWidget *p=0, Qt::WindowFlags f=0):
     Superclass(p, f) { this->constructor(); }
 
+	~PQSelectionPanel();
+
 	/**
 	* Open an epc document and create the treeWidget in panel.
 	* @return informative message
@@ -111,7 +113,9 @@ public:
 	*/
 	void deleteTreeView();
 
+#ifdef WITH_ETP
 	void connectPQEtpPanel();
+#endif
 
 
 
@@ -123,7 +127,9 @@ signals:
 
 protected slots:
 
-	void setEtpTreeView(std::vector<VtkEpcCommon*>);
+#ifdef WITH_ETP
+	void setEtpTreeView(std::vector<VtkEpcCommon>);
+#endif
 	/**
 	* When a line is selected.
 	*/
@@ -154,7 +160,7 @@ private:
 
 	std::string searchSource(const std::string & uuid);
 
-	void populateTreeView(const std::string &  parent, VtkEpcCommon::Resqml2Type parentType, const std::string &  uuid, const std::string &  name, VtkEpcCommon::Resqml2Type type, const std::string & pipeOrigin);
+	void populateTreeView(const std::string &  parent, VtkEpcCommon::Resqml2Type parentType, const std::string &  uuid, const std::string &  name, VtkEpcCommon::Resqml2Type type);
 	void updateTimeSeries(const std::string & uuid, bool isnew);
 	void deleteUUID(QTreeWidgetItem *item);
 

@@ -43,26 +43,6 @@ ENDIF ()
 SET (CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/modules/")
 find_package(Fesapi REQUIRED)
 
-# -- Boost DEPENDENCY --
-SET (BOOST_INCLUDE_DIR BOOST_INCLUDE_DIR-NOTFOUND CACHE PATH "Path to the directory which contains the BOOST header files")
-IF (NOT IS_DIRECTORY ${BOOST_INCLUDE_DIR})
-	MESSAGE(WARNING "The BOOST include dir (BOOST_INCLUDE_DIR variable) does not look to be a valid directory. Please modify it.")
-ENDIF ()
-SET (BOOST_SYSTEM_LIBRARY BOOST_SYSTEM_LIBRARY-NOTFOUND CACHE FILEPATH "Path to the file which contains the Boost system static library release")
-IF (NOT EXISTS ${BOOST_SYSTEM_LIBRARY})
-	MESSAGE(WARNING "The BOOST library (BOOST_SYSTEM_LIBRARY variable) does not look to be a valid file. Please modify it.")
-ENDIF ()
-
-# -- avro DEPENDENCY --
-SET (AVRO_INCLUDE_DIR AVRO_INCLUDE_DIR-NOTFOUND CACHE PATH "Path to the directory which contains the avro header files")
-IF (NOT IS_DIRECTORY ${AVRO_INCLUDE_DIR})
-	MESSAGE(WARNING "The Avro include dir (AVRO_INCLUDE_DIR variable) does not look to be a valid directory. Please modify it.")
-ENDIF ()
-SET (AVRO_LIBRARY_RELEASE AVRO_LIBRARY_RELEASE-NOTFOUND CACHE FILEPATH "Path to the file which contains the avro library release")
-IF (NOT EXISTS ${AVRO_LIBRARY_RELEASE})
-	MESSAGE(WARNING "The avro library (AVRO_LIBRARY_RELEASE variable) does not look to be a valid file. Please modify it.")
-ENDIF ()
-	
 # -- ParaView --
 IF (ParaView_SOURCE_DIR)
   # we are building from within ParaView Source. The environment is already set.
@@ -82,6 +62,35 @@ ENDIF (ParaView_SOURCE_DIR)
 # wrappings for all these modules as well.
 # -----------------------------------------------------------------------------
 pv_process_modules()
+
+
+SET (WITH_ETP OFF CACHE BOOL "Only if Fesapi build with ETP support... for build Fespp with ETP support.")
+
+IF (WITH_ETP)
+
+	message ("WARNING: ETP support only if FESAPI build with ETP support")
+	add_compile_definitions (WITH_ETP)
+
+	# -- Boost DEPENDENCY --
+	SET (BOOST_INCLUDE_DIR BOOST_INCLUDE_DIR-NOTFOUND CACHE PATH "Path to the directory which contains the BOOST header files")
+	IF (NOT IS_DIRECTORY ${BOOST_INCLUDE_DIR})
+		MESSAGE(WARNING "The BOOST include dir (BOOST_INCLUDE_DIR variable) does not look to be a valid directory. Please modify it.")
+	ENDIF ()
+	SET (BOOST_SYSTEM_LIBRARY BOOST_SYSTEM_LIBRARY-NOTFOUND CACHE FILEPATH "Path to the file which contains the Boost system static library release")
+	IF (NOT EXISTS ${BOOST_SYSTEM_LIBRARY})
+		MESSAGE(WARNING "The BOOST library (BOOST_SYSTEM_LIBRARY variable) does not look to be a valid file. Please modify it.")
+	ENDIF ()	
+	
+	# -- avro DEPENDENCY --
+	SET (AVRO_INCLUDE_DIR AVRO_INCLUDE_DIR-NOTFOUND CACHE PATH "Path to the directory which contains the avro header files")
+	IF (NOT IS_DIRECTORY ${AVRO_INCLUDE_DIR})
+		MESSAGE(WARNING "The Avro include dir (AVRO_INCLUDE_DIR variable) does not look to be a valid directory. Please modify it.")
+	ENDIF ()
+	SET (AVRO_LIBRARY_RELEASE AVRO_LIBRARY_RELEASE-NOTFOUND CACHE FILEPATH "Path to the file which contains the avro library release")
+	IF (NOT EXISTS ${AVRO_LIBRARY_RELEASE})
+		MESSAGE(WARNING "The avro library (AVRO_LIBRARY_RELEASE variable) does not look to be a valid file. Please modify it.")
+	ENDIF ()
+ENDIF (WITH_ETP)
 
 # ============================================================================
 # compilation options

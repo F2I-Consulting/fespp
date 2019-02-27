@@ -49,6 +49,7 @@ knowledge of the CeCILL license and that you accept its terms.
 	#include <tr1/unordered_map>
 #endif
 
+
 class VtkEpcDocument;
 
 class VtkEpcDocumentSet
@@ -70,7 +71,7 @@ public:
 	* variable : std::string uuid 
 	* create uuid representation.
 	*/
-	void visualize(const std::string & uuid);
+	std::string visualize(const std::string & uuid);
 	void visualizeFull();
 	
 	/**
@@ -81,7 +82,7 @@ public:
 	void unvisualize(const std::string & uuid);
 
 	VtkEpcCommon::Resqml2Type getType(std::string uuid);
-	VtkEpcCommon* getInfoUuid(std::string);
+	VtkEpcCommon getInfoUuid(std::string);
 
 	/**
 	* method : getOutput
@@ -89,12 +90,12 @@ public:
 	* return the vtkMultiBlockDataSet for each epcdocument.
 	*/
 	vtkSmartPointer<vtkMultiBlockDataSet> getVisualization() const;
-	std::vector<VtkEpcCommon*> getTreeView() const;
+	std::vector<VtkEpcCommon> getTreeView() const;
 
-	void addEpcDocument(const std::string & fileName);
+	std::string addEpcDocument(const std::string & fileName);
 
 	VtkEpcDocument* getVtkEpcDocument(const std::string & uuid);
-
+	VtkEpcCommon::Resqml2Type getTypeInEpcDocument(const std::string & uuid);
 
 protected:
 
@@ -109,7 +110,7 @@ private:
 	std::unordered_map<std::string, VtkEpcDocument*> uuidToVtkEpc; // link uuid/VtkEpcdocument
 #endif
 
-	std::vector<VtkEpcCommon*> treeView; // Tree
+	std::vector<VtkEpcCommon> treeView; // Tree
 
 	vtkSmartPointer<vtkMultiBlockDataSet> vtkOutput;
 

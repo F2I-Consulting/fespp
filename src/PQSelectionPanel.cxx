@@ -1,7 +1,42 @@
+/*-----------------------------------------------------------------------
+Copyright F2I-CONSULTING, (2014)
+
+cedric.robert@f2i-consulting.com
+
+This software is a computer program whose purpose is to display data formatted using Energistics standards.
+
+This software is governed by the CeCILL license under French law and
+abiding by the rules of distribution of free software.  You can  use,
+modify and/ or redistribute the software under the terms of the CeCILL
+license as circulated by CEA, CNRS and INRIA at the following URL
+"http://www.cecill.info".
+
+As a counterpart to the access to the source code and  rights to copy,
+modify and redistribute granted by the license, users are provided only
+with a limited warranty  and the software's author,  the holder of the
+economic rights,  and the successive licensors  have only  limited
+liability.
+
+In this respect, the user's attention is drawn to the risks associated
+with loading,  using,  modifying and/or developing or reproducing the
+software by the user in light of its specific status of free software,
+that may mean  that it is complicated to manipulate,  and  that  also
+therefore means  that it is reserved for developers  and  experienced
+professionals having in-depth computer knowledge. Users are therefore
+encouraged to load and test the software's suitability as regards their
+requirements in conditions enabling the security of their systems and/or
+data to be ensured and,  more generally, to use and operate it in the
+same conditions as regards security.
+
+The fact that you are presently reading this means that you have had
+knowledge of the CeCILL license and that you accept its terms.
+-----------------------------------------------------------------------*/
 #include "ui_PQSelectionPanel.h"
 #include "PQSelectionPanel.h"
 #include "PQToolsManager.h"
+#ifdef WITH_ETP
 #include "PQEtpPanel.h"
+#endif
 
 // include API Resqml2
 #include "resqml2_0_1/PolylineSetRepresentation.h"
@@ -66,7 +101,7 @@
 #include "VTK/VtkEpcDocumentSet.h"
 
 namespace {
-
+#ifdef WITH_ETP
 	PQEtpPanel* getPQEtpPanel() {
 		PQEtpPanel *panel = 0;
 		foreach(QWidget *widget, qApp->topLevelWidgets()) {
@@ -78,6 +113,7 @@ namespace {
 		}
 		return panel;
 	}
+#endif
 
 	pqPropertiesPanel* getpqPropertiesPanel() {
 		pqPropertiesPanel *panel = 0;
@@ -185,6 +221,12 @@ void PQSelectionPanel::constructor()
 
 	vtkEpcDocumentSet = new VtkEpcDocumentSet(0, 0, VtkEpcCommon::TreeView);
 
+}
+
+PQSelectionPanel::~PQSelectionPanel()
+{
+	delete timer;
+	delete vtkEpcDocumentSet;
 }
 
 //******************************* ACTIONS ************************************
@@ -444,27 +486,26 @@ void PQSelectionPanel::addFileName(const std::string & fileName)
 		QMap<std::string, std::string> name_to_uuid;
 		auto treeView = vtkEpcDocumentSet->getTreeView();
 		for (auto &feuille : treeView) {
-
-			if (feuille->getTimeIndex()<0 ) {
-				populateTreeView(feuille->getParent(), feuille->getParentType(), feuille->getUuid(), feuille->getName(), feuille->getType(), "EpcDocument");
+			uuidToPipeName[feuille.getUuid()]="EpcDocument";
+			if (feuille.getTimeIndex()<0 ) {
+				populateTreeView(feuille.getParent(), feuille.getParentType(), feuille.getUuid(), feuille.getName(), feuille.getType());
 			}
 			else {
-				if(name_to_uuid.count(feuille->getName())<=0) {
-					populateTreeView(feuille->getParent(), feuille->getParentType(), feuille->getUuid(), feuille->getName(), feuille->getType(), "EpcDocument");
-					name_to_uuid[feuille->getName()]=feuille->getUuid();
+				if(name_to_uuid.count(feuille.getName())<=0) {
+					populateTreeView(feuille.getParent(), feuille.getParentType(), feuille.getUuid(), feuille.getName(), feuille.getType());
+					name_to_uuid[feuille.getName()]=feuille.getUuid();
 				}
 
-				ts_timestamp_to_uuid[name_to_uuid[feuille->getName()]][feuille->getTimestamp()] = feuille->getUuid();
+				ts_timestamp_to_uuid[name_to_uuid[feuille.getName()]][feuille.getTimestamp()] = feuille.getUuid();
 			}
 		}
 	}
 }
 
-void PQSelectionPanel::populateTreeView(const std::string & parent, VtkEpcCommon::Resqml2Type parentType, const std::string & uuid, const std::string &  name, VtkEpcCommon::Resqml2Type type, const std::string & origin)
+void PQSelectionPanel::populateTreeView(const std::string & parent, VtkEpcCommon::Resqml2Type parentType, const std::string & uuid, const std::string &  name, VtkEpcCommon::Resqml2Type type)
 {
  	if (uuid != "")	{
 		if (!uuidItem[uuid]) {
-			uuidToPipeName[uuid]=origin;
 			if (parentType==VtkEpcCommon::Resqml2Type::PARTIAL && !uuidItem[parent]){
 			}
 			else {
@@ -483,45 +524,57 @@ void PQSelectionPanel::populateTreeView(const std::string & parent, VtkEpcCommon
 					addTreeProperty(uuidItem[parent], parent, name, uuid);
 				}
 				else {
+
+					QTreeWidgetItem *treeItem = new QTreeWidgetItem();
+
+					treeItem->setText(0, name.c_str());
+					treeItem->setFlags(treeItem->flags() | Qt::ItemIsSelectable);
+
 					switch (type) {
+						case VtkEpcCommon::Resqml2Type::INTERPRETATION: {
+							icon.addFile(QString::fromUtf8(":Grid2D.png"), QSize(), QIcon::Normal, QIcon::Off);
+							break;
+						}
 						case VtkEpcCommon::Resqml2Type::GRID_2D: {
 							icon.addFile(QString::fromUtf8(":Grid2D.png"), QSize(), QIcon::Normal, QIcon::Off);
+							treeItem->setCheckState(0, Qt::Unchecked);
 							break;
 						}
 						case VtkEpcCommon::Resqml2Type::POLYLINE_SET: {
 							icon.addFile(QString::fromUtf8(":Polyline.png"), QSize(), QIcon::Normal, QIcon::Off);
+							treeItem->setCheckState(0, Qt::Unchecked);
 							break;
 						}
 						case VtkEpcCommon::Resqml2Type::TRIANGULATED_SET: {
 							icon.addFile(QString::fromUtf8(":Triangulated.png"), QSize(), QIcon::Normal, QIcon::Off);
+							treeItem->setCheckState(0, Qt::Unchecked);
 							break;
 						}
 						case VtkEpcCommon::Resqml2Type::WELL_TRAJ: {
 							icon.addFile(QString::fromUtf8(":WellTraj.png"), QSize(), QIcon::Normal, QIcon::Off);
+							treeItem->setCheckState(0, Qt::Unchecked);
 							break;
 						}
 						case VtkEpcCommon::Resqml2Type::IJK_GRID: {
 							icon.addFile(QString::fromUtf8(":IjkGrid.png"), QSize(), QIcon::Normal, QIcon::Off);
+							treeItem->setCheckState(0, Qt::Unchecked);
 							break;
 						}
 						case VtkEpcCommon::Resqml2Type::UNSTRUC_GRID: {
 							icon.addFile(QString::fromUtf8(":UnstructuredGrid.png"), QSize(), QIcon::Normal, QIcon::Off);
+							treeItem->setCheckState(0, Qt::Unchecked);
 							break;
 						}
 						case VtkEpcCommon::Resqml2Type::SUB_REP: {
 							icon.addFile(QString::fromUtf8(":SubRepresentation.png"), QSize(), QIcon::Normal, QIcon::Off);
+							treeItem->setCheckState(0, Qt::Unchecked);
 							break;
 						}
 						default:
 							break;
 					}
 
-					QTreeWidgetItem *treeItem = new QTreeWidgetItem();
-
-					treeItem->setText(0, name.c_str());
 					treeItem->setIcon(0, icon);
-					treeItem->setCheckState(0, Qt::Unchecked);
-					treeItem->setFlags(treeItem->flags() | Qt::ItemIsUserCheckable | Qt::ItemIsSelectable);
 
 
 					uuidItem[parent]->addChild(treeItem);
@@ -682,21 +735,22 @@ void PQSelectionPanel::uuidKO(const std::string & uuid)
 //*************************************
 //*     ETP
 //*************************************
-
+#ifdef WITH_ETP
 //----------------------------------------------------------------------------
-void PQSelectionPanel::setEtpTreeView(std::vector<VtkEpcCommon*> treeView)
+void PQSelectionPanel::setEtpTreeView(std::vector<VtkEpcCommon> treeView)
 {
 	QMap<std::string, std::string> name_to_uuid;
 	for (auto &feuille : treeView) {
-		if (feuille->getTimeIndex()<0 ) {
-			populateTreeView(feuille->getParent(), feuille->getParentType(), feuille->getUuid(), feuille->getName(), feuille->getType(), "EtpDocument");
+		uuidToPipeName[feuille.getUuid()]="EtpDocument";
+		if (feuille.getTimeIndex()<0 ) {
+			populateTreeView(feuille.getParent(), feuille.getParentType(), feuille.getUuid(), feuille.getName(), feuille.getType());
 		}
 		else  {
-			if(name_to_uuid.count(feuille->getName())<=0) {
-				populateTreeView(feuille->getParent(), feuille->getParentType(), feuille->getUuid(), feuille->getName(), feuille->getType(), "EtpDocument");
-				name_to_uuid[feuille->getName()]=feuille->getUuid();
+			if(name_to_uuid.count(feuille.getName())<=0) {
+				populateTreeView(feuille.getParent(), feuille.getParentType(), feuille.getUuid(), feuille.getName(), feuille.getType());
+				name_to_uuid[feuille.getName()]=feuille.getUuid();
 			}
-			ts_timestamp_to_uuid[name_to_uuid[feuille->getName()]][feuille->getTimestamp()] = feuille->getUuid();
+			ts_timestamp_to_uuid[name_to_uuid[feuille.getName()]][feuille.getTimestamp()] = feuille.getUuid();
 		}
 	}
 
@@ -728,6 +782,7 @@ void PQSelectionPanel::setEtpTreeView(std::vector<VtkEpcCommon*> treeView)
 
 void PQSelectionPanel::connectPQEtpPanel()
 {
-	qRegisterMetaType<std::vector<VtkEpcCommon*> >("std::vector<VtkEpcCommon*>");
-	connect(getPQEtpPanel(), SIGNAL(refreshTreeView(std::vector<VtkEpcCommon*>)), this, SLOT(setEtpTreeView(std::vector<VtkEpcCommon*>)));
+	qRegisterMetaType<std::vector<VtkEpcCommon> >("std::vector<VtkEpcCommon>");
+	connect(getPQEtpPanel(), &PQEtpPanel::refreshTreeView, this, &PQSelectionPanel::setEtpTreeView);
 }
+#endif

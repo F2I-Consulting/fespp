@@ -54,28 +54,30 @@ public:
 		Superclass(t, p, f) { this->constructor(); }
 	PQEtpPanel(QWidget *p=0, Qt::WindowFlags f=0):
 		Superclass(p, f) { this->constructor(); }
+
+	~PQEtpPanel();
 	
 	void etpClientConnect(const std::string & ipAddress, const std::string & port);
-	void setConnectionStatus(bool connect) { etp_connect = connect; }
-	void setVtkEtpDocuement(VtkEtpDocument* vtkEtp) { etp_document = vtkEtp; }
 
-
-	void setEtpTreeView(std::vector<VtkEpcCommon*>);
+	/**
+	* Emit a signal indicating to refresh the tree view
+	*/
+	void setEtpTreeView(std::vector<VtkEpcCommon>);
 
 signals:
-	void refreshTreeView(std::vector<VtkEpcCommon*>);
+	void refreshTreeView(std::vector<VtkEpcCommon>);
 
 protected slots:
-	void handleButtonStatus();
 	void handleButtonRefresh();
-  
+
 private:
 	void constructor();
 
 	QPushButton *EtpSendButton;
 	QPushButton *EtpStatus_Button;
 
-	VtkEtpDocument* etp_document;
+	std::string ipAddress;
+	std::string port;
 
 	bool etp_connect;
 };
