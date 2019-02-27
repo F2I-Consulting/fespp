@@ -155,12 +155,12 @@ PQToolsManager::PQToolsManager(QObject* p)
 
 	QObject::connect(this->actionDataLoadManager(), SIGNAL(triggered(bool)), this, SLOT(showDataLoadManager()));
 	//QObject::connect(this->actionPanelSelection(), SIGNAL(triggered(bool)), this, SLOT(showPanelSelection()));
-	QObject::connect(this->actionPanelMetadata(), SIGNAL(triggered(bool)), this, SLOT(showPanelMetadata()));
+//	QObject::connect(this->actionPanelMetadata(), SIGNAL(triggered(bool)), this, SLOT(showPanelMetadata()));
 #ifdef WITH_ETP
 	QObject::connect(this->actionEtpCommand(), SIGNAL(triggered(bool)), this, SLOT(showEtpConnectionManager()));
 #endif
 
-	this->actionPanelMetadata()->setEnabled(false);
+//	this->actionPanelMetadata()->setEnabled(false);
 	//	this->actionPanelSelection()->setEnabled(false);
 }
 
@@ -185,10 +185,10 @@ QAction* PQToolsManager::actionPanelSelection()
  */
 
 //-----------------------------------------------------------------------------
-QAction* PQToolsManager::actionPanelMetadata()
-{
-	return this->Internal->Actions.actionPanelMetadata;
-}
+//QAction* PQToolsManager::actionPanelMetadata()
+//{
+//	return this->Internal->Actions.actionPanelMetadata;
+//}
 
 //-----------------------------------------------------------------------------
 #ifdef WITH_ETP
@@ -378,15 +378,15 @@ void PQToolsManager::deletePipelineSource(pqPipelineSource* pipe)
 		}
 #endif
 	}
-	this->actionPanelMetadata()->setEnabled(false);
-	this->setVisibilityPanelMetadata(false);
-	panelMetadataVisible = false;
+//	this->actionPanelMetadata()->setEnabled(false);
+//	this->setVisibilityPanelMetadata(false);
+//	panelMetadataVisible = false;
 }
 
 //----------------------------------------------------------------------------
 void PQToolsManager::newFile(const std::string & fileName)
 {
-	this->actionPanelMetadata()->setEnabled(true);
+//	this->actionPanelMetadata()->setEnabled(true);
 	getPQSelectionPanel()->addFileName(fileName);
 	//	this->actionPanelSelection()->setEnabled(true);
 
