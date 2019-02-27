@@ -44,7 +44,7 @@ VtkResqml2UnstructuredGrid::VtkResqml2UnstructuredGrid(const std::string & fileN
 //----------------------------------------------------------------------------
 VtkResqml2UnstructuredGrid::~VtkResqml2UnstructuredGrid()
 {
-	vtkOutput = NULL;
+	vtkOutput = nullptr;
 }
 
 //----------------------------------------------------------------------------

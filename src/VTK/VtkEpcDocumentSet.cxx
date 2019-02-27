@@ -142,10 +142,11 @@ vtkSmartPointer<vtkMultiBlockDataSet> VtkEpcDocumentSet::getVisualization() cons
 }
 
 //----------------------------------------------------------------------------
-void VtkEpcDocumentSet::addEpcDocument(const std::string & fileName)
+std::string VtkEpcDocumentSet::addEpcDocument(const std::string & fileName)
 {
 	if (std::find(vtkEpcNameList.begin(), vtkEpcNameList.end(),fileName)==vtkEpcNameList.end())	{
 		auto vtkEpc = new VtkEpcDocument(fileName, procRank, nbProc, this);
+		auto msg_error = vtkEpc->getError();
 		auto uuidList = vtkEpc->getListUuid();
 		for (auto &uuidListElem : uuidList) {
 			uuidToVtkEpc[uuidListElem] = vtkEpc;
@@ -155,13 +156,26 @@ void VtkEpcDocumentSet::addEpcDocument(const std::string & fileName)
 
 		auto tmpTree = vtkEpc->getTreeView();
 		treeView.insert( treeView.end(), tmpTree.begin(), tmpTree.end() );
+
+		return msg_error;
 	}
+	return std::string();
 }
 
 //----------------------------------------------------------------------------
 VtkEpcDocument* VtkEpcDocumentSet::getVtkEpcDocument(const std::string & uuid)
 {
 	return uuidToVtkEpc.find(uuid) != uuidToVtkEpc.end() ? uuidToVtkEpc[uuid] : nullptr;
+}
+
+//----------------------------------------------------------------------------
+VtkEpcCommon::Resqml2Type VtkEpcDocumentSet::getTypeInEpcDocument(const std::string & uuid)
+{
+	auto epcDoc = uuidToVtkEpc.find(uuid) != uuidToVtkEpc.end() ? uuidToVtkEpc[uuid] : nullptr;
+	if (epcDoc!=nullptr) {
+		return epcDoc->getType(uuid);
+	}
+	return VtkEpcCommon::UNKNOW;
 }
 
 //----------------------------------------------------------------------------

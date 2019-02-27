@@ -112,6 +112,8 @@ public:
 	int getKCellCount(const std::string & uuid) ;
 	int getInitKIndex(const std::string & uuid) ;
 
+	std::string getError() ;
+
 	COMMON_NS::EpcDocument *getEpcDocument();
 
 private:
@@ -121,8 +123,8 @@ private:
 	void addWellTrajTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name);
 	void addIjkGridTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name);
 	void addUnstrucGridTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name);
-	void addSubRepTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name);
-	void addPropertyTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name);
+	int addSubRepTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name);
+	int addPropertyTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name);
 	
 	/**
 	* method : createTreeVtkPartialRep
@@ -159,5 +161,7 @@ private:
 	VtkEpcDocumentSet * epcSet;
 
 	std::vector<VtkEpcCommon> treeView; // Tree
+
+	std::string epc_error;
 };
 #endif

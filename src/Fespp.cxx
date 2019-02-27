@@ -267,7 +267,11 @@ int Fespp::RequestInformation(
 //----------------------------------------------------------------------------
 void Fespp::OpenEpcDocument(const std::string & name)
 {
-	epcDocumentSet->addEpcDocument(name);
+	auto msg = epcDocumentSet->addEpcDocument(name);
+	if  (!msg.empty()){
+		displayWarning(msg);
+	}
+
 }
 
 //----------------------------------------------------------------------------

@@ -92,9 +92,10 @@ public:
 	vtkSmartPointer<vtkMultiBlockDataSet> getVisualization() const;
 	std::vector<VtkEpcCommon> getTreeView() const;
 
-	void addEpcDocument(const std::string & fileName);
+	std::string addEpcDocument(const std::string & fileName);
 
 	VtkEpcDocument* getVtkEpcDocument(const std::string & uuid);
+	VtkEpcCommon::Resqml2Type getTypeInEpcDocument(const std::string & uuid);
 
 protected:
 
