@@ -50,6 +50,7 @@ knowledge of the CeCILL license and that you accept its terms.
 // Fespp include
 #include "VTK/VtkEpcDocument.h"
 #include "VTK/VtkEpcDocumentSet.h"
+#include "VTK/log.h"
 
 #ifdef PARAVIEW_USE_MPI
 #include <vtkMPI.h>
@@ -64,10 +65,14 @@ knowledge of the CeCILL license and that you accept its terms.
 vtkStandardNewMacro(Fespp);
 vtkCxxSetObjectMacro(Fespp, Controller, vtkMultiProcessController);
 
+const std::string loggClass = "CLASS=Fespp ";
+
 //----------------------------------------------------------------------------
 Fespp::Fespp() :
 FileName(nullptr), Controller(nullptr), loadedFile(false), idProc(0), nbProc(0), countTest(0)
 {
+	initLogger( "Fespp.log", linfo);
+	L_(linfo) << loggClass << "FUNCTION=VtkIjkGridRepresentation " << "STATUS=IN ";
 	SetNumberOfInputPorts(0);
 	SetNumberOfOutputPorts(1);
 
@@ -97,11 +102,13 @@ FileName(nullptr), Controller(nullptr), loadedFile(false), idProc(0), nbProc(0),
 	isEtpDocument=false;
 #endif
 	isEpcDocument=false;
+	L_(linfo) << loggClass << "FUNCTION=VtkIjkGridRepresentation " << "STATUS=OUT ";
 }
 
 //----------------------------------------------------------------------------
 Fespp::~Fespp()
 {
+	L_(linfo) << loggClass << "FUNCTION=~Fespp " << "STATUS=IN ";
 	SetFileName(nullptr);
 	SetController(nullptr);
 	fileNameSet.clear();
@@ -118,11 +125,14 @@ Fespp::~Fespp()
 		etpDocument = nullptr;
 	}
 #endif
+	L_(linfo) << loggClass << "FUNCTION=~Fespp " << "STATUS=OUT ";
+	endLogger();
 }
 
 //----------------------------------------------------------------------------
 void Fespp::SetSubFileName(const char* name)
 {
+	L_(linfo) << loggClass << "FUNCTION=SetSubFileName " << "STATUS=IN ";
 #ifdef WITH_ETP
 	if(isEtpDocument) {
 		auto it = std::string(name).find(":");
@@ -138,16 +148,20 @@ void Fespp::SetSubFileName(const char* name)
 			this->OpenEpcDocument(name);
 		}
 	}
+	L_(linfo) << loggClass << "FUNCTION=SetSubFileName " << "STATUS=OUT ";
 }
 
 //----------------------------------------------------------------------------
 int Fespp::GetuuidListArrayStatus(const char* uuid)
 {
+	L_(linfo) << loggClass << "FUNCTION=GetuuidListArrayStatus " << "STATUS=IN ";
+	L_(linfo) << loggClass << "FUNCTION=GetuuidListArrayStatus " << "STATUS=OUT ";
 	return (this->uuidList->ArrayIsEnabled(uuid));
 }
 //----------------------------------------------------------------------------
 void Fespp::SetUuidList(const char* uuid, int status)
 {
+	L_(linfo) << loggClass << "FUNCTION=SetUuidList " << "STATUS=IN ";
 	if (std::string(uuid)=="connect") {
 #ifdef WITH_ETP
 		if(etpDocument == nullptr) {
@@ -184,17 +198,22 @@ void Fespp::SetUuidList(const char* uuid, int status)
 	this->UpdateDataObject();
 	this->UpdateInformation();
 	this->UpdateWholeExtent();
+	L_(linfo) << loggClass << "FUNCTION=SetUuidList " << "STATUS=OUT ";
 }
 
 //----------------------------------------------------------------------------
 int Fespp::GetNumberOfuuidListArrays()
 {
+	L_(linfo) << loggClass << "FUNCTION=GetNumberOfuuidListArrays " << "STATUS=IN ";
+	L_(linfo) << loggClass << "FUNCTION=GetNumberOfuuidListArrays " << "STATUS=OUT ";
 	return this->uuidList->GetNumberOfArrays();
 }
 
 //----------------------------------------------------------------------------
 const char* Fespp::GetuuidListArrayName(int index)
 {
+	L_(linfo) << loggClass << "FUNCTION=GetuuidListArrayName " << "STATUS=IN ";
+	L_(linfo) << loggClass << "FUNCTION=GetuuidListArrayName " << "STATUS=OUT ";
 	return this->uuidList->GetArrayName(index);
 }
 
@@ -204,6 +223,7 @@ const char* Fespp::GetuuidListArrayName(int index)
 //----------------------------------------------------------------------------
 MPI_Comm Fespp::GetMPICommunicator()
 {
+	L_(linfo) << loggClass << "FUNCTION=GetMPICommunicator " << "STATUS=IN ";
 	MPI_Comm comm = MPI_COMM_NULL;
 
 	vtkMPIController *MPIController = vtkMPIController::SafeDownCast(this->Controller);
@@ -217,6 +237,7 @@ MPI_Comm Fespp::GetMPICommunicator()
 			comm = *mpiComm->GetMPIComm()->GetHandle();
 		}
 	}
+	L_(linfo) << loggClass << "FUNCTION=GetMPICommunicator " << "STATUS=OUT ";
 	return comm;
 }
 #endif
@@ -225,13 +246,17 @@ MPI_Comm Fespp::GetMPICommunicator()
 //----------------------------------------------------------------------------
 void Fespp::displayError(std::string msg)
 {
+	L_(linfo) << loggClass << "FUNCTION=displayError " << "STATUS=IN ";
 	vtkErrorMacro(<< msg.c_str());
+	L_(linfo) << loggClass << "FUNCTION=displayError " << "STATUS=OUT ";
 }
 
 //----------------------------------------------------------------------------
 void Fespp::displayWarning(std::string msg)
 {
+	L_(linfo) << loggClass << "FUNCTION=displayWarning " << "STATUS=IN ";
 	vtkWarningMacro(<< msg.c_str());
+	L_(linfo) << loggClass << "FUNCTION=displayWarning " << "STATUS=OUT ";
 }
 
 //----------------------------------------------------------------------------
@@ -240,6 +265,7 @@ int Fespp::RequestInformation(
 		vtkInformationVector **inputVector,
 		vtkInformationVector *outputVector)
 {
+	L_(linfo) << loggClass << "FUNCTION=RequestInformation " << "STATUS=IN ";
 	if ( !loadedFile ) {
 		auto stringFileName = std::string(FileName);
 		auto lengthFileName = stringFileName.length();
@@ -261,17 +287,19 @@ int Fespp::RequestInformation(
 			epcDocumentSet->visualizeFull();
 		}
 	}
+	L_(linfo) << loggClass << "FUNCTION=RequestInformation " << "STATUS=OUT ";
 	return 1;
 }
 
 //----------------------------------------------------------------------------
 void Fespp::OpenEpcDocument(const std::string & name)
 {
+	L_(linfo) << loggClass << "FUNCTION=OpenEpcDocument " << "STATUS=IN ";
 	auto msg = epcDocumentSet->addEpcDocument(name);
 	if  (!msg.empty()){
 		displayWarning(msg);
 	}
-
+	L_(linfo) << loggClass << "FUNCTION=OpenEpcDocument " << "STATUS=OUT ";
 }
 
 //----------------------------------------------------------------------------
@@ -279,6 +307,7 @@ int Fespp::RequestData(vtkInformation *request,
 		vtkInformationVector **inputVector,
 		vtkInformationVector *outputVector)
 {
+	L_(linfo) << loggClass << "FUNCTION=RequestData " << "STATUS=IN ";
 #ifdef WITH_ETP
 	if (isEtpDocument)	{
 		RequestDataEtpDocument(request, inputVector, outputVector);
@@ -287,6 +316,7 @@ int Fespp::RequestData(vtkInformation *request,
 	if (isEpcDocument)	{
 		RequestDataEpcDocument(request, inputVector, outputVector);
 	}
+	L_(linfo) << loggClass << "FUNCTION=RequestData " << "STATUS=OUT ";
 	return 1;
 }
 //----------------------------------------------------------------------------
@@ -294,6 +324,7 @@ void Fespp::RequestDataEpcDocument(vtkInformation *request,
 		vtkInformationVector **inputVector,
 		vtkInformationVector *outputVector)
 {
+	L_(linfo) << loggClass << "FUNCTION=RequestDataEpcDocument " << "STATUS=IN ";
 #ifdef PARAVIEW_USE_MPI
 	auto comm = GetMPICommunicator();
 	double t1;
@@ -333,6 +364,7 @@ void Fespp::RequestDataEpcDocument(vtkInformation *request,
 			cout << "Elapsed time is " << (t2-t1) << "\n";
 	}
 #endif
+	L_(linfo) << loggClass << "FUNCTION=RequestDataEpcDocument " << "STATUS=OUT ";
 }
 
 //----------------------------------------------------------------------------
@@ -341,12 +373,13 @@ void Fespp::RequestDataEtpDocument(vtkInformation *request,
 		vtkInformationVector **inputVector,
 		vtkInformationVector *outputVector)
 {
+	L_(linfo) << loggClass << "FUNCTION=RequestDataEtpDocument " << "STATUS=IN ";
 	vtkInformation *outInfo = outputVector->GetInformationObject(0);
 	vtkMultiBlockDataSet *output = vtkMultiBlockDataSet::SafeDownCast(outInfo->Get(vtkMultiBlockDataSet::DATA_OBJECT()));
 	if (loadedFile)	{
 		output->DeepCopy(etpDocument->getVisualization());
 	}
-
+	L_(linfo) << loggClass << "FUNCTION=RequestDataEtpDocument " << "STATUS=OUT ";
 }
 #endif
 //----------------------------------------------------------------------------

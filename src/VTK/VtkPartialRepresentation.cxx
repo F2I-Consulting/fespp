@@ -77,7 +77,7 @@ void VtkPartialRepresentation::visualize(const std::string & uuid)
 {
 	if (uuid != vtkPartialReprUuid)
 	{
-		common::AbstractObject* obj = epcPackage->getResqmlAbstractObjectByUuid(vtkPartialReprUuid);
+		common::AbstractObject* obj = epcPackage->getDataObjectByUuid(vtkPartialReprUuid);
 		if (obj != nullptr){
 			std::vector<resqml2::AbstractValuesProperty*> valuesPropertySet;
 

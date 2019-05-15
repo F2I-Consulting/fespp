@@ -63,7 +63,7 @@ void VtkGrid2DRepresentationPoints::createOutput(const std::string & uuid)
 	if (!subRepresentation)	{
 
 		resqml2_0_1::Grid2dRepresentation* grid2dRepresentation = nullptr;
-		common::AbstractObject* obj = epcPackageRepresentation->getResqmlAbstractObjectByUuid(getUuid().substr(0, 36));
+		common::AbstractObject* obj = epcPackageRepresentation->getDataObjectByUuid(getUuid().substr(0, 36));
 
 		if (obj != nullptr && obj->getXmlTag() == "Grid2dRepresentation")
 			grid2dRepresentation = static_cast<resqml2_0_1::Grid2dRepresentation*>(obj);
@@ -138,7 +138,7 @@ void VtkGrid2DRepresentationPoints::createOutput(const std::string & uuid)
 	{
 		long result = 0;
 		resqml2_0_1::Grid2dRepresentation* grid2dRepresentation = nullptr;
-		common::AbstractObject* obj = epcPackageRepresentation->getResqmlAbstractObjectByUuid(getUuid().substr(0, 36));
+		common::AbstractObject* obj = epcPackageRepresentation->getDataObjectByUuid(getUuid().substr(0, 36));
 
 		if (obj != nullptr && obj->getXmlTag() == "Grid2dRepresentation"){
 			grid2dRepresentation = static_cast<resqml2_0_1::Grid2dRepresentation*>(obj);

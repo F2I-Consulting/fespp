@@ -70,7 +70,7 @@ void VtkUnstructuredGridRepresentation::createOutput(const std::string & uuid)
 	if (!subRepresentation)	{
 
 		resqml2_0_1::UnstructuredGridRepresentation* unstructuredGridRep = nullptr;
-		common::AbstractObject* obj = epcPackageRepresentation->getResqmlAbstractObjectByUuid(getUuid());
+		common::AbstractObject* obj = epcPackageRepresentation->getDataObjectByUuid(getUuid());
 		if (obj != nullptr && obj->getXmlTag() == "UnstructuredGridRepresentation")
 		{
 			unstructuredGridRep = static_cast<resqml2_0_1::UnstructuredGridRepresentation*>(obj);
@@ -216,7 +216,7 @@ long VtkUnstructuredGridRepresentation::getAttachmentPropertyCount(const std::st
 {
 	long result = 0;
 	resqml2_0_1::UnstructuredGridRepresentation* unstructuredGridRep = nullptr;
-	common::AbstractObject* obj = epcPackageRepresentation->getResqmlAbstractObjectByUuid(getUuid());
+	common::AbstractObject* obj = epcPackageRepresentation->getDataObjectByUuid(getUuid());
 	if (obj != nullptr && obj->getXmlTag() == "UnstructuredGridRepresentation")
 	{
 		unstructuredGridRep = static_cast<resqml2_0_1::UnstructuredGridRepresentation*>(obj);

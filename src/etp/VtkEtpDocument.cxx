@@ -86,7 +86,7 @@ void startio(VtkEtpDocument *etp_document, std::string ipAddress, std::string po
 		ioc.run();
 	});
 
-	auto client_session_sharedPtr = std::make_shared<EtpClientSession>(ioc, ipAddress, port, requestedProtocols, supportedObjects, etp_document, mode);
+	auto client_session_sharedPtr = std::make_shared<EtpClientSession>(ioc, ipAddress, port, "/", "", requestedProtocols, supportedObjects, etp_document, mode);
 	client_session_sharedPtr->run();
 
 	etp_document->setClientSession(client_session_sharedPtr.get());
@@ -256,7 +256,7 @@ void VtkEtpDocument::visualize(const std::string & rec_uri)
 
 			setSessionToEtpHdfProxy(client_session);
 
-			RESQML2_0_1_NS::AbstractIjkGridRepresentation * ijkGrid = client_session->epcDoc.getResqmlAbstractObjectByUuid<RESQML2_0_1_NS::AbstractIjkGridRepresentation>(uuid);
+			RESQML2_0_1_NS::AbstractIjkGridRepresentation * ijkGrid = client_session->epcDoc.getDataObjectByUuid<RESQML2_0_1_NS::AbstractIjkGridRepresentation>(uuid);
 			if (ijkGrid == nullptr) { // Defensive code
 				std::cerr << "The requested ETP ijk grid " << uuid << " could not have been retrieved from the ETP server." << std::endl;
 			}

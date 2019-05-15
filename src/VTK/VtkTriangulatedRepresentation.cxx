@@ -64,7 +64,7 @@ void VtkTriangulatedRepresentation::createOutput(const std::string &uuid)
 	if (!subRepresentation)	{
 
 		resqml2_0_1::TriangulatedSetRepresentation* triangulatedSetRepresentation = nullptr;
-		common::AbstractObject* obj = epcPackageRepresentation->getResqmlAbstractObjectByUuid(getUuid());
+		common::AbstractObject* obj = epcPackageRepresentation->getDataObjectByUuid(getUuid());
 		if (obj != nullptr && obj->getXmlTag() == "TriangulatedSetRepresentation")
 		{
 			triangulatedSetRepresentation = static_cast<resqml2_0_1::TriangulatedSetRepresentation*>(obj);
@@ -127,7 +127,7 @@ long VtkTriangulatedRepresentation::getAttachmentPropertyCount(const std::string
 {
 	long result = 0;
 	resqml2_0_1::TriangulatedSetRepresentation* triangulatedSetRepresentation = nullptr;
-	common::AbstractObject* obj = epcPackageRepresentation->getResqmlAbstractObjectByUuid(getUuid());
+	common::AbstractObject* obj = epcPackageRepresentation->getDataObjectByUuid(getUuid());
 	if (obj != nullptr && obj->getXmlTag() == "TriangulatedSetRepresentation")
 	{
 		triangulatedSetRepresentation = static_cast<resqml2_0_1::TriangulatedSetRepresentation*>(obj);

@@ -65,7 +65,7 @@ void VtkPolylineRepresentation::createOutput(const std::string & uuid)
 {
 	if (!subRepresentation)	{
 		resqml2_0_1::PolylineSetRepresentation* polylineSetRepresentation = nullptr;
-		common::AbstractObject* obj = epcPackageRepresentation->getResqmlAbstractObjectByUuid(getUuid());
+		common::AbstractObject* obj = epcPackageRepresentation->getDataObjectByUuid(getUuid());
 		if (obj != nullptr && obj->getXmlTag() == "PolylineSetRepresentation")
 		{
 			polylineSetRepresentation = static_cast<resqml2_0_1::PolylineSetRepresentation*>(obj);
@@ -134,7 +134,7 @@ long VtkPolylineRepresentation::getAttachmentPropertyCount(const std::string & u
 {
 	long result = 0;
 	resqml2_0_1::PolylineSetRepresentation* polylineSetRepresentation = nullptr;
-	common::AbstractObject* obj = epcPackageRepresentation->getResqmlAbstractObjectByUuid(getUuid());
+	common::AbstractObject* obj = epcPackageRepresentation->getDataObjectByUuid(getUuid());
 	if (obj != nullptr && obj->getXmlTag() == "PolylineSetRepresentation")
 	{
 		polylineSetRepresentation = static_cast<resqml2_0_1::PolylineSetRepresentation*>(obj);

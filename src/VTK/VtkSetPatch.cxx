@@ -57,7 +57,7 @@ VtkResqml2MultiBlockDataSet(fileName, name, uuid, uuidParent, idProc, maxProc), 
 //	uuidIsChildOf[uuid] = new VtkEpcCommon();
 	resqml2_0_1::PolylineSetRepresentation* polylineSetRep = nullptr;
 	resqml2_0_1::TriangulatedSetRepresentation * triangulatedSetRep = nullptr;
-	common::AbstractObject *object = epcPackage->getResqmlAbstractObjectByUuid(uuid);
+	common::AbstractObject *object = epcPackage->getDataObjectByUuid(uuid);
 	std::string xmlTag = object->getXmlTag();
 	if (xmlTag == "PolylineSetRepresentation")
 	{
@@ -122,7 +122,7 @@ void VtkSetPatch::createTreeVtk(const std::string & uuid, const std::string & pa
 
 	resqml2_0_1::PolylineSetRepresentation* polylineSetRep = nullptr;
 	resqml2_0_1::TriangulatedSetRepresentation * triangulatedSetRep = nullptr;
-	common::AbstractObject* obj = epcPackage->getResqmlAbstractObjectByUuid(getUuid());
+	common::AbstractObject* obj = epcPackage->getDataObjectByUuid(getUuid());
 
 	// PROPERTY
 	uuidIsChildOf[uuid].setType( uuidIsChildOf[parent].getType());

@@ -55,7 +55,7 @@ void VtkWellboreTrajectoryRepresentationDatum::createOutput(const std::string & 
 {
 	vtkOutput = vtkSmartPointer<vtkUnstructuredGrid>::New();
 	resqml2_0_1::WellboreTrajectoryRepresentation* wellboreSetRepresentation = nullptr;
-	common::AbstractObject* obj = epcPackageRepresentation->getResqmlAbstractObjectByUuid(uuid);
+	common::AbstractObject* obj = epcPackageRepresentation->getDataObjectByUuid(uuid);
 	if (obj != nullptr && obj->getXmlTag() ==  "WellboreTrajectoryRepresentation")
 	{
 		wellboreSetRepresentation = static_cast<resqml2_0_1::WellboreTrajectoryRepresentation*>(obj);

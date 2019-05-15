@@ -58,7 +58,7 @@ void VtkGrid2DRepresentationCells::createOutput(const std::string & uuid)
 	if (!subRepresentation)	{
 
 		resqml2_0_1::Grid2dRepresentation* grid2dRepresentation = nullptr;
-		common::AbstractObject* obj = epcPackageRepresentation->getResqmlAbstractObjectByUuid(uuid);
+		common::AbstractObject* obj = epcPackageRepresentation->getDataObjectByUuid(uuid);
 		if (obj != nullptr && obj->getXmlTag() == "Grid2dRepresentation")
 		{
 			grid2dRepresentation = static_cast<resqml2_0_1::Grid2dRepresentation*>(obj);

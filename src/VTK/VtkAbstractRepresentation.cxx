@@ -38,6 +38,9 @@ knowledge of the CeCILL license and that you accept its terms.
 #include <common/EpcDocument.h>
 
 #include <vtkDataArray.h>
+
+#include "log.h"
+const std::string loggClass = "CLASS=VtkAbstractRepresentation ";
 //----------------------------------------------------------------------------
 VtkAbstractRepresentation::VtkAbstractRepresentation(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, common::EpcDocument *pckEPCRep, common::EpcDocument *pckEPCSubRep, const int & idProc, const int & maxProc) :
 VtkAbstractObject(fileName, name, uuid, uuidParent, idProc, maxProc), epcPackageRepresentation(pckEPCRep), epcPackageSubRepresentation(pckEPCSubRep)
@@ -83,15 +86,22 @@ void VtkAbstractRepresentation::visualize(const std::string & uuid)
 
 vtkSmartPointer<vtkPoints> VtkAbstractRepresentation::createVtkPoints(const ULONG64 & pointCount, const double * allXyzPoints, const resqml2::AbstractLocal3dCrs * localCRS)
 {
+	L_(linfo) << loggClass << "FUNCTION=~createVtkPoints " << "STATUS=IN "<< "LEVEL=1 ";
+	L_(linfo) << loggClass << "FUNCTION=~createVtkPoints " << "STATUS=IN "<< "LEVEL=1 " << "API=vtk " << "APIFUNC=vtkSmartPointer<vtkPoints>::New() ";
 	points = vtkSmartPointer<vtkPoints>::New();
+	L_(linfo) << loggClass << "FUNCTION=~createVtkPoints " << "STATUS=OUT "<< "LEVEL=1 " << "API=vtk " << "APIFUNC=vtkSmartPointer<vtkPoints>::New() ";
 	double zIndice = 1;
 
 	if (localCRS->isDepthOriented()) {
+
 		zIndice = -1;
 	}
+	L_(linfo) << loggClass << "FUNCTION=~createVtkPoints " << "STATUS=IN "<< "LEVEL=1 " << "API=vtk " << "APIFUNC=InsertNextPoint ";
 	for (ULONG64 nodeIndex = 0; nodeIndex < pointCount * 3; nodeIndex += 3) {
 		points->InsertNextPoint(allXyzPoints[nodeIndex], allXyzPoints[nodeIndex + 1], allXyzPoints[nodeIndex + 2] * zIndice);
 	}
+	L_(linfo) << loggClass << "FUNCTION=~createVtkPoints " << "STATUS=OUT "<< "LEVEL=1 " << "API=vtk " << "APIFUNC=InsertNextPoint ";
+	L_(linfo) << loggClass << "FUNCTION=~createVtkPoints " << "STATUS=IN "<< "LEVEL=1 " << "API=fesapi" << "APIFUNC=getXyzPointCountOfAllPatches ";
 	return points;
 }
 

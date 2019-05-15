@@ -72,12 +72,16 @@ knowledge of the CeCILL license and that you accept its terms.
 #include "VtkPartialRepresentation.h"
 #include "VtkSetPatch.h"
 #include "VtkEpcCommon.h"
+#include "log.h"
+
+const std::string loggClass = "CLASS=VtkEpcDocument ";
 
 //----------------------------------------------------------------------------
 VtkEpcDocument::VtkEpcDocument(const std::string & fileName, const int & idProc, const int & maxProc, VtkEpcDocumentSet* epcDocSet) :
 VtkResqml2MultiBlockDataSet(fileName, fileName, fileName, "", idProc, maxProc),
 epcPackage(nullptr), epcSet(epcDocSet)
 {
+    L_(linfo) << loggClass << "FUNCTION=VtkEpcDocument " << "STATUS=IN ";
 	std::string();
 	try
 	{
@@ -490,11 +494,13 @@ epcPackage(nullptr), epcSet(epcDocSet)
 			cout << "EXCEPTION in fesapi when closing file " << fileName << " : " << e.what();
 		}
 	}
+	L_(linfo) << loggClass << "FUNCTION=VtkEpcDocument " << "STATUS=OUT ";
 }
 
 //----------------------------------------------------------------------------
 VtkEpcDocument::~VtkEpcDocument()
 {
+	L_(linfo) << loggClass << "FUNCTION=~VtkEpcDocument " << "STATUS=IN ";
 	for(auto i : uuidToVtkGrid2DRepresentation) {
 		delete i.second;
 	}
@@ -542,11 +548,13 @@ VtkEpcDocument::~VtkEpcDocument()
 
 	epcPackage->close();
 	delete epcPackage;
+	L_(linfo) << loggClass << "FUNCTION=~VtkEpcDocument " << "STATUS=OUT ";
 }
 
 //----------------------------------------------------------------------------
 void VtkEpcDocument::createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, const VtkEpcCommon::Resqml2Type & type)
 {
+	L_(linfo) << loggClass << "FUNCTION=createTreeVtk " << "STATUS=IN ";
 	int return_code = 1;
 	uuidIsChildOf[uuid].setType( type);
 	uuidIsChildOf[uuid].setUuid(uuid);
@@ -600,18 +608,22 @@ void VtkEpcDocument::createTreeVtk(const std::string & uuid, const std::string &
 	if (return_code!=0){
 		uuidRep.push_back(uuid);
 	}
+	L_(linfo) << loggClass << "FUNCTION=createTreeVtk " << "STATUS=OUT ";
 }
 
 //----------------------------------------------------------------------------
 void VtkEpcDocument::addGrid2DTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name)
 {
+	L_(linfo) << loggClass << "FUNCTION=addGrid2DTreeVtk " << "STATUS=IN ";
 	uuidToVtkGrid2DRepresentation[uuid] = new VtkGrid2DRepresentation(getFileName(), name, uuid, parent, epcPackage, nullptr);
+	L_(linfo) << loggClass << "FUNCTION=addGrid2DTreeVtk " << "STATUS=OUT ";
 }
 
 //----------------------------------------------------------------------------
 void VtkEpcDocument::addPolylineSetTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name)
 {
-	auto object = epcPackage->getResqmlAbstractObjectByUuid(uuid);
+	L_(linfo) << loggClass << "FUNCTION=addPolylineSetTreeVtk " << "STATUS=IN ";
+	auto object = epcPackage->getDataObjectByUuid(uuid);
 	auto typeRepresentation = object->getXmlTag();
 	if (typeRepresentation == "PolylineRepresentation") {
 		uuidToVtkPolylineRepresentation[uuid] = new VtkPolylineRepresentation(getFileName(), name, uuid, parent, 0, epcPackage, nullptr);
@@ -619,12 +631,14 @@ void VtkEpcDocument::addPolylineSetTreeVtk(const std::string & uuid, const std::
 	else {
 		uuidToVtkSetPatch[uuid] = new VtkSetPatch(getFileName(), name, uuid, parent, epcPackage, getIdProc(), getMaxProc());
 	}
+	L_(linfo) << loggClass << "FUNCTION=addPolylineSetTreeVtk " << "STATUS=OUT ";
 }
 
 //----------------------------------------------------------------------------
 void VtkEpcDocument::addTriangulatedSetTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name)
 {
-	auto object = epcPackage->getResqmlAbstractObjectByUuid(uuid);
+	L_(linfo) << loggClass << "FUNCTION=addTriangulatedSetTreeVtk " << "STATUS=IN ";
+	auto object = epcPackage->getDataObjectByUuid(uuid);
 	auto typeRepresentation = object->getXmlTag();
 	if (typeRepresentation == "TriangulatedRepresentation")	{
 		uuidToVtkTriangulatedRepresentation[uuid] = new VtkTriangulatedRepresentation(getFileName(), name, uuid, parent, 0, epcPackage, nullptr);
@@ -632,29 +646,37 @@ void VtkEpcDocument::addTriangulatedSetTreeVtk(const std::string & uuid, const s
 	else {
 		uuidToVtkSetPatch[uuid] = new VtkSetPatch(getFileName(), name, uuid, parent, epcPackage, getIdProc(), getMaxProc());
 	}
+	L_(linfo) << loggClass << "FUNCTION=addTriangulatedSetTreeVtk " << "STATUS=OUT ";
 }
 
 //----------------------------------------------------------------------------
 void VtkEpcDocument::addWellTrajTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name)
 {
+	L_(linfo) << loggClass << "FUNCTION=addWellTrajTreeVtk " << "STATUS=IN ";
 	uuidToVtkWellboreTrajectoryRepresentation[uuid] = new VtkWellboreTrajectoryRepresentation(getFileName(), name, uuid, parent, epcPackage, nullptr);
+	L_(linfo) << loggClass << "FUNCTION=addWellTrajTreeVtk " << "STATUS=OUT ";
 }
 
 //----------------------------------------------------------------------------
 void VtkEpcDocument::addIjkGridTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name)
 {
+	L_(linfo) << loggClass << "FUNCTION=addIjkGridTreeVtk " << "STATUS=IN ";
 	uuidToVtkIjkGridRepresentation[uuid] = new VtkIjkGridRepresentation(getFileName(), name, uuid, parent, epcPackage, nullptr, getIdProc(), getMaxProc());
+	L_(linfo) << loggClass << "FUNCTION=addIjkGridTreeVtk " << "STATUS=OUT ";
 }
 
 //----------------------------------------------------------------------------
 void VtkEpcDocument::addUnstrucGridTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name)
 {
+	L_(linfo) << loggClass << "FUNCTION=addUnstrucGridTreeVtk " << "STATUS=IN ";
 	uuidToVtkUnstructuredGridRepresentation[uuid] = new VtkUnstructuredGridRepresentation(getFileName(), name, uuid, parent, epcPackage, nullptr);
+	L_(linfo) << loggClass << "FUNCTION=addUnstrucGridTreeVtk " << "STATUS=OUT ";
 }
 
 //----------------------------------------------------------------------------
 int VtkEpcDocument::addSubRepTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name)
 {
+	L_(linfo) << loggClass << "FUNCTION=addSubRepTreeVtk " << "STATUS=IN ";
 	if (uuidIsChildOf[uuid].getParentType() == VtkEpcCommon::IJK_GRID)	{
 		uuidToVtkIjkGridRepresentation[uuid] = new VtkIjkGridRepresentation(getFileName(), name, uuid, parent, epcPackage, epcPackage);
 		return 1;
@@ -691,12 +713,14 @@ int VtkEpcDocument::addSubRepTreeVtk(const std::string & uuid, const std::string
 		default: break;
 		}
 	}
+	L_(linfo) << loggClass << "FUNCTION=addSubRepTreeVtk " << "STATUS=OUT ";
 	return 0;
 }
 
 //----------------------------------------------------------------------------
 int VtkEpcDocument::addPropertyTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name)
 {
+	L_(linfo) << loggClass << "FUNCTION=addPropertyTreeVtk " << "STATUS=INT ";
 	switch (uuidIsChildOf[parent].getType()) {
 	case VtkEpcCommon::GRID_2D:	{
 		uuidToVtkGrid2DRepresentation[parent]->createTreeVtk(uuid, parent, name, uuidIsChildOf[uuid].getType());
@@ -704,7 +728,7 @@ int VtkEpcDocument::addPropertyTreeVtk(const std::string & uuid, const std::stri
 		break;
 	}
 	case VtkEpcCommon::POLYLINE_SET: {
-		auto object = epcPackage->getResqmlAbstractObjectByUuid(parent);
+		auto object = epcPackage->getDataObjectByUuid(parent);
 		auto typeRepresentation = object->getXmlTag();
 		if (typeRepresentation == "PolylineRepresentation")	{
 			uuidToVtkPolylineRepresentation[parent]->createTreeVtk(uuid, parent, name, uuidIsChildOf[uuid].getType());
@@ -717,7 +741,7 @@ int VtkEpcDocument::addPropertyTreeVtk(const std::string & uuid, const std::stri
 		break;
 	}
 	case VtkEpcCommon::TRIANGULATED_SET: {
-		auto object = epcPackage->getResqmlAbstractObjectByUuid(uuid);
+		auto object = epcPackage->getDataObjectByUuid(uuid);
 		auto typeRepresentation = object->getXmlTag();
 		if (typeRepresentation == "TriangulatedRepresentation")	{
 			uuidToVtkTriangulatedRepresentation[parent]->createTreeVtk(uuid, parent, name, uuidIsChildOf[uuid].getType());
@@ -792,6 +816,7 @@ int VtkEpcDocument::addPropertyTreeVtk(const std::string & uuid, const std::stri
 		break;
 	}
 	}
+	L_(linfo) << loggClass << "FUNCTION=addPropertyTreeVtk " << "STATUS=OUT ";
 	return 0;
 
 }
@@ -799,14 +824,17 @@ int VtkEpcDocument::addPropertyTreeVtk(const std::string & uuid, const std::stri
 //----------------------------------------------------------------------------
 void VtkEpcDocument::createTreeVtkPartialRep(const std::string & uuid, VtkEpcDocument *vtkEpcDowumentWithCompleteRep)
 {
+	L_(linfo) << loggClass << "FUNCTION=createTreeVtkPartialRep " << "STATUS=IN ";
 	uuidIsChildOf[uuid].setType( VtkEpcCommon::PARTIAL);
 	uuidIsChildOf[uuid].setUuid(uuid);
 	uuidToVtkPartialRepresentation[uuid] = new VtkPartialRepresentation(getFileName(), uuid, vtkEpcDowumentWithCompleteRep, epcPackage);
+	L_(linfo) << loggClass << "FUNCTION=createTreeVtkPartialRep " << "STATUS=OUT ";
 }
 
 //----------------------------------------------------------------------------
 void VtkEpcDocument::visualize(const std::string & uuid)
 {
+	L_(linfo) << loggClass << "FUNCTION=visualize " << "STATUS=IN ";
 	auto uuidToAttach = uuidIsChildOf[uuid].getUuid();
 	switch (uuidIsChildOf[uuid].getType())	{
 	case VtkEpcCommon::GRID_2D:	{
@@ -814,7 +842,7 @@ void VtkEpcDocument::visualize(const std::string & uuid)
 		break;
 	}
 	case VtkEpcCommon::POLYLINE_SET: {
-		auto object = epcPackage->getResqmlAbstractObjectByUuid(uuidIsChildOf[uuid].getUuid());
+		auto object = epcPackage->getDataObjectByUuid(uuidIsChildOf[uuid].getUuid());
 		auto typeRepresentation = object->getXmlTag();
 		if (typeRepresentation == "PolylineRepresentation")	{
 			uuidToVtkPolylineRepresentation[uuidIsChildOf[uuid].getUuid()]->visualize(uuid);
@@ -825,7 +853,7 @@ void VtkEpcDocument::visualize(const std::string & uuid)
 		break;
 	}
 	case VtkEpcCommon::TRIANGULATED_SET: {
-		auto object = epcPackage->getResqmlAbstractObjectByUuid(uuidIsChildOf[uuid].getUuid());
+		auto object = epcPackage->getDataObjectByUuid(uuidIsChildOf[uuid].getUuid());
 		auto typeRepresentation = object->getXmlTag();
 		if (typeRepresentation == "TriangulatedRepresentation") {
 			uuidToVtkTriangulatedRepresentation[uuidIsChildOf[uuid].getUuid()]->visualize(uuid);
@@ -891,7 +919,7 @@ void VtkEpcDocument::visualize(const std::string & uuid)
 			break;
 		}
 		case VtkEpcCommon::POLYLINE_SET: {
-			auto object = epcPackage->getResqmlAbstractObjectByUuid(uuidIsChildOf[uuid].getParent());
+			auto object = epcPackage->getDataObjectByUuid(uuidIsChildOf[uuid].getParent());
 			auto typeRepresentation = object->getXmlTag();
 			if (typeRepresentation == "PolylineRepresentation")	{
 				uuidToVtkPolylineRepresentation[uuidIsChildOf[uuid].getParent()]->visualize(uuid);
@@ -902,7 +930,7 @@ void VtkEpcDocument::visualize(const std::string & uuid)
 			break;
 		}
 		case VtkEpcCommon::TRIANGULATED_SET: {
-			auto object = epcPackage->getResqmlAbstractObjectByUuid(uuid);
+			auto object = epcPackage->getDataObjectByUuid(uuid);
 			auto typeRepresentation = object->getXmlTag();
 			if (typeRepresentation == "TriangulatedRepresentation") {
 				uuidToVtkTriangulatedRepresentation[uuidIsChildOf[uuid].getParent()]->visualize(uuid);
@@ -957,7 +985,7 @@ void VtkEpcDocument::visualize(const std::string & uuid)
 			break;
 		}
 		case VtkEpcCommon::POLYLINE_SET: {
-			auto object = epcPackage->getResqmlAbstractObjectByUuid(uuidIsChildOf[uuid].getParent());
+			auto object = epcPackage->getDataObjectByUuid(uuidIsChildOf[uuid].getParent());
 			auto typeRepresentation = object->getXmlTag();
 			if (typeRepresentation == "PolylineRepresentation")	{
 				uuidToVtkPolylineRepresentation[uuidIsChildOf[uuid].getParent()]->visualize(uuid);
@@ -968,7 +996,7 @@ void VtkEpcDocument::visualize(const std::string & uuid)
 			break;
 		}
 		case VtkEpcCommon::TRIANGULATED_SET: {
-			auto object = epcPackage->getResqmlAbstractObjectByUuid(uuid);
+			auto object = epcPackage->getDataObjectByUuid(uuid);
 			auto typeRepresentation = object->getXmlTag();
 			if (typeRepresentation == "TriangulatedRepresentation")	{
 				uuidToVtkTriangulatedRepresentation[uuidIsChildOf[uuid].getParent()]->visualize(uuid);
@@ -1030,12 +1058,14 @@ void VtkEpcDocument::visualize(const std::string & uuid)
 	{
 		cout << "ERROR with uuid attachment: " << uuid ;
 	}
+	L_(linfo) << loggClass << "FUNCTION=visualize " << "STATUS=OUT ";
 
 }
 
 //----------------------------------------------------------------------------
 void VtkEpcDocument::remove(const std::string & uuid)
 {
+	L_(linfo) << loggClass << "FUNCTION=remove " << "STATUS=IN ";
 	auto uuidtoAttach = uuid;
 	if (uuidIsChildOf[uuid].getType() == VtkEpcCommon::PROPERTY) {
 		uuidtoAttach = uuidIsChildOf[uuid].getParent();
@@ -1053,7 +1083,7 @@ void VtkEpcDocument::remove(const std::string & uuid)
 			break;
 		}
 		case VtkEpcCommon::POLYLINE_SET: {
-			auto object = epcPackage->getResqmlAbstractObjectByUuid(uuidtoAttach);
+			auto object = epcPackage->getDataObjectByUuid(uuidtoAttach);
 			auto typeRepresentation = object->getXmlTag();
 			if (typeRepresentation == "PolylineRepresentation") {
 				uuidToVtkPolylineRepresentation[uuidIsChildOf[uuidtoAttach].getUuid()]->remove(uuid);
@@ -1074,7 +1104,7 @@ void VtkEpcDocument::remove(const std::string & uuid)
 			break;
 		}
 		case VtkEpcCommon::TRIANGULATED_SET: {
-			auto object = epcPackage->getResqmlAbstractObjectByUuid(uuidtoAttach);
+			auto object = epcPackage->getDataObjectByUuid(uuidtoAttach);
 			auto typeRepresentation = object->getXmlTag();
 			if (typeRepresentation == "TriangulatedRepresentation")  {
 				uuidToVtkTriangulatedRepresentation[uuidtoAttach]->remove(uuid);
@@ -1150,11 +1180,13 @@ void VtkEpcDocument::remove(const std::string & uuid)
 		default: break;
 		}
 	}
+	L_(linfo) << loggClass << "FUNCTION=remove " << "STATUS=OUT ";
 }
 
 //----------------------------------------------------------------------------
 void VtkEpcDocument::attach()
 {
+	L_(linfo) << loggClass << "FUNCTION=attach " << "STATUS=IN ";
 	for (unsigned int newBlockIndex = 0; newBlockIndex < attachUuids.size(); ++newBlockIndex)
 	{
 		std::string uuid = attachUuids[newBlockIndex];
@@ -1165,7 +1197,7 @@ void VtkEpcDocument::attach()
 		}
 		if (uuidIsChildOf[uuid].getType() == VtkEpcCommon::POLYLINE_SET)
 		{
-			auto object = epcPackage->getResqmlAbstractObjectByUuid(uuid);
+			auto object = epcPackage->getDataObjectByUuid(uuid);
 			auto typeRepresentation = object->getXmlTag();
 			if (typeRepresentation == "PolylineRepresentation") {
 				vtkOutput->SetBlock(newBlockIndex, uuidToVtkPolylineRepresentation[uuid]->getOutput());
@@ -1178,7 +1210,7 @@ void VtkEpcDocument::attach()
 		}
 		if (uuidIsChildOf[uuid].getType() == VtkEpcCommon::TRIANGULATED_SET)
 		{
-			auto object = epcPackage->getResqmlAbstractObjectByUuid(uuid);
+			auto object = epcPackage->getDataObjectByUuid(uuid);
 			auto typeRepresentation = object->getXmlTag();
 			if (typeRepresentation == "TriangulatedRepresentation")  {
 				vtkOutput->SetBlock(newBlockIndex, uuidToVtkTriangulatedRepresentation[uuid]->getOutput());
@@ -1252,11 +1284,13 @@ void VtkEpcDocument::attach()
 			}
 		}
 	}
+	L_(linfo) << loggClass << "FUNCTION=attach " << "STATUS=OUT ";
 }
 
 //----------------------------------------------------------------------------
 void VtkEpcDocument::addProperty(const std::string & uuidProperty, vtkDataArray* dataProperty)
 {
+	L_(linfo) << loggClass << "FUNCTION=addProperty " << "STATUS=IN ";
 	switch (uuidIsChildOf[uuidProperty].getType())
 	{
 	case VtkEpcCommon::GRID_2D:
@@ -1266,7 +1300,7 @@ void VtkEpcDocument::addProperty(const std::string & uuidProperty, vtkDataArray*
 	}
 	case VtkEpcCommon::POLYLINE_SET:
 	{
-		auto object = epcPackage->getResqmlAbstractObjectByUuid(uuidIsChildOf[uuidProperty].getUuid());
+		auto object = epcPackage->getDataObjectByUuid(uuidIsChildOf[uuidProperty].getUuid());
 		auto typeRepresentation = object->getXmlTag();
 		if (typeRepresentation == "PolylineRepresentation")
 		{
@@ -1280,7 +1314,7 @@ void VtkEpcDocument::addProperty(const std::string & uuidProperty, vtkDataArray*
 	}
 	case VtkEpcCommon::TRIANGULATED_SET:
 	{
-		auto object = epcPackage->getResqmlAbstractObjectByUuid(uuidIsChildOf[uuidProperty].getUuid());
+		auto object = epcPackage->getDataObjectByUuid(uuidIsChildOf[uuidProperty].getUuid());
 		auto typeRepresentation = object->getXmlTag();
 		if (typeRepresentation == "TriangulatedRepresentation")
 		{
@@ -1357,11 +1391,13 @@ void VtkEpcDocument::addProperty(const std::string & uuidProperty, vtkDataArray*
 		attachUuids.push_back(parent);
 		this->attach();
 	}
+	L_(linfo) << loggClass << "FUNCTION=addProperty " << "STATUS=OUT ";
 }
 
 //----------------------------------------------------------------------------
 long VtkEpcDocument::getAttachmentPropertyCount(const std::string & uuid, const VtkEpcCommon::FesppAttachmentProperty propertyUnit)
 {
+	L_(linfo) << loggClass << "FUNCTION=getAttachmentPropertyCount " << "STATUS=IN ";
 	long result = 0;
 	switch (uuidIsChildOf[uuid].getType())
 	{
@@ -1397,12 +1433,14 @@ long VtkEpcDocument::getAttachmentPropertyCount(const std::string & uuid, const 
 	default:
 		break;
 	}
+	L_(linfo) << loggClass << "FUNCTION=getAttachmentPropertyCount " << "STATUS=OUT ";
 	return result;
 }
 
 //----------------------------------------------------------------------------
 int VtkEpcDocument::getICellCount(const std::string & uuid)
 {
+	L_(linfo) << loggClass << "FUNCTION=getICellCount " << "STATUS=IN ";
 	long result = 0;
 	if (uuidIsChildOf[uuid].getType() == VtkEpcCommon::Resqml2Type::IJK_GRID)
 	{
@@ -1424,12 +1462,14 @@ int VtkEpcDocument::getICellCount(const std::string & uuid)
 			}
 		}
 	}
+	L_(linfo) << loggClass << "FUNCTION=getICellCount " << "STATUS=OUT ";
 	return result;
 }
 
 //----------------------------------------------------------------------------
 int VtkEpcDocument::getJCellCount(const std::string & uuid)
 {
+	L_(linfo) << loggClass << "FUNCTION=getJCellCount " << "STATUS=IN ";
 	long result = 0;
 	if (uuidIsChildOf[uuid].getType() == VtkEpcCommon::Resqml2Type::IJK_GRID)
 	{
@@ -1451,12 +1491,14 @@ int VtkEpcDocument::getJCellCount(const std::string & uuid)
 			}
 		}
 	}
+	L_(linfo) << loggClass << "FUNCTION=getJCellCount " << "STATUS=OUT ";
 	return result;
 }
 
 //----------------------------------------------------------------------------
 int VtkEpcDocument::getKCellCount(const std::string & uuid)
 {
+	L_(linfo) << loggClass << "FUNCTION=getKCellCount " << "STATUS=IN ";
 	long result = 0;
 	if (uuidIsChildOf[uuid].getType() == VtkEpcCommon::Resqml2Type::IJK_GRID)
 	{
@@ -1478,12 +1520,14 @@ int VtkEpcDocument::getKCellCount(const std::string & uuid)
 			}
 		}
 	}
+	L_(linfo) << loggClass << "FUNCTION=getKCellCount " << "STATUS=OUT ";
 	return result;
 }
 
 //----------------------------------------------------------------------------
 int VtkEpcDocument::getInitKIndex(const std::string & uuid)
 {
+	L_(linfo) << loggClass << "FUNCTION=getInitKIndex " << "STATUS=IN ";
 	long result = 0;
 	if (uuidIsChildOf[uuid].getType() == VtkEpcCommon::Resqml2Type::IJK_GRID)
 	{
@@ -1505,30 +1549,39 @@ int VtkEpcDocument::getInitKIndex(const std::string & uuid)
 			}
 		}
 	}
+	L_(linfo) << loggClass << "FUNCTION=getInitKIndex " << "STATUS=OUT ";
 	return result;
 }
 
 //----------------------------------------------------------------------------
 VtkEpcCommon::Resqml2Type VtkEpcDocument::getType(std::string uuid)
 {
+	L_(linfo) << loggClass << "FUNCTION=getType " << "STATUS=IN ";
+	L_(linfo) << loggClass << "FUNCTION=getType " << "STATUS=OUT ";
 	return uuidIsChildOf[uuid].getType();
 }
 
 //----------------------------------------------------------------------------
 VtkEpcCommon VtkEpcDocument::getInfoUuid(std::string uuid)
 {
+	L_(linfo) << loggClass << "FUNCTION=getInfoUuid " << "STATUS=IN ";
+	L_(linfo) << loggClass << "FUNCTION=getInfoUuid " << "STATUS=OUT ";
 	return uuidIsChildOf[uuid];
 }
 
 //----------------------------------------------------------------------------
 common::EpcDocument * VtkEpcDocument::getEpcDocument()
 {
+	L_(linfo) << loggClass << "FUNCTION=getEpcDocument " << "STATUS=IN ";
+	L_(linfo) << loggClass << "FUNCTION=getEpcDocument " << "STATUS=OUT ";
 	return epcPackage;
 }
 
 //----------------------------------------------------------------------------
 std::vector<std::string> VtkEpcDocument::getListUuid()
 {
+	L_(linfo) << loggClass << "FUNCTION=getListUuid " << "STATUS=IN ";
+	L_(linfo) << loggClass << "FUNCTION=getListUuid " << "STATUS=OUT ";
 	return uuidRep;
 }
 
@@ -1536,11 +1589,15 @@ std::vector<std::string> VtkEpcDocument::getListUuid()
 //----------------------------------------------------------------------------
 std::vector<VtkEpcCommon> VtkEpcDocument::getTreeView() const
 {
+	L_(linfo) << loggClass << "FUNCTION=getTreeView " << "STATUS=IN ";
+	L_(linfo) << loggClass << "FUNCTION=getTreeView " << "STATUS=OUT ";
 	return treeView;
 }
 
 //----------------------------------------------------------------------------
 std::string VtkEpcDocument::getError()
 {
+	L_(linfo) << loggClass << "FUNCTION=getError " << "STATUS=IN ";
+	L_(linfo) << loggClass << "FUNCTION=getError " << "STATUS=OUT ";
 	return epc_error;
 }
