@@ -45,22 +45,42 @@ knowledge of the CeCILL license and that you accept its terms.
 // include F2i-consulting Energistics Standards ParaView Plugin
 #include "VtkProperty.h"
 
+#ifdef WITH_TEST
+const std::string loggClass = "CLASS=VtkTriangulatedRepresentation ";
+#define BEGIN_FUNC(name_func) L_(linfo) << loggClass << " FUNCTION=" << name_func << " CALL_FUNCTUION=none ITERATION=0 API=FESPP STATUS=START"
+#define END_FUNC(name_func) L_(linfo) << loggClass << " FUNCTION=" << name_func << " CALL_FUNCTUION=none ITERATION=0 API=FESPP STATUS=END"
+#define CALL_FUNC(name_func, call_func, iter, api)  L_(linfo) << loggClass << " FUNCTION=" << name_func << " CALL_FUNCTUION=" << call_func << " ITERATION=" << iter << " API=" << api << " STATUS=IN"
+#endif
+
 //----------------------------------------------------------------------------
 VtkTriangulatedRepresentation::VtkTriangulatedRepresentation(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, const unsigned int & patchNo, common::EpcDocument *pckRep, common::EpcDocument *pckSubRep) :
 VtkResqml2PolyData(fileName, name, uuid, uuidParent, pckRep, pckSubRep), patchIndex(patchNo)
 {
+#ifdef WITH_TEST
+	BEGIN_FUNC(__func__);
+	END_FUNC(__func__);
+#endif
 }
 
 //----------------------------------------------------------------------------
 VtkTriangulatedRepresentation::~VtkTriangulatedRepresentation()
 {
+#ifdef WITH_TEST
+	BEGIN_FUNC(__func__);
+#endif
 	patchIndex = 0;
 	lastProperty = "";
+#ifdef WITH_TEST
+	END_FUNC(__func__);
+#endif
 }
 
 //----------------------------------------------------------------------------
 void VtkTriangulatedRepresentation::createOutput(const std::string &uuid)
 {
+#ifdef WITH_TEST
+	BEGIN_FUNC(__func__);
+#endif
 	if (!subRepresentation)	{
 
 		resqml2_0_1::TriangulatedSetRepresentation* triangulatedSetRepresentation = nullptr;
@@ -113,18 +133,30 @@ void VtkTriangulatedRepresentation::createOutput(const std::string &uuid)
 			}
 		}
 	}
+#ifdef WITH_TEST
+	END_FUNC(__func__);
+#endif
 }
 
 //----------------------------------------------------------------------------
 void VtkTriangulatedRepresentation::addProperty(const std::string & uuidProperty, vtkDataArray* dataProperty)
 {
+#ifdef WITH_TEST
+	BEGIN_FUNC(__func__);
+#endif
 	vtkOutput->Modified();
 	vtkOutput->GetPointData()->AddArray(dataProperty);
 	lastProperty = uuidProperty;
+#ifdef WITH_TEST
+	END_FUNC(__func__);
+#endif
 }
 
 long VtkTriangulatedRepresentation::getAttachmentPropertyCount(const std::string & uuid, const VtkEpcCommon::FesppAttachmentProperty propertyUnit)
 {
+#ifdef WITH_TEST
+	BEGIN_FUNC(__func__);
+#endif
 	long result = 0;
 	resqml2_0_1::TriangulatedSetRepresentation* triangulatedSetRepresentation = nullptr;
 	common::AbstractObject* obj = epcPackageRepresentation->getDataObjectByUuid(getUuid());
@@ -133,6 +165,9 @@ long VtkTriangulatedRepresentation::getAttachmentPropertyCount(const std::string
 		triangulatedSetRepresentation = static_cast<resqml2_0_1::TriangulatedSetRepresentation*>(obj);
 		result = triangulatedSetRepresentation->getXyzPointCountOfAllPatches();
 	}
+#ifdef WITH_TEST
+	END_FUNC(__func__);
+#endif
 	return result;
 }
 

@@ -42,10 +42,21 @@ knowledge of the CeCILL license and that you accept its terms.
 #include <common/EpcDocument.h>
 #include <resqml2_0_1/Grid2dRepresentation.h>
 
+#ifdef WITH_TEST
+const std::string loggClass = "CLASS=VtkGrid2DRepresentationCells ";
+#define BEGIN_FUNC(name_func) L_(linfo) << loggClass << " FUNCTION=" << name_func << " CALL_FUNCTUION=none ITERATION=0 API=FESPP STATUS=START"
+#define END_FUNC(name_func) L_(linfo) << loggClass << " FUNCTION=" << name_func << " CALL_FUNCTUION=none ITERATION=0 API=FESPP STATUS=END"
+#define CALL_FUNC(name_func, call_func, iter, api)  L_(linfo) << loggClass << " FUNCTION=" << name_func << " CALL_FUNCTUION=" << call_func << " ITERATION=" << iter << " API=" << api << " STATUS=IN"
+#endif
+
 //----------------------------------------------------------------------------
 VtkGrid2DRepresentationCells::VtkGrid2DRepresentationCells(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, common::EpcDocument *pckEPCRep, common::EpcDocument *pckEPCSubRep) :
 VtkResqml2StructuredGrid(fileName, name, uuid, uuidParent, pckEPCRep, pckEPCSubRep)
 {
+#ifdef WITH_TEST
+	BEGIN_FUNC(__func__);
+	END_FUNC(__func__);
+#endif
 }
 
 VtkGrid2DRepresentationCells::~VtkGrid2DRepresentationCells()
@@ -55,6 +66,9 @@ VtkGrid2DRepresentationCells::~VtkGrid2DRepresentationCells()
 //----------------------------------------------------------------------------
 void VtkGrid2DRepresentationCells::createOutput(const std::string & uuid)
 {
+#ifdef WITH_TEST
+	BEGIN_FUNC(__func__);
+#endif
 	if (!subRepresentation)	{
 
 		resqml2_0_1::Grid2dRepresentation* grid2dRepresentation = nullptr;
@@ -115,4 +129,7 @@ void VtkGrid2DRepresentationCells::createOutput(const std::string & uuid)
 			vtkOutput->Modified();
 		}
 	}
+#ifdef WITH_TEST
+	END_FUNC(__func__);
+#endif
 }

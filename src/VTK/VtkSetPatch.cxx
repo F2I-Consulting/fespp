@@ -50,10 +50,20 @@ knowledge of the CeCILL license and that you accept its terms.
 #include "VtkTriangulatedRepresentation.h"
 #include "VtkProperty.h"
 
+#ifdef WITH_TEST
+const std::string loggClass = "CLASS=VtkSetPatch ";
+#define BEGIN_FUNC(name_func) L_(linfo) << loggClass << " FUNCTION=" << name_func << " CALL_FUNCTUION=none ITERATION=0 API=FESPP STATUS=START"
+#define END_FUNC(name_func) L_(linfo) << loggClass << " FUNCTION=" << name_func << " CALL_FUNCTUION=none ITERATION=0 API=FESPP STATUS=END"
+#define CALL_FUNC(name_func, call_func, iter, api)  L_(linfo) << loggClass << " FUNCTION=" << name_func << " CALL_FUNCTUION=" << call_func << " ITERATION=" << iter << " API=" << api << " STATUS=IN"
+#endif
+
 //----------------------------------------------------------------------------
 VtkSetPatch::VtkSetPatch(const std::string & fileName, const std::string & name, const std:: string & uuid, const std::string & uuidParent, common::EpcDocument *pck, const int & idProc, const int & maxProc):
 VtkResqml2MultiBlockDataSet(fileName, name, uuid, uuidParent, idProc, maxProc), epcPackage(pck)
 {
+#ifdef WITH_TEST
+	BEGIN_FUNC(__func__);
+#endif
 //	uuidIsChildOf[uuid] = new VtkEpcCommon();
 	resqml2_0_1::PolylineSetRepresentation* polylineSetRep = nullptr;
 	resqml2_0_1::TriangulatedSetRepresentation * triangulatedSetRep = nullptr;
@@ -87,11 +97,17 @@ VtkResqml2MultiBlockDataSet(fileName, name, uuid, uuidParent, idProc, maxProc), 
 		uuidIsChildOf[uuid].setType(VtkEpcCommon::TRIANGULATED_SET);
 		uuidIsChildOf[uuid].setUuid(uuid);
 	}
+#ifdef WITH_TEST
+	END_FUNC(__func__);
+#endif
 }
 
 //----------------------------------------------------------------------------
 VtkSetPatch::~VtkSetPatch()
 {
+#ifdef WITH_TEST
+	BEGIN_FUNC(__func__);
+#endif
 	if (epcPackage != nullptr) {
 		epcPackage = nullptr;
 	}
@@ -111,12 +127,18 @@ VtkSetPatch::~VtkSetPatch()
 	uuidToVtkTriangulatedRepresentation.clear();
 
 	uuidToVtkProperty.clear();
+#ifdef WITH_TEST
+	END_FUNC(__func__);
+#endif
 
 }
 
 //----------------------------------------------------------------------------
 void VtkSetPatch::createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, const VtkEpcCommon::Resqml2Type & type)
 {
+#ifdef WITH_TEST
+	BEGIN_FUNC(__func__);
+#endif
 	uuidIsChildOf[uuid].setType( type);
 	uuidIsChildOf[uuid].setUuid( uuid);
 
@@ -151,11 +173,17 @@ void VtkSetPatch::createTreeVtk(const std::string & uuid, const std::string & pa
 			uuidToVtkTriangulatedRepresentation[uuidIsChildOf[uuid].getUuid()][patchIndex]->createTreeVtk(uuid, parent, name, type);
 		}
 	}
+#ifdef WITH_TEST
+	END_FUNC(__func__);
+#endif
 }
 
 //----------------------------------------------------------------------------
 void VtkSetPatch::visualize(const std::string & uuid)
 {
+#ifdef WITH_TEST
+	BEGIN_FUNC(__func__);
+#endif
 	std::vector<VtkPolylineRepresentation *> vectPolyPatch;
 	std::vector<VtkTriangulatedRepresentation *> vectTriPatch;
 	switch (uuidIsChildOf[uuid].getType())
@@ -188,11 +216,17 @@ void VtkSetPatch::visualize(const std::string & uuid)
 		attachUuids.push_back(parent);
 		this->attach();
 	}
+#ifdef WITH_TEST
+	END_FUNC(__func__);
+#endif
 }
 
 //----------------------------------------------------------------------------
 void VtkSetPatch::remove(const std::string & uuid)
 {
+#ifdef WITH_TEST
+	BEGIN_FUNC(__func__);
+#endif
 	switch (uuidIsChildOf[uuid].getType())
 	{
 	case VtkEpcCommon::POLYLINE_SET:
@@ -217,11 +251,17 @@ void VtkSetPatch::remove(const std::string & uuid)
 		attachUuids.erase(std::find(attachUuids.begin(), attachUuids.end(), uuid ));
 		this->attach();
 	}
+#ifdef WITH_TEST
+	END_FUNC(__func__);
+#endif
 }
 
 //----------------------------------------------------------------------------
 void VtkSetPatch::attach()
 {
+#ifdef WITH_TEST
+	BEGIN_FUNC(__func__);
+#endif
 	unsigned int indexTmp = 0;
 
 	for (unsigned int newBlockIndex = 0; newBlockIndex < attachUuids.size(); ++newBlockIndex)
@@ -249,10 +289,17 @@ void VtkSetPatch::attach()
 			break;
 		}
 	}
+#ifdef WITH_TEST
+	END_FUNC(__func__);
+#endif
 }
 
+//----------------------------------------------------------------------------
 void VtkSetPatch::addProperty(const std::string & uuidProperty, vtkDataArray* dataProperty)
 {
+#ifdef WITH_TEST
+	BEGIN_FUNC(__func__);
+#endif
 	std::vector<VtkPolylineRepresentation *> vectPolyPatch;
 	std::vector<VtkTriangulatedRepresentation *> vectTriPatch;
 	switch (uuidIsChildOf[uuidProperty].getType())
@@ -285,11 +332,17 @@ void VtkSetPatch::addProperty(const std::string & uuidProperty, vtkDataArray* da
 		attachUuids.push_back(parent);
 		this->attach();
 	}
+#ifdef WITH_TEST
+	END_FUNC(__func__);
+#endif
 }
 
-
+//----------------------------------------------------------------------------
 long VtkSetPatch::getAttachmentPropertyCount(const std::string & uuid, const VtkEpcCommon::FesppAttachmentProperty propertyUnit)
 {
+#ifdef WITH_TEST
+	BEGIN_FUNC(__func__);
+#endif
 	long result = 0;
 	std::vector<VtkPolylineRepresentation *> vectPolyPatch;
 	std::vector<VtkTriangulatedRepresentation *> vectTriPatch;
@@ -312,5 +365,8 @@ long VtkSetPatch::getAttachmentPropertyCount(const std::string & uuid, const Vtk
 	default:
 		break;
 	}
+#ifdef WITH_TEST
+	END_FUNC(__func__);
+#endif
 	return result;
 }

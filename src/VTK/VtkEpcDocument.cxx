@@ -72,16 +72,23 @@ knowledge of the CeCILL license and that you accept its terms.
 #include "VtkPartialRepresentation.h"
 #include "VtkSetPatch.h"
 #include "VtkEpcCommon.h"
-#include "log.h"
 
+#ifdef WITH_TEST
 const std::string loggClass = "CLASS=VtkEpcDocument ";
+#define BEGIN_FUNC(name_func) L_(linfo) << loggClass << " FUNCTION=" << name_func << " CALL_FUNCTUION=none ITERATION=0 API=FESPP STATUS=START"
+#define END_FUNC(name_func) L_(linfo) << loggClass << " FUNCTION=" << name_func << " CALL_FUNCTUION=none ITERATION=0 API=FESPP STATUS=END"
+#define CALL_FUNC(name_func, call_func, iter, api)  L_(linfo) << loggClass << " FUNCTION=" << name_func << " CALL_FUNCTUION=" << call_func << " ITERATION=" << iter << " API=" << api << " STATUS=IN"
+#endif
 
 //----------------------------------------------------------------------------
 VtkEpcDocument::VtkEpcDocument(const std::string & fileName, const int & idProc, const int & maxProc, VtkEpcDocumentSet* epcDocSet) :
 VtkResqml2MultiBlockDataSet(fileName, fileName, fileName, "", idProc, maxProc),
 epcPackage(nullptr), epcSet(epcDocSet)
 {
-    L_(linfo) << loggClass << "FUNCTION=VtkEpcDocument " << "STATUS=IN ";
+#ifdef WITH_TEST
+	BEGIN_FUNC(__func__);
+#endif
+
 	std::string();
 	try
 	{
@@ -494,13 +501,19 @@ epcPackage(nullptr), epcSet(epcDocSet)
 			cout << "EXCEPTION in fesapi when closing file " << fileName << " : " << e.what();
 		}
 	}
-	L_(linfo) << loggClass << "FUNCTION=VtkEpcDocument " << "STATUS=OUT ";
+#ifdef WITH_TEST
+	END_FUNC(__func__);
+#endif
+
 }
 
 //----------------------------------------------------------------------------
 VtkEpcDocument::~VtkEpcDocument()
 {
-	L_(linfo) << loggClass << "FUNCTION=~VtkEpcDocument " << "STATUS=IN ";
+#ifdef WITH_TEST
+	BEGIN_FUNC(__func__);
+#endif
+
 	for(auto i : uuidToVtkGrid2DRepresentation) {
 		delete i.second;
 	}
@@ -548,13 +561,19 @@ VtkEpcDocument::~VtkEpcDocument()
 
 	epcPackage->close();
 	delete epcPackage;
-	L_(linfo) << loggClass << "FUNCTION=~VtkEpcDocument " << "STATUS=OUT ";
+#ifdef WITH_TEST
+	END_FUNC(__func__);
+#endif
+
 }
 
 //----------------------------------------------------------------------------
 void VtkEpcDocument::createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, const VtkEpcCommon::Resqml2Type & type)
 {
-	L_(linfo) << loggClass << "FUNCTION=createTreeVtk " << "STATUS=IN ";
+#ifdef WITH_TEST
+	BEGIN_FUNC(__func__);
+#endif
+
 	int return_code = 1;
 	uuidIsChildOf[uuid].setType( type);
 	uuidIsChildOf[uuid].setUuid(uuid);
@@ -608,21 +627,31 @@ void VtkEpcDocument::createTreeVtk(const std::string & uuid, const std::string &
 	if (return_code!=0){
 		uuidRep.push_back(uuid);
 	}
-	L_(linfo) << loggClass << "FUNCTION=createTreeVtk " << "STATUS=OUT ";
+#ifdef WITH_TEST
+	END_FUNC(__func__);
+#endif
+
 }
 
 //----------------------------------------------------------------------------
 void VtkEpcDocument::addGrid2DTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name)
 {
-	L_(linfo) << loggClass << "FUNCTION=addGrid2DTreeVtk " << "STATUS=IN ";
+#ifdef WITH_TEST
+	BEGIN_FUNC(__func__);
+#endif
 	uuidToVtkGrid2DRepresentation[uuid] = new VtkGrid2DRepresentation(getFileName(), name, uuid, parent, epcPackage, nullptr);
-	L_(linfo) << loggClass << "FUNCTION=addGrid2DTreeVtk " << "STATUS=OUT ";
+#ifdef WITH_TEST
+	END_FUNC(__func__);
+#endif
 }
 
 //----------------------------------------------------------------------------
 void VtkEpcDocument::addPolylineSetTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name)
 {
-	L_(linfo) << loggClass << "FUNCTION=addPolylineSetTreeVtk " << "STATUS=IN ";
+#ifdef WITH_TEST
+	BEGIN_FUNC(__func__);
+#endif
+
 	auto object = epcPackage->getDataObjectByUuid(uuid);
 	auto typeRepresentation = object->getXmlTag();
 	if (typeRepresentation == "PolylineRepresentation") {
@@ -631,13 +660,19 @@ void VtkEpcDocument::addPolylineSetTreeVtk(const std::string & uuid, const std::
 	else {
 		uuidToVtkSetPatch[uuid] = new VtkSetPatch(getFileName(), name, uuid, parent, epcPackage, getIdProc(), getMaxProc());
 	}
-	L_(linfo) << loggClass << "FUNCTION=addPolylineSetTreeVtk " << "STATUS=OUT ";
+#ifdef WITH_TEST
+	END_FUNC(__func__);
+#endif
+
 }
 
 //----------------------------------------------------------------------------
 void VtkEpcDocument::addTriangulatedSetTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name)
 {
-	L_(linfo) << loggClass << "FUNCTION=addTriangulatedSetTreeVtk " << "STATUS=IN ";
+#ifdef WITH_TEST
+	BEGIN_FUNC(__func__);
+#endif
+
 	auto object = epcPackage->getDataObjectByUuid(uuid);
 	auto typeRepresentation = object->getXmlTag();
 	if (typeRepresentation == "TriangulatedRepresentation")	{
@@ -646,37 +681,61 @@ void VtkEpcDocument::addTriangulatedSetTreeVtk(const std::string & uuid, const s
 	else {
 		uuidToVtkSetPatch[uuid] = new VtkSetPatch(getFileName(), name, uuid, parent, epcPackage, getIdProc(), getMaxProc());
 	}
-	L_(linfo) << loggClass << "FUNCTION=addTriangulatedSetTreeVtk " << "STATUS=OUT ";
+#ifdef WITH_TEST
+	END_FUNC(__func__);
+#endif
+
 }
 
 //----------------------------------------------------------------------------
 void VtkEpcDocument::addWellTrajTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name)
 {
-	L_(linfo) << loggClass << "FUNCTION=addWellTrajTreeVtk " << "STATUS=IN ";
+#ifdef WITH_TEST
+	BEGIN_FUNC(__func__);
+#endif
+
 	uuidToVtkWellboreTrajectoryRepresentation[uuid] = new VtkWellboreTrajectoryRepresentation(getFileName(), name, uuid, parent, epcPackage, nullptr);
-	L_(linfo) << loggClass << "FUNCTION=addWellTrajTreeVtk " << "STATUS=OUT ";
+#ifdef WITH_TEST
+	END_FUNC(__func__);
+#endif
+
 }
 
 //----------------------------------------------------------------------------
 void VtkEpcDocument::addIjkGridTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name)
 {
-	L_(linfo) << loggClass << "FUNCTION=addIjkGridTreeVtk " << "STATUS=IN ";
+#ifdef WITH_TEST
+	BEGIN_FUNC(__func__);
+#endif
+
 	uuidToVtkIjkGridRepresentation[uuid] = new VtkIjkGridRepresentation(getFileName(), name, uuid, parent, epcPackage, nullptr, getIdProc(), getMaxProc());
-	L_(linfo) << loggClass << "FUNCTION=addIjkGridTreeVtk " << "STATUS=OUT ";
+#ifdef WITH_TEST
+	END_FUNC(__func__);
+#endif
+
 }
 
 //----------------------------------------------------------------------------
 void VtkEpcDocument::addUnstrucGridTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name)
 {
-	L_(linfo) << loggClass << "FUNCTION=addUnstrucGridTreeVtk " << "STATUS=IN ";
+#ifdef WITH_TEST
+	BEGIN_FUNC(__func__);
+#endif
+
 	uuidToVtkUnstructuredGridRepresentation[uuid] = new VtkUnstructuredGridRepresentation(getFileName(), name, uuid, parent, epcPackage, nullptr);
-	L_(linfo) << loggClass << "FUNCTION=addUnstrucGridTreeVtk " << "STATUS=OUT ";
+#ifdef WITH_TEST
+	END_FUNC(__func__);
+#endif
+
 }
 
 //----------------------------------------------------------------------------
 int VtkEpcDocument::addSubRepTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name)
 {
-	L_(linfo) << loggClass << "FUNCTION=addSubRepTreeVtk " << "STATUS=IN ";
+#ifdef WITH_TEST
+	BEGIN_FUNC(__func__);
+#endif
+
 	if (uuidIsChildOf[uuid].getParentType() == VtkEpcCommon::IJK_GRID)	{
 		uuidToVtkIjkGridRepresentation[uuid] = new VtkIjkGridRepresentation(getFileName(), name, uuid, parent, epcPackage, epcPackage);
 		return 1;
@@ -713,14 +772,20 @@ int VtkEpcDocument::addSubRepTreeVtk(const std::string & uuid, const std::string
 		default: break;
 		}
 	}
-	L_(linfo) << loggClass << "FUNCTION=addSubRepTreeVtk " << "STATUS=OUT ";
+#ifdef WITH_TEST
+	END_FUNC(__func__);
+#endif
+
 	return 0;
 }
 
 //----------------------------------------------------------------------------
 int VtkEpcDocument::addPropertyTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name)
 {
-	L_(linfo) << loggClass << "FUNCTION=addPropertyTreeVtk " << "STATUS=INT ";
+#ifdef WITH_TEST
+	BEGIN_FUNC(__func__);
+#endif
+
 	switch (uuidIsChildOf[parent].getType()) {
 	case VtkEpcCommon::GRID_2D:	{
 		uuidToVtkGrid2DRepresentation[parent]->createTreeVtk(uuid, parent, name, uuidIsChildOf[uuid].getType());
@@ -816,7 +881,10 @@ int VtkEpcDocument::addPropertyTreeVtk(const std::string & uuid, const std::stri
 		break;
 	}
 	}
-	L_(linfo) << loggClass << "FUNCTION=addPropertyTreeVtk " << "STATUS=OUT ";
+#ifdef WITH_TEST
+	END_FUNC(__func__);
+#endif
+
 	return 0;
 
 }
@@ -824,17 +892,26 @@ int VtkEpcDocument::addPropertyTreeVtk(const std::string & uuid, const std::stri
 //----------------------------------------------------------------------------
 void VtkEpcDocument::createTreeVtkPartialRep(const std::string & uuid, VtkEpcDocument *vtkEpcDowumentWithCompleteRep)
 {
-	L_(linfo) << loggClass << "FUNCTION=createTreeVtkPartialRep " << "STATUS=IN ";
+#ifdef WITH_TEST
+	BEGIN_FUNC(__func__);
+#endif
+
 	uuidIsChildOf[uuid].setType( VtkEpcCommon::PARTIAL);
 	uuidIsChildOf[uuid].setUuid(uuid);
 	uuidToVtkPartialRepresentation[uuid] = new VtkPartialRepresentation(getFileName(), uuid, vtkEpcDowumentWithCompleteRep, epcPackage);
-	L_(linfo) << loggClass << "FUNCTION=createTreeVtkPartialRep " << "STATUS=OUT ";
+#ifdef WITH_TEST
+	END_FUNC(__func__);
+#endif
+
 }
 
 //----------------------------------------------------------------------------
 void VtkEpcDocument::visualize(const std::string & uuid)
 {
-	L_(linfo) << loggClass << "FUNCTION=visualize " << "STATUS=IN ";
+#ifdef WITH_TEST
+	BEGIN_FUNC(__func__);
+#endif
+
 	auto uuidToAttach = uuidIsChildOf[uuid].getUuid();
 	switch (uuidIsChildOf[uuid].getType())	{
 	case VtkEpcCommon::GRID_2D:	{
@@ -1058,14 +1135,20 @@ void VtkEpcDocument::visualize(const std::string & uuid)
 	{
 		cout << "ERROR with uuid attachment: " << uuid ;
 	}
-	L_(linfo) << loggClass << "FUNCTION=visualize " << "STATUS=OUT ";
+#ifdef WITH_TEST
+	END_FUNC(__func__);
+#endif
+
 
 }
 
 //----------------------------------------------------------------------------
 void VtkEpcDocument::remove(const std::string & uuid)
 {
-	L_(linfo) << loggClass << "FUNCTION=remove " << "STATUS=IN ";
+#ifdef WITH_TEST
+	BEGIN_FUNC(__func__);
+#endif
+
 	auto uuidtoAttach = uuid;
 	if (uuidIsChildOf[uuid].getType() == VtkEpcCommon::PROPERTY) {
 		uuidtoAttach = uuidIsChildOf[uuid].getParent();
@@ -1180,13 +1263,19 @@ void VtkEpcDocument::remove(const std::string & uuid)
 		default: break;
 		}
 	}
-	L_(linfo) << loggClass << "FUNCTION=remove " << "STATUS=OUT ";
+#ifdef WITH_TEST
+	END_FUNC(__func__);
+#endif
+
 }
 
 //----------------------------------------------------------------------------
 void VtkEpcDocument::attach()
 {
-	L_(linfo) << loggClass << "FUNCTION=attach " << "STATUS=IN ";
+#ifdef WITH_TEST
+	BEGIN_FUNC(__func__);
+#endif
+
 	for (unsigned int newBlockIndex = 0; newBlockIndex < attachUuids.size(); ++newBlockIndex)
 	{
 		std::string uuid = attachUuids[newBlockIndex];
@@ -1284,13 +1373,19 @@ void VtkEpcDocument::attach()
 			}
 		}
 	}
-	L_(linfo) << loggClass << "FUNCTION=attach " << "STATUS=OUT ";
+#ifdef WITH_TEST
+	END_FUNC(__func__);
+#endif
+
 }
 
 //----------------------------------------------------------------------------
 void VtkEpcDocument::addProperty(const std::string & uuidProperty, vtkDataArray* dataProperty)
 {
-	L_(linfo) << loggClass << "FUNCTION=addProperty " << "STATUS=IN ";
+#ifdef WITH_TEST
+	BEGIN_FUNC(__func__);
+#endif
+
 	switch (uuidIsChildOf[uuidProperty].getType())
 	{
 	case VtkEpcCommon::GRID_2D:
@@ -1391,13 +1486,19 @@ void VtkEpcDocument::addProperty(const std::string & uuidProperty, vtkDataArray*
 		attachUuids.push_back(parent);
 		this->attach();
 	}
-	L_(linfo) << loggClass << "FUNCTION=addProperty " << "STATUS=OUT ";
+#ifdef WITH_TEST
+	END_FUNC(__func__);
+#endif
+
 }
 
 //----------------------------------------------------------------------------
 long VtkEpcDocument::getAttachmentPropertyCount(const std::string & uuid, const VtkEpcCommon::FesppAttachmentProperty propertyUnit)
 {
-	L_(linfo) << loggClass << "FUNCTION=getAttachmentPropertyCount " << "STATUS=IN ";
+#ifdef WITH_TEST
+	BEGIN_FUNC(__func__);
+#endif
+
 	long result = 0;
 	switch (uuidIsChildOf[uuid].getType())
 	{
@@ -1433,14 +1534,20 @@ long VtkEpcDocument::getAttachmentPropertyCount(const std::string & uuid, const 
 	default:
 		break;
 	}
-	L_(linfo) << loggClass << "FUNCTION=getAttachmentPropertyCount " << "STATUS=OUT ";
+#ifdef WITH_TEST
+	END_FUNC(__func__);
+#endif
+
 	return result;
 }
 
 //----------------------------------------------------------------------------
 int VtkEpcDocument::getICellCount(const std::string & uuid)
 {
-	L_(linfo) << loggClass << "FUNCTION=getICellCount " << "STATUS=IN ";
+#ifdef WITH_TEST
+	BEGIN_FUNC(__func__);
+#endif
+
 	long result = 0;
 	if (uuidIsChildOf[uuid].getType() == VtkEpcCommon::Resqml2Type::IJK_GRID)
 	{
@@ -1462,14 +1569,20 @@ int VtkEpcDocument::getICellCount(const std::string & uuid)
 			}
 		}
 	}
-	L_(linfo) << loggClass << "FUNCTION=getICellCount " << "STATUS=OUT ";
+#ifdef WITH_TEST
+	END_FUNC(__func__);
+#endif
+
 	return result;
 }
 
 //----------------------------------------------------------------------------
 int VtkEpcDocument::getJCellCount(const std::string & uuid)
 {
-	L_(linfo) << loggClass << "FUNCTION=getJCellCount " << "STATUS=IN ";
+#ifdef WITH_TEST
+	BEGIN_FUNC(__func__);
+#endif
+
 	long result = 0;
 	if (uuidIsChildOf[uuid].getType() == VtkEpcCommon::Resqml2Type::IJK_GRID)
 	{
@@ -1491,14 +1604,20 @@ int VtkEpcDocument::getJCellCount(const std::string & uuid)
 			}
 		}
 	}
-	L_(linfo) << loggClass << "FUNCTION=getJCellCount " << "STATUS=OUT ";
+#ifdef WITH_TEST
+	END_FUNC(__func__);
+#endif
+
 	return result;
 }
 
 //----------------------------------------------------------------------------
 int VtkEpcDocument::getKCellCount(const std::string & uuid)
 {
-	L_(linfo) << loggClass << "FUNCTION=getKCellCount " << "STATUS=IN ";
+#ifdef WITH_TEST
+	BEGIN_FUNC(__func__);
+#endif
+
 	long result = 0;
 	if (uuidIsChildOf[uuid].getType() == VtkEpcCommon::Resqml2Type::IJK_GRID)
 	{
@@ -1520,14 +1639,20 @@ int VtkEpcDocument::getKCellCount(const std::string & uuid)
 			}
 		}
 	}
-	L_(linfo) << loggClass << "FUNCTION=getKCellCount " << "STATUS=OUT ";
+#ifdef WITH_TEST
+	END_FUNC(__func__);
+#endif
+
 	return result;
 }
 
 //----------------------------------------------------------------------------
 int VtkEpcDocument::getInitKIndex(const std::string & uuid)
 {
-	L_(linfo) << loggClass << "FUNCTION=getInitKIndex " << "STATUS=IN ";
+#ifdef WITH_TEST
+	BEGIN_FUNC(__func__);
+#endif
+
 	long result = 0;
 	if (uuidIsChildOf[uuid].getType() == VtkEpcCommon::Resqml2Type::IJK_GRID)
 	{
@@ -1549,39 +1674,34 @@ int VtkEpcDocument::getInitKIndex(const std::string & uuid)
 			}
 		}
 	}
-	L_(linfo) << loggClass << "FUNCTION=getInitKIndex " << "STATUS=OUT ";
+#ifdef WITH_TEST
+	END_FUNC(__func__);
+#endif
+
 	return result;
 }
 
 //----------------------------------------------------------------------------
 VtkEpcCommon::Resqml2Type VtkEpcDocument::getType(std::string uuid)
 {
-	L_(linfo) << loggClass << "FUNCTION=getType " << "STATUS=IN ";
-	L_(linfo) << loggClass << "FUNCTION=getType " << "STATUS=OUT ";
 	return uuidIsChildOf[uuid].getType();
 }
 
 //----------------------------------------------------------------------------
 VtkEpcCommon VtkEpcDocument::getInfoUuid(std::string uuid)
 {
-	L_(linfo) << loggClass << "FUNCTION=getInfoUuid " << "STATUS=IN ";
-	L_(linfo) << loggClass << "FUNCTION=getInfoUuid " << "STATUS=OUT ";
 	return uuidIsChildOf[uuid];
 }
 
 //----------------------------------------------------------------------------
 common::EpcDocument * VtkEpcDocument::getEpcDocument()
 {
-	L_(linfo) << loggClass << "FUNCTION=getEpcDocument " << "STATUS=IN ";
-	L_(linfo) << loggClass << "FUNCTION=getEpcDocument " << "STATUS=OUT ";
 	return epcPackage;
 }
 
 //----------------------------------------------------------------------------
 std::vector<std::string> VtkEpcDocument::getListUuid()
 {
-	L_(linfo) << loggClass << "FUNCTION=getListUuid " << "STATUS=IN ";
-	L_(linfo) << loggClass << "FUNCTION=getListUuid " << "STATUS=OUT ";
 	return uuidRep;
 }
 
@@ -1589,15 +1709,12 @@ std::vector<std::string> VtkEpcDocument::getListUuid()
 //----------------------------------------------------------------------------
 std::vector<VtkEpcCommon> VtkEpcDocument::getTreeView() const
 {
-	L_(linfo) << loggClass << "FUNCTION=getTreeView " << "STATUS=IN ";
-	L_(linfo) << loggClass << "FUNCTION=getTreeView " << "STATUS=OUT ";
 	return treeView;
 }
 
 //----------------------------------------------------------------------------
 std::string VtkEpcDocument::getError()
 {
-	L_(linfo) << loggClass << "FUNCTION=getError " << "STATUS=IN ";
-	L_(linfo) << loggClass << "FUNCTION=getError " << "STATUS=OUT ";
+
 	return epc_error;
 }

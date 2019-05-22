@@ -49,13 +49,20 @@ knowledge of the CeCILL license and that you accept its terms.
 
 #include <sstream>
 
+#ifdef WITH_TEST
 const std::string loggClass = "CLASS=VtkIjkGridRepresentation ";
+#define BEGIN_FUNC(name_func) L_(linfo) << loggClass << " FUNCTION=" << name_func << " CALL_FUNCTUION=none ITERATION=0 API=FESPP STATUS=START"
+#define END_FUNC(name_func) L_(linfo) << loggClass << " FUNCTION=" << name_func << " CALL_FUNCTUION=none ITERATION=0 API=FESPP STATUS=END"
+#define CALL_FUNC(name_func, call_func, iter, api)  L_(linfo) << loggClass << " FUNCTION=" << name_func << " CALL_FUNCTUION=" << call_func << " ITERATION=" << iter << " API=" << api << " STATUS=IN"
+#endif
 
 //----------------------------------------------------------------------------
 VtkIjkGridRepresentation::VtkIjkGridRepresentation(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, common::EpcDocument *pckEPCRep, common::EpcDocument *pckEPCSubRep, const int & idProc, const int & maxProc) :
-VtkResqml2UnstructuredGrid(fileName, name, uuid, uuidParent, pckEPCRep, pckEPCSubRep, idProc, maxProc)
+		VtkResqml2UnstructuredGrid(fileName, name, uuid, uuidParent, pckEPCRep, pckEPCSubRep, idProc, maxProc)
 {
-    L_(linfo) << loggClass << "FUNCTION=VtkIjkGridRepresentation " << "STATUS=IN " << "LEVEL=1 ";
+#ifdef WITH_TEST
+	BEGIN_FUNC(__func__);
+#endif
 
 	isHyperslabed = false;
 
@@ -65,12 +72,16 @@ VtkResqml2UnstructuredGrid(fileName, name, uuid, uuidParent, pckEPCRep, pckEPCSu
 	initKIndex = 0;
 	maxKIndex = 0;
 
-    L_(linfo) << loggClass << "FUNCTION=VtkIjkGridRepresentation " << "STATUS=OUT "<< "LEVEL=1";
+#ifdef WITH_TEST
+	END_FUNC(__func__);
+#endif
 }
 
 VtkIjkGridRepresentation::~VtkIjkGridRepresentation()
 {
-    L_(linfo) << loggClass << "FUNCTION=~VtkIjkGridRepresentation " << "STATUS=IN "<< "LEVEL=1";
+#ifdef WITH_TEST
+	BEGIN_FUNC(__func__);
+#endif
 
 	lastProperty = "";
 
@@ -80,50 +91,40 @@ VtkIjkGridRepresentation::~VtkIjkGridRepresentation()
 	initKIndex = 0;
 	maxKIndex = 0;
 
-    L_(linfo) << loggClass << "FUNCTION=~VtkIjkGridRepresentation " << "STATUS=OUT "<< "LEVEL=1 ";
-
-
+#ifdef WITH_TEST
+	END_FUNC(__func__);
+#endif
 
 }
+
+//----------------------------------------------------------------------------
 vtkSmartPointer<vtkPoints> VtkIjkGridRepresentation::createpoint()
 {
-    L_(linfo) << loggClass << "FUNCTION=createpoint " << "STATUS=IN "<< "LEVEL=2 ";
+#ifdef WITH_TEST
+	BEGIN_FUNC(__func__);
+#endif
 
 	if (!vtkPointsIsCreated())
 	{
-		L_(linfo) << loggClass << "FUNCTION=~createpoint " << "STATUS=IN "<< "LEVEL=1 " << "API=vtk " << "APIFUNC=vtkSmartPointer<vtkPoints>::New() ";
 		points = vtkSmartPointer<vtkPoints>::New();
-		L_(linfo) << loggClass << "FUNCTION=~createpoint " << "STATUS=OUT "<< "LEVEL=1 " << "API=vtk " << "APIFUNC=vtkSmartPointer<vtkPoints>::New() ";
 		common::AbstractObject* obj = nullptr;
 		resqml2_0_1::AbstractIjkGridRepresentation* ijkGridRepresentation = nullptr;
 		if (subRepresentation){
-			L_(linfo) << loggClass << "FUNCTION=~createpoint " << "STATUS=IN "<< "LEVEL=1 " << "API=fesapi " << "APIFUNC=getDataObjectByUuid ";
 			obj = epcPackageRepresentation->getDataObjectByUuid(getParent());
-			L_(linfo) << loggClass << "FUNCTION=~createpoint " << "STATUS=OUT "<< "LEVEL=1 " << "API=fesapi " << "APIFUNC=getDataObjectByUuid ";
 		}
 		else{
-			L_(linfo) << loggClass << "FUNCTION=~createpoint " << "STATUS=IN "<< "LEVEL=1 " << "API=fesapi " << "APIFUNC=getDataObjectByUuid ";
 			obj = epcPackageRepresentation->getDataObjectByUuid(getUuid());
-			L_(linfo) << loggClass << "FUNCTION=~createpoint " << "STATUS=OUT "<< "LEVEL=1 " << "API=fesapi " << "APIFUNC=getXmlTag() ";
-//			obj = epcPackageRepresentation->getResqmlAbstractObjectByUuid(getUuid());
+			//			obj = epcPackageRepresentation->getResqmlAbstractObjectByUuid(getUuid());
 		}
 
 		if (obj != nullptr && (obj->getXmlTag() == resqml2_0_1::AbstractIjkGridRepresentation::XML_TAG || obj->getXmlTag() == resqml2_0_1::AbstractIjkGridRepresentation::XML_TAG_TRUNCATED)) {
-			L_(linfo) << loggClass << "FUNCTION=~createpoint " << "STATUS=IN "<< "LEVEL=1 " << "API=fesapi " << "APIFUNC=static_cast<resqml2_0_1::AbstractIjkGridRepresentation*> ";
 			ijkGridRepresentation = static_cast<resqml2_0_1::AbstractIjkGridRepresentation*>(obj);
-			L_(linfo) << loggClass << "FUNCTION=~createpoint " << "STATUS=OUT "<< "LEVEL=1 " << "API=fesapi " << "APIFUNC=static_cast<resqml2_0_1::AbstractIjkGridRepresentation*> ";
 
 		}
 
-		L_(linfo) << loggClass << "FUNCTION=~createpoint " << "STATUS=IN "<< "LEVEL=1 " << "API=fesapi " << "APIFUNC=getICellCount ";
 		iCellCount = ijkGridRepresentation->getICellCount();
-		L_(linfo) << loggClass << "FUNCTION=~createpoint " << "STATUS=OUT "<< "LEVEL=1 " << "API=fesapi " << "APIFUNC=getICellCount ";
-		L_(linfo) << loggClass << "FUNCTION=~createpoint " << "STATUS=IN "<< "LEVEL=1 " << "API=fesapi " << "APIFUNC=getJCellCount ";
 		jCellCount = ijkGridRepresentation->getJCellCount();
-		L_(linfo) << loggClass << "FUNCTION=~createpoint " << "STATUS=OUT "<< "LEVEL=1 " << "API=fesapi " << "APIFUNC=getJCellCount ";
-		L_(linfo) << loggClass << "FUNCTION=~createpoint " << "STATUS=IN "<< "LEVEL=1 " << "API=fesapi " << "APIFUNC=getKCellCount ";
 		kCellCount = ijkGridRepresentation->getKCellCount();
-		L_(linfo) << loggClass << "FUNCTION=~createpoint " << "STATUS=OUT "<< "LEVEL=1 " << "API=fesapi " << "APIFUNC=getKCellCount ";
 
 
 #ifdef PARAVIEW_USE_MPI
@@ -169,27 +170,21 @@ vtkSmartPointer<vtkPoints> VtkIjkGridRepresentation::createpoint()
 			maxKIndex = kCellCount;
 
 			// POINT
-			L_(linfo) << loggClass << "FUNCTION=~createpoint " << "STATUS=IN "<< "LEVEL=1 " << "API=fesapi " << "APIFUNC=getXyzPointCountOfAllPatches ";
 			const auto nodeCount = ijkGridRepresentation->getXyzPointCountOfAllPatches();
-			L_(linfo) << loggClass << "FUNCTION=~createpoint " << "STATUS=OUT "<< "LEVEL=1 " << "API=fesapi " << "APIFUNC=getXyzPointCountOfAllPatches ";
-			L_(linfo) << loggClass << "FUNCTION=~createpoint " << "STATUS=IN "<< "LEVEL=1 " << "API=fespp " << "APIFUNC=new double[nodeCount * 3] ";
 			auto allXyzPoints = new double[nodeCount * 3];
-			L_(linfo) << loggClass << "FUNCTION=~createpoint " << "STATUS=OUT "<< "LEVEL=1 " << "API=fespp " << "APIFUNC=new double[nodeCount * 3] ";
-			L_(linfo) << loggClass << "FUNCTION=~createpoint " << "STATUS=IN "<< "LEVEL=1 " << "API=fesapi " << "APIFUNC=getXyzPointsOfAllPatchesInGlobalCrs ";
 			ijkGridRepresentation->getXyzPointsOfAllPatchesInGlobalCrs(allXyzPoints);
-			L_(linfo) << loggClass << "FUNCTION=~createpoint " << "STATUS=OUT "<< "LEVEL=1 " << "API=fesapi " << "APIFUNC=getXyzPointsOfAllPatchesInGlobalCrs ";
 			createVtkPoints(nodeCount, allXyzPoints, ijkGridRepresentation->getLocalCrs());
 
-			L_(linfo) << loggClass << "FUNCTION=~createpoint " << "STATUS=IN "<< "LEVEL=1 " << "API=fespp " << "APIFUNC=delete[] allXyzPoints ";
 			delete[] allXyzPoints;
-			L_(linfo) << loggClass << "FUNCTION=~createpoint " << "STATUS=OUT "<< "LEVEL=1 " << "API=fespp " << "APIFUNC=delete[] allXyzPoints ";
 #ifdef PARAVIEW_USE_MPI
 		}
 #endif
 
 	}
 
-    L_(linfo) << loggClass << "FUNCTION=createpoint " << "STATUS=OUT "<< "LEVEL=2 ";
+#ifdef WITH_TEST
+	END_FUNC(__func__);
+#endif
 
 	return points;
 
@@ -198,7 +193,9 @@ vtkSmartPointer<vtkPoints> VtkIjkGridRepresentation::createpoint()
 //----------------------------------------------------------------------------
 void VtkIjkGridRepresentation::createOutput(const std::string & uuid)
 {
-    L_(linfo) << loggClass << "FUNCTION=createOutput " << "STATUS=IN "<< "LEVEL=1 ";
+#ifdef WITH_TEST
+	BEGIN_FUNC(__func__);
+#endif
 
 	createpoint(); // => POINTS
 	if (!vtkOutput)	// => REPRESENTATION
@@ -218,57 +215,51 @@ void VtkIjkGridRepresentation::createOutput(const std::string & uuid)
 	{
 		if (subRepresentation) 
 		{
-			L_(linfo) << loggClass << "FUNCTION=~createpoint " << "STATUS=IN "<< "LEVEL=1 " << "API=fesapi" << "APIFUNC=getDataObjectByUuid ";
 			auto objRepProp = epcPackageSubRepresentation->getDataObjectByUuid(getUuid());
-			L_(linfo) << loggClass << "FUNCTION=~createpoint " << "STATUS=OUT "<< "LEVEL=1 " << "API=fesapi" << "APIFUNC=getDataObjectByUuid ";
-			L_(linfo) << loggClass << "FUNCTION=~createpoint " << "STATUS=IN "<< "LEVEL=1 " << "API=fesapi" << "APIFUNC=static_cast<resqml2::SubRepresentation*> ";
 			auto property = static_cast<resqml2::SubRepresentation*>(objRepProp);
-			L_(linfo) << loggClass << "FUNCTION=~createpoint " << "STATUS=OUT "<< "LEVEL=1 " << "API=fesapi" << "APIFUNC=static_cast<resqml2::SubRepresentation*> ";
-			L_(linfo) << loggClass << "FUNCTION=~createpoint " << "STATUS=IN "<< "LEVEL=1 " << "API=fesapi" << "APIFUNC=getElementCountOfPatch ";
 			auto cellCount = property->getElementCountOfPatch(0);
-			L_(linfo) << loggClass << "FUNCTION=~createpoint " << "STATUS=OUT "<< "LEVEL=1 " << "API=fesapi" << "APIFUNC=getElementCountOfPatch ";
-//#ifdef PARAVIEW_USE_MPI
+			//#ifdef PARAVIEW_USE_MPI
 			if (isHyperslabed) {
 				addProperty(uuid, uuidToVtkProperty[uuid]->loadValuesPropertySet(property->getValuesPropertySet(), iCellCount*jCellCount*(maxKIndex - initKIndex), 0, iCellCount, jCellCount, maxKIndex - initKIndex, initKIndex));
 			}
 			else {
-//#endif
+				//#endif
 				addProperty(uuid, uuidToVtkProperty[uuid]->loadValuesPropertySet(property->getValuesPropertySet(), cellCount, 0));
-//#ifdef PARAVIEW_USE_MPI
+				//#ifdef PARAVIEW_USE_MPI
 			}
-//#endif
+			//#endif
 		}
 		else
 		{
-			L_(linfo) << loggClass << "FUNCTION=~createpoint " << "STATUS=IN "<< "LEVEL=1 " << "API=fesapi" << "APIFUNC=getDataObjectByUuid ";
 			auto objRepProp = epcPackageRepresentation->getDataObjectByUuid(getUuid());
-			L_(linfo) << loggClass << "FUNCTION=~createpoint " << "STATUS=OUT "<< "LEVEL=1 " << "API=fesapi" << "APIFUNC=getDataObjectByUuid ";
-			L_(linfo) << loggClass << "FUNCTION=~createpoint " << "STATUS=IN "<< "LEVEL=1 " << "API=fesapi" << "APIFUNC=static_cast<resqml2::AbstractIjkGridRepresentation*> ";
 			auto property = static_cast<resqml2_0_1::AbstractIjkGridRepresentation*>(objRepProp);
-			L_(linfo) << loggClass << "FUNCTION=~createpoint " << "STATUS=OUT "<< "LEVEL=1 " << "API=fesapi" << "APIFUNC=static_cast<resqml2::AbstractIjkGridRepresentation*> ";
 			auto cellCount = iCellCount*jCellCount*kCellCount;
-//#ifdef PARAVIEW_USE_MPI
+			//#ifdef PARAVIEW_USE_MPI
 			if (isHyperslabed)
 			{
 				addProperty(uuid, uuidToVtkProperty[uuid]->loadValuesPropertySet(property->getValuesPropertySet(), iCellCount*jCellCount*(maxKIndex - initKIndex), 0, iCellCount, jCellCount, maxKIndex - initKIndex, initKIndex));
 			}
 			else
 			{
-//#endif
+				//#endif
 				addProperty(uuid, uuidToVtkProperty[uuid]->loadValuesPropertySet(property->getValuesPropertySet(), cellCount, 0));
-//#ifdef PARAVIEW_USE_MPI
+				//#ifdef PARAVIEW_USE_MPI
 			}
-//#endif
+			//#endif
 		}
 	}
 
-	L_(linfo) << loggClass << "FUNCTION=createOutput " << "STATUS=OUT "<< "LEVEL=1 ";
+#ifdef WITH_TEST
+	END_FUNC(__func__);
+#endif
 }
 
 //----------------------------------------------------------------------------
 void VtkIjkGridRepresentation::checkHyperslabingCapacity(resqml2_0_1::AbstractIjkGridRepresentation* ijkGridRepresentation)
 {
-    L_(linfo) << loggClass << "FUNCTION=checkHyperslabingCapacity " << "STATUS=IN "<< "LEVEL=2 ";
+#ifdef WITH_TEST
+	BEGIN_FUNC(__func__);
+#endif
 
 	double* allXyzPoints = nullptr;
 	try{
@@ -285,26 +276,34 @@ void VtkIjkGridRepresentation::checkHyperslabingCapacity(resqml2_0_1::AbstractIj
 			delete[] allXyzPoints;
 	}
 
-    L_(linfo) << loggClass << "FUNCTION=checkHyperslabingCapacity " << "STATUS=OUT "<< "LEVEL=2 ";
+#ifdef WITH_TEST
+	END_FUNC(__func__);
+#endif
 }
 
 //----------------------------------------------------------------------------
 void VtkIjkGridRepresentation::addProperty(const std::string & uuidProperty, vtkDataArray* dataProperty)
 {
-    L_(linfo) << loggClass << "FUNCTION=addProperty " << "STATUS=IN "<< "LEVEL=2 ";
+#ifdef WITH_TEST
+	BEGIN_FUNC(__func__);
+#endif
 
 	vtkOutput->Modified();
 	vtkOutput->GetCellData()->AddArray(dataProperty);
 	vtkOutput->Modified();
 	lastProperty = uuidProperty;
 
-    L_(linfo) << loggClass << "FUNCTION=addProperty " << "STATUS=OUT "<< "LEVEL=2 ";
+#ifdef WITH_TEST
+	END_FUNC(__func__);
+#endif
 }
 
 //----------------------------------------------------------------------------
 long VtkIjkGridRepresentation::getAttachmentPropertyCount(const std::string & uuid, const VtkEpcCommon::FesppAttachmentProperty propertyUnit)
 {
-    L_(linfo) << loggClass << "FUNCTION=getAttachmentPropertyCount " << "STATUS=IN "<< "LEVEL=2 ";
+#ifdef WITH_TEST
+	BEGIN_FUNC(__func__);
+#endif
 
 	if (propertyUnit == VtkEpcCommon::CELLS)
 	{
@@ -324,7 +323,9 @@ long VtkIjkGridRepresentation::getAttachmentPropertyCount(const std::string & uu
 		}
 	}
 
-    L_(linfo) << loggClass << "FUNCTION=getAttachmentPropertyCount " << "STATUS=OUT "<< "LEVEL=2 ";
+#ifdef WITH_TEST
+	END_FUNC(__func__);
+#endif
 
 	return 0;
 
@@ -333,7 +334,9 @@ long VtkIjkGridRepresentation::getAttachmentPropertyCount(const std::string & uu
 //----------------------------------------------------------------------------
 int VtkIjkGridRepresentation::getICellCount(const std::string & uuid) const
 {
-    L_(linfo) << loggClass << "FUNCTION=getICellCount " << "STATUS=IN "<< "LEVEL=2 ";
+#ifdef WITH_TEST
+	BEGIN_FUNC(__func__);
+#endif
 
 	long result = 0;
 
@@ -350,16 +353,20 @@ int VtkIjkGridRepresentation::getICellCount(const std::string & uuid) const
 		result = ijkGridRepresentation->getICellCount();
 	}
 
-    L_(linfo) << loggClass << "FUNCTION=getICellCount " << "STATUS=OUT "<< "LEVEL=2 ";
+#ifdef WITH_TEST
+	END_FUNC(__func__);
+#endif
 	return result;
 }
 
 //----------------------------------------------------------------------------
 int VtkIjkGridRepresentation::getJCellCount(const std::string & uuid) const
 {
-    L_(linfo) << loggClass << "FUNCTION=getJCellCount " << "STATUS=IN "<< "LEVEL=2 ";
+#ifdef WITH_TEST
+	BEGIN_FUNC(__func__);
+#endif
 
-    long result = 0;
+	long result = 0;
 
 	if (subRepresentation)
 	{
@@ -374,14 +381,18 @@ int VtkIjkGridRepresentation::getJCellCount(const std::string & uuid) const
 		result = ijkGridRepresentation->getJCellCount();
 	}
 
-    L_(linfo) << loggClass << "FUNCTION=getJCellCount " << "STATUS=OUT "<< "LEVEL=2 ";
+#ifdef WITH_TEST
+	END_FUNC(__func__);
+#endif
 	return result;
 }
 
 //----------------------------------------------------------------------------
 int VtkIjkGridRepresentation::getKCellCount(const std::string & uuid) const
 {
-    L_(linfo) << loggClass << "FUNCTION=getKCellCount " << "STATUS=IN ";
+#ifdef WITH_TEST
+	BEGIN_FUNC(__func__);
+#endif
 
 	long result = 0;
 
@@ -398,8 +409,10 @@ int VtkIjkGridRepresentation::getKCellCount(const std::string & uuid) const
 		result = ijkGridRepresentation->getKCellCount();
 	}
 
-    L_(linfo) << loggClass << "FUNCTION=getKCellCount " << "STATUS=OUT "<< "LEVEL=2 ";
-    return result;
+#ifdef WITH_TEST
+	END_FUNC(__func__);
+#endif
+	return result;
 }
 
 //----------------------------------------------------------------------------
@@ -411,7 +424,9 @@ int VtkIjkGridRepresentation::getInitKIndex(const std::string & uuid) const
 //----------------------------------------------------------------------------
 void VtkIjkGridRepresentation::createWithPoints(const vtkSmartPointer<vtkPoints> & pointsRepresentation, common::AbstractObject* obj)
 {
-    L_(linfo) << loggClass << "FUNCTION=createWithPoints " << "STATUS=IN "<< "LEVEL=2 ";
+#ifdef WITH_TEST
+	BEGIN_FUNC(__func__);
+#endif
 
 	vtkOutput = vtkSmartPointer<vtkUnstructuredGrid>::New();
 	vtkOutput->SetPoints(pointsRepresentation);
@@ -517,5 +532,7 @@ void VtkIjkGridRepresentation::createWithPoints(const vtkSmartPointer<vtkPoints>
 		}
 	}
 
-    L_(linfo) << loggClass << "FUNCTION=createWithPoints " << "STATUS=OUT "<< "LEVEL=2 ";
+#ifdef WITH_TEST
+	END_FUNC(__func__);
+#endif
 }

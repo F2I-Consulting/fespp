@@ -99,6 +99,9 @@ knowledge of the CeCILL license and that you accept its terms.
 #include <stdexcept>
 
 #include "VTK/VtkEpcDocumentSet.h"
+#ifdef WITH_TEST
+#include "VTK/log.h"
+#endif
 
 namespace {
 #ifdef WITH_ETP
@@ -132,6 +135,9 @@ namespace {
 //----------------------------------------------------------------------------
 void PQSelectionPanel::constructor()
 {
+#ifdef WITH_TEST
+	initLogger( "Fespp.log", linfo);
+#endif
 	setWindowTitle("Selection widget");
 	QWidget* t_widget = new QWidget(this);
 	Ui::panelSelection ui;
@@ -227,6 +233,9 @@ PQSelectionPanel::~PQSelectionPanel()
 {
 	delete timer;
 	delete vtkEpcDocumentSet;
+#ifdef WITH_TEST
+	endLogger();
+#endif
 }
 
 //******************************* ACTIONS ************************************
