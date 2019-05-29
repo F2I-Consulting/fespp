@@ -219,6 +219,7 @@ void PQSelectionPanel::constructor()
 	connect(slider_Time_Step, SIGNAL (sliderMoved(int)), this, SLOT (sliderMoved(int)));
 
 	//***
+
 	radioButtonCount = 0;
 
 	indexFile = 0;

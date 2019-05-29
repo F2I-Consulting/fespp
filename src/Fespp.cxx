@@ -69,9 +69,10 @@ vtkCxxSetObjectMacro(Fespp, Controller, vtkMultiProcessController);
 
 #ifdef WITH_TEST
 const std::string loggClass = "CLASS=Fespp ";
-#define BEGIN_FUNC(name_func) L_(linfo) << loggClass << " FUNCTION=" << name_func << " CALL_FUNCTUION=none ITERATION=0 API=FESPP STATUS=START"
-#define END_FUNC(name_func) L_(linfo) << loggClass << " FUNCTION=" << name_func << " CALL_FUNCTUION=none ITERATION=0 API=FESPP STATUS=END"
-#define CALL_FUNC(name_func, call_func, iter, api)  L_(linfo) << loggClass << " FUNCTION=" << name_func << " CALL_FUNCTUION=" << call_func << " ITERATION=" << iter << " API=" << api << " STATUS=IN"
+#define BEGIN_FUNC(name_func) L_(linfo) << loggClass << " FUNCTION=" << name_func << " CALL_FUNCTION=none ITERATION=0 API=FESPP STATUS=START ";
+#define END_FUNC(name_func) L_(linfo) << loggClass << " FUNCTION=" << name_func << " CALL_FUNCTION=none ITERATION=0 API=FESPP STATUS=END"
+#define CALL_FUNC(name_func, call_func, iter, api, info)  L_(linfo) << loggClass << " FUNCTION=" << name_func << " CALL_FUNCTION=" << call_func << " ITERATION=" << iter << " API=" << api << " INFO=" << info << " STATUS=IN"
+#define RETURN_FUNC(name_func, call_func, iter, api, info)  L_(linfo) << loggClass << " FUNCTION=" << name_func << " CALL_FUNCTION=" << call_func << " ITERATION=" << iter << " API=" << api << " INFO=" << info << " STATUS=OUT"
 #endif
 
 
@@ -191,14 +192,29 @@ void Fespp::SetUuidList(const char* uuid, int status)
 #endif
 	} else if (status != 0) {
 		if(isEpcDocument) {
+#ifdef WITH_TEST
+			CALL_FUNC(__func__, "visualize", 1, "Fespp", "");
+#endif
 			auto msg = epcDocumentSet->visualize(std::string(uuid));
+#ifdef WITH_TEST
+			RETURN_FUNC(__func__, "visualize", 1, "Fespp", "");
+#endif
+
 			if  (!msg.empty()){
 				displayError(msg);
 			}
 		}
 #ifdef WITH_ETP
 		if(isEtpDocument && etpDocument!=nullptr) {
+#ifdef WITH_TEST
+			CALL_FUNC(__func__, "visualize", 1, "Fespp", "");
+#endif
+
 			etpDocument->visualize(std::string(uuid));
+#ifdef WITH_TEST
+			RETURN_FUNC(__func__, "visualize", 1, "Fespp", "");
+#endif
+
 		}
 #endif
 	}

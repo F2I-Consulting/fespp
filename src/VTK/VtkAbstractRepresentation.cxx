@@ -41,9 +41,9 @@ knowledge of the CeCILL license and that you accept its terms.
 
 #ifdef WITH_TEST
 const std::string loggClass = "CLASS=VtkAbstractRepresentation ";
-#define BEGIN_FUNC(name_func) L_(linfo) << loggClass << " FUNCTION=" << name_func << " CALL_FUNCTUION=none ITERATION=0 API=FESPP STATUS=START"
-#define END_FUNC(name_func) L_(linfo) << loggClass << " FUNCTION=" << name_func << " CALL_FUNCTUION=none ITERATION=0 API=FESPP STATUS=END"
-#define CALL_FUNC(name_func, call_func, iter, api)  L_(linfo) << loggClass << " FUNCTION=" << name_func << " CALL_FUNCTUION=" << call_func << " ITERATION=" << iter << " API=" << api << " STATUS=IN"
+#define BEGIN_FUNC(name_func, name) L_(linfo) << loggClass << " FUNCTION=" << name_func << " CALL_FUNCTION=none ITERATION=0 API=FESPP" << "NAME=" << name << " STATUS=START"
+#define END_FUNC(name_func) L_(linfo) << loggClass << " FUNCTION=" << name_func << " CALL_FUNCTION=none ITERATION=0 API=FESPP STATUS=END"
+#define CALL_FUNC(name_func, call_func, iter, api)  L_(linfo) << loggClass << " FUNCTION=" << name_func << " CALL_FUNCTION=" << call_func << " ITERATION=" << iter << " API=" << api << " STATUS=IN"
 #endif
 
 //----------------------------------------------------------------------------
@@ -86,13 +86,19 @@ void VtkAbstractRepresentation::createTreeVtk(const std::string & uuid, const st
 //----------------------------------------------------------------------------
 void VtkAbstractRepresentation::visualize(const std::string & uuid)
 {
+#ifdef WITH_TEST
+	BEGIN_FUNC(__func__, this->getName());
+#endif
 	this->createOutput(uuid);
+#ifdef WITH_TEST
+	END_FUNC(__func__);
+#endif
 }
 
 vtkSmartPointer<vtkPoints> VtkAbstractRepresentation::createVtkPoints(const ULONG64 & pointCount, const double * allXyzPoints, const resqml2::AbstractLocal3dCrs * localCRS)
 {
 #ifdef WITH_TEST
-	BEGIN_FUNC(__func__);
+	BEGIN_FUNC(__func__, this->getName());
 #endif
 	points = vtkSmartPointer<vtkPoints>::New();
 

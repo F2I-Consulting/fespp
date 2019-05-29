@@ -69,7 +69,7 @@ PQDataLoadManager::PQDataLoadManager(QWidget* p, Qt::WindowFlags f /*=0*/)
 	this->ui->setupUi(this);
 
 	this->ui->epcFile->setServer(this->Server);
-	this->ui->epcFile->setForceSingleFile(true);
+	this->ui->epcFile->setForceSingleFile(false);
 	this->ui->epcFile->setExtension("epc Files (*.epc)");
 
 	QObject::connect(this->ui->epcFile, SIGNAL(filenamesChanged(const QStringList&)), this,
@@ -111,20 +111,22 @@ void PQDataLoadManager::setupPipeline()
 		fesppReader = builder->createReader("sources", "Fespp", QStringList("EpcDocument"), this->Server);
 		manager->existPipe(true);
 	}
+	QStringList epcFiles =	this->ui->epcFile->filenames();//.join("*");
 
-	QString epcFiles = this->ui->epcFile->filenames().join("*");
+//	QString epcFiles = this->ui->epcFile->filenames().join("*");
 
-	if (!epcFiles.isEmpty()) 	{
-		if (fesppReader) {
+	if (!epcFiles.isEmpty() && fesppReader) 	{
+
+		for (auto it=0; it < epcFiles.length(); ++it){
 			pqActiveObjects *activeObjects = &pqActiveObjects::instance();
 			activeObjects->setActiveSource(fesppReader);
 
 			vtkSMProxy* fesppReaderProxy = fesppReader->getProxy();
-			vtkSMPropertyHelper( fesppReaderProxy, "SubFileName" ).Set(epcFiles.toStdString().c_str());
+			vtkSMPropertyHelper( fesppReaderProxy, "SubFileName" ).Set(epcFiles[it].toStdString().c_str());
 
 			fesppReaderProxy->UpdateSelfAndAllInputs();
 
-			manager->newFile(epcFiles.toStdString().c_str());
+			manager->newFile(epcFiles[it].toStdString().c_str());
 		}
 	}
 	END_UNDO_SET();

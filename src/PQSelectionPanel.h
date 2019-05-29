@@ -156,6 +156,10 @@ protected slots:
 	void timeChangedComboBox(int);
 	void sliderMoved(int);
 
+#ifdef WITH_TEST
+	void handleButtonTest();
+#endif
+
 private:
 
 	std::string searchSource(const std::string & uuid);
@@ -242,6 +246,11 @@ private:
 	VtkEpcDocumentSet* vtkEpcDocumentSet;
 
 	bool debug_verif;
+
+#ifdef WITH_TEST
+	QPushButton *button_test_perf;
+#endif
+
 };
 
 #endif
