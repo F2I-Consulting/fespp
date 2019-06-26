@@ -419,7 +419,7 @@ void VtkEtpDocument::receive_resources_tree(const std::string & rec_uri, const s
 		treeView.push_back(leaf);
 	}
 	else if (contentType == "application/x-resqml+xml;version=2.0;type=obj_ContinuousProperty" ||
-			contentType == "application/x-resqml+xml;version=2.0;type=obj_ContinuousProperty" ){
+			contentType == "application/x-resqml+xml;version=2.0;type=obj_DiscreteProperty" ){
 		VtkEpcCommon leaf;
 		leaf.setName(rec_name);
 		leaf.setUuid(rec_uri);
