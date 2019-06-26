@@ -60,23 +60,30 @@ void PQEtpPanel::handleButtonRefresh()
 {
 	VtkEtpDocument etp_document(ipAddress, port, VtkEpcCommon::TreeView);
 
+	// Wait for etp connection
+	cout << "av attente getClientSession()\n";
+	while (etp_document.getClientSession() == nullptr) {
+	}
+	cout << "av attente getClientSession() OK\n";
+	while (etp_document.getClientSession()->isEtpSessionClosed()) {
+	}
+	cout << "av attente getClientSession()->isEtpSessionClosed() OK\n";
+
 	QIcon icon;
 	icon.addFile(QString::fromUtf8(":green_status.png"), QSize(), QIcon::Normal, QIcon::Off);
 	EtpStatus_Button->setIcon(icon);
 
-	// Wait for etp connection
-	while (etp_document.getClientSession() == nullptr) {
-	}
-	while (etp_document.getClientSession()->isEtpSessionClosed()) {
-	}
-
 	etp_document.createTree();
-	getPQSelectionPanel()->connectPQEtpPanel();
-	EtpSendButton->setText("Refresh");
+	if (EtpSendButton->text() == "Create TreeView"){
+		getPQSelectionPanel()->connectPQEtpPanel();
+		EtpSendButton->setText("Refresh");
+	}
 
 	// The tree creation will automatically close the session when done
-	while (!etp_document.getClientSession()->isWebSocketSessionClosed()) {
+	cout << "av attente etp_document.getClientSession()->isWebSocketSessionClosed()\n";
+	while (etp_document.inloading()) {
 	}
+	cout << "av attente etp_document.getClientSession()->isWebSocketSessionClosed() OK\n";
 	// etp_document can now be destroyed without risk
 }
 

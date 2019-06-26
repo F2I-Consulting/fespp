@@ -209,7 +209,6 @@ void Fespp::SetUuidList(const char* uuid, int status)
 #ifdef WITH_TEST
 			CALL_FUNC(__func__, "visualize", 1, "Fespp", "");
 #endif
-
 			etpDocument->visualize(std::string(uuid));
 #ifdef WITH_TEST
 			RETURN_FUNC(__func__, "visualize", 1, "Fespp", "");

@@ -48,7 +48,7 @@ const std::string loggClass = "CLASS=VtkAbstractRepresentation ";
 
 //----------------------------------------------------------------------------
 VtkAbstractRepresentation::VtkAbstractRepresentation(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, common::EpcDocument *pckEPCRep, common::EpcDocument *pckEPCSubRep, const int & idProc, const int & maxProc) :
-VtkAbstractObject(fileName, name, uuid, uuidParent, idProc, maxProc), epcPackageRepresentation(pckEPCRep), epcPackageSubRepresentation(pckEPCSubRep)
+				VtkAbstractObject(fileName, name, uuid, uuidParent, idProc, maxProc), epcPackageRepresentation(pckEPCRep), epcPackageSubRepresentation(pckEPCSubRep)
 {
 	if (!pckEPCSubRep){
 		subRepresentation = false;
@@ -79,7 +79,9 @@ VtkAbstractRepresentation::~VtkAbstractRepresentation()
 void VtkAbstractRepresentation::createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, const VtkEpcCommon::Resqml2Type & resqmlType)
 {
 	if (resqmlType==VtkEpcCommon::PROPERTY)	{
-		uuidToVtkProperty[uuid] = new VtkProperty(getFileName(), name, uuid, parent, subRepresentation ? epcPackageSubRepresentation : epcPackageRepresentation);
+		if (uuidToVtkProperty.find(uuid) == uuidToVtkProperty.end()) {
+			uuidToVtkProperty[uuid] = new VtkProperty(getFileName(), name, uuid, parent, subRepresentation ? epcPackageSubRepresentation : epcPackageRepresentation);
+		}
 	}
 }
 

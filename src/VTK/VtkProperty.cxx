@@ -68,6 +68,7 @@ const std::string loggClass = "CLASS=VtkProperty ";
 VtkProperty::VtkProperty(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, common::EpcDocument *pck, const int & idProc, const int & maxProc) :
 VtkAbstractObject(fileName, name, uuid, uuidParent, idProc, maxProc), epcPackage(pck)
 {
+	cout << " uuid " << uuid << endl;
 #ifdef WITH_TEST
 	BEGIN_FUNC(__func__);
 #endif
@@ -225,6 +226,7 @@ vtkDataArray* VtkProperty::visualize(const std::string & uuid, resqml2_0_1::Well
 //----------------------------------------------------------------------------
 vtkDataArray* VtkProperty::loadValuesPropertySet(std::vector<resqml2::AbstractValuesProperty*> valuesPropertySet, long cellCount, long pointCount)
 {
+	cout << "VtkProperty::loadValuesPropertySet IN" << endl;
 #ifdef WITH_TEST
 	BEGIN_FUNC(__func__);
 #endif
@@ -292,6 +294,7 @@ vtkDataArray* VtkProperty::loadValuesPropertySet(std::vector<resqml2::AbstractVa
 #ifdef WITH_TEST
 	END_FUNC(__func__);
 #endif
+	cout << "VtkProperty::loadValuesPropertySet OUT" << endl;
 	return cellData;
 }
 
@@ -299,11 +302,14 @@ vtkDataArray* VtkProperty::loadValuesPropertySet(std::vector<resqml2::AbstractVa
 vtkDataArray* VtkProperty::loadValuesPropertySet(std::vector<resqml2::AbstractValuesProperty*> valuesPropertySet, long cellCount, long pointCount,
 		int iCellCount, int jCellCount, int kCellCount, int initKIndex)
 {
+	cout << "VtkProperty::loadValuesPropertySet1 IN" << endl;
 #ifdef WITH_TEST
 	BEGIN_FUNC(__func__);
 #endif
 	for (size_t i = 0; i < valuesPropertySet.size(); ++i)
 	{
+		cout << " valuesPropertySet[i]->getUuid(): " << valuesPropertySet[i]->getUuid() << endl;
+		cout << " getUuid(): " << getUuid() << endl;
 		if (valuesPropertySet[i]->getUuid() == getUuid())
 		{
 			resqml2::AbstractValuesProperty* valuesProperty = valuesPropertySet[i];
@@ -408,6 +414,7 @@ vtkDataArray* VtkProperty::loadValuesPropertySet(std::vector<resqml2::AbstractVa
 #ifdef WITH_TEST
 	END_FUNC(__func__);
 #endif
+	cout << "VtkProperty::loadValuesPropertySet1 OUT" << endl;
 	return cellData;
 	/*	resqml2::AbstractValuesProperty::hdfDatatypeEnum hdfDatatype = valuesPropertySet[i]->getValuesHdfDatatype();
 

@@ -193,6 +193,7 @@ vtkSmartPointer<vtkPoints> VtkIjkGridRepresentation::createpoint()
 //----------------------------------------------------------------------------
 void VtkIjkGridRepresentation::createOutput(const std::string & uuid)
 {
+	cout << "VtkIjkGridRepresentation::createOutput IN" << endl;
 #ifdef WITH_TEST
 	BEGIN_FUNC(__func__);
 #endif
@@ -200,6 +201,7 @@ void VtkIjkGridRepresentation::createOutput(const std::string & uuid)
 	createpoint(); // => POINTS
 	if (!vtkOutput)	// => REPRESENTATION
 	{
+		cout << "representation à crééer" << endl;
 		if (subRepresentation)
 		{
 			// SubRep
@@ -213,8 +215,10 @@ void VtkIjkGridRepresentation::createOutput(const std::string & uuid)
 
 	if (uuid != getUuid()) // => PROPERTY UUID
 	{
+		cout << "PROPERTY à créer" << endl;
 		if (subRepresentation) 
 		{
+			cout << "PROPERTY d'une sub rep à créer" << endl;
 			auto objRepProp = epcPackageSubRepresentation->getDataObjectByUuid(getUuid());
 			auto property = static_cast<resqml2::SubRepresentation*>(objRepProp);
 			auto cellCount = property->getElementCountOfPatch(0);
@@ -231,6 +235,7 @@ void VtkIjkGridRepresentation::createOutput(const std::string & uuid)
 		}
 		else
 		{
+			cout << "PROPERTY d'une ijkgrid à créer" << endl;
 			auto objRepProp = epcPackageRepresentation->getDataObjectByUuid(getUuid());
 			auto property = static_cast<resqml2_0_1::AbstractIjkGridRepresentation*>(objRepProp);
 			auto cellCount = iCellCount*jCellCount*kCellCount;
@@ -246,6 +251,7 @@ void VtkIjkGridRepresentation::createOutput(const std::string & uuid)
 				//#ifdef PARAVIEW_USE_MPI
 			}
 			//#endif
+			cout << "PROPERTY d'une ijkgrid créer" << endl;
 		}
 	}
 

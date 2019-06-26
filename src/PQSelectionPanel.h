@@ -246,6 +246,7 @@ private:
 	VtkEpcDocumentSet* vtkEpcDocumentSet;
 
 	bool debug_verif;
+	bool etpCreated;
 
 #ifdef WITH_TEST
 	QPushButton *button_test_perf;
