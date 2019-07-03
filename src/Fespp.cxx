@@ -66,37 +66,38 @@ vtkCxxSetObjectMacro(Fespp, Controller, vtkMultiProcessController);
 
 //----------------------------------------------------------------------------
 Fespp::Fespp() :
-FileName(nullptr), Controller(nullptr), loadedFile(false), idProc(0), nbProc(0), countTest(0)
+		FileName(nullptr), Controller(nullptr), loadedFile(false), idProc(0), nbProc(0), countTest(0)
 {
 	SetNumberOfInputPorts(0);
 	SetNumberOfOutputPorts(1);
 
 	loadedFile = false;
 
-	this->uuidList = vtkDataArraySelection::New();
+	uuidList = vtkDataArraySelection::New();
 
-	this->SetController(vtkMultiProcessController::GetGlobalController());
+	SetController(vtkMultiProcessController::GetGlobalController());
 
 
 #ifdef PARAVIEW_USE_MPI
 	auto comm = GetMPICommunicator();
 	if (comm != MPI_COMM_NULL)
 	{
-		MPI_Comm_rank(comm, &this->idProc);
-		MPI_Comm_size(comm, &this->nbProc);
+		MPI_Comm_rank(comm, &idProc);
+		MPI_Comm_size(comm, &nbProc);
 	}
 #else
 	idProc = 0;
-	nbProc = 0;
+	nbProc = 1;
 #endif
 
 	countTest = 0;
 	epcDocumentSet = nullptr;
+	isEpcDocument=false;
+
 #ifdef WITH_ETP
 	etpDocument = nullptr;
 	isEtpDocument=false;
 #endif
-	isEpcDocument=false;
 }
 
 //----------------------------------------------------------------------------
@@ -135,7 +136,7 @@ void Fespp::SetSubFileName(const char* name)
 	if(isEpcDocument) {
 		if (std::find(fileNameSet.begin(), fileNameSet.end(),std::string(name))==fileNameSet.end())	{
 			fileNameSet.push_back(std::string(name));
-			this->OpenEpcDocument(name);
+			OpenEpcDocument(name);
 		}
 	}
 }
@@ -143,7 +144,7 @@ void Fespp::SetSubFileName(const char* name)
 //----------------------------------------------------------------------------
 int Fespp::GetuuidListArrayStatus(const char* uuid)
 {
-	return (this->uuidList->ArrayIsEnabled(uuid));
+	return (uuidList->ArrayIsEnabled(uuid));
 }
 //----------------------------------------------------------------------------
 void Fespp::SetUuidList(const char* uuid, int status)
@@ -164,7 +165,7 @@ void Fespp::SetUuidList(const char* uuid, int status)
 		}
 #ifdef WITH_ETP
 		if(isEtpDocument && etpDocument!=nullptr) {
-				etpDocument->visualize(std::string(uuid));
+			etpDocument->visualize(std::string(uuid));
 		}
 #endif
 	}
@@ -179,23 +180,23 @@ void Fespp::SetUuidList(const char* uuid, int status)
 #endif
 	}
 
-	this->Modified();
-	this->Update();
-	this->UpdateDataObject();
-	this->UpdateInformation();
-	this->UpdateWholeExtent();
+	Modified();
+	Update();
+	UpdateDataObject();
+	UpdateInformation();
+	UpdateWholeExtent();
 }
 
 //----------------------------------------------------------------------------
 int Fespp::GetNumberOfuuidListArrays()
 {
-	return this->uuidList->GetNumberOfArrays();
+	return uuidList->GetNumberOfArrays();
 }
 
 //----------------------------------------------------------------------------
 const char* Fespp::GetuuidListArrayName(int index)
 {
-	return this->uuidList->GetArrayName(index);
+	return uuidList->GetArrayName(index);
 }
 
 
@@ -206,14 +207,12 @@ MPI_Comm Fespp::GetMPICommunicator()
 {
 	MPI_Comm comm = MPI_COMM_NULL;
 
-	vtkMPIController *MPIController = vtkMPIController::SafeDownCast(this->Controller);
+	vtkMPIController *MPIController = vtkMPIController::SafeDownCast(Controller);
 
-	if (MPIController != nullptr)
-	{
+	if (MPIController != nullptr) {
 		vtkMPICommunicator *mpiComm = vtkMPICommunicator::SafeDownCast(MPIController->GetCommunicator());
 
-		if (mpiComm != nullptr)
-		{
+		if (mpiComm != nullptr)	{
 			comm = *mpiComm->GetMPIComm()->GetHandle();
 		}
 	}
@@ -257,7 +256,7 @@ int Fespp::RequestInformation(
 		if(extension=="epc") {
 			isEpcDocument=true;
 			loadedFile = true;
-			this->OpenEpcDocument(stringFileName);
+			OpenEpcDocument(stringFileName);
 			epcDocumentSet->visualizeFull();
 		}
 	}
@@ -271,7 +270,6 @@ void Fespp::OpenEpcDocument(const std::string & name)
 	if  (!msg.empty()){
 		displayWarning(msg);
 	}
-
 }
 
 //----------------------------------------------------------------------------
@@ -301,8 +299,8 @@ void Fespp::RequestDataEpcDocument(vtkInformation *request,
 		t1 = MPI_Wtime();
 #endif
 
-	if (this->idProc == 0)
-		cout << "traitement fait avec " <<  this->nbProc << " processeur(s) \n";
+	if (idProc == 0)
+		cout << "traitement fait avec " <<  nbProc << " processeur(s) \n";
 
 	vtkInformation *outInfo = outputVector->GetInformationObject(0);
 	vtkMultiBlockDataSet *output = vtkMultiBlockDataSet::SafeDownCast(outInfo->Get(vtkMultiBlockDataSet::DATA_OBJECT()));
@@ -329,7 +327,7 @@ void Fespp::RequestDataEpcDocument(vtkInformation *request,
 		double t2;
 		MPI_Barrier(comm);
 		t2 = MPI_Wtime();
-		if (this->idProc == 0)
+		if (idProc == 0)
 			cout << "Elapsed time is " << (t2-t1) << "\n";
 	}
 #endif
@@ -346,13 +344,11 @@ void Fespp::RequestDataEtpDocument(vtkInformation *request,
 	if (loadedFile)	{
 		output->DeepCopy(etpDocument->getVisualization());
 	}
-
 }
 #endif
 //----------------------------------------------------------------------------
 void Fespp::PrintSelf(ostream& os, vtkIndent indent)
 {
-	cout<<"Fespp::PrintSelf" << endl;
 	Superclass::PrintSelf(os, indent);
 	os << indent << "fileName: " << (FileName ? FileName : "(none)") << endl;
 }

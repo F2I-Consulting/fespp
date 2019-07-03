@@ -37,7 +37,7 @@ knowledge of the CeCILL license and that you accept its terms.
 
 //----------------------------------------------------------------------------
 VtkResqml2StructuredGrid::VtkResqml2StructuredGrid(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, common::EpcDocument *pckRep, common::EpcDocument *pckSubRep, const int & idProc, const int & maxProc) :
-	VtkAbstractRepresentation(fileName, name, uuid, uuidParent, pckRep, pckSubRep, idProc, maxProc)
+VtkAbstractRepresentation(fileName, name, uuid, uuidParent, pckRep, pckSubRep, idProc, maxProc)
 {
 }
 
@@ -56,12 +56,10 @@ vtkSmartPointer<vtkStructuredGrid> VtkResqml2StructuredGrid::getOutput() const
 //----------------------------------------------------------------------------
 void VtkResqml2StructuredGrid::remove(const std::string & uuid)
 {
-	if (uuid == getUuid())
-	{
+	if (uuid == getUuid()) {
 		vtkOutput = nullptr;
 	}
-	else if(uuidToVtkProperty[uuid])
-	{
+	else if(uuidToVtkProperty[uuid]) {
 		vtkOutput->GetCellData()-> RemoveArray(0);
 	}
 }

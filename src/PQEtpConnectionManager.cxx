@@ -30,17 +30,17 @@ class PQEtpConnectionManager::pqUI : public Ui::PQEtpConnectionManager
 
 namespace
 {
-	PQEtpPanel* getPQEtpPanel()
-	{
-		PQEtpPanel *panel = 0;
-		foreach(QWidget *widget, qApp->topLevelWidgets()) {
-			panel = widget->findChild<PQEtpPanel *>();
-			if(panel) {
-				break;
-			}
+PQEtpPanel* getPQEtpPanel()
+{
+	PQEtpPanel *panel = nullptr;
+	foreach(QWidget *widget, qApp->topLevelWidgets()) {
+		panel = widget->findChild<PQEtpPanel *>();
+		if(panel!=nullptr) {
+			break;
 		}
-		return panel;
 	}
+	return panel;
+}
 }
 
 //=============================================================================
@@ -48,26 +48,26 @@ PQEtpConnectionManager::PQEtpConnectionManager(QWidget* p, Qt::WindowFlags f /*=
 : QDialog(p, f)
 {
 	PQToolsManager* manager = PQToolsManager::instance();
-	this->Server = manager->getActiveServer();
+	Server = manager->getActiveServer();
 
-	this->ui = new PQEtpConnectionManager::pqUI;
-	this->ui->setupUi(this);
+	ui = new PQEtpConnectionManager::pqUI;
+	ui->setupUi(this);
 
 	QObject::connect(this, SIGNAL(accepted()), this, SLOT(setupPipeline()));
 
-	this->checkInputValid();
+	checkInputValid();
 }
 
 PQEtpConnectionManager::~PQEtpConnectionManager()
 {
-	delete this->ui;
+	delete ui;
 }
 
 //-----------------------------------------------------------------------------
 void PQEtpConnectionManager::checkInputValid()
 {
 	bool valid = true;
-	this->ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(valid);
+	ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(valid);
 }
 
 //-----------------------------------------------------------------------------
@@ -86,7 +86,7 @@ void PQEtpConnectionManager::setupPipeline()
 		fesppReader = manager->getFesppReader();
 	}
 	else {
-		fesppReader = builder->createReader("sources", "Fespp", QStringList("EtpDocument"), this->Server);
+		fesppReader = builder->createReader("sources", "Fespp", QStringList("EtpDocument"), Server);
 		manager->etp_existPipe(true);
 	}
 
@@ -94,7 +94,7 @@ void PQEtpConnectionManager::setupPipeline()
 		pqActiveObjects *activeObjects = &pqActiveObjects::instance();
 		activeObjects->setActiveSource(fesppReader);
 
-		auto connection_parameter = this->ui->etp_ip->text()+":"+this->ui->etp_port->text();
+		auto connection_parameter = this->ui->etp_ip->text()+":"+ this->ui->etp_port->text();
 		vtkSMProxy* fesppReaderProxy = fesppReader->getProxy();
 		vtkSMPropertyHelper( fesppReaderProxy, "SubFileName" ).Set(connection_parameter.toStdString().c_str());
 		fesppReaderProxy->UpdateSelfAndAllInputs();

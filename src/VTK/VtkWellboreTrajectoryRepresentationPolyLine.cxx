@@ -59,14 +59,12 @@ void VtkWellboreTrajectoryRepresentationPolyLine::createOutput(const std::string
 	if (!subRepresentation)	{
 
 		resqml2_0_1::WellboreTrajectoryRepresentation* wellboreSetRepresentation = nullptr;
-		common::AbstractObject* obj = epcPackageRepresentation->getResqmlAbstractObjectByUuid(getUuid().substr(0, 36));
-		if (obj != nullptr && obj->getXmlTag() == "WellboreTrajectoryRepresentation")
-		{
+		common::AbstractObject* obj = epcPackageRepresentation->getDataObjectByUuid(getUuid().substr(0, 36));
+		if (obj != nullptr && obj->getXmlTag() == "WellboreTrajectoryRepresentation") {
 			wellboreSetRepresentation = static_cast<resqml2_0_1::WellboreTrajectoryRepresentation*>(obj);
 		}
 
-		if (!vtkOutput)
-		{
+		if (!vtkOutput) {
 			vtkOutput = vtkSmartPointer<vtkPolyData>::New();
 
 			// POINT
@@ -93,12 +91,10 @@ void VtkWellboreTrajectoryRepresentationPolyLine::createOutput(const std::string
 			points = nullptr;
 		}
 		// PROPERTY(IES)
-		else
-		{
-			if (uuid != getUuid().substr(0, 36))
-			{
+		else {
+			if (uuid != getUuid().substr(0, 36)) {
 				vtkDataArray* arrayProperty = uuidToVtkProperty[uuid]->visualize(uuid, wellboreSetRepresentation);
-				this->addProperty(uuid, arrayProperty);
+				addProperty(uuid, arrayProperty);
 			}
 		}
 	}
@@ -123,9 +119,8 @@ long VtkWellboreTrajectoryRepresentationPolyLine::getAttachmentPropertyCount(con
 {
 	long result = 0;
 	resqml2_0_1::WellboreTrajectoryRepresentation* wellboreSetRepresentation = nullptr;
-	common::AbstractObject* obj = epcPackageRepresentation->getResqmlAbstractObjectByUuid(getUuid().substr(0, 36));
-	if (obj != nullptr && obj->getXmlTag() == "WellboreTrajectoryRepresentation")
-	{
+	common::AbstractObject* obj = epcPackageRepresentation->getDataObjectByUuid(getUuid().substr(0, 36));
+	if (obj != nullptr && obj->getXmlTag() == "WellboreTrajectoryRepresentation") {
 		wellboreSetRepresentation = static_cast<resqml2_0_1::WellboreTrajectoryRepresentation*>(obj);
 		result = wellboreSetRepresentation->getXyzPointCountOfAllPatches();
 	}

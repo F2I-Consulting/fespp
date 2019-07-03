@@ -72,17 +72,16 @@ VtkWellboreTrajectoryRepresentation::~VtkWellboreTrajectoryRepresentation()
 //----------------------------------------------------------------------------
 void VtkWellboreTrajectoryRepresentation::createTreeVtk(const std::string & uuid, const std::string & uuidParent, const std::string & name, const VtkEpcCommon::Resqml2Type & type)
 {
-	if (uuid != getUuid())
-	{
-		this->polyline.createTreeVtk(uuid, uuidParent, name, type);
+	if (uuid != getUuid())	{
+		polyline.createTreeVtk(uuid, uuidParent, name, type);
 	}
 }
 
 //----------------------------------------------------------------------------
 int VtkWellboreTrajectoryRepresentation::createOutput(const std::string & uuid)
 {
-		this->polyline.createOutput(uuid);
-		//	head.createOutput(uuid);
+	polyline.createOutput(uuid);
+	//	head.createOutput(uuid);
 	return 1;
 }
 //----------------------------------------------------------------------------
@@ -90,15 +89,14 @@ void VtkWellboreTrajectoryRepresentation::visualize(const std::string & uuid)
 {
 	createOutput(uuid);
 
-	this->attach();
+	attach();
 }
 
 //----------------------------------------------------------------------------
 void VtkWellboreTrajectoryRepresentation::remove(const std::string & uuid)
 {
-	if (uuid == getUuid())
-	{
-		this->detach();
+	if (uuid == getUuid()) {
+		detach();
 		std::stringstream polylineUuid;
 		polylineUuid << getUuid() << "-Polyline";
 		polyline.remove(uuid);
@@ -116,13 +114,14 @@ void VtkWellboreTrajectoryRepresentation::attach()
 	vtkOutput->GetMetaData(index++)->Set(vtkCompositeDataSet::NAME(),head.getName().c_str());
 }
 
+//----------------------------------------------------------------------------
 void VtkWellboreTrajectoryRepresentation::addProperty(const std::string & uuidProperty, vtkDataArray* dataProperty)
 {
-	this->polyline.addProperty(uuidProperty, dataProperty);
+	polyline.addProperty(uuidProperty, dataProperty);
 }
 
+//----------------------------------------------------------------------------
 long VtkWellboreTrajectoryRepresentation::getAttachmentPropertyCount(const std::string & uuid, const VtkEpcCommon::FesppAttachmentProperty propertyUnit)
 {
-	return 	this->polyline.getAttachmentPropertyCount(uuid, propertyUnit);
-	;
+	return 	 polyline.getAttachmentPropertyCount(uuid, propertyUnit);
 }

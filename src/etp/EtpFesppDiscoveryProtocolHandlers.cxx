@@ -17,7 +17,7 @@ void EtpFesppDiscoveryProtocolHandlers::on_GetResourcesResponse(const Energistic
 		if (std::find(getObjectWhenDiscovered.begin(), getObjectWhenDiscovered.end(), correlationId) != getObjectWhenDiscovered.end()) {
 			size_t openingParenthesis = graphResource.m_uri.find('(', 5);
 			if (openingParenthesis != std::string::npos) {
-				auto resqmlObj = static_cast<EtpClientSession*>(session)->epcDoc.getResqmlAbstractObjectByUuid(graphResource.m_uri.substr(openingParenthesis + 1, 36));
+				auto resqmlObj = static_cast<EtpClientSession*>(session)->epcDoc.getDataObjectByUuid(graphResource.m_uri.substr(openingParenthesis + 1, 36));
 				if (resqmlObj == nullptr || resqmlObj->isPartial()) {
 					Energistics::Etp::v12::Protocol::Store::GetDataObjects getO;
 					getO.m_uris.push_back(graphResource.m_uri);

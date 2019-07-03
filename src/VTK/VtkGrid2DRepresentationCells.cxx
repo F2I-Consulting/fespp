@@ -46,6 +46,7 @@ knowledge of the CeCILL license and that you accept its terms.
 VtkGrid2DRepresentationCells::VtkGrid2DRepresentationCells(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, common::EpcDocument *pckEPCRep, common::EpcDocument *pckEPCSubRep) :
 VtkResqml2StructuredGrid(fileName, name, uuid, uuidParent, pckEPCRep, pckEPCSubRep)
 {
+
 }
 
 VtkGrid2DRepresentationCells::~VtkGrid2DRepresentationCells()
@@ -58,14 +59,12 @@ void VtkGrid2DRepresentationCells::createOutput(const std::string & uuid)
 	if (!subRepresentation)	{
 
 		resqml2_0_1::Grid2dRepresentation* grid2dRepresentation = nullptr;
-		common::AbstractObject* obj = epcPackageRepresentation->getResqmlAbstractObjectByUuid(uuid);
-		if (obj != nullptr && obj->getXmlTag() == "Grid2dRepresentation")
-		{
+		common::AbstractObject* obj = epcPackageRepresentation->getDataObjectByUuid(uuid);
+		if (obj != nullptr && obj->getXmlTag() == "Grid2dRepresentation") {
 			grid2dRepresentation = static_cast<resqml2_0_1::Grid2dRepresentation*>(obj);
 		}
 
-		if (!vtkOutput)
-		{
+		if (!vtkOutput) {
 			vtkOutput = vtkSmartPointer<vtkStructuredGrid>::New();
 
 			resqml2_0_1::Grid2dRepresentation *supportingGrid = grid2dRepresentation->getSupportingRepresentation();
@@ -84,23 +83,19 @@ void VtkGrid2DRepresentationCells::createOutput(const std::string & uuid)
 			double YIOffset = supportingGrid->getYIOffsetInGlobalCrs();
 			double YJOffset = supportingGrid->getYJOffsetInGlobalCrs();
 			std::vector<unsigned int> ptBlank;
-			for (unsigned int j = 0; j < nbNodeJ; ++j)
-			{
-				for (unsigned int i = 0; i < nbNodeI; ++i)
-				{
+			for (unsigned int j = 0; j < nbNodeJ; ++j) {
+				for (unsigned int i = 0; i < nbNodeI; ++i) {
 					unsigned int ptId = i + j * nbNodeI;
-					if (vtkMath::IsNan(z[ptId]))
-					{
+					if (vtkMath::IsNan(z[ptId])) {
 						points->InsertNextPoint(i, j, i + j);
 						ptBlank.push_back(ptId);
 					}
-					else
-					{
+					else {
 						points->InsertNextPoint(
-							originX + i*XIOffset + j*XJOffset,
-							originY + i*YIOffset + j*YJOffset,
-							z[ptId]
-							);
+								originX + i*XIOffset + j*XJOffset,
+								originY + i*YIOffset + j*YJOffset,
+								z[ptId]
+						);
 					}
 				}
 			}
@@ -109,7 +104,7 @@ void VtkGrid2DRepresentationCells::createOutput(const std::string & uuid)
 			vtkOutput->SetDimensions(nbNodeI, nbNodeJ, 1);
 			vtkOutput->SetPoints(points);
 
-			for (unsigned int i = 0; i < ptBlank.size(); ++i)
+			for (size_t i = 0; i < ptBlank.size(); ++i)
 				vtkOutput->BlankPoint(ptBlank[i]);
 
 			vtkOutput->Modified();

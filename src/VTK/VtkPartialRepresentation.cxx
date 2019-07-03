@@ -77,7 +77,7 @@ void VtkPartialRepresentation::visualize(const std::string & uuid)
 {
 	if (uuid != vtkPartialReprUuid)
 	{
-		common::AbstractObject* obj = epcPackage->getResqmlAbstractObjectByUuid(vtkPartialReprUuid);
+		common::AbstractObject* obj = epcPackage->getDataObjectByUuid(vtkPartialReprUuid);
 		if (obj != nullptr){
 			std::vector<resqml2::AbstractValuesProperty*> valuesPropertySet;
 
@@ -130,19 +130,17 @@ void VtkPartialRepresentation::visualize(const std::string & uuid)
 			auto initKIndex = vtkEpcDocumentSource->getInitKIndex(vtkPartialReprUuid);
 
 			auto arrayProperty = uuidToVtkProperty[uuid]->loadValuesPropertySet(valuesPropertySet, cellCount, pointCount, iCellCount, jCellCount, kCellCount, initKIndex);
-//			auto arrayProperty = uuidToVtkProperty[uuid]->loadValuesPropertySet(valuesPropertySet, cellCount, pointCount);
+			//			auto arrayProperty = uuidToVtkProperty[uuid]->loadValuesPropertySet(valuesPropertySet, cellCount, pointCount);
 
 			vtkEpcDocumentSource->addProperty(vtkPartialReprUuid, arrayProperty);
 		}
 	}
-
 }
-	
+
 //----------------------------------------------------------------------------
 void VtkPartialRepresentation::createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, const VtkEpcCommon::Resqml2Type & resqmlType)
 {
-	if (resqmlType == VtkEpcCommon::PROPERTY )
-	{
+	if (resqmlType == VtkEpcCommon::PROPERTY ) {
 		uuidToVtkProperty[uuid] = new VtkProperty(fileName, name, uuid, parent, epcPackage);
 	}
 }

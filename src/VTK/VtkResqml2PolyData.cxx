@@ -38,7 +38,7 @@ knowledge of the CeCILL license and that you accept its terms.
 
 //----------------------------------------------------------------------------
 VtkResqml2PolyData::VtkResqml2PolyData(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, common::EpcDocument *pckRep, common::EpcDocument *pckSubRep, const int & idProc, const int & maxProc) :
-	VtkAbstractRepresentation(fileName, name, uuid, uuidParent, pckRep, pckSubRep, idProc, maxProc)
+VtkAbstractRepresentation(fileName, name, uuid, uuidParent, pckRep, pckSubRep, idProc, maxProc)
 {
 }
 
@@ -57,12 +57,10 @@ vtkSmartPointer<vtkPolyData> VtkResqml2PolyData::getOutput() const
 //----------------------------------------------------------------------------
 void VtkResqml2PolyData::remove(const std::string & uuid)
 {
-	if (uuid == getUuid())
-	{
+	if (uuid == getUuid()) {
 		vtkOutput = nullptr;
 	}
-	else if(uuidToVtkProperty[uuid])
-	{
+	else if(uuidToVtkProperty[uuid]) {
 		vtkOutput->GetPointData()->RemoveArray(0);
 	}
 }

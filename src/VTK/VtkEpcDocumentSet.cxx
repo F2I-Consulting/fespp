@@ -43,7 +43,6 @@ knowledge of the CeCILL license and that you accept its terms.
 #include <algorithm>
 #include <sstream>
 
-
 //----------------------------------------------------------------------------
 VtkEpcDocumentSet::VtkEpcDocumentSet(const int & idProc, const int & maxProc, const VtkEpcCommon::modeVtkEpc & mode) :
 procRank(idProc), nbProc(maxProc)
@@ -79,13 +78,10 @@ VtkEpcDocumentSet::~VtkEpcDocumentSet()
 std::string VtkEpcDocumentSet::visualize(const std::string & uuid)
 {
 	if(representationMode) {
-		try
-		{
-
+		try {
 			uuidToVtkEpc[uuid]->visualize(uuid);
 		}
-		catch  (const std::exception & e)
-		{
+		catch  (const std::exception & e) {
 			return "EXCEPTION in fesapi " + uuidToVtkEpc[uuid]->getFileName() + " : " + e.what();
 		}
 	}
@@ -130,7 +126,7 @@ vtkSmartPointer<vtkMultiBlockDataSet> VtkEpcDocumentSet::getVisualization() cons
 {
 	if(representationMode) {
 		vtkOutput->Initialize();
-		auto index = 0;
+		unsigned int index = 0;
 		for (auto &vtkEpcElem : vtkEpcList) {
 			if(vtkEpcElem->getOutput()->GetNumberOfBlocks()>0) {
 				vtkOutput->SetBlock(index, vtkEpcElem->getOutput());
@@ -171,6 +167,7 @@ VtkEpcDocument* VtkEpcDocumentSet::getVtkEpcDocument(const std::string & uuid)
 //----------------------------------------------------------------------------
 VtkEpcCommon::Resqml2Type VtkEpcDocumentSet::getTypeInEpcDocument(const std::string & uuid)
 {
+
 	auto epcDoc = uuidToVtkEpc.find(uuid) != uuidToVtkEpc.end() ? uuidToVtkEpc[uuid] : nullptr;
 	if (epcDoc!=nullptr) {
 		return epcDoc->getType(uuid);

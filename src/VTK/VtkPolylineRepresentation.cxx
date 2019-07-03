@@ -65,21 +65,19 @@ void VtkPolylineRepresentation::createOutput(const std::string & uuid)
 {
 	if (!subRepresentation)	{
 		resqml2_0_1::PolylineSetRepresentation* polylineSetRepresentation = nullptr;
-		common::AbstractObject* obj = epcPackageRepresentation->getResqmlAbstractObjectByUuid(getUuid());
-		if (obj != nullptr && obj->getXmlTag() == "PolylineSetRepresentation")
-		{
+		common::AbstractObject* obj = epcPackageRepresentation->getDataObjectByUuid(getUuid());
+		if (obj != nullptr && obj->getXmlTag() == "PolylineSetRepresentation") {
 			polylineSetRepresentation = static_cast<resqml2_0_1::PolylineSetRepresentation*>(obj);
 		}
 
-		if (!vtkOutput)
-		{
+		if (!vtkOutput) {
 			VtkResqml2PolyData::vtkOutput = vtkSmartPointer<vtkPolyData>::New();
 
 			// POINT
-			unsigned int nodeCount = polylineSetRepresentation->getXyzPointCountOfPatch(this->patchIndex);
+			unsigned int nodeCount = polylineSetRepresentation->getXyzPointCountOfPatch(patchIndex);
 
 			double * allPoint = new double[nodeCount * 3];
-			polylineSetRepresentation->getXyzPointsOfPatch(this->patchIndex, allPoint);
+			polylineSetRepresentation->getXyzPointsOfPatch(patchIndex, allPoint);
 
 			createVtkPoints(nodeCount, allPoint, polylineSetRepresentation->getLocalCrs());
 			vtkOutput->SetPoints(points);
@@ -89,18 +87,16 @@ void VtkPolylineRepresentation::createOutput(const std::string & uuid)
 			// POLYLINE
 			vtkSmartPointer<vtkCellArray> setPolylineRepresentationLines = vtkSmartPointer<vtkCellArray>::New();
 
-			unsigned int countPolyline = polylineSetRepresentation->getPolylineCountOfPatch(this->patchIndex);
+			unsigned int countPolyline = polylineSetRepresentation->getPolylineCountOfPatch(patchIndex);
 
 			unsigned int* countNodePolylineInPatch = new unsigned int[countPolyline];
-			polylineSetRepresentation->getNodeCountPerPolylineInPatch(this->patchIndex, countNodePolylineInPatch);
+			polylineSetRepresentation->getNodeCountPerPolylineInPatch(patchIndex, countNodePolylineInPatch);
 
 			unsigned int idPoint = 0;
-			for (unsigned int polylineIndex = 0; polylineIndex < countPolyline; ++polylineIndex)
-			{
+			for (unsigned int polylineIndex = 0; polylineIndex < countPolyline; ++polylineIndex) {
 				vtkSmartPointer<vtkPolyLine> polylineRepresentation = vtkSmartPointer<vtkPolyLine>::New();
 				polylineRepresentation->GetPointIds()->SetNumberOfIds(countNodePolylineInPatch[polylineIndex]);
-				for (unsigned int line = 0; line < countNodePolylineInPatch[polylineIndex]; ++line)
-				{
+				for (unsigned int line = 0; line < countNodePolylineInPatch[polylineIndex]; ++line) {
 					polylineRepresentation->GetPointIds()->SetId(line, idPoint);
 					idPoint++;
 
@@ -111,12 +107,10 @@ void VtkPolylineRepresentation::createOutput(const std::string & uuid)
 			points = nullptr;
 			delete[] countNodePolylineInPatch;
 		}
-		else
-		{
-			if (uuid != getUuid())
-			{
+		else {
+			if (uuid != getUuid()) {
 				vtkDataArray* arrayProperty = uuidToVtkProperty[uuid]->visualize(uuid, polylineSetRepresentation);
-				this->addProperty(uuid, arrayProperty);
+				addProperty(uuid, arrayProperty);
 			}
 		}
 	}
@@ -130,13 +124,13 @@ void VtkPolylineRepresentation::addProperty(const std::string & uuidProperty, vt
 	lastProperty = uuidProperty;
 }
 
+//----------------------------------------------------------------------------
 long VtkPolylineRepresentation::getAttachmentPropertyCount(const std::string & uuid, const VtkEpcCommon::FesppAttachmentProperty propertyUnit)
 {
 	long result = 0;
 	resqml2_0_1::PolylineSetRepresentation* polylineSetRepresentation = nullptr;
-	common::AbstractObject* obj = epcPackageRepresentation->getResqmlAbstractObjectByUuid(getUuid());
-	if (obj != nullptr && obj->getXmlTag() == "PolylineSetRepresentation")
-	{
+	common::AbstractObject* obj = epcPackageRepresentation->getDataObjectByUuid(getUuid());
+	if (obj != nullptr && obj->getXmlTag() == "PolylineSetRepresentation") {
 		polylineSetRepresentation = static_cast<resqml2_0_1::PolylineSetRepresentation*>(obj);
 		result = polylineSetRepresentation->getXyzPointCountOfPatch(0);
 	}

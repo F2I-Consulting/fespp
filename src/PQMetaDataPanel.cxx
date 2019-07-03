@@ -49,13 +49,11 @@ namespace
 	PQSelectionPanel* getPQSelectionPanel()
 	{
 	    // get multi-block inspector panel
-	    PQSelectionPanel *panel = 0;
-	    foreach(QWidget *widget, qApp->topLevelWidgets())
-		{
+	    PQSelectionPanel *panel = nullptr;
+	    foreach(QWidget *widget, qApp->topLevelWidgets()) {
 			panel = widget->findChild<PQSelectionPanel *>();
 	
-			if(panel)
-	        {
+			if(panel != nullptr) {
 			    break;
 			}
 		}
@@ -79,7 +77,7 @@ void PQMetaDataPanel::constructor()
   ui.tableView->setModel(tableViewModel);
 
   connect(getPQSelectionPanel(), SIGNAL(selectionName(std::string, std::string, common::EpcDocument *)), this, SLOT(displayMetaData(std::string, std::string, common::EpcDocument *)));
-  this->setVisible(false);
+  setVisible(false);
 }
 
 PQMetaDataPanel::~PQMetaDataPanel()
@@ -89,7 +87,7 @@ PQMetaDataPanel::~PQMetaDataPanel()
 
 void PQMetaDataPanel::displayMetaData(const std::string & fileName, const std::string & uuid, common::EpcDocument *pck)
 {
-	common::AbstractObject *object = pck->getResqmlAbstractObjectByUuid(uuid);
+/*	common::AbstractObject *object = pck->getResqmlAbstractObjectByUuid(uuid);
 	
 	tableViewModel->setItem(0,0,new QStandardItem(QString("Uuid")));
 	tableViewModel->setItem(0,1,new QStandardItem(QString(object->getUuid().c_str())));
@@ -120,5 +118,5 @@ void PQMetaDataPanel::displayMetaData(const std::string & fileName, const std::s
 	tableViewModel->setItem(8,1,new QStandardItem(QString(object->getDescriptiveKeywords().c_str())));
 
 	tableViewModel->setItem(9,0,new QStandardItem(QString("Part Name In Epc Document")));
-	tableViewModel->setItem(9,1,new QStandardItem(QString(object->getPartNameInEpcDocument().c_str())));
+	tableViewModel->setItem(9,1,new QStandardItem(QString(object->getPartNameInEpcDocument().c_str())));*/
 }

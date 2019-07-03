@@ -139,5 +139,6 @@ private:
 	int maxKIndex;
 
 	bool isHyperslabed;
+
 };
 #endif

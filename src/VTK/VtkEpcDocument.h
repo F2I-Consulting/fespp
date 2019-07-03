@@ -145,7 +145,6 @@ private:
 	// EPC DOCUMENT
 	COMMON_NS::EpcDocument *epcPackage;
 
-	//std::unordered_map<std::string, VtkFeature*> uuidToVtKFeature;	
 	std::unordered_map<std::string, VtkGrid2DRepresentation*> uuidToVtkGrid2DRepresentation;
 	std::unordered_map<std::string, VtkPolylineRepresentation*> uuidToVtkPolylineRepresentation;
 	std::unordered_map<std::string, VtkTriangulatedRepresentation*> uuidToVtkTriangulatedRepresentation;
@@ -163,5 +162,6 @@ private:
 	std::vector<VtkEpcCommon> treeView; // Tree
 
 	std::string epc_error;
+
 };
 #endif

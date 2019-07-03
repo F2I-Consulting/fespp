@@ -201,6 +201,13 @@
      </property>
     </widget>
    </item>
+   <item row="1" column="11">
+    <widget class="QPushButton" name="button_test_perf">
+     <property name="text">
+      <string>PushButton</string>
+     </property>
+    </widget>
+   </item>
   </layout>
  </widget>
  <resources>

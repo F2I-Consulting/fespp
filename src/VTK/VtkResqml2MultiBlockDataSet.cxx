@@ -65,8 +65,7 @@ bool VtkResqml2MultiBlockDataSet::isEmpty()
 //----------------------------------------------------------------------------
 void VtkResqml2MultiBlockDataSet::detach()
 {
-	for (size_t blockIndex = 0; blockIndex < attachUuids.size() ; ++blockIndex)
-	{
+	for (size_t blockIndex = 0; blockIndex < attachUuids.size() ; ++blockIndex) {
 		vtkOutput->RemoveBlock(0);
 	}
 }

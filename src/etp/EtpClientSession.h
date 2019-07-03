@@ -36,16 +36,17 @@ knowledge of the CeCILL license and that you accept its terms.
 #define _etpClientSession_h_
 
 // include FESAPI
-#include <etp/ClientSession.h>
+#include <etp/PlainClientSession.h>
 #include <common/EpcDocument.h>
 #include <set>
 #include <algorithm>
 
 //include Fespp
 #include "VTK/VtkEpcCommon.h"
+#include "etp/EtpClientSessionEpcBased.h"
 
 class VtkEtpDocument;
-class EtpClientSession : public ETP_NS::ClientSession
+class EtpClientSession : public ETP_NS::PlainClientSession, public EtpClientSessionEpcBased
 {
 public:
 	/**
@@ -55,7 +56,7 @@ public:
 	 * @param supportedObjects		A list of the Data Objects supported by the client. This list MUST be empty if the client is a customer. This field MUST be supplied if the client is a Store and is requesting a customer role for the server.
 	 */
 	EtpClientSession(boost::asio::io_context& ioc,
-			const std::string & host, const std::string & port,
+			const std::string & host, const std::string & port, const std::string & target, const std::string & authorization,
 			const std::vector<Energistics::Etp::v12::Datatypes::SupportedProtocol> & requestedProtocols,
 			const std::vector<std::string>& supportedObjects,
 			VtkEtpDocument* my_etp_document,

@@ -100,11 +100,19 @@ public:
 	std::vector<VtkEpcCommon> getTreeView() const;
 
 	/**
+		 * method : inloading treeView
+		 * variable :
+		 */
+	bool inloading() const;
+
+	/**
 	 * method : visualize
 	 * variable : std::string uuid
 	 * create uuid representation.
 	 */
 	void visualize(const std::string & uuid);
+
+	void refresh();
 
 	/**
 	 * method : remove
@@ -143,6 +151,8 @@ private:
 	std::vector<VtkEpcCommon> treeView; // Tree
 
 	int64_t last_id;
+
+	bool loading;
 
 
 	std::unordered_map<std::string, VtkIjkGridRepresentation*> uuidToVtkIjkGridRepresentation;

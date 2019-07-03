@@ -102,7 +102,6 @@ vtkDataArray* VtkProperty::visualize(const std::string & uuid, resqml2_0_1::Poly
 	std::vector<resqml2::AbstractValuesProperty*> valuesPropertySet = polylineSetRepresentation->getValuesPropertySet();
 
 	long pointCount = polylineSetRepresentation->getXyzPointCountOfPatch(0);
-
 	return loadValuesPropertySet(valuesPropertySet, 0, pointCount);
 }
 
@@ -110,9 +109,7 @@ vtkDataArray* VtkProperty::visualize(const std::string & uuid, resqml2_0_1::Poly
 vtkDataArray* VtkProperty::visualize(const std::string & uuid, resqml2_0_1::TriangulatedSetRepresentation* triangulatedSetRepresentation)
 {
 	std::vector<resqml2::AbstractValuesProperty*> valuesPropertySet = triangulatedSetRepresentation->getValuesPropertySet();
-
 	long pointCount = triangulatedSetRepresentation->getXyzPointCountOfAllPatches();
-
 	return loadValuesPropertySet(valuesPropertySet, 0, pointCount);
 }
 
@@ -120,9 +117,7 @@ vtkDataArray* VtkProperty::visualize(const std::string & uuid, resqml2_0_1::Tria
 vtkDataArray* VtkProperty::visualize(const std::string & uuid, resqml2_0_1::Grid2dRepresentation* grid2dRepresentation)
 {
 	std::vector<resqml2::AbstractValuesProperty*> valuesPropertySet = grid2dRepresentation->getValuesPropertySet();
-
 	long pointCount = grid2dRepresentation->getNodeCountAlongIAxis() * grid2dRepresentation->getNodeCountAlongJAxis();
-
 	return loadValuesPropertySet(valuesPropertySet, 0, pointCount);
 }
 
@@ -132,7 +127,6 @@ vtkDataArray* VtkProperty::visualize(const std::string & uuid, resqml2_0_1::Abst
 	std::vector<resqml2::AbstractValuesProperty*> valuesPropertySet = ijkGridRepresentation->getValuesPropertySet();
 
 	long cellCount = ijkGridRepresentation->getCellCount();
-
 	return loadValuesPropertySet(valuesPropertySet,cellCount, 0);
 }
 
@@ -143,8 +137,6 @@ vtkDataArray* VtkProperty::visualize(const std::string & uuid, resqml2_0_1::Unst
 
 	const ULONG64 cellCount = unstructuredGridRepresentation->getCellCount();
 	const ULONG64 pointCount = unstructuredGridRepresentation->getXyzPointCountOfAllPatches();
-
-
 	return loadValuesPropertySet(valuesPropertySet,cellCount, pointCount);
 }
 
@@ -152,29 +144,24 @@ vtkDataArray* VtkProperty::visualize(const std::string & uuid, resqml2_0_1::Unst
 vtkDataArray* VtkProperty::visualize(const std::string & uuid, resqml2_0_1::WellboreTrajectoryRepresentation* wellboreTrajectoryRepresentation)
 {
 	std::vector<resqml2::AbstractValuesProperty*> valuesPropertySet = wellboreTrajectoryRepresentation->getValuesPropertySet();
-
 	long pointCount = wellboreTrajectoryRepresentation->getXyzPointCountOfAllPatches();
-
 	return loadValuesPropertySet(valuesPropertySet, 0, pointCount);
 }
 
 //----------------------------------------------------------------------------
 vtkDataArray* VtkProperty::loadValuesPropertySet(std::vector<resqml2::AbstractValuesProperty*> valuesPropertySet, long cellCount, long pointCount)
 {
-	for (size_t i = 0; i < valuesPropertySet.size(); ++i)
-	{
-		if (valuesPropertySet[i]->getUuid() == getUuid())
-		{
+	for (size_t i = 0; i < valuesPropertySet.size(); ++i) {
+		if (valuesPropertySet[i]->getUuid() == getUuid()) {
 			resqml2::AbstractValuesProperty* valuesProperty = valuesPropertySet[i];
 
 			int nbElement = 0;
 			gsoap_resqml2_0_1::resqml2__IndexableElements element = valuesProperty->getAttachmentKind();
-			if (element == gsoap_resqml2_0_1::resqml2__IndexableElements::resqml2__IndexableElements__cells )
-			{
+			if (element == gsoap_resqml2_0_1::resqml2__IndexableElements::resqml2__IndexableElements__cells ) {
 				nbElement = cellCount;
 				support = typeSupport::CELLS;
 			}
-			else if (element == gsoap_resqml2_0_1::resqml2__IndexableElements::resqml2__IndexableElements__nodes ){
+			else if (element == gsoap_resqml2_0_1::resqml2__IndexableElements::resqml2__IndexableElements__nodes ) {
 				support = typeSupport::POINTS ;
 				nbElement = pointCount;
 			}
@@ -184,12 +171,10 @@ vtkDataArray* VtkProperty::loadValuesPropertySet(std::vector<resqml2::AbstractVa
 
 			const std::string name = valuesProperty->getTitle();
 
-			if (valuesProperty->getXmlTag() == "ContinuousProperty")
-			{
+			if (valuesProperty->getXmlTag() == "ContinuousProperty") {
 				vtkSmartPointer<vtkDoubleArray> cellDataDouble = vtkSmartPointer<vtkDoubleArray>::New();
 
-				if ( valuesProperty->getElementCountPerValue() == 1)
-				{
+				if ( valuesProperty->getElementCountPerValue() == 1) {
 					double* valuesDoubleSet = new double[nbElement*valuesProperty->getElementCountPerValue()];
 
 					static_cast<resqml2_0_1::ContinuousProperty*>(valuesProperty)->getDoubleValuesOfPatch(0, valuesDoubleSet);
@@ -204,8 +189,7 @@ vtkDataArray* VtkProperty::loadValuesPropertySet(std::vector<resqml2::AbstractVa
 			else if (valuesProperty->getXmlTag() == "DiscreteProperty" || valuesProperty->getXmlTag() == "CategoricalProperty")	{
 				vtkSmartPointer<vtkLongArray> cellDataLong = vtkSmartPointer<vtkLongArray>::New();
 
-				if (valuesProperty->getElementCountPerValue() == 1)
-				{
+				if (valuesProperty->getElementCountPerValue() == 1) {
 					long* valuesLongSet = new long[nbElement*valuesProperty->getElementCountPerValue()];
 					valuesProperty->getLongValuesOfPatch(0, valuesLongSet);
 
@@ -229,21 +213,17 @@ vtkDataArray* VtkProperty::loadValuesPropertySet(std::vector<resqml2::AbstractVa
 vtkDataArray* VtkProperty::loadValuesPropertySet(std::vector<resqml2::AbstractValuesProperty*> valuesPropertySet, long cellCount, long pointCount,
 		int iCellCount, int jCellCount, int kCellCount, int initKIndex)
 {
-	for (size_t i = 0; i < valuesPropertySet.size(); ++i)
-	{
-		if (valuesPropertySet[i]->getUuid() == getUuid())
-		{
+	for (size_t i = 0; i < valuesPropertySet.size(); ++i) {
+		if (valuesPropertySet[i]->getUuid() == getUuid()) {
 			resqml2::AbstractValuesProperty* valuesProperty = valuesPropertySet[i];
 
 			int nbElement = 0;
 			gsoap_resqml2_0_1::resqml2__IndexableElements element = valuesPropertySet[i]->getAttachmentKind();
-			if (element == gsoap_resqml2_0_1::resqml2__IndexableElements::resqml2__IndexableElements__cells )
-			{
+			if (element == gsoap_resqml2_0_1::resqml2__IndexableElements::resqml2__IndexableElements__cells ) {
 				nbElement = cellCount;
 				support = typeSupport::CELLS;
 			}
-			else if (element == gsoap_resqml2_0_1::resqml2__IndexableElements::resqml2__IndexableElements__nodes )
-			{
+			else if (element == gsoap_resqml2_0_1::resqml2__IndexableElements::resqml2__IndexableElements__nodes ) {
 				support = typeSupport::POINTS ;
 				nbElement = pointCount;
 			}
@@ -255,23 +235,16 @@ vtkDataArray* VtkProperty::loadValuesPropertySet(std::vector<resqml2::AbstractVa
 			unsigned long long numValuesInEachDimension = cellCount; //cellCount/kCellCount; //3834;//iCellCount*jCellCount*kCellCount;
 			unsigned long long offsetInEachDimension = iCellCount*jCellCount*initKIndex; //initKIndex;//iCellCount*jCellCount*initKIndex;
 
-			if (typeProperty == "ContinuousProperty")
-			{
+			if (typeProperty == "ContinuousProperty") {
 				vtkSmartPointer<vtkFloatArray> cellDataFloat = vtkSmartPointer<vtkFloatArray>::New();
 				float* valuesFloatSet = new float[nbElement];
 				resqml2_0_1::ContinuousProperty *propertyValue = static_cast<resqml2_0_1::ContinuousProperty*>(valuesPropertySet[i]);
-				if (propertyValue->getElementCountPerValue() == 1)
-				{
-					if (propertyValue->getDimensionsCountOfPatch(0)==3)
-					{
+				if (propertyValue->getElementCountPerValue() == 1) {
+					if (propertyValue->getDimensionsCountOfPatch(0)==3) {
 						propertyValue->getFloatValuesOf3dPatch(0, valuesFloatSet,iCellCount, jCellCount, kCellCount, 0, 0, initKIndex);
-					}
-					else if(propertyValue->getDimensionsCountOfPatch(0)==1)
-					{
+					} else if(propertyValue->getDimensionsCountOfPatch(0)==1) {
 						propertyValue->getFloatValuesOfPatch(0, valuesFloatSet, &numValuesInEachDimension, &offsetInEachDimension, 1);
-					}
-					else
-					{
+					} else {
 						vtkOutputWindowDisplayDebugText("error in : propertyValue->getDimensionsCountOfPatch (values different of 1 or 3)");
 					}
 				}
@@ -280,21 +253,16 @@ vtkDataArray* VtkProperty::loadValuesPropertySet(std::vector<resqml2::AbstractVa
 				cellDataFloat->SetArray(valuesFloatSet, nbElement, 0);
 				cellData = cellDataFloat;
 			}
-			else if(typeProperty == "DiscreteProperty")
-			{
+			else if(typeProperty == "DiscreteProperty") {
 				vtkSmartPointer<vtkIntArray> cellDataInt = vtkSmartPointer<vtkIntArray>::New();
 				int* valuesIntSet = new int[nbElement];
 				resqml2_0_1::DiscreteProperty *propertyValue = static_cast<resqml2_0_1::DiscreteProperty*>(valuesPropertySet[i]);
-				if (propertyValue->getElementCountPerValue() == 1)
-				{
-					if (propertyValue->getDimensionsCountOfPatch(0)==3)
-					{
+				if (propertyValue->getElementCountPerValue() == 1) {
+					if (propertyValue->getDimensionsCountOfPatch(0)==3) {
 						propertyValue->getIntValuesOf3dPatch(0, valuesIntSet,iCellCount, jCellCount, kCellCount, 0, 0, initKIndex);
-					}else if(propertyValue->getDimensionsCountOfPatch(0)==1)
-					{
+					}else if(propertyValue->getDimensionsCountOfPatch(0)==1) {
 						propertyValue->getIntValuesOfPatch(0, valuesIntSet, &numValuesInEachDimension, &offsetInEachDimension, 1);
-					}else
-					{
+					}else {
 						vtkOutputWindowDisplayDebugText("error in : propertyValue->getDimensionsCountOfPatch (values different of 1 or 3)");
 					}
 				}
@@ -303,18 +271,14 @@ vtkDataArray* VtkProperty::loadValuesPropertySet(std::vector<resqml2::AbstractVa
 				cellDataInt->SetArray(valuesIntSet, nbElement, 0);
 				cellData = cellDataInt;
 			}
-			else if (typeProperty == "CategoricalProperty")
-			{
+			else if (typeProperty == "CategoricalProperty") {
 				vtkSmartPointer<vtkIntArray> cellDataInt = vtkSmartPointer<vtkIntArray>::New();
 				int* valuesIntSet = new int[nbElement];
 				resqml2_0_1::CategoricalProperty *propertyValue = static_cast<resqml2_0_1::CategoricalProperty*>(valuesPropertySet[i]);
-				if (propertyValue->getElementCountPerValue() == 1)
-				{
-					if (propertyValue->getDimensionsCountOfPatch(0)==3)
-					{
+				if (propertyValue->getElementCountPerValue() == 1) {
+					if (propertyValue->getDimensionsCountOfPatch(0)==3) {
 						propertyValue->getIntValuesOf3dPatch(0, valuesIntSet,iCellCount, jCellCount, kCellCount, 0, 0, initKIndex);
-					}else if(propertyValue->getDimensionsCountOfPatch(0)==1)
-					{
+					}else if(propertyValue->getDimensionsCountOfPatch(0)==1) {
 						propertyValue->getIntValuesOfPatch(0, valuesIntSet, &numValuesInEachDimension, &offsetInEachDimension, 1);
 					}else
 					{
@@ -333,72 +297,6 @@ vtkDataArray* VtkProperty::loadValuesPropertySet(std::vector<resqml2::AbstractVa
 		}
 	}
 	return cellData;
-	/*	resqml2::AbstractValuesProperty::hdfDatatypeEnum hdfDatatype = valuesPropertySet[i]->getValuesHdfDatatype();
-
-	switch (hdfDatatype)
-	{
-	case resqml2::AbstractValuesProperty::hdfDatatypeEnum::UNKNOWN :
-		{
-			break;
-		}
-	case resqml2::AbstractValuesProperty::hdfDatatypeEnum::FLOAT :
-		{
-			vtkSmartPointer<vtkFloatArray> cellDataFloat = vtkSmartPointer<vtkFloatArray>::New();
-			float* valuesFloatSet = new float[nbElement];
-
-			if (valuesProperty->getXmlTag() == "ContinuousProperty")
-			{
-				resqml2_0_1::ContinuousProperty *propertyValue = static_cast<resqml2_0_1::ContinuousProperty*>(valuesPropertySet[i]);
-				if (propertyValue->getElementCountPerValue() == 1)
-				{
-					propertyValue->getFloatValuesOf3dPatch(0, valuesFloatSet,iCellCount, jCellCount, kCellCount, 0, 0, initKIndex);
-				}
-			}
-
-			std::string name = valuesPropertySet[i]->getTitle();
-			cellDataFloat->SetName(name.c_str());
-			cellDataFloat->SetArray(valuesFloatSet, nbElement, 0);
-			cellData = cellDataFloat;
-//					delete[] valuesFloatSet;
-			break;
-	}
-	case resqml2::AbstractValuesProperty::hdfDatatypeEnum::INT :
-		{
-			vtkSmartPointer<vtkIntArray> cellDataInt = vtkSmartPointer<vtkIntArray>::New();
-			int* valuesIntSet = new int[nbElement];
-
-			if (valuesProperty->getXmlTag() == "DiscreteProperty")
-			{
-				resqml2_0_1::DiscreteProperty *propertyValue = static_cast<resqml2_0_1::DiscreteProperty*>(valuesPropertySet[i]);
-				if (propertyValue->getElementCountPerValue() == 1)
-				{
-					propertyValue->getIntValuesOf3dPatch(0, valuesIntSet,iCellCount, jCellCount, kCellCount, 0, 0, initKIndex);
-				}
-			}
-			else if (valuesProperty->getXmlTag() == "CategoricalProperty")
-			{
-				resqml2_0_1::CategoricalProperty *propertyValue = static_cast<resqml2_0_1::CategoricalProperty*>(valuesPropertySet[i]);
-				if (propertyValue->getElementCountPerValue() == 1)
-				{
-					propertyValue->getIntValuesOf3dPatch(0, valuesIntSet,iCellCount, jCellCount, kCellCount, 0, 0, initKIndex);
-				}
-			}
-
-			std::string name = valuesPropertySet[i]->getTitle();
-			cellDataInt->SetName(name.c_str());
-			cellDataInt->SetArray(valuesIntSet, nbElement, 0);
-			cellData = cellDataInt;
-//					delete[] valuesIntSet;
-			break;
-	}
-	default:
-		vtkOutputWindowDisplayDebugText("property not supported...  (hdfDatatypeEnum)");
-		break;
-	}
-}
-}
-return cellData;
-	 */
 }
 long VtkProperty::getAttachmentPropertyCount(const std::string & uuid, const VtkEpcCommon::FesppAttachmentProperty propertyUnit)
 {

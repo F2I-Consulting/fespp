@@ -62,16 +62,13 @@ VtkTriangulatedRepresentation::~VtkTriangulatedRepresentation()
 void VtkTriangulatedRepresentation::createOutput(const std::string &uuid)
 {
 	if (!subRepresentation)	{
-
 		resqml2_0_1::TriangulatedSetRepresentation* triangulatedSetRepresentation = nullptr;
-		common::AbstractObject* obj = epcPackageRepresentation->getResqmlAbstractObjectByUuid(getUuid());
-		if (obj != nullptr && obj->getXmlTag() == "TriangulatedSetRepresentation")
-		{
+		common::AbstractObject* obj = epcPackageRepresentation->getDataObjectByUuid(getUuid());
+		if (obj != nullptr && obj->getXmlTag() == "TriangulatedSetRepresentation") {
 			triangulatedSetRepresentation = static_cast<resqml2_0_1::TriangulatedSetRepresentation*>(obj);
 		}
 
-		if (!vtkOutput)
-		{
+		if (!vtkOutput) {
 			vtkOutput = vtkSmartPointer<vtkPolyData>::New();
 
 			// POINT
@@ -87,10 +84,9 @@ void VtkTriangulatedRepresentation::createOutput(const std::string &uuid)
 
 			// CELLS
 			vtkSmartPointer<vtkCellArray> triangulatedRepresentationTriangles = vtkSmartPointer<vtkCellArray>::New();
-			unsigned int * triangleIndices = new unsigned int[triangulatedSetRepresentation->getTriangleCountOfPatch(this->patchIndex) * 3];
-			triangulatedSetRepresentation->getTriangleNodeIndicesOfPatch(this->patchIndex, triangleIndices);
-			for (unsigned int p = 0; p < triangulatedSetRepresentation->getTriangleCountOfPatch(this->patchIndex); ++p)
-			{
+			unsigned int * triangleIndices = new unsigned int[triangulatedSetRepresentation->getTriangleCountOfPatch(patchIndex) * 3];
+			triangulatedSetRepresentation->getTriangleNodeIndicesOfPatch(patchIndex, triangleIndices);
+			for (unsigned int p = 0; p < triangulatedSetRepresentation->getTriangleCountOfPatch(patchIndex); ++p) {
 				vtkSmartPointer<vtkTriangle> triangulatedRepresentationTriangle = vtkSmartPointer<vtkTriangle>::New();
 				triangulatedRepresentationTriangle->GetPointIds()->SetId(0, triangleIndices[p * 3]);
 				triangulatedRepresentationTriangle->GetPointIds()->SetId(1, triangleIndices[p * 3 + 1]);
@@ -104,12 +100,10 @@ void VtkTriangulatedRepresentation::createOutput(const std::string &uuid)
 
 			delete[] triangleIndices;
 		}
-		else
-		{
-			if (uuid != getUuid())
-			{
+		else {
+			if (uuid != getUuid()) {
 				vtkDataArray* arrayProperty = uuidToVtkProperty[uuid]->visualize(uuid, triangulatedSetRepresentation);
-				this->addProperty(uuid, arrayProperty);
+				addProperty(uuid, arrayProperty);
 			}
 		}
 	}
@@ -127,9 +121,8 @@ long VtkTriangulatedRepresentation::getAttachmentPropertyCount(const std::string
 {
 	long result = 0;
 	resqml2_0_1::TriangulatedSetRepresentation* triangulatedSetRepresentation = nullptr;
-	common::AbstractObject* obj = epcPackageRepresentation->getResqmlAbstractObjectByUuid(getUuid());
-	if (obj != nullptr && obj->getXmlTag() == "TriangulatedSetRepresentation")
-	{
+	common::AbstractObject* obj = epcPackageRepresentation->getDataObjectByUuid(getUuid());
+	if (obj != nullptr && obj->getXmlTag() == "TriangulatedSetRepresentation") {
 		triangulatedSetRepresentation = static_cast<resqml2_0_1::TriangulatedSetRepresentation*>(obj);
 		result = triangulatedSetRepresentation->getXyzPointCountOfAllPatches();
 	}
