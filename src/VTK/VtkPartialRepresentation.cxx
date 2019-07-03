@@ -48,28 +48,14 @@ knowledge of the CeCILL license and that you accept its terms.
 #include <resqml2_0_1/SubRepresentation.h>
 #include <common/AbstractObject.h>
 
-#ifdef WITH_TEST
-const std::string loggClass = "CLASS=VtkPartialRepresentation ";
-#define BEGIN_FUNC(name_func) L_(linfo) << loggClass << " FUNCTION=" << name_func << " CALL_FUNCTION=none ITERATION=0 API=FESPP STATUS=START"
-#define END_FUNC(name_func) L_(linfo) << loggClass << " FUNCTION=" << name_func << " CALL_FUNCTION=none ITERATION=0 API=FESPP STATUS=END"
-#define CALL_FUNC(name_func, call_func, iter, api)  L_(linfo) << loggClass << " FUNCTION=" << name_func << " CALL_FUNCTION=" << call_func << " ITERATION=" << iter << " API=" << api << " STATUS=IN"
-#endif
-
 //----------------------------------------------------------------------------
 VtkPartialRepresentation::VtkPartialRepresentation(const std::string & fileName, const std::string & uuid, VtkEpcDocument *vtkEpcDowumentWithCompleteRep, common::EpcDocument *pck) :
 epcPackage(pck), vtkEpcDocumentSource(vtkEpcDowumentWithCompleteRep), vtkPartialReprUuid(uuid), fileName(fileName)
 {
-#ifdef WITH_TEST
-	BEGIN_FUNC(__func__);
-	END_FUNC(__func__);
-#endif
 }
 
 VtkPartialRepresentation::~VtkPartialRepresentation()
 {
-#ifdef WITH_TEST
-	BEGIN_FUNC(__func__);
-#endif
 	for(auto i : uuidToVtkProperty) {
 		delete i.second;
 	}
@@ -85,16 +71,10 @@ VtkPartialRepresentation::~VtkPartialRepresentation()
 
 	vtkPartialReprUuid = "";
 	fileName = "";
-#ifdef WITH_TEST
-	END_FUNC(__func__);
-#endif
 }
 //----------------------------------------------------------------------------
 void VtkPartialRepresentation::visualize(const std::string & uuid)
 {
-#ifdef WITH_TEST
-	BEGIN_FUNC(__func__);
-#endif
 	if (uuid != vtkPartialReprUuid)
 	{
 		common::AbstractObject* obj = epcPackage->getDataObjectByUuid(vtkPartialReprUuid);
@@ -155,25 +135,15 @@ void VtkPartialRepresentation::visualize(const std::string & uuid)
 			vtkEpcDocumentSource->addProperty(vtkPartialReprUuid, arrayProperty);
 		}
 	}
-#ifdef WITH_TEST
-	END_FUNC(__func__);
-#endif
-
 }
 	
 //----------------------------------------------------------------------------
 void VtkPartialRepresentation::createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, const VtkEpcCommon::Resqml2Type & resqmlType)
 {
-#ifdef WITH_TEST
-	BEGIN_FUNC(__func__);
-#endif
 	if (resqmlType == VtkEpcCommon::PROPERTY )
 	{
 		uuidToVtkProperty[uuid] = new VtkProperty(fileName, name, uuid, parent, epcPackage);
 	}
-#ifdef WITH_TEST
-	END_FUNC(__func__);
-#endif
 }
 
 //----------------------------------------------------------------------------

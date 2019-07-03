@@ -92,10 +92,6 @@ IF (WITH_ETP)
 	ENDIF ()
 ENDIF (WITH_ETP)
 
-SET (WITH_TEST OFF CACHE BOOL "for build Fespp with TEST option and perf log.")
-IF (WITH_TEST)
-	add_compile_definitions (WITH_TEST)
-ENDIF (WITH_TEST)
 # ============================================================================
 # compilation options
 # ============================================================================

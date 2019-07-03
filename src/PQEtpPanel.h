@@ -73,8 +73,8 @@ protected slots:
 private:
 	void constructor();
 
-	QPushButton *EtpSendButton;
-	QPushButton *EtpStatus_Button;
+	QPushButton *etpSendButton;
+	QPushButton *etpStatus_Button;
 
 	std::string ipAddress;
 	std::string port;

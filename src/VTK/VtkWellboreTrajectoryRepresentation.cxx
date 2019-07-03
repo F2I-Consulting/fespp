@@ -47,13 +47,6 @@ knowledge of the CeCILL license and that you accept its terms.
 #include "VtkWellboreTrajectoryRepresentationText.h"
 #include "VtkWellboreTrajectoryRepresentationPolyLine.h"
 
-#ifdef WITH_TEST
-const std::string loggClass = "CLASS=VtkEpcDocument ";
-#define BEGIN_FUNC(name_func) L_(linfo) << loggClass << " FUNCTION=" << name_func << " CALL_FUNCTION=none ITERATION=0 API=FESPP STATUS=START"
-#define END_FUNC(name_func) L_(linfo) << loggClass << " FUNCTION=" << name_func << " CALL_FUNCTION=none ITERATION=0 API=FESPP STATUS=END"
-#define CALL_FUNC(name_func, call_func, iter, api)  L_(linfo) << loggClass << " FUNCTION=" << name_func << " CALL_FUNCTION=" << call_func << " ITERATION=" << iter << " API=" << api << " STATUS=IN"
-#endif
-
 //----------------------------------------------------------------------------
 VtkWellboreTrajectoryRepresentation::VtkWellboreTrajectoryRepresentation(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, common::EpcDocument *pckRep, common::EpcDocument *pckSubRep) :
 VtkResqml2MultiBlockDataSet(fileName, name, uuid, uuidParent), epcPackageRepresentation(pckRep), epcPackageSubRepresentation(pckSubRep),
@@ -61,21 +54,12 @@ polyline(getFileName(), name, uuid+"-Polyline", uuidParent, pckRep, pckSubRep),
 head(getFileName(), name, uuid+"-Head", uuidParent, pckRep, pckSubRep),
 text(getFileName(), name, uuid+"-Text", uuidParent, pckRep, pckSubRep)
 {
-#ifdef WITH_TEST
-	BEGIN_FUNC(__func__);
-#endif
-#ifdef WITH_TEST
-	END_FUNC(__func__);
-#endif
 }
 
 
 //----------------------------------------------------------------------------
 VtkWellboreTrajectoryRepresentation::~VtkWellboreTrajectoryRepresentation()
 {
-#ifdef WITH_TEST
-	BEGIN_FUNC(__func__);
-#endif
 	if (epcPackageRepresentation != nullptr) {
 		epcPackageRepresentation = nullptr;
 	}
@@ -83,58 +67,34 @@ VtkWellboreTrajectoryRepresentation::~VtkWellboreTrajectoryRepresentation()
 	if (epcPackageSubRepresentation != nullptr) {
 		epcPackageSubRepresentation = nullptr;
 	}
-#ifdef WITH_TEST
-	END_FUNC(__func__);
-#endif
 }
 
 //----------------------------------------------------------------------------
 void VtkWellboreTrajectoryRepresentation::createTreeVtk(const std::string & uuid, const std::string & uuidParent, const std::string & name, const VtkEpcCommon::Resqml2Type & type)
 {
-#ifdef WITH_TEST
-	BEGIN_FUNC(__func__);
-#endif
 	if (uuid != getUuid())	{
 		this->polyline.createTreeVtk(uuid, uuidParent, name, type);
 	}
-#ifdef WITH_TEST
-	END_FUNC(__func__);
-#endif
 }
 
 //----------------------------------------------------------------------------
 int VtkWellboreTrajectoryRepresentation::createOutput(const std::string & uuid)
 {
-#ifdef WITH_TEST
-	BEGIN_FUNC(__func__);
-#endif
-		this->polyline.createOutput(uuid);
-		//	head.createOutput(uuid);
-#ifdef WITH_TEST
-	END_FUNC(__func__);
-#endif
+	this->polyline.createOutput(uuid);
+	//	head.createOutput(uuid);
 	return 1;
 }
 //----------------------------------------------------------------------------
 void VtkWellboreTrajectoryRepresentation::visualize(const std::string & uuid)
 {
-#ifdef WITH_TEST
-	BEGIN_FUNC(__func__);
-#endif
 	createOutput(uuid);
 
 	this->attach();
-#ifdef WITH_TEST
-	END_FUNC(__func__);
-#endif
 }
 
 //----------------------------------------------------------------------------
 void VtkWellboreTrajectoryRepresentation::remove(const std::string & uuid)
 {
-#ifdef WITH_TEST
-	BEGIN_FUNC(__func__);
-#endif
 	if (uuid == getUuid())
 	{
 		this->detach();
@@ -142,38 +102,23 @@ void VtkWellboreTrajectoryRepresentation::remove(const std::string & uuid)
 		polylineUuid << getUuid() << "-Polyline";
 		polyline.remove(uuid);
 	}
-#ifdef WITH_TEST
-	END_FUNC(__func__);
-#endif
 }
 
 //----------------------------------------------------------------------------
 void VtkWellboreTrajectoryRepresentation::attach()
 {
-#ifdef WITH_TEST
-	BEGIN_FUNC(__func__);
-#endif
 	unsigned int index =0;
 	vtkOutput->SetBlock(index, polyline.getOutput());
 	vtkOutput->GetMetaData(index++)->Set(vtkCompositeDataSet::NAME(),polyline.getName().c_str());
 
 	vtkOutput->SetBlock(index, head.getOutput());
 	vtkOutput->GetMetaData(index++)->Set(vtkCompositeDataSet::NAME(),head.getName().c_str());
-#ifdef WITH_TEST
-	END_FUNC(__func__);
-#endif
 }
 
 //----------------------------------------------------------------------------
 void VtkWellboreTrajectoryRepresentation::addProperty(const std::string & uuidProperty, vtkDataArray* dataProperty)
 {
-#ifdef WITH_TEST
-	BEGIN_FUNC(__func__);
-#endif
 	this->polyline.addProperty(uuidProperty, dataProperty);
-#ifdef WITH_TEST
-	END_FUNC(__func__);
-#endif
 }
 
 //----------------------------------------------------------------------------

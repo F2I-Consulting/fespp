@@ -111,22 +111,20 @@ void PQDataLoadManager::setupPipeline()
 		fesppReader = builder->createReader("sources", "Fespp", QStringList("EpcDocument"), this->Server);
 		manager->existPipe(true);
 	}
-	QStringList epcFiles =	this->ui->epcFile->filenames();//.join("*");
-
-//	QString epcFiles = this->ui->epcFile->filenames().join("*");
+	QStringList epcFiles =	this->ui->epcFile->filenames();
 
 	if (!epcFiles.isEmpty() && fesppReader) 	{
 
-		for (auto it=0; it < epcFiles.length(); ++it){
+		for (auto i=0; i < epcFiles.length(); ++i){
 			pqActiveObjects *activeObjects = &pqActiveObjects::instance();
 			activeObjects->setActiveSource(fesppReader);
 
 			vtkSMProxy* fesppReaderProxy = fesppReader->getProxy();
-			vtkSMPropertyHelper( fesppReaderProxy, "SubFileName" ).Set(epcFiles[it].toStdString().c_str());
+			vtkSMPropertyHelper( fesppReaderProxy, "SubFileName" ).Set(epcFiles[i].toStdString().c_str());
 
 			fesppReaderProxy->UpdateSelfAndAllInputs();
 
-			manager->newFile(epcFiles[it].toStdString().c_str());
+			manager->newFile(epcFiles[i].toStdString().c_str());
 		}
 	}
 	END_UNDO_SET();

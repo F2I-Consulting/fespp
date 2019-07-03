@@ -46,39 +46,19 @@ knowledge of the CeCILL license and that you accept its terms.
 // include F2i-consulting Energistics Standards ParaView Plugin
 #include "VtkProperty.h"
 
-#ifdef WITH_TEST
-const std::string loggClass = "CLASS=VtkGrid2DRepresentationPoints ";
-#define BEGIN_FUNC(name_func) L_(linfo) << loggClass << " FUNCTION=" << name_func << " CALL_FUNCTION=none ITERATION=0 API=FESPP STATUS=START"
-#define END_FUNC(name_func) L_(linfo) << loggClass << " FUNCTION=" << name_func << " CALL_FUNCTION=none ITERATION=0 API=FESPP STATUS=END"
-#define CALL_FUNC(name_func, call_func, iter, api)  L_(linfo) << loggClass << " FUNCTION=" << name_func << " CALL_FUNCTION=" << call_func << " ITERATION=" << iter << " API=" << api << " STATUS=IN"
-#endif
-
 //----------------------------------------------------------------------------
 VtkGrid2DRepresentationPoints::VtkGrid2DRepresentationPoints(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, common::EpcDocument *pckEPCRep, common::EpcDocument *pckEPCSubRep) :
 		VtkResqml2PolyData(fileName, name, uuid, uuidParent, pckEPCRep, pckEPCSubRep)
 {
-#ifdef WITH_TEST
-	BEGIN_FUNC(__func__);
-	END_FUNC(__func__);
-#endif
 }
 
 VtkGrid2DRepresentationPoints::~VtkGrid2DRepresentationPoints()
 {
-#ifdef WITH_TEST
-	BEGIN_FUNC(__func__);
-#endif
 	lastProperty = "";
-#ifdef WITH_TEST
-	END_FUNC(__func__);
-#endif
 }
 //----------------------------------------------------------------------------
 void VtkGrid2DRepresentationPoints::createOutput(const std::string & uuid)
 {
-#ifdef WITH_TEST
-	BEGIN_FUNC(__func__);
-#endif
 	if (!subRepresentation)	{
 
 		resqml2_0_1::Grid2dRepresentation* grid2dRepresentation = nullptr;
@@ -143,31 +123,19 @@ void VtkGrid2DRepresentationPoints::createOutput(const std::string & uuid)
 			}
 		}
 	}
-#ifdef WITH_TEST
-	END_FUNC(__func__);
-#endif
 }
 
 //----------------------------------------------------------------------------
 void VtkGrid2DRepresentationPoints::addProperty(const std::string & uuidProperty, vtkDataArray* dataProperty)
 {
-#ifdef WITH_TEST
-	BEGIN_FUNC(__func__);
-#endif
 	vtkOutput->Modified();
 	vtkOutput->GetPointData()->AddArray(dataProperty);
 	lastProperty = uuidProperty;
-#ifdef WITH_TEST
-	END_FUNC(__func__);
-#endif
 }
 
 //----------------------------------------------------------------------------
 long VtkGrid2DRepresentationPoints::getAttachmentPropertyCount(const std::string & uuid, const VtkEpcCommon::FesppAttachmentProperty propertyUnit)
 {
-#ifdef WITH_TEST
-	BEGIN_FUNC(__func__);
-#endif
 	long result = 0;
 	resqml2_0_1::Grid2dRepresentation* grid2dRepresentation = nullptr;
 	common::AbstractObject* obj = epcPackageRepresentation->getDataObjectByUuid(getUuid().substr(0, 36));
@@ -177,9 +145,6 @@ long VtkGrid2DRepresentationPoints::getAttachmentPropertyCount(const std::string
 
 		result = grid2dRepresentation->getNodeCountAlongIAxis() * grid2dRepresentation->getNodeCountAlongJAxis();
 	}
-#ifdef WITH_TEST
-	END_FUNC(__func__);
-#endif
 	return result;
 }
 

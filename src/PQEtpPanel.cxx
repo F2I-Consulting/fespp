@@ -32,24 +32,24 @@ void PQEtpPanel::constructor()
 	ui.setupUi(t_widget);
 	setWidget(t_widget);
 
-	EtpStatus_Button = ui.status;
+	etpStatus_Button = ui.status;
 	QIcon icon;
 	icon.addFile(QString::fromUtf8(":red_status.png"), QSize(), QIcon::Normal, QIcon::Off);
-	EtpStatus_Button->setIcon(icon);
+	etpStatus_Button->setIcon(icon);
 	etp_connect = false;
-	connect(EtpStatus_Button, &QAbstractButton::released, [this]() {
+	connect(etpStatus_Button, &QAbstractButton::released, [this]() {
 		if (etp_connect) {
 			//		delete etp_document;
 			etp_connect = false;
 			QIcon icon;
 			icon.addFile(QString::fromUtf8(":red_status.png"), QSize(), QIcon::Normal, QIcon::Off);
-			EtpStatus_Button->setIcon(icon);
+			etpStatus_Button->setIcon(icon);
 		}
 	});
 
 	// Create treeview button
-	EtpSendButton = ui.refresh;
-	connect(EtpSendButton, &QAbstractButton::released, this, &PQEtpPanel::handleButtonRefresh);
+	etpSendButton = ui.refresh;
+	connect(etpSendButton, &QAbstractButton::released, this, &PQEtpPanel::handleButtonRefresh);
 }
 
 PQEtpPanel::~PQEtpPanel()
@@ -61,29 +61,24 @@ void PQEtpPanel::handleButtonRefresh()
 	VtkEtpDocument etp_document(ipAddress, port, VtkEpcCommon::TreeView);
 
 	// Wait for etp connection
-	cout << "av attente getClientSession()\n";
 	while (etp_document.getClientSession() == nullptr) {
 	}
-	cout << "av attente getClientSession() OK\n";
 	while (etp_document.getClientSession()->isEtpSessionClosed()) {
 	}
-	cout << "av attente getClientSession()->isEtpSessionClosed() OK\n";
 
 	QIcon icon;
 	icon.addFile(QString::fromUtf8(":green_status.png"), QSize(), QIcon::Normal, QIcon::Off);
-	EtpStatus_Button->setIcon(icon);
+	etpStatus_Button->setIcon(icon);
 
 	etp_document.createTree();
-	if (EtpSendButton->text() == "Create TreeView"){
+	if (etpSendButton->text() == "Create TreeView"){
 		getPQSelectionPanel()->connectPQEtpPanel();
-		EtpSendButton->setText("Refresh");
+		etpSendButton->setText("Refresh");
 	}
 
 	// The tree creation will automatically close the session when done
-	cout << "av attente etp_document.getClientSession()->isWebSocketSessionClosed()\n";
 	while (etp_document.inloading()) {
 	}
-	cout << "av attente etp_document.getClientSession()->isWebSocketSessionClosed() OK\n";
 	// etp_document can now be destroyed without risk
 }
 

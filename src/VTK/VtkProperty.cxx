@@ -57,71 +57,37 @@ knowledge of the CeCILL license and that you accept its terms.
 #include <vtkCharArray.h>
 #include <vtkUnsignedCharArray.h>
 
-#ifdef WITH_TEST
-const std::string loggClass = "CLASS=VtkProperty ";
-#define BEGIN_FUNC(name_func) L_(linfo) << loggClass << " FUNCTION=" << name_func << " CALL_FUNCTION=none ITERATION=0 API=FESPP STATUS=START"
-#define END_FUNC(name_func) L_(linfo) << loggClass << " FUNCTION=" << name_func << " CALL_FUNCTION=none ITERATION=0 API=FESPP STATUS=END"
-#define CALL_FUNC(name_func, call_func, iter, api)  L_(linfo) << loggClass << " FUNCTION=" << name_func << " CALL_FUNCTION=" << call_func << " ITERATION=" << iter << " API=" << api << " STATUS=IN"
-#endif
-
 //----------------------------------------------------------------------------
 VtkProperty::VtkProperty(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, common::EpcDocument *pck, const int & idProc, const int & maxProc) :
 VtkAbstractObject(fileName, name, uuid, uuidParent, idProc, maxProc), epcPackage(pck)
 {
-	cout << " uuid " << uuid << endl;
-#ifdef WITH_TEST
-	BEGIN_FUNC(__func__);
-#endif
 	support = typeSupport::CELLS;
-#ifdef WITH_TEST
-	END_FUNC(__func__);
-#endif
 }
 
 //----------------------------------------------------------------------------
 VtkProperty::~VtkProperty()
 {
-#ifdef WITH_TEST
-	BEGIN_FUNC(__func__);
-#endif
 	cellData = NULL;
 
 	if (epcPackage != nullptr) {
 		epcPackage = nullptr;
 	}
-#ifdef WITH_TEST
-	END_FUNC(__func__);
-#endif
 }
 
 //----------------------------------------------------------------------------
 void VtkProperty::visualize(const std::string & uuid)
 {
-#ifdef WITH_TEST
-	BEGIN_FUNC(__func__);
-	END_FUNC(__func__);
-#endif
 }
 
 //----------------------------------------------------------------------------
 void VtkProperty::createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, const VtkEpcCommon::Resqml2Type & resqmlType)
 {
-#ifdef WITH_TEST
-	BEGIN_FUNC(__func__);
-	END_FUNC(__func__);
-#endif
 }
 
 //----------------------------------------------------------------------------
 void VtkProperty::remove(const std::string & uuid)
 {
-#ifdef WITH_TEST
-	BEGIN_FUNC(__func__);
-#endif
 	cellData=nullptr;
-#ifdef WITH_TEST
-	END_FUNC(__func__);
-#endif
 }
 
 //----------------------------------------------------------------------------
@@ -133,103 +99,58 @@ unsigned int VtkProperty::getSupport()
 //----------------------------------------------------------------------------
 vtkDataArray* VtkProperty::visualize(const std::string & uuid, resqml2_0_1::PolylineSetRepresentation* polylineSetRepresentation)
 {
-#ifdef WITH_TEST
-	BEGIN_FUNC(__func__);
-#endif
 	std::vector<resqml2::AbstractValuesProperty*> valuesPropertySet = polylineSetRepresentation->getValuesPropertySet();
 
 	long pointCount = polylineSetRepresentation->getXyzPointCountOfPatch(0);
-#ifdef WITH_TEST
-	END_FUNC(__func__);
-#endif
 	return loadValuesPropertySet(valuesPropertySet, 0, pointCount);
 }
 
 //----------------------------------------------------------------------------
 vtkDataArray* VtkProperty::visualize(const std::string & uuid, resqml2_0_1::TriangulatedSetRepresentation* triangulatedSetRepresentation)
 {
-#ifdef WITH_TEST
-	BEGIN_FUNC(__func__);
-#endif
 	std::vector<resqml2::AbstractValuesProperty*> valuesPropertySet = triangulatedSetRepresentation->getValuesPropertySet();
-
 	long pointCount = triangulatedSetRepresentation->getXyzPointCountOfAllPatches();
-#ifdef WITH_TEST
-	END_FUNC(__func__);
-#endif
 	return loadValuesPropertySet(valuesPropertySet, 0, pointCount);
 }
 
 //----------------------------------------------------------------------------
 vtkDataArray* VtkProperty::visualize(const std::string & uuid, resqml2_0_1::Grid2dRepresentation* grid2dRepresentation)
 {
-#ifdef WITH_TEST
-	BEGIN_FUNC(__func__);
-#endif
 	std::vector<resqml2::AbstractValuesProperty*> valuesPropertySet = grid2dRepresentation->getValuesPropertySet();
-
 	long pointCount = grid2dRepresentation->getNodeCountAlongIAxis() * grid2dRepresentation->getNodeCountAlongJAxis();
-#ifdef WITH_TEST
-	END_FUNC(__func__);
-#endif
 	return loadValuesPropertySet(valuesPropertySet, 0, pointCount);
 }
 
 //----------------------------------------------------------------------------
 vtkDataArray* VtkProperty::visualize(const std::string & uuid, resqml2_0_1::AbstractIjkGridRepresentation* ijkGridRepresentation )
 {
-#ifdef WITH_TEST
-	BEGIN_FUNC(__func__);
-#endif
 	std::vector<resqml2::AbstractValuesProperty*> valuesPropertySet = ijkGridRepresentation->getValuesPropertySet();
 
 	long cellCount = ijkGridRepresentation->getCellCount();
-#ifdef WITH_TEST
-	END_FUNC(__func__);
-#endif
 	return loadValuesPropertySet(valuesPropertySet,cellCount, 0);
 }
 
 //----------------------------------------------------------------------------
 vtkDataArray* VtkProperty::visualize(const std::string & uuid, resqml2_0_1::UnstructuredGridRepresentation* unstructuredGridRepresentation)
 {
-#ifdef WITH_TEST
-	BEGIN_FUNC(__func__);
-#endif
 	std::vector<resqml2::AbstractValuesProperty*> valuesPropertySet = unstructuredGridRepresentation->getValuesPropertySet();
 
 	const ULONG64 cellCount = unstructuredGridRepresentation->getCellCount();
 	const ULONG64 pointCount = unstructuredGridRepresentation->getXyzPointCountOfAllPatches();
-
-#ifdef WITH_TEST
-	END_FUNC(__func__);
-#endif
 	return loadValuesPropertySet(valuesPropertySet,cellCount, pointCount);
 }
 
 //----------------------------------------------------------------------------
 vtkDataArray* VtkProperty::visualize(const std::string & uuid, resqml2_0_1::WellboreTrajectoryRepresentation* wellboreTrajectoryRepresentation)
 {
-#ifdef WITH_TEST
-	BEGIN_FUNC(__func__);
-#endif
 	std::vector<resqml2::AbstractValuesProperty*> valuesPropertySet = wellboreTrajectoryRepresentation->getValuesPropertySet();
-
 	long pointCount = wellboreTrajectoryRepresentation->getXyzPointCountOfAllPatches();
-
-#ifdef WITH_TEST
-	END_FUNC(__func__);
-#endif
 	return loadValuesPropertySet(valuesPropertySet, 0, pointCount);
 }
 
 //----------------------------------------------------------------------------
 vtkDataArray* VtkProperty::loadValuesPropertySet(std::vector<resqml2::AbstractValuesProperty*> valuesPropertySet, long cellCount, long pointCount)
 {
-	cout << "VtkProperty::loadValuesPropertySet IN" << endl;
-#ifdef WITH_TEST
-	BEGIN_FUNC(__func__);
-#endif
 	for (size_t i = 0; i < valuesPropertySet.size(); ++i)
 	{
 		if (valuesPropertySet[i]->getUuid() == getUuid())
@@ -291,10 +212,6 @@ vtkDataArray* VtkProperty::loadValuesPropertySet(std::vector<resqml2::AbstractVa
 			}
 		}
 	}
-#ifdef WITH_TEST
-	END_FUNC(__func__);
-#endif
-	cout << "VtkProperty::loadValuesPropertySet OUT" << endl;
 	return cellData;
 }
 
@@ -302,14 +219,8 @@ vtkDataArray* VtkProperty::loadValuesPropertySet(std::vector<resqml2::AbstractVa
 vtkDataArray* VtkProperty::loadValuesPropertySet(std::vector<resqml2::AbstractValuesProperty*> valuesPropertySet, long cellCount, long pointCount,
 		int iCellCount, int jCellCount, int kCellCount, int initKIndex)
 {
-	cout << "VtkProperty::loadValuesPropertySet1 IN" << endl;
-#ifdef WITH_TEST
-	BEGIN_FUNC(__func__);
-#endif
 	for (size_t i = 0; i < valuesPropertySet.size(); ++i)
 	{
-		cout << " valuesPropertySet[i]->getUuid(): " << valuesPropertySet[i]->getUuid() << endl;
-		cout << " getUuid(): " << getUuid() << endl;
 		if (valuesPropertySet[i]->getUuid() == getUuid())
 		{
 			resqml2::AbstractValuesProperty* valuesProperty = valuesPropertySet[i];
@@ -411,10 +322,6 @@ vtkDataArray* VtkProperty::loadValuesPropertySet(std::vector<resqml2::AbstractVa
 			}
 		}
 	}
-#ifdef WITH_TEST
-	END_FUNC(__func__);
-#endif
-	cout << "VtkProperty::loadValuesPropertySet1 OUT" << endl;
 	return cellData;
 	/*	resqml2::AbstractValuesProperty::hdfDatatypeEnum hdfDatatype = valuesPropertySet[i]->getValuesHdfDatatype();
 

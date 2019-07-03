@@ -45,29 +45,15 @@ knowledge of the CeCILL license and that you accept its terms.
 #include "VtkGrid2DRepresentationPoints.h"
 #include "VtkGrid2DRepresentationCells.h"
 
-#ifdef WITH_TEST
-const std::string loggClass = "CLASS=VtkGrid2DRepresentation ";
-#define BEGIN_FUNC(name_func) L_(linfo) << loggClass << " FUNCTION=" << name_func << " CALL_FUNCTION=none ITERATION=0 API=FESPP STATUS=START"
-#define END_FUNC(name_func) L_(linfo) << loggClass << " FUNCTION=" << name_func << " CALL_FUNCTION=none ITERATION=0 API=FESPP STATUS=END"
-#define CALL_FUNC(name_func, call_func, iter, api)  L_(linfo) << loggClass << " FUNCTION=" << name_func << " CALL_FUNCTION=" << call_func << " ITERATION=" << iter << " API=" << api << " STATUS=IN"
-#endif
-
 //----------------------------------------------------------------------------
 VtkGrid2DRepresentation::VtkGrid2DRepresentation(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, common::EpcDocument *pckEPCRep, common::EpcDocument *pckEPCSubRep) :
 VtkResqml2MultiBlockDataSet(fileName, name, uuid, uuidParent), epcPackageRepresentation(pckEPCRep), epcPackageSubRepresentation(pckEPCSubRep), grid2DPoints(getFileName(), name, uuid+"-Points", uuidParent, epcPackageRepresentation, epcPackageSubRepresentation)
 {
-#ifdef WITH_TEST
-	BEGIN_FUNC(__func__);
-#endif
-
 	//BUG in PARAVIEW
 //	std::stringstream grid2DCellsUuid;
 //	grid2DCellsUuid << uuid << "-Cells";
 //	
 //	grid2DCells = new VtkGrid2DRepresentationCells(getFileName(), name, grid2DCellsUuid.str(), uuidParent, epcPackage);
-#ifdef WITH_TEST
-	END_FUNC(__func__);
-#endif
 }
 
 VtkGrid2DRepresentation::~VtkGrid2DRepresentation()

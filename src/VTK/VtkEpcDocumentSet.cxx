@@ -43,40 +43,21 @@ knowledge of the CeCILL license and that you accept its terms.
 #include <algorithm>
 #include <sstream>
 
-#include "log.h"
-
-#ifdef WITH_TEST
-const std::string loggClass = "CLASS=VtkEpcDocumentSet ";
-#define BEGIN_FUNC(name_func) L_(linfo) << loggClass << " FUNCTION=" << name_func << " CALL_FUNCTION=none ITERATION=0 API=FESPP STATUS=START"
-#define END_FUNC(name_func) L_(linfo) << loggClass << " FUNCTION=" << name_func << " CALL_FUNCTION=none ITERATION=0 API=FESPP STATUS=END"
-#define CALL_FUNC(name_func, call_func, iter, api, info)  L_(linfo) << loggClass << " FUNCTION=" << name_func << " CALL_FUNCTION=" << call_func << " ITERATION=" << iter << " API=" << api << " INFO=" << info << " STATUS=IN"
-#endif
-
-
 //----------------------------------------------------------------------------
 VtkEpcDocumentSet::VtkEpcDocumentSet(const int & idProc, const int & maxProc, const VtkEpcCommon::modeVtkEpc & mode) :
 procRank(idProc), nbProc(maxProc)
 {
-#ifdef WITH_TEST
-	BEGIN_FUNC(__func__);
-#endif
-	treeViewMode = (mode==VtkEpcCommon::Both || mode==VtkEpcCommon::TreeView);
+treeViewMode = (mode==VtkEpcCommon::Both || mode==VtkEpcCommon::TreeView);
 	representationMode = (mode==VtkEpcCommon::Both || mode==VtkEpcCommon::Representation);
 
 	vtkOutput = vtkSmartPointer<vtkMultiBlockDataSet>::New();
 	treeView = {};
-#ifdef WITH_TEST
-	END_FUNC(__func__);
-#endif
 }
 
 //----------------------------------------------------------------------------
 VtkEpcDocumentSet::~VtkEpcDocumentSet()
 {
-#ifdef WITH_TEST
-	BEGIN_FUNC(__func__);
-#endif
-	vtkEpcNameList.clear();
+vtkEpcNameList.clear();
 
 	uuidToVtkEpc.clear();
 
@@ -91,21 +72,14 @@ VtkEpcDocumentSet::~VtkEpcDocumentSet()
 
 	procRank = 0;
 	nbProc = 0;
-#ifdef WITH_TEST
-	END_FUNC(__func__);
-#endif
 }
 
 //----------------------------------------------------------------------------
 std::string VtkEpcDocumentSet::visualize(const std::string & uuid)
 {
-#ifdef WITH_TEST
-	BEGIN_FUNC(__func__);
-#endif
-	if(representationMode) {
+if(representationMode) {
 		try
 		{
-			CALL_FUNC(__func__, "VtkEpcDocument->visualize", 1, "Fespp", uuid + uuidToVtkEpc[uuid]->getFileName());
 			uuidToVtkEpc[uuid]->visualize(uuid);
 		}
 		catch  (const std::exception & e)
@@ -113,19 +87,13 @@ std::string VtkEpcDocumentSet::visualize(const std::string & uuid)
 			return "EXCEPTION in fesapi " + uuidToVtkEpc[uuid]->getFileName() + " : " + e.what();
 		}
 	}
-#ifdef WITH_TEST
-	END_FUNC(__func__);
-#endif
-	return std::string();
+return std::string();
 }
 
 //----------------------------------------------------------------------------
 void VtkEpcDocumentSet::visualizeFull()
 {
-#ifdef WITH_TEST
-	BEGIN_FUNC(__func__);
-#endif
-	if(representationMode) {
+if(representationMode) {
 		for (auto &vtkEpcElem : vtkEpcList) {
 			auto uuidList = vtkEpcElem->getListUuid();
 			for (auto &uuidListElem : uuidList)	{
@@ -133,23 +101,14 @@ void VtkEpcDocumentSet::visualizeFull()
 			}
 		}
 	}
-#ifdef WITH_TEST
-	END_FUNC(__func__);
-#endif
 }
 
 //----------------------------------------------------------------------------
 void VtkEpcDocumentSet::unvisualize(const std::string & uuid)
 {
-#ifdef WITH_TEST
-	BEGIN_FUNC(__func__);
-#endif
-	if(representationMode) {
+if(representationMode) {
 		uuidToVtkEpc[uuid]->remove(uuid);
 	}
-#ifdef WITH_TEST
-	END_FUNC(__func__);
-#endif
 }
 
 //----------------------------------------------------------------------------
@@ -167,12 +126,9 @@ VtkEpcCommon VtkEpcDocumentSet::getInfoUuid(std::string uuid)
 //----------------------------------------------------------------------------
 vtkSmartPointer<vtkMultiBlockDataSet> VtkEpcDocumentSet::getVisualization() const
 {
-#ifdef WITH_TEST
-	BEGIN_FUNC(__func__);
-#endif
-	if(representationMode) {
+if(representationMode) {
 		vtkOutput->Initialize();
-		auto index = 0;
+		unsigned int index = 0;
 		for (auto &vtkEpcElem : vtkEpcList) {
 			if(vtkEpcElem->getOutput()->GetNumberOfBlocks()>0) {
 				vtkOutput->SetBlock(index, vtkEpcElem->getOutput());
@@ -180,18 +136,12 @@ vtkSmartPointer<vtkMultiBlockDataSet> VtkEpcDocumentSet::getVisualization() cons
 			}
 		}
 	}
-#ifdef WITH_TEST
-	END_FUNC(__func__);
-#endif
 	return vtkOutput;
 }
 
 //----------------------------------------------------------------------------
 std::string VtkEpcDocumentSet::addEpcDocument(const std::string & fileName)
 {
-#ifdef WITH_TEST
-	BEGIN_FUNC(__func__);
-#endif
 	if (std::find(vtkEpcNameList.begin(), vtkEpcNameList.end(),fileName)==vtkEpcNameList.end())	{
 		auto vtkEpc = new VtkEpcDocument(fileName, procRank, nbProc, this);
 		auto msg_error = vtkEpc->getError();
@@ -205,14 +155,8 @@ std::string VtkEpcDocumentSet::addEpcDocument(const std::string & fileName)
 		auto tmpTree = vtkEpc->getTreeView();
 		treeView.insert( treeView.end(), tmpTree.begin(), tmpTree.end() );
 
-#ifdef WITH_TEST
-	END_FUNC(__func__);
-#endif
 		return msg_error;
 	}
-#ifdef WITH_TEST
-	END_FUNC(__func__);
-#endif
 	return std::string();
 }
 
@@ -225,20 +169,11 @@ VtkEpcDocument* VtkEpcDocumentSet::getVtkEpcDocument(const std::string & uuid)
 //----------------------------------------------------------------------------
 VtkEpcCommon::Resqml2Type VtkEpcDocumentSet::getTypeInEpcDocument(const std::string & uuid)
 {
-#ifdef WITH_TEST
-	BEGIN_FUNC(__func__);
-#endif
 
 	auto epcDoc = uuidToVtkEpc.find(uuid) != uuidToVtkEpc.end() ? uuidToVtkEpc[uuid] : nullptr;
 	if (epcDoc!=nullptr) {
-#ifdef WITH_TEST
-	END_FUNC(__func__);
-#endif
 		return epcDoc->getType(uuid);
 	}
-#ifdef WITH_TEST
-	END_FUNC(__func__);
-#endif
 	return VtkEpcCommon::UNKNOW;
 }
 
