@@ -63,32 +63,32 @@ PQDataLoadManager::PQDataLoadManager(QWidget* p, Qt::WindowFlags f /*=0*/)
 : QDialog(p, f)
 {
 	PQToolsManager* manager = PQToolsManager::instance();
-	this->Server = manager->getActiveServer();
+	Server = manager->getActiveServer();
 
 	this->ui = new PQDataLoadManager::pqUI;
 	this->ui->setupUi(this);
 
-	this->ui->epcFile->setServer(this->Server);
+	this->ui->epcFile->setServer(Server);
 	this->ui->epcFile->setForceSingleFile(false);
 	this->ui->epcFile->setExtension("epc Files (*.epc)");
 
-	QObject::connect(this->ui->epcFile, SIGNAL(filenamesChanged(const QStringList&)), this,
+	QObject::connect(ui->epcFile, SIGNAL(filenamesChanged(const QStringList&)), this,
 			SLOT(checkInputValid()));
 
 	QObject::connect(this, SIGNAL(accepted()), this, SLOT(setupPipeline()));
 
-	this->checkInputValid();
+	checkInputValid();
 }
 
 PQDataLoadManager::~PQDataLoadManager()
 {
-	delete this->ui;
+	delete ui;
 }
 
 //-----------------------------------------------------------------------------
 void PQDataLoadManager::checkInputValid()
 {
-	auto valid = (this->ui->epcFile->filenames().isEmpty()) ? false : true;
+	auto valid = (ui->epcFile->filenames().isEmpty()) ? false : true;
 	this->ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(valid);
 }
 
@@ -108,10 +108,10 @@ void PQDataLoadManager::setupPipeline()
 		fesppReader = manager->getFesppReader();
 	}
 	else {
-		fesppReader = builder->createReader("sources", "Fespp", QStringList("EpcDocument"), this->Server);
+		fesppReader = builder->createReader("sources", "Fespp", QStringList("EpcDocument"), Server);
 		manager->existPipe(true);
 	}
-	QStringList epcFiles =	this->ui->epcFile->filenames();
+	QStringList epcFiles =	ui->epcFile->filenames();
 
 	if (!epcFiles.isEmpty() && fesppReader) 	{
 

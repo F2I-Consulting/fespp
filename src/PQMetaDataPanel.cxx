@@ -49,13 +49,11 @@ namespace
 	PQSelectionPanel* getPQSelectionPanel()
 	{
 	    // get multi-block inspector panel
-	    PQSelectionPanel *panel = 0;
-	    foreach(QWidget *widget, qApp->topLevelWidgets())
-		{
+	    PQSelectionPanel *panel = nullptr;
+	    foreach(QWidget *widget, qApp->topLevelWidgets()) {
 			panel = widget->findChild<PQSelectionPanel *>();
 	
-			if(panel)
-	        {
+			if(panel != nullptr) {
 			    break;
 			}
 		}
@@ -79,7 +77,7 @@ void PQMetaDataPanel::constructor()
   ui.tableView->setModel(tableViewModel);
 
   connect(getPQSelectionPanel(), SIGNAL(selectionName(std::string, std::string, common::EpcDocument *)), this, SLOT(displayMetaData(std::string, std::string, common::EpcDocument *)));
-  this->setVisible(false);
+  setVisible(false);
 }
 
 PQMetaDataPanel::~PQMetaDataPanel()

@@ -60,13 +60,12 @@ namespace
 {
 pqPropertiesPanel* getpqPropertiesPanel()
 {
-	pqPropertiesPanel *panel = 0;
+	pqPropertiesPanel *panel = nullptr;
 	foreach(QWidget *widget, qApp->topLevelWidgets())
 	{
 		panel = widget->findChild<pqPropertiesPanel *>();
 
-		if (panel)
-		{
+		if (panel != nullptr) {
 			break;
 		}
 	}
@@ -75,13 +74,12 @@ pqPropertiesPanel* getpqPropertiesPanel()
 
 PQSelectionPanel* getPQSelectionPanel()
 {
-	PQSelectionPanel *panel = 0;
+	PQSelectionPanel *panel = nullptr;
 	foreach(QWidget *widget, qApp->topLevelWidgets())
 	{
 		panel = widget->findChild<PQSelectionPanel *>();
 
-		if (panel)
-		{
+		if (panel != nullptr) {
 			break;
 		}
 	}
@@ -90,13 +88,11 @@ PQSelectionPanel* getPQSelectionPanel()
 
 PQMetaDataPanel* getPQMetadataPanel()
 {
-	PQMetaDataPanel *panel = 0;
-	foreach(QWidget *widget, qApp->topLevelWidgets())
-	{
+	PQMetaDataPanel *panel = nullptr;
+	foreach(QWidget *widget, qApp->topLevelWidgets()) {
 		panel = widget->findChild<PQMetaDataPanel *>();
 
-		if (panel)
-		{
+		if (panel != nullptr) {
 			break;
 		}
 	}
@@ -119,11 +115,9 @@ QPointer<PQToolsManager> PQToolsManagerInstance = nullptr;
 
 PQToolsManager* PQToolsManager::instance()
 {
-	if (PQToolsManagerInstance == nullptr)
-	{
+	if (PQToolsManagerInstance == nullptr) {
 		pqApplicationCore* core = pqApplicationCore::instance();
-		if (!core)
-		{
+		if (!core) {
 			qFatal("Cannot use the Tools without an application core instance.");
 			return nullptr;
 		}
@@ -139,69 +133,69 @@ PQToolsManager* PQToolsManager::instance()
 PQToolsManager::PQToolsManager(QObject* p)
 : QObject(p)
 {
-	this->Internal = new PQToolsManager::pqInternal;
+	Internal = new PQToolsManager::pqInternal;
 
 	// This widget serves no real purpose other than initializing the Actions
 	// structure created with designer that holds the actions.
-	this->Internal->ActionPlaceholder = new QWidget(nullptr);
-	this->Internal->Actions.setupUi(this->Internal->ActionPlaceholder);
+	Internal->ActionPlaceholder = new QWidget(nullptr);
+	Internal->Actions.setupUi(Internal->ActionPlaceholder);
 
-	this->existEpcPipe = false;
+	existEpcPipe = false;
 #ifdef WITH_ETP
-	this->existEtpPipe = false;
+	existEtpPipe = false;
 #endif
-	this->panelSelectionVisible = false;
-	this->panelMetadataVisible = false;
+	panelSelectionVisible = false;
+	panelMetadataVisible = false;
 
-	QObject::connect(this->actionDataLoadManager(), SIGNAL(triggered(bool)), this, SLOT(showDataLoadManager()));
-	//QObject::connect(this->actionPanelSelection(), SIGNAL(triggered(bool)), this, SLOT(showPanelSelection()));
-//	QObject::connect(this->actionPanelMetadata(), SIGNAL(triggered(bool)), this, SLOT(showPanelMetadata()));
+	QObject::connect(actionDataLoadManager(), SIGNAL(triggered(bool)), this, SLOT(showDataLoadManager()));
+	//QObject::connect(actionPanelSelection(), SIGNAL(triggered(bool)), this, SLOT(showPanelSelection()));
+	//	QObject::connect(actionPanelMetadata(), SIGNAL(triggered(bool)), this, SLOT(showPanelMetadata()));
 #ifdef WITH_ETP
-	QObject::connect(this->actionEtpCommand(), SIGNAL(triggered(bool)), this, SLOT(showEtpConnectionManager()));
+	QObject::connect(actionEtpCommand(), SIGNAL(triggered(bool)), this, SLOT(showEtpConnectionManager()));
 #endif
 
-//	this->actionPanelMetadata()->setEnabled(false);
-	//	this->actionPanelSelection()->setEnabled(false);
+	//	actionPanelMetadata()->setEnabled(false);
+	//	actionPanelSelection()->setEnabled(false);
 }
 
 PQToolsManager::~PQToolsManager()
 {
-	delete this->Internal->ActionPlaceholder;
-	delete this->Internal;
+	delete Internal->ActionPlaceholder;
+	delete Internal;
 }
 
 //-----------------------------------------------------------------------------
 QAction* PQToolsManager::actionDataLoadManager()
 {
-	return this->Internal->Actions.actionDataLoadManager;
+	return Internal->Actions.actionDataLoadManager;
 }
 
 //-----------------------------------------------------------------------------
 /*
 QAction* PQToolsManager::actionPanelSelection()
 {
-	return this->Internal->Actions.actionPanelSelection;
+	return Internal->Actions.actionPanelSelection;
 }
  */
 
 //-----------------------------------------------------------------------------
 //QAction* PQToolsManager::actionPanelMetadata()
 //{
-//	return this->Internal->Actions.actionPanelMetadata;
+//	return Internal->Actions.actionPanelMetadata;
 //}
 
 //-----------------------------------------------------------------------------
 #ifdef WITH_ETP
 QAction* PQToolsManager::actionEtpCommand()
 {
-	return this->Internal->Actions.actionEtpCommand;
+	return Internal->Actions.actionEtpCommand;
 }
 #endif
 
 //-----------------------------------------------------------------------------
 void PQToolsManager::showDataLoadManager()
 {
-	PQDataLoadManager* dialog = new PQDataLoadManager(this->getMainWindow());
+	PQDataLoadManager* dialog = new PQDataLoadManager(getMainWindow());
 	dialog->setAttribute(Qt::WA_DeleteOnClose, true);
 
 	dialog->show();
@@ -211,7 +205,7 @@ void PQToolsManager::showDataLoadManager()
 #ifdef WITH_ETP
 void PQToolsManager::showEtpConnectionManager()
 {
-	PQEtpConnectionManager* dialog = new PQEtpConnectionManager(this->getMainWindow());
+	PQEtpConnectionManager* dialog = new PQEtpConnectionManager(getMainWindow());
 	dialog->setAttribute(Qt::WA_DeleteOnClose, true);
 
 	dialog->show();
@@ -222,20 +216,18 @@ void PQToolsManager::showEtpConnectionManager()
 void PQToolsManager::setVisibilityPanelSelection(bool visible)
 {
 	getPQSelectionPanel()->setVisible(visible);
-	this->panelSelectionVisible=visible;
+	panelSelectionVisible=visible;
 }
 
 //-----------------------------------------------------------------------------
 void PQToolsManager::showPanelMetadata()
 {
-	if(this->panelMetadataVisible)
-	{
-		this->setVisibilityPanelMetadata(false);
+	if(panelMetadataVisible) {
+		setVisibilityPanelMetadata(false);
 		panelMetadataVisible = false;
 	}
-	else
-	{
-		this->setVisibilityPanelMetadata(true);
+	else {
+		setVisibilityPanelMetadata(true);
 		panelMetadataVisible = true;
 	}
 }
@@ -244,26 +236,25 @@ void PQToolsManager::showPanelMetadata()
 void PQToolsManager::setVisibilityPanelMetadata(bool visible)
 {
 	getPQMetadataPanel()->setVisible(visible);
-	this->panelSelectionVisible=visible;
+	panelSelectionVisible=visible;
 }
 
 //-----------------------------------------------------------------------------
 pqPipelineSource* PQToolsManager::getFesppReader()
 {
-	return this->findPipelineSource("Fespp");
+	return findPipelineSource("Fespp");
 }
 
 //-----------------------------------------------------------------------------
 pqView* PQToolsManager::getFesppView()
 {
-	return this->findView(this->getFesppReader(), 0, pqRenderView::renderViewType());
+	return findView(getFesppReader(), 0, pqRenderView::renderViewType());
 }
 
 //-----------------------------------------------------------------------------
 QWidget* PQToolsManager::getMainWindow()
 {
-	foreach (QWidget* topWidget, QApplication::topLevelWidgets())
-	{
+	foreach (QWidget* topWidget, QApplication::topLevelWidgets()) {
 		if (qobject_cast<QMainWindow*>(topWidget))
 			return topWidget;
 	}
@@ -286,9 +277,8 @@ pqPipelineSource* PQToolsManager::findPipelineSource(const char* SMName)
 	pqApplicationCore* core = pqApplicationCore::instance();
 	pqServerManagerModel* smModel = core->getServerManagerModel();
 
-	QList<pqPipelineSource*> sources = smModel->findItems<pqPipelineSource*>(this->getActiveServer());
-	foreach (pqPipelineSource* s, sources)
-	{
+	QList<pqPipelineSource*> sources = smModel->findItems<pqPipelineSource*>(getActiveServer());
+	foreach (pqPipelineSource* s, sources) {
 		if (strcmp(s->getProxy()->GetXMLName(), SMName) == 0)
 			return s;
 	}
@@ -299,14 +289,13 @@ pqPipelineSource* PQToolsManager::findPipelineSource(const char* SMName)
 //-----------------------------------------------------------------------------
 pqView* PQToolsManager::findView(pqPipelineSource* source, int port, const QString& viewType)
 {
-	if (source)
-	{
+	if (source) {
 		foreach (pqView* view, source->getViews())
-    								{
+    										{
 			pqDataRepresentation* repr = source->getRepresentation(port, view);
 			if (repr && repr->isVisible())
 				return view;
-    								}
+    										}
 	}
 	pqView* view = pqActiveObjects::instance().activeView();
 	if (view->getViewType() == viewType)
@@ -314,11 +303,8 @@ pqView* PQToolsManager::findView(pqPipelineSource* source, int port, const QStri
 
 	pqApplicationCore* core = pqApplicationCore::instance();
 	pqServerManagerModel* smModel = core->getServerManagerModel();
-	foreach (view, smModel->findItems<pqView*>())
-	{
-		if (view && (view->getViewType() == viewType) &&
-				(view->getNumberOfVisibleRepresentations() < 1))
-		{
+	foreach (view, smModel->findItems<pqView*>()) {
+		if (view && (view->getViewType() == viewType) && (view->getNumberOfVisibleRepresentations() < 1)) {
 			return view;
 		}
 	}
@@ -330,23 +316,23 @@ pqView* PQToolsManager::findView(pqPipelineSource* source, int port, const QStri
 bool PQToolsManager::existPipe()
 {
 #ifdef WITH_ETP
-	return this->existEpcPipe || this->existEtpPipe;
+	return existEpcPipe || existEtpPipe;
 #else
-	return this->existEpcPipe;
+	return existEpcPipe;
 #endif
 }
 
 //-----------------------------------------------------------------------------
 void PQToolsManager::existPipe(bool value)
 {
-	this->existEpcPipe = value;
+	existEpcPipe = value;
 }
 
 //-----------------------------------------------------------------------------
 #ifdef WITH_ETP
 bool PQToolsManager::etp_existPipe()
 {
-	return this->existEtpPipe;
+	return existEtpPipe;
 }
 #endif
 
@@ -354,41 +340,39 @@ bool PQToolsManager::etp_existPipe()
 #ifdef WITH_ETP
 void PQToolsManager::etp_existPipe(bool value)
 {
-	this->existEtpPipe = value;
+	existEtpPipe = value;
 }
 #endif
 
 //----------------------------------------------------------------------------
 void PQToolsManager::deletePipelineSource(pqPipelineSource* pipe)
 {
-	if(this->existPipe())
+	if(existPipe())
 	{
 		pqPipelineSource * source = findPipelineSource("EpcDocument");
-		if (!source)
-		{
+		if (!source) {
 			getPQSelectionPanel()->deleteTreeView();
-			this->existEpcPipe = false;
+			existEpcPipe = false;
 		}
 #ifdef WITH_ETP
 		source = findPipelineSource("EtpDocument");
-		if (!source)
-		{
+		if (!source) {
 			getPQSelectionPanel()->deleteTreeView();
-			this->existEtpPipe = false;
+			existEtpPipe = false;
 		}
 #endif
 	}
-//	this->actionPanelMetadata()->setEnabled(false);
-//	this->setVisibilityPanelMetadata(false);
-//	panelMetadataVisible = false;
+	//	actionPanelMetadata()->setEnabled(false);
+	//	setVisibilityPanelMetadata(false);
+	//	panelMetadataVisible = false;
 }
 
 //----------------------------------------------------------------------------
 void PQToolsManager::newFile(const std::string & fileName)
 {
-//	this->actionPanelMetadata()->setEnabled(true);
+	//	actionPanelMetadata()->setEnabled(true);
 	getPQSelectionPanel()->addFileName(fileName);
-	//	this->actionPanelSelection()->setEnabled(true);
+	//	actionPanelSelection()->setEnabled(true);
 
 	connect(getpqPropertiesPanel(), SIGNAL(deleteRequested(pqPipelineSource*)), this, SLOT(deletePipelineSource(pqPipelineSource*)));
 

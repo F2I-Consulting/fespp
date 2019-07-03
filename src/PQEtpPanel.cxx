@@ -13,10 +13,10 @@
 namespace {
 	PQSelectionPanel* getPQSelectionPanel()
 	{
-		PQSelectionPanel *panel = 0;
+		PQSelectionPanel *panel = nullptr;
 		foreach(QWidget *widget, qApp->topLevelWidgets()) {
 			panel = widget->findChild<PQSelectionPanel *>();
-			if(panel) {
+			if(panel != nullptr) {
 				break;
 			}
 		}
@@ -32,7 +32,7 @@ void PQEtpPanel::constructor()
 	ui.setupUi(t_widget);
 	setWidget(t_widget);
 
-	etpStatus_Button = ui.status;
+	this->etpStatus_Button = ui.status;
 	QIcon icon;
 	icon.addFile(QString::fromUtf8(":red_status.png"), QSize(), QIcon::Normal, QIcon::Off);
 	etpStatus_Button->setIcon(icon);

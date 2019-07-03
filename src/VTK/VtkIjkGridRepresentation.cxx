@@ -50,9 +50,9 @@ knowledge of the CeCILL license and that you accept its terms.
 
 //----------------------------------------------------------------------------
 VtkIjkGridRepresentation::VtkIjkGridRepresentation(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, common::EpcDocument *pckEPCRep, common::EpcDocument *pckEPCSubRep, const int & idProc, const int & maxProc) :
-		VtkResqml2UnstructuredGrid(fileName, name, uuid, uuidParent, pckEPCRep, pckEPCSubRep, idProc, maxProc)
+VtkResqml2UnstructuredGrid(fileName, name, uuid, uuidParent, pckEPCRep, pckEPCSubRep, idProc, maxProc)
 {
-isHyperslabed = false;
+	isHyperslabed = false;
 
 	iCellCount = 0;
 	jCellCount = 0;
@@ -75,8 +75,7 @@ VtkIjkGridRepresentation::~VtkIjkGridRepresentation()
 //----------------------------------------------------------------------------
 vtkSmartPointer<vtkPoints> VtkIjkGridRepresentation::createpoint()
 {
-if (!vtkPointsIsCreated())
-	{
+	if (!vtkPointsIsCreated()) {
 		points = vtkSmartPointer<vtkPoints>::New();
 		common::AbstractObject* obj = nullptr;
 		resqml2_0_1::AbstractIjkGridRepresentation* ijkGridRepresentation = nullptr;
@@ -102,8 +101,7 @@ if (!vtkPointsIsCreated())
 		const ULONG64 kInterfaceNodeCount = ijkGridRepresentation->getXyzPointCountOfKInterfaceOfPatch(0);
 
 		checkHyperslabingCapacity(ijkGridRepresentation);
-		if (isHyperslabed)
-		{
+		if (isHyperslabed) {
 			initKIndex = getIdProc() * (kCellCount / getMaxProc());
 			maxKIndex = (getIdProc()+1) * (kCellCount / getMaxProc());
 
@@ -112,8 +110,7 @@ if (!vtkPointsIsCreated())
 
 			auto allXyzPoints = new double[kInterfaceNodeCount * 3];
 
-			for (auto kInterface = initKIndex; kInterface <= maxKIndex; ++kInterface)
-			{
+			for (auto kInterface = initKIndex; kInterface <= maxKIndex; ++kInterface) {
 
 				ijkGridRepresentation->getXyzPointsOfKInterfaceOfPatch(kInterface, 0, allXyzPoints);
 				double zIndice = 1;
@@ -121,8 +118,7 @@ if (!vtkPointsIsCreated())
 				if (ijkGridRepresentation->getLocalCrs()->isDepthOriented())
 					zIndice = -1;
 
-				for (ULONG64 nodeIndex = 0; nodeIndex < kInterfaceNodeCount * 3; nodeIndex += 3)
-				{
+				for (ULONG64 nodeIndex = 0; nodeIndex < kInterfaceNodeCount * 3; nodeIndex += 3) {
 					points->InsertNextPoint(allXyzPoints[nodeIndex], allXyzPoints[nodeIndex + 1], allXyzPoints[nodeIndex + 2] * zIndice);
 				}
 
@@ -134,8 +130,7 @@ if (!vtkPointsIsCreated())
 			vtkOutputWindowDisplayDebugText(pchar);
 
 		}
-		else
-		{
+		else {
 #endif
 			initKIndex = 0;
 			maxKIndex = kCellCount;
@@ -159,23 +154,18 @@ if (!vtkPointsIsCreated())
 void VtkIjkGridRepresentation::createOutput(const std::string & uuid)
 {
 	createpoint(); // => POINTS
-	if (!vtkOutput)	// => REPRESENTATION
-	{
-		if (subRepresentation)
-		{
+	if (!vtkOutput) {	// => REPRESENTATION
+		if (subRepresentation){
 			// SubRep
 			createWithPoints(points, epcPackageSubRepresentation->getDataObjectByUuid(getUuid()));
-		}else
-		{
+		}else{
 			// Ijk Grid
 			createWithPoints(points, epcPackageRepresentation->getDataObjectByUuid(getUuid()));
 		}
 	}
 
-	if (uuid != getUuid()) // => PROPERTY UUID
-	{
-		if (subRepresentation) 
-		{
+	if (uuid != getUuid()){ // => PROPERTY UUID
+		if (subRepresentation){
 			auto objRepProp = epcPackageSubRepresentation->getDataObjectByUuid(getUuid());
 			auto property = static_cast<resqml2::SubRepresentation*>(objRepProp);
 			auto cellCount = property->getElementCountOfPatch(0);
@@ -190,18 +180,15 @@ void VtkIjkGridRepresentation::createOutput(const std::string & uuid)
 			}
 			//#endif
 		}
-		else
-		{
+		else {
 			auto objRepProp = epcPackageRepresentation->getDataObjectByUuid(getUuid());
 			auto property = static_cast<resqml2_0_1::AbstractIjkGridRepresentation*>(objRepProp);
 			auto cellCount = iCellCount*jCellCount*kCellCount;
 			//#ifdef PARAVIEW_USE_MPI
-			if (isHyperslabed)
-			{
+			if (isHyperslabed) {
 				addProperty(uuid, uuidToVtkProperty[uuid]->loadValuesPropertySet(property->getValuesPropertySet(), iCellCount*jCellCount*(maxKIndex - initKIndex), 0, iCellCount, jCellCount, maxKIndex - initKIndex, initKIndex));
 			}
-			else
-			{
+			else {
 				//#endif
 				addProperty(uuid, uuidToVtkProperty[uuid]->loadValuesPropertySet(property->getValuesPropertySet(), cellCount, 0));
 				//#ifdef PARAVIEW_USE_MPI
@@ -242,17 +229,14 @@ void VtkIjkGridRepresentation::addProperty(const std::string & uuidProperty, vtk
 //----------------------------------------------------------------------------
 long VtkIjkGridRepresentation::getAttachmentPropertyCount(const std::string & uuid, const VtkEpcCommon::FesppAttachmentProperty propertyUnit)
 {
-	if (propertyUnit == VtkEpcCommon::CELLS)
-	{
+	if (propertyUnit == VtkEpcCommon::CELLS) {
 		common::AbstractObject* obj;
-		if (subRepresentation)
-		{
+		if (subRepresentation) {
 			// SubRep
 			obj = epcPackageSubRepresentation->getDataObjectByUuid(getUuid());
 			auto subRepresentation1 = static_cast<resqml2::SubRepresentation*>(obj);
 			return isHyperslabed ? iCellCount*jCellCount*(maxKIndex - initKIndex) : subRepresentation1->getElementCountOfPatch(0);
-		}else
-		{
+		}else {
 			// Ijk Grid
 			obj = epcPackageRepresentation->getDataObjectByUuid(getUuid());
 			auto ijkGridRepresentation = static_cast<resqml2_0_1::AbstractIjkGridRepresentation*>(obj);
@@ -268,12 +252,10 @@ int VtkIjkGridRepresentation::getICellCount(const std::string & uuid) const
 {
 	long result = 0;
 
-	if (subRepresentation)
-	{
+	if (subRepresentation) {
 		// SubRep
 		result = iCellCount;
-	}else
-	{
+	}else {
 		common::AbstractObject* obj;
 		// Ijk Grid
 		obj = epcPackageRepresentation->getDataObjectByUuid(getUuid());
@@ -331,8 +313,7 @@ void VtkIjkGridRepresentation::createWithPoints(const vtkSmartPointer<vtkPoints>
 	vtkOutput = vtkSmartPointer<vtkUnstructuredGrid>::New();
 	vtkOutput->SetPoints(pointsRepresentation);
 
-	if (obj != nullptr && (obj->getXmlTag() == "SubRepresentation"))
-	{
+	if (obj != nullptr && (obj->getXmlTag() == "SubRepresentation")) {
 		resqml2::SubRepresentation* subRepresentation1 = static_cast<resqml2::SubRepresentation*>(obj);
 		resqml2_0_1::AbstractIjkGridRepresentation* ijkGridRepresentation = static_cast<resqml2_0_1::AbstractIjkGridRepresentation*>(epcPackageRepresentation->getDataObjectByUuid(subRepresentation1->getSupportingRepresentationUuid(0)));
 
@@ -356,14 +337,10 @@ void VtkIjkGridRepresentation::createWithPoints(const vtkSmartPointer<vtkPoints>
 		auto indice = 0;
 		unsigned int cellIndex = 0;
 
-		for (auto vtkKCellIndex = initKIndex; vtkKCellIndex < maxKIndex; ++vtkKCellIndex)
-		{
-			for (auto vtkJCellIndex = 0; vtkJCellIndex < jCellCount; ++vtkJCellIndex)
-			{
-				for (auto vtkICellIndex = 0; vtkICellIndex < iCellCount; ++vtkICellIndex)
-				{
-					if (elementIndices[indice] == cellIndex)
-					{
+		for (auto vtkKCellIndex = initKIndex; vtkKCellIndex < maxKIndex; ++vtkKCellIndex) {
+			for (auto vtkJCellIndex = 0; vtkJCellIndex < jCellCount; ++vtkJCellIndex) {
+				for (auto vtkICellIndex = 0; vtkICellIndex < iCellCount; ++vtkICellIndex) {
+					if (elementIndices[indice] == cellIndex) {
 						vtkSmartPointer<vtkHexahedron> hex = vtkSmartPointer<vtkHexahedron>::New();
 
 
@@ -381,9 +358,8 @@ void VtkIjkGridRepresentation::createWithPoints(const vtkSmartPointer<vtkPoints>
 
 		delete[] elementIndices;
 	}
-	else{
-		if (obj != nullptr && (obj->getXmlTag() == resqml2_0_1::AbstractIjkGridRepresentation::XML_TAG || obj->getXmlTag() == resqml2_0_1::AbstractIjkGridRepresentation::XML_TAG_TRUNCATED))
-		{
+	else {
+		if (obj != nullptr && (obj->getXmlTag() == resqml2_0_1::AbstractIjkGridRepresentation::XML_TAG || obj->getXmlTag() == resqml2_0_1::AbstractIjkGridRepresentation::XML_TAG_TRUNCATED)){
 			resqml2_0_1::AbstractIjkGridRepresentation* ijkGridRepresentation = static_cast<resqml2_0_1::AbstractIjkGridRepresentation*>(obj);
 
 			std::string s = "ijkGrid idProc-maxProc : " + std::to_string(getIdProc()) + "-" + std::to_string(getMaxProc()) + " Kcell " + std::to_string(initKIndex) + " to " + std::to_string(maxKIndex) +"\n";

@@ -41,7 +41,7 @@ knowledge of the CeCILL license and that you accept its terms.
 
 //----------------------------------------------------------------------------
 VtkAbstractRepresentation::VtkAbstractRepresentation(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, common::EpcDocument *pckEPCRep, common::EpcDocument *pckEPCSubRep, const int & idProc, const int & maxProc) :
-				VtkAbstractObject(fileName, name, uuid, uuidParent, idProc, maxProc), epcPackageRepresentation(pckEPCRep), epcPackageSubRepresentation(pckEPCSubRep)
+VtkAbstractObject(fileName, name, uuid, uuidParent, idProc, maxProc), epcPackageRepresentation(pckEPCRep), epcPackageSubRepresentation(pckEPCSubRep)
 {
 	if (!pckEPCSubRep){
 		subRepresentation = false;
@@ -81,7 +81,7 @@ void VtkAbstractRepresentation::createTreeVtk(const std::string & uuid, const st
 //----------------------------------------------------------------------------
 void VtkAbstractRepresentation::visualize(const std::string & uuid)
 {
-	this->createOutput(uuid);
+	createOutput(uuid);
 }
 
 vtkSmartPointer<vtkPoints> VtkAbstractRepresentation::createVtkPoints(const ULONG64 & pointCount, const double * allXyzPoints, const resqml2::AbstractLocal3dCrs * localCRS)

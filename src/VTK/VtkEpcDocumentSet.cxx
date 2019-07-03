@@ -47,7 +47,7 @@ knowledge of the CeCILL license and that you accept its terms.
 VtkEpcDocumentSet::VtkEpcDocumentSet(const int & idProc, const int & maxProc, const VtkEpcCommon::modeVtkEpc & mode) :
 procRank(idProc), nbProc(maxProc)
 {
-treeViewMode = (mode==VtkEpcCommon::Both || mode==VtkEpcCommon::TreeView);
+	treeViewMode = (mode==VtkEpcCommon::Both || mode==VtkEpcCommon::TreeView);
 	representationMode = (mode==VtkEpcCommon::Both || mode==VtkEpcCommon::Representation);
 
 	vtkOutput = vtkSmartPointer<vtkMultiBlockDataSet>::New();
@@ -57,7 +57,7 @@ treeViewMode = (mode==VtkEpcCommon::Both || mode==VtkEpcCommon::TreeView);
 //----------------------------------------------------------------------------
 VtkEpcDocumentSet::~VtkEpcDocumentSet()
 {
-vtkEpcNameList.clear();
+	vtkEpcNameList.clear();
 
 	uuidToVtkEpc.clear();
 
@@ -77,23 +77,21 @@ vtkEpcNameList.clear();
 //----------------------------------------------------------------------------
 std::string VtkEpcDocumentSet::visualize(const std::string & uuid)
 {
-if(representationMode) {
-		try
-		{
+	if(representationMode) {
+		try {
 			uuidToVtkEpc[uuid]->visualize(uuid);
 		}
-		catch  (const std::exception & e)
-		{
+		catch  (const std::exception & e) {
 			return "EXCEPTION in fesapi " + uuidToVtkEpc[uuid]->getFileName() + " : " + e.what();
 		}
 	}
-return std::string();
+	return std::string();
 }
 
 //----------------------------------------------------------------------------
 void VtkEpcDocumentSet::visualizeFull()
 {
-if(representationMode) {
+	if(representationMode) {
 		for (auto &vtkEpcElem : vtkEpcList) {
 			auto uuidList = vtkEpcElem->getListUuid();
 			for (auto &uuidListElem : uuidList)	{
@@ -106,7 +104,7 @@ if(representationMode) {
 //----------------------------------------------------------------------------
 void VtkEpcDocumentSet::unvisualize(const std::string & uuid)
 {
-if(representationMode) {
+	if(representationMode) {
 		uuidToVtkEpc[uuid]->remove(uuid);
 	}
 }
@@ -126,7 +124,7 @@ VtkEpcCommon VtkEpcDocumentSet::getInfoUuid(std::string uuid)
 //----------------------------------------------------------------------------
 vtkSmartPointer<vtkMultiBlockDataSet> VtkEpcDocumentSet::getVisualization() const
 {
-if(representationMode) {
+	if(representationMode) {
 		vtkOutput->Initialize();
 		unsigned int index = 0;
 		for (auto &vtkEpcElem : vtkEpcList) {

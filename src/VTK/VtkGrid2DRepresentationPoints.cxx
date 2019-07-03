@@ -48,7 +48,7 @@ knowledge of the CeCILL license and that you accept its terms.
 
 //----------------------------------------------------------------------------
 VtkGrid2DRepresentationPoints::VtkGrid2DRepresentationPoints(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, common::EpcDocument *pckEPCRep, common::EpcDocument *pckEPCSubRep) :
-		VtkResqml2PolyData(fileName, name, uuid, uuidParent, pckEPCRep, pckEPCSubRep)
+VtkResqml2PolyData(fileName, name, uuid, uuidParent, pckEPCRep, pckEPCSubRep)
 {
 }
 
@@ -67,8 +67,7 @@ void VtkGrid2DRepresentationPoints::createOutput(const std::string & uuid)
 		if (obj != nullptr && obj->getXmlTag() == "Grid2dRepresentation")
 			grid2dRepresentation = static_cast<resqml2_0_1::Grid2dRepresentation*>(obj);
 
-		if (!vtkOutput)
-		{
+		if (!vtkOutput) {
 			vtkOutput = vtkSmartPointer<vtkPolyData>::New();
 
 			const ULONG64 nbNodeI = grid2dRepresentation->getNodeCountAlongIAxis();
@@ -86,18 +85,14 @@ void VtkGrid2DRepresentationPoints::createOutput(const std::string & uuid)
 
 			double zIndice = 1;
 
-			if (grid2dRepresentation->getLocalCrs()->isDepthOriented())
-			{
+			if (grid2dRepresentation->getLocalCrs()->isDepthOriented()) {
 				zIndice = -1;
 			}
 
-			for (ULONG64 j = 0; j < nbNodeJ; ++j)
-			{
-				for (ULONG64 i = 0; i < nbNodeI; ++i)
-				{
+			for (ULONG64 j = 0; j < nbNodeJ; ++j) {
+				for (ULONG64 i = 0; i < nbNodeI; ++i) {
 					size_t ptId = i + j * nbNodeI;
-					if (!(vtkMath::IsNan(z[ptId])))
-					{
+					if (!(vtkMath::IsNan(z[ptId]))) {
 						vtkIdType pid[1];
 						pid[0] = points->InsertNextPoint(
 								originX + i*XIOffset + j*XJOffset,
@@ -114,12 +109,10 @@ void VtkGrid2DRepresentationPoints::createOutput(const std::string & uuid)
 			vtkOutput->SetVerts(vertices);
 
 		}
-		else
-		{
-			if (uuid != getUuid().substr(0, 36))
-			{
+		else {
+			if (uuid != getUuid().substr(0, 36)) {
 				vtkDataArray* arrayProperty = uuidToVtkProperty[uuid]->visualize(uuid, grid2dRepresentation);
-				this->addProperty(uuid, arrayProperty);
+				addProperty(uuid, arrayProperty);
 			}
 		}
 	}

@@ -40,17 +40,16 @@ PQToolsActionGroup::PQToolsActionGroup(QObject* p)
 : QActionGroup(p)
 {
 	PQToolsManager* manager = PQToolsManager::instance();
-	if (!manager)
-	{
+	if (!manager) {
 		qFatal("Cannot get Fespp Tools Manager.");
 		return;
 	}
 
-	this->addAction(manager->actionDataLoadManager());
-//	this->addAction(manager->actionPanelMetadata());
+	addAction(manager->actionDataLoadManager());
+//	addAction(manager->actionPanelMetadata());
 #ifdef WITH_ETP
-	this->addAction(manager->actionEtpCommand());
+	addAction(manager->actionEtpCommand());
 #endif // ETP support
 
-	this->setExclusive(false);
+	setExclusive(false);
 }

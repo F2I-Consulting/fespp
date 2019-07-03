@@ -50,10 +50,10 @@ VtkGrid2DRepresentation::VtkGrid2DRepresentation(const std::string & fileName, c
 VtkResqml2MultiBlockDataSet(fileName, name, uuid, uuidParent), epcPackageRepresentation(pckEPCRep), epcPackageSubRepresentation(pckEPCSubRep), grid2DPoints(getFileName(), name, uuid+"-Points", uuidParent, epcPackageRepresentation, epcPackageSubRepresentation)
 {
 	//BUG in PARAVIEW
-//	std::stringstream grid2DCellsUuid;
-//	grid2DCellsUuid << uuid << "-Cells";
-//	
-//	grid2DCells = new VtkGrid2DRepresentationCells(getFileName(), name, grid2DCellsUuid.str(), uuidParent, epcPackage);
+	//	std::stringstream grid2DCellsUuid;
+	//	grid2DCellsUuid << uuid << "-Cells";
+	//
+	//	grid2DCells = new VtkGrid2DRepresentationCells(getFileName(), name, grid2DCellsUuid.str(), uuidParent, epcPackage);
 }
 
 VtkGrid2DRepresentation::~VtkGrid2DRepresentation()
@@ -71,16 +71,15 @@ VtkGrid2DRepresentation::~VtkGrid2DRepresentation()
 		delete grid2DCells;
 		grid2DCells = nullptr;
 	}
-	*/
+	 */
 }
 
 //----------------------------------------------------------------------------
 void VtkGrid2DRepresentation::createTreeVtk(const std::string & uuid, const std::string & uuidParent, const std::string & name, const VtkEpcCommon::Resqml2Type & type)
 {
-	if (uuid != getUuid())
-	{
+	if (uuid != getUuid()) {
 		grid2DPoints.createTreeVtk(uuid, uuidParent, name, type);
-//		grid2DCells->createTreeVtk(uuid, uuidParent, name, type);
+		//		grid2DCells->createTreeVtk(uuid, uuidParent, name, type);
 	}
 }
 
@@ -88,8 +87,8 @@ void VtkGrid2DRepresentation::createTreeVtk(const std::string & uuid, const std:
 int VtkGrid2DRepresentation::createOutput(const std::string & uuid)
 {
 	grid2DPoints.createOutput(uuid);
-//	grid2DCells->createOutput(uuid);
-	
+	//	grid2DCells->createOutput(uuid);
+
 	return 1;
 }
 //----------------------------------------------------------------------------
@@ -98,15 +97,14 @@ void VtkGrid2DRepresentation::visualize(const std::string & uuid)
 {
 	createOutput(uuid);
 
-	this->attach();
+	attach();
 }
 
 //----------------------------------------------------------------------------
 void VtkGrid2DRepresentation::remove(const std::string & uuid)
 {
-	if (uuid == getUuid())
-	{
-		this->detach();
+	if (uuid == getUuid()) {
+		detach();
 		std::stringstream grid2DPointsUuid;
 		grid2DPointsUuid << uuid << "-Points";
 
@@ -127,8 +125,8 @@ void VtkGrid2DRepresentation::attach()
 	vtkOutput->SetBlock(index, grid2DPoints.getOutput());
 	vtkOutput->GetMetaData(index++)->Set(vtkCompositeDataSet::NAME(),grid2DPoints.getUuid().c_str());
 
-//	vtkOutput->SetBlock(index, grid2DCells->getOutput());
-//	vtkOutput->GetMetaData(index++)->Set(vtkCompositeDataSet::NAME(),grid2DCells->getUuid().c_str());
+	//	vtkOutput->SetBlock(index, grid2DCells->getOutput());
+	//	vtkOutput->GetMetaData(index++)->Set(vtkCompositeDataSet::NAME(),grid2DCells->getUuid().c_str());
 }
 
 void VtkGrid2DRepresentation::addProperty(const std::string & uuidProperty, vtkDataArray* dataProperty)
