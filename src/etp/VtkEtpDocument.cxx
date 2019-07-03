@@ -356,7 +356,7 @@ void VtkEtpDocument::unvisualize(const std::string & rec_uri)
 		auto lenght = rec_uri.find_last_of(")") - pos1;
 		std::string uuid = rec_uri.substr(pos1,lenght);
 
-		this->remove(uuid);
+		remove(uuid);
 	}
 }
 
@@ -372,9 +372,9 @@ void VtkEtpDocument::remove(const std::string & uuid)
 		if (uuidIsChildOf[uuidtoAttach].getType() == VtkEpcCommon::IJK_GRID) {
 			uuidToVtkIjkGridRepresentation[uuidtoAttach]->remove(uuid);
 			if (uuid == uuidtoAttach) {
-				this->detach();
+				detach();
 				attachUuids.erase(std::find(attachUuids.begin(), attachUuids.end(), uuid));
-				this->attach();
+				attach();
 			}
 		}
 	}
@@ -442,7 +442,7 @@ void VtkEtpDocument::receive_resources_tree(const std::string & rec_uri, const s
 		client_session->close();
 		client_session->epcDoc.close();
 		 */
-		getPQEtpPanel()->setEtpTreeView(this->getTreeView());
+		getPQEtpPanel()->setEtpTreeView(getTreeView());
 		loading = false;
 	}
 }
@@ -461,7 +461,7 @@ void VtkEtpDocument::receive_nbresources_tree(size_t nb_resources)
 			if(response_queue.empty()) {
 				/*				client_session->close();
 				client_session->epcDoc.close();*/
-				getPQEtpPanel()->setEtpTreeView(this->getTreeView());
+				getPQEtpPanel()->setEtpTreeView(getTreeView());
 				loading = false;
 			}
 		}

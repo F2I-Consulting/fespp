@@ -102,18 +102,18 @@
 
 namespace {
 #ifdef WITH_ETP
-PQEtpPanel* getPQEtpPanel() {
-	PQEtpPanel *panel = nullptr;
-	foreach(QWidget *widget, qApp->topLevelWidgets())
-	{
-		panel = widget->findChild<PQEtpPanel *>();
+ PQEtpPanel* getPQEtpPanel() {
+ 	PQEtpPanel *panel = nullptr;
+ 	foreach(QWidget *widget, qApp->topLevelWidgets())
+ 	{
+ 		panel = widget->findChild<PQEtpPanel *>();
 
-		if (panel!=nullptr) {
-			break;
-		}
-	}
-	return panel;
-}
+ 		if (panel!=nullptr) {
+ 			break;
+ 		}
+ 	}
+ 	return panel;
+ }
 #endif
 
 pqPropertiesPanel* getpqPropertiesPanel() {
@@ -234,7 +234,7 @@ void PQSelectionPanel::constructor() {
 	save_time = 0;
 
 	vtkEpcDocumentSet = new VtkEpcDocumentSet(0, 0, VtkEpcCommon::TreeView);
-	this->etpCreated = false;
+	etpCreated = false;
 
 }
 
@@ -268,19 +268,19 @@ void PQSelectionPanel::onItemCheckedUnchecked(QTreeWidgetItem * item, int column
 	std::string uuid = itemUuid[item];
 	if (!uuid.empty()) {
 		if (item->checkState(0) == Qt::Checked) {
-			this->loadUuid(uuid);
+			loadUuid(uuid);
 		} else if (item->checkState(0) == Qt::Unchecked) {
 			// Property exist
 			if (uuidItem[uuid]->childCount() > 0
 					&& mapUuidWithProperty[uuid] != "") {
 				auto uuidProperty = mapUuidWithProperty[uuid];
-				this->removeUuid(uuidProperty);
+				removeUuid(uuidProperty);
 
 				mapUuidWithProperty[uuid] = "";
 				mapUuidParentButtonInvisible[uuid]->setChecked(true);
 				uuidItem[uuid]->setData(0, Qt::CheckStateRole, QVariant());
 			}
-			this->removeUuid(uuid);
+			removeUuid(uuid);
 		}
 	}
 }
@@ -341,23 +341,23 @@ void PQSelectionPanel::checkedRadioButton(int rbNo) {
 						time_series->currentText());
 				time_t time = date.toTime_t();
 
-				this->removeUuid(ts_timestamp_to_uuid[uuidOld][time]);
+				removeUuid(ts_timestamp_to_uuid[uuidOld][time]);
 
-				this->updateTimeSeries(uuidOld, false);
+				updateTimeSeries(uuidOld, false);
 			} else {
-				this->removeUuid(uuidOld);
+				removeUuid(uuidOld);
 			}
 		}
 		mapUuidWithProperty[uuidParent] = uuid;
 		if (ts_timestamp_to_uuid.count(uuid) > 0) {
-			this->updateTimeSeries(uuid, true);
+			updateTimeSeries(uuid, true);
 
 			QDateTime date = QDateTime::fromString(time_series->currentText());
 			time_t time = date.toTime_t();
 
-			this->loadUuid(ts_timestamp_to_uuid[uuid][time]);
+			loadUuid(ts_timestamp_to_uuid[uuid][time]);
 		} else {
-			this->loadUuid(uuid);
+			loadUuid(uuid);
 		}
 	}
 }
@@ -420,13 +420,13 @@ void PQSelectionPanel::timeChangedComboBox(int) {
 		// remove old time properties
 		if (save_time != 0) {
 			for (auto &ts : ts_displayed) {
-				this->removeUuid(ts_timestamp_to_uuid[ts][save_time]);
-				this->loadUuid(ts_timestamp_to_uuid[ts][time]);
+				removeUuid(ts_timestamp_to_uuid[ts][save_time]);
+				loadUuid(ts_timestamp_to_uuid[ts][time]);
 			}
 		} else {
 			// load time properties
 			for (auto &ts : ts_displayed) {
-				this->loadUuid(ts_timestamp_to_uuid[ts][time]);
+				loadUuid(ts_timestamp_to_uuid[ts][time]);
 			}
 		}
 		save_time = time;
@@ -726,7 +726,7 @@ pqPipelineSource * PQSelectionPanel::findPipelineSource(const char *SMName) {
 	pqServerManagerModel *smModel = core->getServerManagerModel();
 
 	QList<pqPipelineSource*> sources = smModel->findItems<pqPipelineSource*>(
-			this->getActiveServer());
+			getActiveServer());
 	foreach(pqPipelineSource *s, sources)
 	{
 		if (strcmp(s->getSMName().toStdString().c_str(), SMName) == 0)
@@ -795,7 +795,7 @@ void PQSelectionPanel::setEtpTreeView(std::vector<VtkEpcCommon> treeView) {
 
 				vtkSMPropertyHelper(fesppReaderProxy, "uuidList").SetStatus(
 						"connect", 0);
-				this->etpCreated = true;
+				etpCreated = true;
 
 				fesppReaderProxy->UpdatePropertyInformation();
 				fesppReaderProxy->UpdateVTKObjects();

@@ -60,13 +60,11 @@ void VtkGrid2DRepresentationCells::createOutput(const std::string & uuid)
 
 		resqml2_0_1::Grid2dRepresentation* grid2dRepresentation = nullptr;
 		common::AbstractObject* obj = epcPackageRepresentation->getDataObjectByUuid(uuid);
-		if (obj != nullptr && obj->getXmlTag() == "Grid2dRepresentation")
-		{
+		if (obj != nullptr && obj->getXmlTag() == "Grid2dRepresentation") {
 			grid2dRepresentation = static_cast<resqml2_0_1::Grid2dRepresentation*>(obj);
 		}
 
-		if (!vtkOutput)
-		{
+		if (!vtkOutput) {
 			vtkOutput = vtkSmartPointer<vtkStructuredGrid>::New();
 
 			resqml2_0_1::Grid2dRepresentation *supportingGrid = grid2dRepresentation->getSupportingRepresentation();
@@ -85,23 +83,19 @@ void VtkGrid2DRepresentationCells::createOutput(const std::string & uuid)
 			double YIOffset = supportingGrid->getYIOffsetInGlobalCrs();
 			double YJOffset = supportingGrid->getYJOffsetInGlobalCrs();
 			std::vector<unsigned int> ptBlank;
-			for (unsigned int j = 0; j < nbNodeJ; ++j)
-			{
-				for (unsigned int i = 0; i < nbNodeI; ++i)
-				{
+			for (unsigned int j = 0; j < nbNodeJ; ++j) {
+				for (unsigned int i = 0; i < nbNodeI; ++i) {
 					unsigned int ptId = i + j * nbNodeI;
-					if (vtkMath::IsNan(z[ptId]))
-					{
+					if (vtkMath::IsNan(z[ptId])) {
 						points->InsertNextPoint(i, j, i + j);
 						ptBlank.push_back(ptId);
 					}
-					else
-					{
+					else {
 						points->InsertNextPoint(
-							originX + i*XIOffset + j*XJOffset,
-							originY + i*YIOffset + j*YJOffset,
-							z[ptId]
-							);
+								originX + i*XIOffset + j*XJOffset,
+								originY + i*YIOffset + j*YJOffset,
+								z[ptId]
+						);
 					}
 				}
 			}
@@ -110,7 +104,7 @@ void VtkGrid2DRepresentationCells::createOutput(const std::string & uuid)
 			vtkOutput->SetDimensions(nbNodeI, nbNodeJ, 1);
 			vtkOutput->SetPoints(points);
 
-			for (unsigned int i = 0; i < ptBlank.size(); ++i)
+			for (size_t i = 0; i < ptBlank.size(); ++i)
 				vtkOutput->BlankPoint(ptBlank[i]);
 
 			vtkOutput->Modified();
