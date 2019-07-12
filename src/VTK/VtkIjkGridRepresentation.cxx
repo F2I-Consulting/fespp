@@ -100,8 +100,9 @@ vtkSmartPointer<vtkPoints> VtkIjkGridRepresentation::createpoint()
 
 		checkHyperslabingCapacity(ijkGridRepresentation);
 		if (isHyperslabed && !ijkGridRepresentation->isNodeGeometryCompressed()) {
-			initKIndex = getIdProc() * (kCellCount / getMaxProc());
-			maxKIndex = (getIdProc()+1) * (kCellCount / getMaxProc());
+			auto optim = kCellCount / getMaxProc();
+			initKIndex = getIdProc() * optim;
+			maxKIndex = initKIndex + optim;
 
 			if (getIdProc() == getMaxProc()-1)
 				maxKIndex = kCellCount;
