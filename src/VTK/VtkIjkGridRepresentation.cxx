@@ -96,14 +96,13 @@ vtkSmartPointer<vtkPoints> VtkIjkGridRepresentation::createpoint()
 		jCellCount = ijkGridRepresentation->getJCellCount();
 		kCellCount = ijkGridRepresentation->getKCellCount();
 
-
-#ifdef PARAVIEW_USE_MPI
 		const ULONG64 kInterfaceNodeCount = ijkGridRepresentation->getXyzPointCountOfKInterfaceOfPatch(0);
 
 		checkHyperslabingCapacity(ijkGridRepresentation);
-		if (isHyperslabed) {
-			initKIndex = getIdProc() * (kCellCount / getMaxProc());
-			maxKIndex = (getIdProc()+1) * (kCellCount / getMaxProc());
+		if (isHyperslabed && !ijkGridRepresentation->isNodeGeometryCompressed()) {
+			auto optim = kCellCount / getMaxProc();
+			initKIndex = getIdProc() * optim;
+			maxKIndex = initKIndex + optim;
 
 			if (getIdProc() == getMaxProc()-1)
 				maxKIndex = kCellCount;
@@ -131,7 +130,6 @@ vtkSmartPointer<vtkPoints> VtkIjkGridRepresentation::createpoint()
 
 		}
 		else {
-#endif
 			initKIndex = 0;
 			maxKIndex = kCellCount;
 
@@ -142,10 +140,7 @@ vtkSmartPointer<vtkPoints> VtkIjkGridRepresentation::createpoint()
 			createVtkPoints(nodeCount, allXyzPoints, ijkGridRepresentation->getLocalCrs());
 
 			delete[] allXyzPoints;
-#ifdef PARAVIEW_USE_MPI
 		}
-#endif
-
 	}
 	return points;
 }

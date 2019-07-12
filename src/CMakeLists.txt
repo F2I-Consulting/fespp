@@ -1,6 +1,6 @@
 #--------------------------------------------------
 SET (PLUGIN_NAME Fespp)
-SET (PLUGIN_VERSION "2.0.0")
+SET (PLUGIN_VERSION "2.1.0")
 
 #--------------------------------------------------
 SET (FESPP_ROOT_DIR ${CMAKE_SOURCE_DIR})
