@@ -256,6 +256,7 @@ int Fespp::RequestInformation(
 		if(extension=="epc") {
 			isEpcDocument=true;
 			loadedFile = true;
+			epcDocumentSet = new VtkEpcDocumentSet(idProc, nbProc, VtkEpcCommon::Both);
 			OpenEpcDocument(stringFileName);
 			epcDocumentSet->visualizeFull();
 		}

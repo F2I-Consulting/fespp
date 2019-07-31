@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1001</width>
+    <width>437</width>
     <height>896</height>
    </rect>
   </property>
@@ -187,24 +187,11 @@
    </item>
    <item row="1" column="10">
     <widget class="QComboBox" name="time_series">
-     <property name="minimumSize">
-      <size>
-       <width>300</width>
-       <height>16</height>
-      </size>
-     </property>
      <property name="maximumSize">
       <size>
        <width>300</width>
        <height>16</height>
       </size>
-     </property>
-    </widget>
-   </item>
-   <item row="1" column="11">
-    <widget class="QPushButton" name="button_test_perf">
-     <property name="text">
-      <string>PushButton</string>
      </property>
     </widget>
    </item>
