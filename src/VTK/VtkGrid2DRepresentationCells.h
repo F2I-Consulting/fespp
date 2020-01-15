@@ -37,9 +37,9 @@ knowledge of the CeCILL license and that you accept its terms.
 
 #include "VtkResqml2StructuredGrid.h"
 
-namespace common
+namespace COMMON_NS
 {
-	class EpcDocument;
+	class DataObjectRepository;
 }
 
 class VtkGrid2DRepresentationCells : public VtkResqml2StructuredGrid
@@ -48,7 +48,7 @@ public:
 	/**
 	* Constructor
 	*/
-	VtkGrid2DRepresentationCells(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, common::EpcDocument *pckRep, common::EpcDocument *pckSubRep);
+	VtkGrid2DRepresentationCells(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, COMMON_NS::DataObjectRepository *pckRep, COMMON_NS::DataObjectRepository *pckSubRep);
 	
 	/**
 	* Destructor

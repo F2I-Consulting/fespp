@@ -33,26 +33,27 @@ knowledge of the CeCILL license and that you accept its terms.
 -----------------------------------------------------------------------*/
 #include "VtkWellboreTrajectoryRepresentation.h"
 
+//SYSTEM
 #include <sstream>
 
-// include VTK library
+// VTK
 #include <vtkInformation.h>
 
-// include F2i-consulting Energistics Standards API 
-#include <common/EpcDocument.h>
-#include <resqml2_0_1/WellboreTrajectoryRepresentation.h>
+// FESAPI
+#include <fesapi/common/EpcDocument.h>
+#include <fesapi/resqml2_0_1/WellboreTrajectoryRepresentation.h>
 
-// include F2i-consulting Energistics Standards ParaView Plugin
+// FESPP
 #include "VtkWellboreTrajectoryRepresentationDatum.h"
 #include "VtkWellboreTrajectoryRepresentationText.h"
 #include "VtkWellboreTrajectoryRepresentationPolyLine.h"
 
 //----------------------------------------------------------------------------
-VtkWellboreTrajectoryRepresentation::VtkWellboreTrajectoryRepresentation(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, common::EpcDocument *pckRep, common::EpcDocument *pckSubRep) :
-VtkResqml2MultiBlockDataSet(fileName, name, uuid, uuidParent), epcPackageRepresentation(pckRep), epcPackageSubRepresentation(pckSubRep),
-polyline(getFileName(), name, uuid+"-Polyline", uuidParent, pckRep, pckSubRep),
-head(getFileName(), name, uuid+"-Head", uuidParent, pckRep, pckSubRep),
-text(getFileName(), name, uuid+"-Text", uuidParent, pckRep, pckSubRep)
+VtkWellboreTrajectoryRepresentation::VtkWellboreTrajectoryRepresentation(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, COMMON_NS::DataObjectRepository *repoRepresentation, COMMON_NS::DataObjectRepository *repoSubRepresentation) :
+VtkResqml2MultiBlockDataSet(fileName, name, uuid, uuidParent), repositoryRepresentation(repoRepresentation), repositorySubRepresentation(repoSubRepresentation),
+polyline(getFileName(), name, uuid+"-Polyline", uuidParent, repoRepresentation, repoSubRepresentation),
+head(getFileName(), name, uuid+"-Head", uuidParent, repoRepresentation, repoSubRepresentation),
+text(getFileName(), name, uuid+"-Text", uuidParent, repoRepresentation, repoSubRepresentation)
 {
 }
 
@@ -60,12 +61,12 @@ text(getFileName(), name, uuid+"-Text", uuidParent, pckRep, pckSubRep)
 //----------------------------------------------------------------------------
 VtkWellboreTrajectoryRepresentation::~VtkWellboreTrajectoryRepresentation()
 {
-	if (epcPackageRepresentation != nullptr) {
-		epcPackageRepresentation = nullptr;
+	if (repositoryRepresentation != nullptr) {
+		repositoryRepresentation = nullptr;
 	}
 
-	if (epcPackageSubRepresentation != nullptr) {
-		epcPackageSubRepresentation = nullptr;
+	if (repositorySubRepresentation != nullptr) {
+		repositorySubRepresentation = nullptr;
 	}
 }
 

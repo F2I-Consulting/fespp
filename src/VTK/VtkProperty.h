@@ -40,15 +40,17 @@ knowledge of the CeCILL license and that you accept its terms.
 
 #include "VtkAbstractObject.h"
 
+#include <fesapi/common/DataObjectRepository.h>
+
 namespace resqml2
 {
 	class AbstractValuesProperty;
 }
 
-namespace common
-{
-	class EpcDocument;
-}
+//namespace COMMON_NS
+//{
+//	class DataObjectRepository;
+//}
 
 namespace resqml2_0_1
 {
@@ -69,7 +71,7 @@ public:
 	/**
 	* Constructor
 	*/
-	VtkProperty(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, common::EpcDocument *pck, const int & idProc=0, const int & maxProc=0);
+	VtkProperty(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, COMMON_NS::DataObjectRepository *repo, const int & idProc=0, const int & maxProc=0);
 
 	/**
 	* Destructor
@@ -127,6 +129,6 @@ private:
 	typeSupport support;
 
 	// EPC DOCUMENT
-	common::EpcDocument *epcPackage;
+	COMMON_NS::DataObjectRepository* repository;
 };
 #endif

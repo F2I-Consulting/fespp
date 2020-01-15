@@ -39,15 +39,15 @@ knowledge of the CeCILL license and that you accept its terms.
 #include <vtkInformation.h>
 
 // include F2i-consulting Energistics Standards API
-#include <common/EpcDocument.h>
+#include <fesapi/common/EpcDocument.h>
 
 // include F2i-consulting Energistics Standards ParaView Plugin
 #include "VtkGrid2DRepresentationPoints.h"
 #include "VtkGrid2DRepresentationCells.h"
 
 //----------------------------------------------------------------------------
-VtkGrid2DRepresentation::VtkGrid2DRepresentation(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, common::EpcDocument *pckEPCRep, common::EpcDocument *pckEPCSubRep) :
-VtkResqml2MultiBlockDataSet(fileName, name, uuid, uuidParent), epcPackageRepresentation(pckEPCRep), epcPackageSubRepresentation(pckEPCSubRep), grid2DPoints(getFileName(), name, uuid+"-Points", uuidParent, epcPackageRepresentation, epcPackageSubRepresentation)
+VtkGrid2DRepresentation::VtkGrid2DRepresentation(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, COMMON_NS::DataObjectRepository *pckEPCRep, COMMON_NS::DataObjectRepository *pckEPCSubRep) :
+VtkResqml2MultiBlockDataSet(fileName, name, uuid, uuidParent), repositoryRepresentation(pckEPCRep), repositorySubRepresentation(pckEPCSubRep), grid2DPoints(getFileName(), name, uuid+"-Points", uuidParent, repositoryRepresentation, repositorySubRepresentation)
 {
 	//BUG in PARAVIEW
 	//	std::stringstream grid2DCellsUuid;
@@ -58,12 +58,12 @@ VtkResqml2MultiBlockDataSet(fileName, name, uuid, uuidParent), epcPackageReprese
 
 VtkGrid2DRepresentation::~VtkGrid2DRepresentation()
 {
-	if (epcPackageRepresentation != nullptr) {
-		epcPackageRepresentation = nullptr;
+	if (repositoryRepresentation != nullptr) {
+		repositoryRepresentation = nullptr;
 	}
 
-	if (epcPackageSubRepresentation != nullptr) {
-		epcPackageSubRepresentation = nullptr;
+	if (repositorySubRepresentation != nullptr) {
+		repositorySubRepresentation = nullptr;
 	}
 
 	/*

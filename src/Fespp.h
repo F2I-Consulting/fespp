@@ -42,7 +42,7 @@ knowledge of the CeCILL license and that you accept its terms.
 #include <unordered_map>
 #include <vector>
 
-#include <common/EpcDocument.h>
+#include <fesapi/common/EpcDocument.h>
 
 #ifdef WITH_ETP
 	#include "etp/VtkEtpDocument.h"

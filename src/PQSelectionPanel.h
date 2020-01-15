@@ -65,7 +65,7 @@ class pqServer;
 //class pqView;
 class VtkEpcDocumentSet;
 
-#include "common/EpcDocument.h"
+#include <fesapi/common/EpcDocument.h>
 
 namespace resqml2
 {

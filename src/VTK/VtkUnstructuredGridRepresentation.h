@@ -38,9 +38,9 @@ knowledge of the CeCILL license and that you accept its terms.
 #include "VtkResqml2UnstructuredGrid.h"
 class VtkProperty;
 
-namespace common
+namespace COMMON_NS
 {
-	class EpcDocument;
+	class DataObjectRepository;
 }
 
 namespace resqml2_0_1
@@ -55,7 +55,7 @@ public:
 	/**
 	* Constructor
 	*/
-	VtkUnstructuredGridRepresentation(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, common::EpcDocument *pckEPCRep, common::EpcDocument *pckEPCSubRep, const int & idProc=0, const int & maxProc=0);
+	VtkUnstructuredGridRepresentation(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, COMMON_NS::DataObjectRepository *repoRepresentation, COMMON_NS::DataObjectRepository *repoSubRepresentation, const int & idProc=0, const int & maxProc=0);
 
 	/**
 	* Destructor

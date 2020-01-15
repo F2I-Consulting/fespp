@@ -41,7 +41,9 @@ knowledge of the CeCILL license and that you accept its terms.
 #include "VtkEpcDocumentSet.h"
 
 // Fesapi namespaces
-#include "nsDefinitions.h"
+#include <fesapi/nsDefinitions.h>
+
+#include <fesapi/common/DataObjectRepository.h>
 
 class VtkIjkGridRepresentation;
 class VtkUnstructuredGridRepresentation;
@@ -52,10 +54,10 @@ class VtkTriangulatedRepresentation;
 class VtkSetPatch;
 class VtkWellboreTrajectoryRepresentation;
 
-namespace COMMON_NS
-{
-	class EpcDocument;
-}
+//namespace COMMON_NS
+//{
+//	class DataObjectRepository;
+//}
 
 class VtkEpcDocument : public VtkResqml2MultiBlockDataSet
 {
@@ -114,7 +116,7 @@ public:
 
 	std::string getError() ;
 
-	COMMON_NS::EpcDocument *getEpcDocument();
+	COMMON_NS::DataObjectRepository* getEpcDocument();
 
 private:
 	void addGrid2DTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name);
@@ -143,7 +145,7 @@ private:
 
 
 	// EPC DOCUMENT
-	COMMON_NS::EpcDocument *epcPackage;
+	COMMON_NS::DataObjectRepository repository;
 
 	std::unordered_map<std::string, VtkGrid2DRepresentation*> uuidToVtkGrid2DRepresentation;
 	std::unordered_map<std::string, VtkPolylineRepresentation*> uuidToVtkPolylineRepresentation;

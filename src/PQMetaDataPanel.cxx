@@ -34,14 +34,16 @@ knowledge of the CeCILL license and that you accept its terms.
 #include "PQMetaDataPanel.h"
 #include "ui_PQMetaDataPanel.h"
 
-//#include <time.h>
-
 #include "PQSelectionPanel.h"
-#include "common/AbstractObject.h"
-#include "common/EpcDocument.h"
 
+// Fesapi
+#include <fesapi/common/AbstractObject.h>
+#include <fesapi/common/EpcDocument.h>
+
+// VTK
 #include <vtkInformation.h>
 
+// QT
 #include <qmessagebox.h>
 
 namespace

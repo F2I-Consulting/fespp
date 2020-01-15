@@ -42,9 +42,9 @@ namespace resqml2_0_1
 	class AbstractValuesProperty;
 }
 
-namespace common
+namespace COMMON_NS
 {
-	class EpcDocument;
+	class DataObjectRepository;
 }
 
 class VtkWellboreTrajectoryRepresentationDatum : public VtkResqml2UnstructuredGrid
@@ -53,7 +53,7 @@ public:
 	/**
 	* Constructor
 	*/
-	VtkWellboreTrajectoryRepresentationDatum(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, common::EpcDocument *pckRep, common::EpcDocument *pckSubRep);
+	VtkWellboreTrajectoryRepresentationDatum(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, COMMON_NS::DataObjectRepository *repoRepresentation, COMMON_NS::DataObjectRepository *repoSubRepresentation);
 	
 	/**
 	* method : createOutput

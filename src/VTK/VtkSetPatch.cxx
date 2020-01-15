@@ -33,25 +33,25 @@ knowledge of the CeCILL license and that you accept its terms.
 -----------------------------------------------------------------------*/
 #include "VtkSetPatch.h"
 
-// include system
+// system
 #include <algorithm>
 #include <sstream>
 
-// include VTK library
+// VTK
 #include <vtkInformation.h>
 
-// include F2i-consulting Energistics Standards API
-#include <resqml2_0_1/SubRepresentation.h>
-#include <resqml2_0_1/PolylineSetRepresentation.h>
-#include <resqml2_0_1/TriangulatedSetRepresentation.h>
+// FESAPI
+#include <fesapi/resqml2_0_1/SubRepresentation.h>
+#include <fesapi/resqml2_0_1/PolylineSetRepresentation.h>
+#include <fesapi/resqml2_0_1/TriangulatedSetRepresentation.h>
 
-// include F2i-consulting Energistics Standards ParaView Plugin
+// FESPP
 #include "VtkPolylineRepresentation.h"
 #include "VtkTriangulatedRepresentation.h"
 #include "VtkProperty.h"
 
 //----------------------------------------------------------------------------
-VtkSetPatch::VtkSetPatch(const std::string & fileName, const std::string & name, const std:: string & uuid, const std::string & uuidParent, common::EpcDocument *pck, const int & idProc, const int & maxProc):
+VtkSetPatch::VtkSetPatch(const std::string & fileName, const std::string & name, const std:: string & uuid, const std::string & uuidParent, COMMON_NS::DataObjectRepository *pck, const int & idProc, const int & maxProc):
 VtkResqml2MultiBlockDataSet(fileName, name, uuid, uuidParent, idProc, maxProc), epcPackage(pck)
 {
 	//	uuidIsChildOf[uuid] = new VtkEpcCommon();

@@ -37,9 +37,9 @@ knowledge of the CeCILL license and that you accept its terms.
 
 #include "VtkResqml2UnstructuredGrid.h"
 
-namespace common
+namespace COMMON_NS
 {
-	class EpcDocument;
+	class DataObjectRepository;
 	class AbstractObject;
 }
 namespace resqml2_0_1
@@ -53,7 +53,7 @@ public:
 	/**
 	* Constructor
 	*/
-	VtkIjkGridRepresentation(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, common::EpcDocument *pckRep, common::EpcDocument *pckSubRep, const int & idProc=0, const int & maxProc=0);
+	VtkIjkGridRepresentation(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, COMMON_NS::DataObjectRepository *pckRep, COMMON_NS::DataObjectRepository *pckSubRep, const int & idProc=0, const int & maxProc=0);
 
 	/**
 	* Destructor
@@ -107,7 +107,7 @@ public:
 	* description :
 	* create the vtk objects with points
 	*/	
-	void createWithPoints(const vtkSmartPointer<vtkPoints> & pointsRepresentation, common::AbstractObject* obj2);
+	void createWithPoints(const vtkSmartPointer<vtkPoints> & pointsRepresentation, COMMON_NS::AbstractObject* obj2);
 
 	/**
 	* method : createpoint

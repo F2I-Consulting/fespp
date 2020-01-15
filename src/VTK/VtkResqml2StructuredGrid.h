@@ -48,7 +48,7 @@ public:
 	/**
 	* Constructor
 	*/
-	VtkResqml2StructuredGrid(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, common::EpcDocument *pckRep, common::EpcDocument *pckSubRep, const int & idProc=0, const int & maxProc=0);
+	VtkResqml2StructuredGrid(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, COMMON_NS::DataObjectRepository *pckRep, COMMON_NS::DataObjectRepository *pckSubRep, const int & idProc=0, const int & maxProc=0);
 
 	/**
 	* Destructor

@@ -40,8 +40,8 @@ knowledge of the CeCILL license and that you accept its terms.
 #include <vtkDataArray.h>
 
 // include F2i-consulting Energistics Standards API
-#include <resqml2_0_1/AbstractIjkGridRepresentation.h>
-#include <resqml2/SubRepresentation.h>
+#include <fesapi/resqml2_0_1/AbstractIjkGridRepresentation.h>
+#include <fesapi/resqml2/SubRepresentation.h>
 
 // include F2i-consulting Energistics Standards ParaView Plugin
 #include "VtkProperty.h"
@@ -49,7 +49,7 @@ knowledge of the CeCILL license and that you accept its terms.
 #include <sstream>
 
 //----------------------------------------------------------------------------
-VtkIjkGridRepresentation::VtkIjkGridRepresentation(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, common::EpcDocument *pckEPCRep, common::EpcDocument *pckEPCSubRep, const int & idProc, const int & maxProc) :
+VtkIjkGridRepresentation::VtkIjkGridRepresentation(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, COMMON_NS::DataObjectRepository *pckEPCRep, COMMON_NS::DataObjectRepository *pckEPCSubRep, const int & idProc, const int & maxProc) :
 VtkResqml2UnstructuredGrid(fileName, name, uuid, uuidParent, pckEPCRep, pckEPCSubRep, idProc, maxProc)
 {
 	isHyperslabed = false;
@@ -114,7 +114,7 @@ vtkSmartPointer<vtkPoints> VtkIjkGridRepresentation::createpoint()
 				ijkGridRepresentation->getXyzPointsOfKInterfaceOfPatch(kInterface, 0, allXyzPoints);
 				double zIndice = 1;
 
-				if (ijkGridRepresentation->getLocalCrs()->isDepthOriented())
+				if (ijkGridRepresentation->getLocalCrs(0)->isDepthOriented())
 					zIndice = -1;
 
 				for (ULONG64 nodeIndex = 0; nodeIndex < kInterfaceNodeCount * 3; nodeIndex += 3) {
@@ -137,7 +137,7 @@ vtkSmartPointer<vtkPoints> VtkIjkGridRepresentation::createpoint()
 			const auto nodeCount = ijkGridRepresentation->getXyzPointCountOfAllPatches();
 			auto allXyzPoints = new double[nodeCount * 3];
 			ijkGridRepresentation->getXyzPointsOfAllPatchesInGlobalCrs(allXyzPoints);
-			createVtkPoints(nodeCount, allXyzPoints, ijkGridRepresentation->getLocalCrs());
+			createVtkPoints(nodeCount, allXyzPoints, ijkGridRepresentation->getLocalCrs(0));
 
 			delete[] allXyzPoints;
 		}

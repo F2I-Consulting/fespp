@@ -35,12 +35,12 @@ knowledge of the CeCILL license and that you accept its terms.
 #include "VtkProperty.h"
 
 // FESAPI
-#include <common/EpcDocument.h>
+#include <fesapi/common/EpcDocument.h>
 
 #include <vtkDataArray.h>
 
 //----------------------------------------------------------------------------
-VtkAbstractRepresentation::VtkAbstractRepresentation(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, common::EpcDocument *pckEPCRep, common::EpcDocument *pckEPCSubRep, const int & idProc, const int & maxProc) :
+VtkAbstractRepresentation::VtkAbstractRepresentation(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, COMMON_NS::DataObjectRepository *pckEPCRep, COMMON_NS::DataObjectRepository *pckEPCSubRep, const int & idProc, const int & maxProc) :
 VtkAbstractObject(fileName, name, uuid, uuidParent, idProc, maxProc), epcPackageRepresentation(pckEPCRep), epcPackageSubRepresentation(pckEPCSubRep)
 {
 	if (!pckEPCSubRep){

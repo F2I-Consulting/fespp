@@ -37,9 +37,9 @@ knowledge of the CeCILL license and that you accept its terms.
 
 #include "VtkResqml2PolyData.h"
 
-namespace common
+namespace COMMON_NS
 {
-	class EpcDocument;
+	class DataObjectRepository;
 }
 
 class VtkPolylineRepresentation : public VtkResqml2PolyData 
@@ -48,7 +48,7 @@ public:
 	/**
 	* Constructor
 	*/
-	VtkPolylineRepresentation(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, const unsigned int & patchNo, common::EpcDocument *pckEPCRep, common::EpcDocument *pckEPCSubRep);
+	VtkPolylineRepresentation(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, const unsigned int & patchNo, COMMON_NS::DataObjectRepository *repoRepresentation, COMMON_NS::DataObjectRepository *repoSubRepresentation);
 	
 	/**
 	* Destructor

@@ -33,9 +33,10 @@ knowledge of the CeCILL license and that you accept its terms.
 -----------------------------------------------------------------------*/
 #include "VtkUnstructuredGridRepresentation.h"
 
+//SYSTEM
 #include <sstream>
 
-// include VTK library
+// VTK
 #include <vtkSmartPointer.h>
 #include <vtkCellData.h>
 #include <vtkPointData.h>
@@ -43,16 +44,16 @@ knowledge of the CeCILL license and that you accept its terms.
 #include <vtkPolyhedron.h>
 #include <vtkTetra.h>
 
-// include F2i-consulting Energistics Standards API
-#include <common/EpcDocument.h>
-#include <resqml2_0_1/UnstructuredGridRepresentation.h>
+// FESAPI
+#include <fesapi/common/EpcDocument.h>
+#include <fesapi/resqml2_0_1/UnstructuredGridRepresentation.h>
 
-// include F2i-consulting Energistics Standards ParaView Plugin
+// FESPP
 #include "VtkProperty.h"
 
 //----------------------------------------------------------------------------
-VtkUnstructuredGridRepresentation::VtkUnstructuredGridRepresentation(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, common::EpcDocument *pckRep, common::EpcDocument *pckSubRep, const int & idProc, const int & maxProc) :
-VtkResqml2UnstructuredGrid(fileName, name, uuid, uuidParent, pckRep, pckSubRep, idProc, maxProc)
+VtkUnstructuredGridRepresentation::VtkUnstructuredGridRepresentation(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, COMMON_NS::DataObjectRepository *repoRepresentation, COMMON_NS::DataObjectRepository *repoSubRepresentation, const int & idProc, const int & maxProc) :
+VtkResqml2UnstructuredGrid(fileName, name, uuid, uuidParent, repoRepresentation, repoSubRepresentation, idProc, maxProc)
 {
 }
 
@@ -80,7 +81,7 @@ void VtkUnstructuredGridRepresentation::createOutput(const std::string & uuid)
 			ULONG64 pointCount = unstructuredGridRep->getXyzPointCountOfAllPatches();
 			double* allXyzPoints = new double[pointCount * 3];
 			unstructuredGridRep->getXyzPointsOfAllPatchesInGlobalCrs(allXyzPoints);
-			createVtkPoints(pointCount, allXyzPoints, unstructuredGridRep->getLocalCrs());
+			createVtkPoints(pointCount, allXyzPoints, unstructuredGridRep->getLocalCrs(0));
 			vtkOutput->SetPoints(points);
 
 			delete[] allXyzPoints;

@@ -31,13 +31,17 @@ same conditions as regards security.
 The fact that you are presently reading this means that you have had
 knowledge of the CeCILL license and that you accept its terms.
 -----------------------------------------------------------------------*/
+// FESPP
 #include "VtkResqml2PolyData.h"
 
-#include <common/EpcDocument.h>
+//FESAPI
+#include <fesapi/common/EpcDocument.h>
+
+// VTK
 #include <vtkPointData.h>
 
 //----------------------------------------------------------------------------
-VtkResqml2PolyData::VtkResqml2PolyData(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, common::EpcDocument *pckRep, common::EpcDocument *pckSubRep, const int & idProc, const int & maxProc) :
+VtkResqml2PolyData::VtkResqml2PolyData(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, COMMON_NS::DataObjectRepository *pckRep, COMMON_NS::DataObjectRepository *pckSubRep, const int & idProc, const int & maxProc) :
 VtkAbstractRepresentation(fileName, name, uuid, uuidParent, pckRep, pckSubRep, idProc, maxProc)
 {
 }

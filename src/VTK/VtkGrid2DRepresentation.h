@@ -42,10 +42,7 @@ knowledge of the CeCILL license and that you accept its terms.
 
 class VtkGrid2DRepresentationCells;
 
-namespace common
-{
-	class EpcDocument;
-}
+#include <fesapi/common/DataObjectRepository.h>
 
 class VtkGrid2DRepresentation : public VtkResqml2MultiBlockDataSet
 {
@@ -53,7 +50,7 @@ public:
 	/**
 	* Constructor
 	*/
-	VtkGrid2DRepresentation(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, common::EpcDocument *pckRep, common::EpcDocument *pckSubRep);
+	VtkGrid2DRepresentation(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, COMMON_NS::DataObjectRepository *pckRep, COMMON_NS::DataObjectRepository *pckSubRep);
 	
 	/**
 	* Destructor
@@ -103,8 +100,8 @@ protected:
 	
 private:
 	// EPC DOCUMENT
-	common::EpcDocument *epcPackageRepresentation;
-	common::EpcDocument *epcPackageSubRepresentation;
+	COMMON_NS::DataObjectRepository *repositoryRepresentation;
+	COMMON_NS::DataObjectRepository *repositorySubRepresentation;
 
 	VtkGrid2DRepresentationPoints grid2DPoints;
 //	VtkGrid2DRepresentationCells* grid2DCells;

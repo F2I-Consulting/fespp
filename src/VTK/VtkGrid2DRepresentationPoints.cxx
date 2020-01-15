@@ -33,22 +33,22 @@ knowledge of the CeCILL license and that you accept its terms.
 -----------------------------------------------------------------------*/
 #include "VtkGrid2DRepresentationPoints.h"
 
-// include VTK library
+// VTK
 #include <vtkSmartPointer.h>
 #include <vtkMath.h>
 #include <vtkPointData.h>
 #include <vtkCellArray.h>
 
-// include F2i-consulting Energistics Standards API
-#include <common/EpcDocument.h>
-#include <resqml2_0_1/Grid2dRepresentation.h>
+// FESAPI
+#include <fesapi/common/EpcDocument.h>
+#include <fesapi/resqml2_0_1/Grid2dRepresentation.h>
 
-// include F2i-consulting Energistics Standards ParaView Plugin
+// FESPP
 #include "VtkProperty.h"
 
 //----------------------------------------------------------------------------
-VtkGrid2DRepresentationPoints::VtkGrid2DRepresentationPoints(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, common::EpcDocument *pckEPCRep, common::EpcDocument *pckEPCSubRep) :
-VtkResqml2PolyData(fileName, name, uuid, uuidParent, pckEPCRep, pckEPCSubRep)
+VtkGrid2DRepresentationPoints::VtkGrid2DRepresentationPoints(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, COMMON_NS::DataObjectRepository *repoRepresentation, COMMON_NS::DataObjectRepository *repoSubRepresentation) :
+VtkResqml2PolyData(fileName, name, uuid, uuidParent, repoRepresentation, repoSubRepresentation)
 {
 }
 
@@ -85,7 +85,7 @@ void VtkGrid2DRepresentationPoints::createOutput(const std::string & uuid)
 
 			double zIndice = 1;
 
-			if (grid2dRepresentation->getLocalCrs()->isDepthOriented()) {
+			if (grid2dRepresentation->getLocalCrs(0)->isDepthOriented()) {
 				zIndice = -1;
 			}
 

@@ -37,7 +37,7 @@ knowledge of the CeCILL license and that you accept its terms.
 
 // include Resqml2.0 VTK
 #include "VtkAbstractObject.h"
-#include <resqml2/AbstractLocal3dCrs.h>
+#include <fesapi/resqml2/AbstractLocal3dCrs.h>
 
 // include VTK
 #include <vtkSmartPointer.h> 
@@ -54,9 +54,9 @@ knowledge of the CeCILL license and that you accept its terms.
 #include<string>
 
 class VtkProperty;
-namespace common
+namespace COMMON_NS
 {
-	class EpcDocument;
+	class DataObjectRepository;
 }
 
 class VtkAbstractRepresentation : public VtkAbstractObject
@@ -65,7 +65,7 @@ public:
 	/**
 	* Constructor
 	*/
-	VtkAbstractRepresentation(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, common::EpcDocument *epcPackageRepresentation, common::EpcDocument *epcPackageSubRepresentation, const int & idProc=0, const int & maxProc=0);
+	VtkAbstractRepresentation(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, COMMON_NS::DataObjectRepository *epcPackageRepresentation, COMMON_NS::DataObjectRepository *epcPackageSubRepresentation, const int & idProc=0, const int & maxProc=0);
 
 	/**
 	* Destructor
@@ -108,8 +108,8 @@ protected:
 
 
 	// EPC DOCUMENT
-	common::EpcDocument *epcPackageRepresentation;
-	common::EpcDocument *epcPackageSubRepresentation;
+	COMMON_NS::DataObjectRepository *epcPackageRepresentation;
+	COMMON_NS::DataObjectRepository *epcPackageSubRepresentation;
 
 	vtkSmartPointer<vtkPoints> points;
 	bool subRepresentation;

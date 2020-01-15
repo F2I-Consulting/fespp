@@ -41,15 +41,15 @@ knowledge of the CeCILL license and that you accept its terms.
 #include <vtkSmartPointer.h>
 
 // include F2i-consulting Energistics Standards API
-#include <resqml2_0_1/PolylineSetRepresentation.h>
-#include <common/EpcDocument.h>
+#include <fesapi/resqml2_0_1/PolylineSetRepresentation.h>
+#include <fesapi/common/EpcDocument.h>
 
 // include F2i-consulting Energistics Standards ParaView Plugin
 #include "VtkProperty.h"
 
 //----------------------------------------------------------------------------
-VtkPolylineRepresentation::VtkPolylineRepresentation(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, const unsigned int & patchNo, common::EpcDocument *pckRep, common::EpcDocument *pckSubRep) :
-VtkResqml2PolyData(fileName, name, uuid, uuidParent, pckRep, pckSubRep), patchIndex(patchNo)
+VtkPolylineRepresentation::VtkPolylineRepresentation(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, const unsigned int & patchNo, COMMON_NS::DataObjectRepository *repoRepresentation, COMMON_NS::DataObjectRepository *repoSubRepresentation) :
+VtkResqml2PolyData(fileName, name, uuid, uuidParent, repoRepresentation, repoSubRepresentation), patchIndex(patchNo)
 {
 }
 
@@ -79,7 +79,7 @@ void VtkPolylineRepresentation::createOutput(const std::string & uuid)
 			double * allPoint = new double[nodeCount * 3];
 			polylineSetRepresentation->getXyzPointsOfPatch(patchIndex, allPoint);
 
-			createVtkPoints(nodeCount, allPoint, polylineSetRepresentation->getLocalCrs());
+			createVtkPoints(nodeCount, allPoint, polylineSetRepresentation->getLocalCrs(0));
 			vtkOutput->SetPoints(points);
 
 			delete[] allPoint;

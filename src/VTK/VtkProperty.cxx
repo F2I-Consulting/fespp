@@ -34,18 +34,19 @@ knowledge of the CeCILL license and that you accept its terms.
 #include "VtkProperty.h"
 #include "vtkMath.h"
 
-// include F2i-consulting Energistics Standards API
-#include <resqml2/AbstractValuesProperty.h>
-#include <resqml2_0_1/CategoricalProperty.h>
-#include <resqml2_0_1/ContinuousProperty.h>
-#include <resqml2_0_1/DiscreteProperty.h>
-#include <resqml2_0_1/AbstractIjkGridRepresentation.h>
-#include <resqml2_0_1/PolylineSetRepresentation.h>
-#include <resqml2_0_1/TriangulatedSetRepresentation.h>
-#include <resqml2_0_1/Grid2dRepresentation.h>
-#include <resqml2_0_1/UnstructuredGridRepresentation.h>
-#include <resqml2_0_1/WellboreTrajectoryRepresentation.h>
+// FESAPI
+#include <fesapi/resqml2/AbstractValuesProperty.h>
+#include <fesapi/resqml2_0_1/CategoricalProperty.h>
+#include <fesapi/resqml2_0_1/ContinuousProperty.h>
+#include <fesapi/resqml2_0_1/DiscreteProperty.h>
+#include <fesapi/resqml2_0_1/AbstractIjkGridRepresentation.h>
+#include <fesapi/resqml2_0_1/PolylineSetRepresentation.h>
+#include <fesapi/resqml2_0_1/TriangulatedSetRepresentation.h>
+#include <fesapi/resqml2_0_1/Grid2dRepresentation.h>
+#include <fesapi/resqml2_0_1/UnstructuredGridRepresentation.h>
+#include <fesapi/resqml2_0_1/WellboreTrajectoryRepresentation.h>
 
+// VTK
 #include <vtkDoubleArray.h>
 #include <vtkFloatArray.h>
 #include <vtkLongArray.h>
@@ -58,8 +59,8 @@ knowledge of the CeCILL license and that you accept its terms.
 #include <vtkUnsignedCharArray.h>
 
 //----------------------------------------------------------------------------
-VtkProperty::VtkProperty(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, common::EpcDocument *pck, const int & idProc, const int & maxProc) :
-VtkAbstractObject(fileName, name, uuid, uuidParent, idProc, maxProc), epcPackage(pck)
+VtkProperty::VtkProperty(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, COMMON_NS::DataObjectRepository *repo, const int & idProc, const int & maxProc) :
+VtkAbstractObject(fileName, name, uuid, uuidParent, idProc, maxProc), repository(repo)
 {
 	support = typeSupport::CELLS;
 }
@@ -69,8 +70,8 @@ VtkProperty::~VtkProperty()
 {
 	cellData = NULL;
 
-	if (epcPackage != nullptr) {
-		epcPackage = nullptr;
+	if (repository != nullptr) {
+		repository = nullptr;
 	}
 }
 
@@ -156,12 +157,12 @@ vtkDataArray* VtkProperty::loadValuesPropertySet(std::vector<resqml2::AbstractVa
 			resqml2::AbstractValuesProperty* valuesProperty = valuesPropertySet[i];
 
 			int nbElement = 0;
-			gsoap_resqml2_0_1::resqml2__IndexableElements element = valuesProperty->getAttachmentKind();
-			if (element == gsoap_resqml2_0_1::resqml2__IndexableElements::resqml2__IndexableElements__cells ) {
+			gsoap_resqml2_0_1::resqml20__IndexableElements element = valuesProperty->getAttachmentKind();
+			if (element == gsoap_resqml2_0_1::resqml20__IndexableElements__cells ) {
 				nbElement = cellCount;
 				support = typeSupport::CELLS;
 			}
-			else if (element == gsoap_resqml2_0_1::resqml2__IndexableElements::resqml2__IndexableElements__nodes ) {
+			else if (element == gsoap_resqml2_0_1::resqml20__IndexableElements__nodes ) {
 				support = typeSupport::POINTS ;
 				nbElement = pointCount;
 			}
@@ -218,12 +219,12 @@ vtkDataArray* VtkProperty::loadValuesPropertySet(std::vector<resqml2::AbstractVa
 			resqml2::AbstractValuesProperty* valuesProperty = valuesPropertySet[i];
 
 			int nbElement = 0;
-			gsoap_resqml2_0_1::resqml2__IndexableElements element = valuesPropertySet[i]->getAttachmentKind();
-			if (element == gsoap_resqml2_0_1::resqml2__IndexableElements::resqml2__IndexableElements__cells ) {
+			gsoap_resqml2_0_1::resqml20__IndexableElements element = valuesPropertySet[i]->getAttachmentKind();
+			if (element == gsoap_resqml2_0_1::resqml20__IndexableElements__cells) {
 				nbElement = cellCount;
 				support = typeSupport::CELLS;
 			}
-			else if (element == gsoap_resqml2_0_1::resqml2__IndexableElements::resqml2__IndexableElements__nodes ) {
+			else if (element == gsoap_resqml2_0_1::resqml20__IndexableElements__nodes) {
 				support = typeSupport::POINTS ;
 				nbElement = pointCount;
 			}

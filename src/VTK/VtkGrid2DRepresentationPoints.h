@@ -35,11 +35,12 @@ knowledge of the CeCILL license and that you accept its terms.
 #ifndef __VtkGrid2DRepresentationPoints_h
 #define __VtkGrid2DRepresentationPoints_h
 
+// FESPP
 #include "VtkResqml2PolyData.h"
 
-namespace common
+namespace COMMON_NS
 {
-	class EpcDocument;
+	class DataObjectRepository;
 }
 
 class VtkGrid2DRepresentationPoints : public VtkResqml2PolyData
@@ -48,7 +49,7 @@ public:
 	/**
 	* Constructor
 	*/
-	VtkGrid2DRepresentationPoints(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, common::EpcDocument *pckRep, common::EpcDocument *pckSubRep);
+	VtkGrid2DRepresentationPoints(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, COMMON_NS::DataObjectRepository *repoRepresentation, COMMON_NS::DataObjectRepository *repoSubRepresentation);
 	
 	/**
 	* Destructor

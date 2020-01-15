@@ -40,13 +40,13 @@ knowledge of the CeCILL license and that you accept its terms.
 #include <vtkTriangle.h>
 
 // include F2i-consulting Energistics Standards API
-#include <resqml2_0_1/TriangulatedSetRepresentation.h>
+#include <fesapi/resqml2_0_1/TriangulatedSetRepresentation.h>
 
 // include F2i-consulting Energistics Standards ParaView Plugin
 #include "VtkProperty.h"
 
 //----------------------------------------------------------------------------
-VtkTriangulatedRepresentation::VtkTriangulatedRepresentation(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, const unsigned int & patchNo, common::EpcDocument *pckRep, common::EpcDocument *pckSubRep) :
+VtkTriangulatedRepresentation::VtkTriangulatedRepresentation(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, const unsigned int & patchNo, COMMON_NS::DataObjectRepository *pckRep, COMMON_NS::DataObjectRepository *pckSubRep) :
 VtkResqml2PolyData(fileName, name, uuid, uuidParent, pckRep, pckSubRep), patchIndex(patchNo)
 {
 }
@@ -78,7 +78,7 @@ void VtkTriangulatedRepresentation::createOutput(const std::string &uuid)
 			double* allXyzPoints = new double[nodeCount * 3];
 			triangulatedSetRepresentation->getXyzPointsOfAllPatchesInGlobalCrs(allXyzPoints);
 
-			createVtkPoints(nodeCount, allXyzPoints, triangulatedSetRepresentation->getLocalCrs());
+			createVtkPoints(nodeCount, allXyzPoints, triangulatedSetRepresentation->getLocalCrs(0));
 
 			delete[] allXyzPoints;
 

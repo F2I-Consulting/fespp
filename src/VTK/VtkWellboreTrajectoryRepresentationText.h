@@ -44,9 +44,9 @@ namespace resqml2_0_1
 	class AbstractValuesProperty;
 }
 
-namespace common
+namespace COMMON_NS
 {
-	class EpcDocument;
+	class DataObjectRepository;
 }
 
 class VtkWellboreTrajectoryRepresentationText : public VtkResqml2PolyData
@@ -55,7 +55,7 @@ public:
 	/**
 	* Constructor
 	*/
-	VtkWellboreTrajectoryRepresentationText(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, common::EpcDocument *pckRep, common::EpcDocument *pckSubRep);
+	VtkWellboreTrajectoryRepresentationText(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, COMMON_NS::DataObjectRepository *pckRep, COMMON_NS::DataObjectRepository *pckSubRep);
 	
 	/**
 	* method : createOutput
@@ -67,6 +67,7 @@ public:
 	void addProperty(const std::string & uuidProperty, vtkDataArray* dataProperty);
 
 	long getAttachmentPropertyCount(const std::string & uuid, const VtkEpcCommon::FesppAttachmentProperty propertyUnit);
+
 protected:
 
 private:

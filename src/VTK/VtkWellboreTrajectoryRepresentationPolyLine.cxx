@@ -33,23 +33,23 @@ knowledge of the CeCILL license and that you accept its terms.
 -----------------------------------------------------------------------*/
 #include "VtkWellboreTrajectoryRepresentationPolyLine.h"
 
-// include VTK library
+// VTK
 #include <vtkPointData.h>
 #include <vtkCellArray.h>
 #include <vtkPolyLine.h>
 #include <vtkSmartPointer.h>
 #include <vtkDataArray.h>
 
-// include F2i-consulting Energistics Standards API 
-#include <common/EpcDocument.h>
-#include <resqml2_0_1/WellboreTrajectoryRepresentation.h>
+// FESAPI
+#include <fesapi/common/EpcDocument.h>
+#include <fesapi/resqml2_0_1/WellboreTrajectoryRepresentation.h>
 
-// include F2i-consulting Energistics Standards ParaView Plugin
+// FESPP
 #include "VtkProperty.h"
 
 //----------------------------------------------------------------------------
-VtkWellboreTrajectoryRepresentationPolyLine::VtkWellboreTrajectoryRepresentationPolyLine(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, common::EpcDocument *pckRep, common::EpcDocument *pckSubRep) :
-VtkResqml2PolyData(fileName, name, uuid, uuidParent, pckRep, pckSubRep)
+VtkWellboreTrajectoryRepresentationPolyLine::VtkWellboreTrajectoryRepresentationPolyLine(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, COMMON_NS::DataObjectRepository *repoRepresentation, COMMON_NS::DataObjectRepository *repoSubRepresentation) :
+VtkResqml2PolyData(fileName, name, uuid, uuidParent, repoRepresentation, repoSubRepresentation)
 {
 }
 
@@ -71,7 +71,7 @@ void VtkWellboreTrajectoryRepresentationPolyLine::createOutput(const std::string
 			unsigned int pointCount = wellboreSetRepresentation->getXyzPointCountOfPatch(0);
 			double * allXyzPoints = new double[pointCount * 3];
 			wellboreSetRepresentation->getXyzPointsOfAllPatchesInGlobalCrs(allXyzPoints);
-			createVtkPoints(pointCount, allXyzPoints, wellboreSetRepresentation->getLocalCrs());
+			createVtkPoints(pointCount, allXyzPoints, wellboreSetRepresentation->getLocalCrs(0));
 			vtkOutput->SetPoints(points);
 
 			delete[] allXyzPoints;

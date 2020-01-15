@@ -33,24 +33,26 @@ knowledge of the CeCILL license and that you accept its terms.
 -----------------------------------------------------------------------*/
 #include "VtkPartialRepresentation.h"
 
+// FESPP
 #include"VtkEpcDocument.h"
 #include "VtkProperty.h"
 
+// VTK
 #include <vtkDataArray.h>
 
-// include F2i-consulting Energistics Standards API
-#include <resqml2_0_1/PolylineSetRepresentation.h>
-#include <resqml2_0_1/Grid2dRepresentation.h>
-#include <resqml2_0_1/TriangulatedSetRepresentation.h>
-#include <resqml2_0_1/UnstructuredGridRepresentation.h>
-#include <resqml2_0_1/WellboreTrajectoryRepresentation.h>
-#include <resqml2_0_1/AbstractIjkGridRepresentation.h>
-#include <resqml2_0_1/SubRepresentation.h>
-#include <common/AbstractObject.h>
+// FESAPI
+#include <fesapi/resqml2_0_1/PolylineSetRepresentation.h>
+#include <fesapi/resqml2_0_1/Grid2dRepresentation.h>
+#include <fesapi/resqml2_0_1/TriangulatedSetRepresentation.h>
+#include <fesapi/resqml2_0_1/UnstructuredGridRepresentation.h>
+#include <fesapi/resqml2_0_1/WellboreTrajectoryRepresentation.h>
+#include <fesapi/resqml2_0_1/AbstractIjkGridRepresentation.h>
+#include <fesapi/resqml2_0_1/SubRepresentation.h>
+#include <fesapi/common/AbstractObject.h>
 
 //----------------------------------------------------------------------------
-VtkPartialRepresentation::VtkPartialRepresentation(const std::string & fileName, const std::string & uuid, VtkEpcDocument *vtkEpcDowumentWithCompleteRep, common::EpcDocument *pck) :
-epcPackage(pck), vtkEpcDocumentSource(vtkEpcDowumentWithCompleteRep), vtkPartialReprUuid(uuid), fileName(fileName)
+VtkPartialRepresentation::VtkPartialRepresentation(const std::string & fileName, const std::string & uuid, VtkEpcDocument *vtkEpcDowumentWithCompleteRep, COMMON_NS::DataObjectRepository *repo) :
+repository(repo), vtkEpcDocumentSource(vtkEpcDowumentWithCompleteRep), vtkPartialReprUuid(uuid), fileName(fileName)
 {
 }
 
@@ -61,8 +63,8 @@ VtkPartialRepresentation::~VtkPartialRepresentation()
 	}
 	uuidToVtkProperty.clear();
 
-	if (epcPackage != nullptr) {
-		epcPackage = nullptr;
+	if (repository != nullptr) {
+		repository = nullptr;
 	}
 
 	if (vtkEpcDocumentSource != nullptr) {
@@ -77,7 +79,7 @@ void VtkPartialRepresentation::visualize(const std::string & uuid)
 {
 	if (uuid != vtkPartialReprUuid)
 	{
-		common::AbstractObject* obj = epcPackage->getDataObjectByUuid(vtkPartialReprUuid);
+		COMMON_NS::AbstractObject* obj = repository->getDataObjectByUuid(vtkPartialReprUuid);
 		if (obj != nullptr){
 			std::vector<resqml2::AbstractValuesProperty*> valuesPropertySet;
 
@@ -141,7 +143,7 @@ void VtkPartialRepresentation::visualize(const std::string & uuid)
 void VtkPartialRepresentation::createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, const VtkEpcCommon::Resqml2Type & resqmlType)
 {
 	if (resqmlType == VtkEpcCommon::PROPERTY ) {
-		uuidToVtkProperty[uuid] = new VtkProperty(fileName, name, uuid, parent, epcPackage);
+		uuidToVtkProperty[uuid] = new VtkProperty(fileName, name, uuid, parent, repository);
 	}
 }
 
@@ -168,7 +170,7 @@ VtkEpcCommon VtkPartialRepresentation::getInfoUuid()
 }
 
 //----------------------------------------------------------------------------
-common::EpcDocument * VtkPartialRepresentation::getEpcSource()
+COMMON_NS::DataObjectRepository * VtkPartialRepresentation::getEpcSource()
 {
 	return vtkEpcDocumentSource->getEpcDocument();
 }

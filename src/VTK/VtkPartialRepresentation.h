@@ -35,23 +35,26 @@ knowledge of the CeCILL license and that you accept its terms.
 #ifndef __VtkPartialRepresentation_h
 #define __VtkPartialRepresentation_h
 
-// include system
+// SYSTEM
 #if (defined(_WIN32) && _MSC_VER >= 1600)
 #include <unordered_map>
 #else
 #include <tr1/unordered_map>
 #endif
+#include <string>
 
-#include<string>
+// FESPP
 #include "VtkAbstractObject.h"
+
+#include <fesapi/common/DataObjectRepository.h>
 
 class VtkEpcDocument;
 class VtkProperty;
 
-namespace common
+/*namespace COMMON_NS
 {
-	class EpcDocument;
-}
+	class DataObjectRepository;
+}*/
 
 class VtkPartialRepresentation
 {
@@ -59,7 +62,7 @@ public:
 	/**
 	* Constructor
 	*/
-	VtkPartialRepresentation(const std::string & fileName, const std::string & uuid, VtkEpcDocument *vtkEpcDowumentWithCompleteRep, common::EpcDocument *pck);
+	VtkPartialRepresentation(const std::string & fileName, const std::string & uuid, VtkEpcDocument *vtkEpcDowumentWithCompleteRep, COMMON_NS::DataObjectRepository *repo);
 
 	/**
 	* Destructor
@@ -88,7 +91,7 @@ public:
 	VtkEpcCommon::Resqml2Type getType();
 	VtkEpcCommon getInfoUuid();
 
-	common::EpcDocument * getEpcSource();
+	COMMON_NS::DataObjectRepository * getEpcSource();
 
 	long getAttachmentPropertyCount(const std::string & uuid, const VtkEpcCommon::FesppAttachmentProperty propertyUnit);
 
@@ -100,9 +103,9 @@ private:
 #endif
 
 	// EPC DOCUMENT
-	common::EpcDocument *epcPackage;
+	COMMON_NS::DataObjectRepository* repository;
 
-	VtkEpcDocument *vtkEpcDocumentSource;
+	VtkEpcDocument* vtkEpcDocumentSource;
 	std::string vtkPartialReprUuid;
 	std::string fileName;
 };

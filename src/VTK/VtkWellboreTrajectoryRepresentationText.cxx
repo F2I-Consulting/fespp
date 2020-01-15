@@ -33,15 +33,15 @@ knowledge of the CeCILL license and that you accept its terms.
 -----------------------------------------------------------------------*/
 #include "VtkWellboreTrajectoryRepresentationText.h"
 
-// include F2i-consulting Energistics Standards API 
-#include <common/EpcDocument.h>
+// FESAPI
+#include <fesapi/common/EpcDocument.h>
 
-// include F2i-consulting Energistics Standards ParaView Plugin
+// FESPP
 #include "VtkResqml2PolyData.h"
 
 //----------------------------------------------------------------------------
-VtkWellboreTrajectoryRepresentationText::VtkWellboreTrajectoryRepresentationText(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, common::EpcDocument *pckRep, common::EpcDocument *pckSubRep) :
-VtkResqml2PolyData(fileName, name, uuid, uuidParent, pckRep, pckSubRep)
+VtkWellboreTrajectoryRepresentationText::VtkWellboreTrajectoryRepresentationText(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, COMMON_NS::DataObjectRepository *repoRepresentation, COMMON_NS::DataObjectRepository *repoSubRepresentation) :
+VtkResqml2PolyData(fileName, name, uuid, uuidParent, repoRepresentation, repoSubRepresentation)
 {
 }
 

@@ -39,24 +39,23 @@
 #endif
 
 // include API Resqml2
-#include "resqml2_0_1/PolylineSetRepresentation.h"
-#include "resqml2_0_1/TriangulatedSetRepresentation.h"
-#include "resqml2_0_1/Horizon.h"
-#include "resqml2_0_1/TectonicBoundaryFeature.h"
-#include "resqml2_0_1/HorizonInterpretation.h"
-#include "resqml2_0_1/FaultInterpretation.h"
-#include "resqml2_0_1/PointSetRepresentation.h"
-#include "resqml2_0_1/Grid2dRepresentation.h"
-#include "common/AbstractObject.h"
-#include "resqml2_0_1/SubRepresentation.h"
-#include "resqml2_0_1/AbstractIjkGridRepresentation.h"
-#include "resqml2/AbstractValuesProperty.h"
-#include "resqml2_0_1/UnstructuredGridRepresentation.h"
-#include "resqml2_0_1/WellboreTrajectoryRepresentation.h"
-#include "resqml2_0_1/PropertyKindMapper.h"
-#include "resqml2_0_1/SubRepresentation.h"
-
-#include "resqml2/TimeSeries.h"
+#include <fesapi/resqml2_0_1/PolylineSetRepresentation.h>
+#include <fesapi/resqml2_0_1/TriangulatedSetRepresentation.h>
+#include <fesapi/resqml2_0_1/Horizon.h>
+#include <fesapi/resqml2_0_1/TectonicBoundaryFeature.h>
+#include <fesapi/resqml2_0_1/HorizonInterpretation.h>
+#include <fesapi/resqml2_0_1/FaultInterpretation.h>
+#include <fesapi/resqml2_0_1/PointSetRepresentation.h>
+#include <fesapi/resqml2_0_1/Grid2dRepresentation.h>
+#include <fesapi/common/AbstractObject.h>
+#include <fesapi/resqml2_0_1/SubRepresentation.h>
+#include <fesapi/resqml2_0_1/AbstractIjkGridRepresentation.h>
+#include <fesapi/resqml2/AbstractValuesProperty.h>
+#include <fesapi/resqml2_0_1/UnstructuredGridRepresentation.h>
+#include <fesapi/resqml2_0_1/WellboreTrajectoryRepresentation.h>
+#include <fesapi/resqml2_0_1/PropertyKindMapper.h>
+#include <fesapi/resqml2_0_1/SubRepresentation.h>
+#include <fesapi/resqml2/TimeSeries.h>
 
 // include Qt
 #include <QtGui>

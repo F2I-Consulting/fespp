@@ -39,11 +39,11 @@ knowledge of the CeCILL license and that you accept its terms.
 #include <vtkCellArray.h>
 
 // include F2i-consulting Energistics Standards API
-#include <common/EpcDocument.h>
-#include <resqml2_0_1/Grid2dRepresentation.h>
+#include <fesapi/common/EpcDocument.h>
+#include <fesapi/resqml2_0_1/Grid2dRepresentation.h>
 
 //----------------------------------------------------------------------------
-VtkGrid2DRepresentationCells::VtkGrid2DRepresentationCells(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, common::EpcDocument *pckEPCRep, common::EpcDocument *pckEPCSubRep) :
+VtkGrid2DRepresentationCells::VtkGrid2DRepresentationCells(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, COMMON_NS::DataObjectRepository *pckEPCRep, COMMON_NS::DataObjectRepository *pckEPCSubRep) :
 VtkResqml2StructuredGrid(fileName, name, uuid, uuidParent, pckEPCRep, pckEPCSubRep)
 {
 

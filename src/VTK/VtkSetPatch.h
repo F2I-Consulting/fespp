@@ -43,7 +43,7 @@ knowledge of the CeCILL license and that you accept its terms.
 #include "VtkResqml2MultiBlockDataSet.h"
 
 // Fesapi namespaces
-#include "nsDefinitions.h"
+#include <fesapi/nsDefinitions.h>
 
 class VtkPolylineRepresentation;
 class VtkTriangulatedRepresentation;
@@ -51,7 +51,7 @@ class VtkProperty;
 
 namespace COMMON_NS
 {
-	class EpcDocument;
+	class DataObjectRepository;
 }
 
 class VtkSetPatch : public VtkResqml2MultiBlockDataSet
@@ -61,7 +61,7 @@ public:
 	/**
 	* Constructor
 	*/
-	VtkSetPatch (const std::string & fileName, const std::string & name, const std:: string & uuid, const std::string & uuidParent, COMMON_NS::EpcDocument *pckEPC, const int & idProc=0, const int & maxProc=0);
+	VtkSetPatch (const std::string & fileName, const std::string & name, const std:: string & uuid, const std::string & uuidParent, COMMON_NS::DataObjectRepository *pckEPC, const int & idProc=0, const int & maxProc=0);
 	
 	/**
 	* Destructor
@@ -103,7 +103,7 @@ protected:
 	
 private:
 	// EPC DOCUMENT
-	COMMON_NS::EpcDocument *epcPackage;
+	COMMON_NS::DataObjectRepository *epcPackage;
 	
 	// All representation
 	std::unordered_map<std::string, std::vector<VtkPolylineRepresentation *>> uuidToVtkPolylineRepresentation;

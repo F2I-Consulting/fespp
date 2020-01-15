@@ -33,20 +33,20 @@ knowledge of the CeCILL license and that you accept its terms.
 -----------------------------------------------------------------------*/
 #include "VtkWellboreTrajectoryRepresentationDatum.h"
 
-// include VTK library
+// VTK
 #include <vtkSmartPointer.h>
 #include <vtkCellArray.h>
 #include <vtkPyramid.h>
 #include <vtkPoints.h>
 
-// include F2i-consulting Energistics Standards API 
-#include <common/EpcDocument.h>
-#include <resqml2_0_1/WellboreTrajectoryRepresentation.h>
-#include <resqml2/MdDatum.h>
+// FESAPI
+#include <fesapi/common/EpcDocument.h>
+#include <fesapi/resqml2_0_1/WellboreTrajectoryRepresentation.h>
+#include <fesapi/resqml2/MdDatum.h>
 
 //----------------------------------------------------------------------------
-VtkWellboreTrajectoryRepresentationDatum::VtkWellboreTrajectoryRepresentationDatum(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, common::EpcDocument *pckRep, common::EpcDocument *pckSubRep) :
-VtkResqml2UnstructuredGrid(fileName, name, uuid, uuidParent, pckRep, pckSubRep)
+VtkWellboreTrajectoryRepresentationDatum::VtkWellboreTrajectoryRepresentationDatum(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, COMMON_NS::DataObjectRepository *repoRepresentation, COMMON_NS::DataObjectRepository *repoSubRepresentation) :
+VtkResqml2UnstructuredGrid(fileName, name, uuid, uuidParent, repoRepresentation, repoSubRepresentation)
 {
 }
 
