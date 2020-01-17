@@ -128,6 +128,17 @@ private:
 	int addSubRepTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name);
 	int addPropertyTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name);
 	
+	void searchFaultPolylines(const std::string & fileName);
+	void searchHorizonPolylines(const std::string & fileName);
+	void searchUnstructuredGrid(const std::string & fileName);
+	void searchTriangulated(const std::string & fileName);
+	void searchGrid2d(const std::string & fileName);
+	void searchIjkGrid(const std::string & fileName);
+	void searchWellboreTrajectory(const std::string & fileName);
+	void searchSubRepresentation(const std::string & fileName);
+	void searchTimeSeries(const std::string & fileName);
+
+
 	/**
 	* method : createTreeVtkPartialRep
 	* variable : uuid, VtkEpcDocument with complete representation

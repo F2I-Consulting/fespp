@@ -73,402 +73,41 @@ knowledge of the CeCILL license and that you accept its terms.
 #include "VtkSetPatch.h"
 #include "VtkEpcCommon.h"
 
-//----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 VtkEpcDocument::VtkEpcDocument(const std::string & fileName, const int & idProc, const int & maxProc, VtkEpcDocumentSet* epcDocSet) :
 VtkResqml2MultiBlockDataSet(fileName, fileName, fileName, "", idProc, maxProc),
 epcSet(epcDocSet)
 {
 	COMMON_NS::EpcDocument pck(fileName);
 	std::string resqmlResult = pck.deserializeInto(repository);
+	pck.close();
 	if (!resqmlResult.empty()) {
-		cerr << resqmlResult << endl;
-		pck.close();
-	} else {
-		//**************
-		// polylines
-		std::vector<resqml2_0_1::PolylineSetRepresentation*> polylines;
-		try	{
-			polylines = repository.getFaultPolylineSetRepSet();
-		}
-		catch  (const std::exception & e) {
-			cout << "EXCEPTION in fesapi when call getFaultPolylineSetRepSet with file: " << fileName << " : " << e.what();
-		}
-		for (size_t idx = 0; idx < polylines.size(); ++idx)	{
-			auto interpretation = polylines[idx]->getInterpretation();
-			//			VtkEpcCommon uuidIsChildOf[polylines[idx]->getUuid()];
-			std::string uuidParent;
-			if (interpretation) {
-				uuidParent = interpretation->getUuid();
-				createTreeVtk(uuidParent, fileName, interpretation->getTitle().c_str(), VtkEpcCommon::INTERPRETATION);
-			}
-			else {
-				uuidParent = fileName;
-			}
-			if (polylines[idx]->isPartial()) {
-				auto vtkEpcSrc = epcSet->getVtkEpcDocument(polylines[idx]->getUuid());
-				if (vtkEpcSrc) {
-					auto type_in_epcdoc = epcSet->getTypeInEpcDocument(polylines[idx]->getUuid());
-					if (type_in_epcdoc == VtkEpcCommon::POLYLINE_SET){
-						createTreeVtkPartialRep(polylines[idx]->getUuid(), vtkEpcSrc);
-						uuidIsChildOf[polylines[idx]->getUuid()].setParentType( VtkEpcCommon::POLYLINE_SET);
-					}
-				}
-				else {
-					epc_error = epc_error + " Partial UUID: (" + polylines[idx]->getUuid() + ") is not loaded \n";
-				}
-			}
-			else {
-				createTreeVtk(polylines[idx]->getUuid(), uuidParent, polylines[idx]->getTitle().c_str(), VtkEpcCommon::POLYLINE_SET);
-			}
-		}
+		epc_error = epc_error + resqmlResult;
+	}
+	// polylines
+	searchFaultPolylines(fileName);
+	searchHorizonPolylines(fileName);
+	//unstructuredGrid
+	searchUnstructuredGrid(fileName);
+	// triangulated
+	searchTriangulated(fileName);
+	// grid2D
+	searchGrid2d(fileName);
+	// ijkGrid
+	searchIjkGrid(fileName);
+	// WellboreTrajectory
+	searchWellboreTrajectory(fileName);
+	// subRepresentation
+	searchSubRepresentation(fileName);
+	// TimeSeries
+	searchTimeSeries(fileName);
 
-		try	{
-			polylines = repository.getHorizonPolylineSetRepSet();
-		}
-		catch  (const std::exception & e) {
-			cout << "EXCEPTION in fesapi when call getHorizonPolylineSetRepSet with file: " << fileName << " : " << e.what();
-		}
-		for (size_t idx = 0; idx < polylines.size(); ++idx)	{
-			auto interpretation = polylines[idx]->getInterpretation();
-			std::string uuidParent;
-			if (interpretation) {
-				uuidParent = interpretation->getUuid();
-				createTreeVtk(uuidParent, fileName, interpretation->getTitle().c_str(), VtkEpcCommon::INTERPRETATION);
-			}
-			else {
-				uuidParent = fileName;
-			}
-			if (polylines[idx]->isPartial()) {
-				auto vtkEpcSrc = epcSet->getVtkEpcDocument(polylines[idx]->getUuid());
-				if (vtkEpcSrc)	{
-					auto type_in_epcdoc = epcSet->getTypeInEpcDocument(polylines[idx]->getUuid());
-					if (type_in_epcdoc == VtkEpcCommon::POLYLINE_SET){
-						createTreeVtkPartialRep(polylines[idx]->getUuid(), vtkEpcSrc);
-						uuidIsChildOf[polylines[idx]->getUuid()].setParentType( VtkEpcCommon::POLYLINE_SET);
-					}
-				}
-				else {
-					epc_error = epc_error + " Partial UUID: (" + polylines[idx]->getUuid() + ") is not loaded \n";
-				}
-			}
-			else {
-				createTreeVtk(polylines[idx]->getUuid(), uuidParent, polylines[idx]->getTitle().c_str(), VtkEpcCommon::POLYLINE_SET);
-			}
-			//property
-			auto valuesPropertySet = polylines[idx]->getValuesPropertySet();
-			for (size_t i = 0; i < valuesPropertySet.size(); ++i)	{
-				//				uuidIsChildOf[valuesPropertySet[i]->getUuid()] = new VtkEpcCommon();
-				createTreeVtk(valuesPropertySet[i]->getUuid(), polylines[idx]->getUuid(), valuesPropertySet[i]->getTitle().c_str(), VtkEpcCommon::PROPERTY);
-			}
-		}
-		//**************
-
-		//**************
-		// triangulated
-		std::vector<resqml2_0_1::TriangulatedSetRepresentation*> triangulated;
-		try	{
-			triangulated = repository.getAllTriangulatedSetRepSet();
-		}
-		catch  (const std::exception & e)	{
-			cout << "EXCEPTION in fesapi when call getAllTriangulatedSetRepSet with file: " << fileName << " : " << e.what();
-		}
-		for (size_t iter = 0; iter < triangulated.size(); ++iter)	{
-			auto interpretation = triangulated[iter]->getInterpretation();
-			std::string uuidParent;
-			if (interpretation) {
-				uuidParent = interpretation->getUuid();
-				createTreeVtk(uuidParent, fileName, interpretation->getTitle().c_str(), VtkEpcCommon::INTERPRETATION);
-			}
-			else {
-				uuidParent = fileName;
-			}
-			if (triangulated[iter]->isPartial()){
-				auto vtkEpcSrc = epcSet->getVtkEpcDocument(triangulated[iter]->getUuid());
-				if (vtkEpcSrc)	{
-					auto type_in_epcdoc = epcSet->getTypeInEpcDocument(triangulated[iter]->getUuid());
-					if (type_in_epcdoc == VtkEpcCommon::TRIANGULATED_SET){
-						createTreeVtkPartialRep(triangulated[iter]->getUuid(), vtkEpcSrc);
-						uuidIsChildOf[triangulated[iter]->getUuid()].setParentType( VtkEpcCommon::TRIANGULATED_SET);
-					}
-				}
-				else {
-					epc_error = epc_error + " Partial UUID: (" + triangulated[iter]->getUuid() + ") is not loaded \n";
-				}
-			}
-			else {
-				createTreeVtk(triangulated[iter]->getUuid(), uuidParent, triangulated[iter]->getTitle().c_str(), VtkEpcCommon::TRIANGULATED_SET);
-			}
-			//property
-			auto valuesPropertySet = triangulated[iter]->getValuesPropertySet();
-			for (size_t i = 0; i < valuesPropertySet.size(); ++i) {
-				createTreeVtk(valuesPropertySet[i]->getUuid(), triangulated[iter]->getUuid(), valuesPropertySet[i]->getTitle().c_str(), VtkEpcCommon::PROPERTY);
-			}
-		}
-		//**************
-
-		//**************
-		// grid2D
-		std::vector<resqml2_0_1::Grid2dRepresentation*> grid2D;
-		try	{
-			grid2D = repository.getHorizonGrid2dRepSet();
-		}
-		catch  (const std::exception & e)	{
-			cout << "EXCEPTION in fesapi when call getHorizonGrid2dRepSet with file: " << fileName << " : " << e.what();
-		}
-		for (size_t iter = 0; iter < grid2D.size(); ++iter)	{
-			auto interpretation = grid2D[iter]->getInterpretation();
-			std::string uuidParent;
-			if (interpretation) {
-				uuidParent = interpretation->getUuid();
-				createTreeVtk(uuidParent, fileName, interpretation->getTitle().c_str(), VtkEpcCommon::INTERPRETATION);
-			}
-			else {
-				uuidParent = fileName;
-			}
-			if (grid2D[iter]->isPartial())	{
-				auto vtkEpcSrc = epcSet->getVtkEpcDocument(grid2D[iter]->getUuid());
-				if (vtkEpcSrc)
-				{
-					auto type_in_epcdoc = epcSet->getTypeInEpcDocument(grid2D[iter]->getUuid());
-					if (type_in_epcdoc == VtkEpcCommon::GRID_2D){
-						createTreeVtkPartialRep(grid2D[iter]->getUuid(), vtkEpcSrc);
-						uuidIsChildOf[grid2D[iter]->getUuid()].setParentType( VtkEpcCommon::GRID_2D);
-					}
-					else {
-						epc_error = epc_error + " Partial UUID (" + grid2D[iter]->getUuid() + ") is grid2D type and is incorrect \n";
-					}
-				}
-				else {
-					epc_error = epc_error + " Partial UUID: (" + grid2D[iter]->getUuid() + ") is not loaded \n";
-				}
-			}
-			else	{
-				createTreeVtk(grid2D[iter]->getUuid(), uuidParent, grid2D[iter]->getTitle().c_str(), VtkEpcCommon::GRID_2D);
-			}
-			//property
-			auto valuesPropertySet = grid2D[iter]->getValuesPropertySet();
-			for (size_t i = 0; i < valuesPropertySet.size(); ++i)	{
-				createTreeVtk(valuesPropertySet[i]->getUuid(), grid2D[iter]->getUuid(), valuesPropertySet[i]->getTitle().c_str(), VtkEpcCommon::PROPERTY);
-			}
-		}
-		//**************
-
-		//**************
-		// ijkGrid
-		std::vector<resqml2_0_1::AbstractIjkGridRepresentation*> ijkGrid;
-		try	{
-			ijkGrid = repository.getIjkGridRepresentationSet();
-		}
-		catch  (const std::exception & e) {
-			cout << "EXCEPTION in fesapi when call getIjkGridRepresentationSet with file: " << fileName << " : " << e.what();
-		}
-		for (size_t iter = 0; iter < ijkGrid.size(); ++iter) {
-			auto interpretation = ijkGrid[iter]->getInterpretation();
-			std::string uuidParent;
-			if (interpretation) {
-				uuidParent = interpretation->getUuid();
-				createTreeVtk(uuidParent, fileName, interpretation->getTitle().c_str(), VtkEpcCommon::INTERPRETATION);
-			}
-			else {
-				uuidParent = fileName;
-			}
-			if (ijkGrid[iter]->isPartial())	{
-				auto vtkEpcSrc = epcSet->getVtkEpcDocument(ijkGrid[iter]->getUuid());
-				if (vtkEpcSrc)	{
-					auto type_in_epcdoc = epcSet->getTypeInEpcDocument(ijkGrid[iter]->getUuid());
-					if (type_in_epcdoc == VtkEpcCommon::IJK_GRID){
-						createTreeVtkPartialRep(ijkGrid[iter]->getUuid(), vtkEpcSrc);
-						uuidIsChildOf[ijkGrid[iter]->getUuid()].setParentType( VtkEpcCommon::IJK_GRID);
-					}
-					else {
-						epc_error = epc_error + " Partial UUID (" + ijkGrid[iter]->getUuid() + ") is ijk grid type and is incorrect \n";
-					}
-				}
-				else {
-					epc_error = epc_error + " Partial UUID: (" + ijkGrid[iter]->getUuid() + ") is not loaded \n";
-				}
-			}
-			else	{
-				createTreeVtk(ijkGrid[iter]->getUuid(), uuidParent, ijkGrid[iter]->getTitle().c_str(), VtkEpcCommon::IJK_GRID);
-			}
-			//property
-			auto valuesPropertySet = ijkGrid[iter]->getValuesPropertySet();
-			for (size_t i = 0; i < valuesPropertySet.size(); ++i)	{
-				createTreeVtk(valuesPropertySet[i]->getUuid(), ijkGrid[iter]->getUuid(), valuesPropertySet[i]->getTitle().c_str(), VtkEpcCommon::PROPERTY);
-			}
-		}
-		//**************
-
-		//**************
-		// unstructuredGrid
-		std::vector<resqml2_0_1::UnstructuredGridRepresentation*> unstructuredGrid;
-		try	{
-			unstructuredGrid = repository.getUnstructuredGridRepresentationSet();
-		}
-		catch  (const std::exception & e)	{
-			cout << "EXCEPTION in fesapi when call getUnstructuredGridRepresentationSet with file: " << fileName << " : " << e.what();
-		}
-		for (size_t iter = 0; iter < unstructuredGrid.size(); ++iter)	{
-			auto interpretation = unstructuredGrid[iter]->getInterpretation();
-			std::string uuidParent;
-			if (interpretation) {
-				uuidParent = interpretation->getUuid();
-				createTreeVtk(uuidParent, fileName, interpretation->getTitle().c_str(), VtkEpcCommon::INTERPRETATION);
-			}
-			else {
-				uuidParent = fileName;
-			}
-			if (unstructuredGrid[iter]->isPartial())	{
-				auto vtkEpcSrc = epcSet->getVtkEpcDocument(unstructuredGrid[iter]->getUuid());
-				if (vtkEpcSrc){
-					auto type_in_epcdoc = epcSet->getTypeInEpcDocument(unstructuredGrid[iter]->getUuid());
-					if (type_in_epcdoc == VtkEpcCommon::UNSTRUC_GRID){
-						createTreeVtkPartialRep(unstructuredGrid[iter]->getUuid(), vtkEpcSrc);
-						uuidIsChildOf[unstructuredGrid[iter]->getUuid()].setParentType( VtkEpcCommon::UNSTRUC_GRID);
-					}
-					else {
-						epc_error = epc_error + " Partial UUID (" + unstructuredGrid[iter]->getUuid() + ") is Unstructured grid type and is incorrect \n";
-					}
-				}
-				else {
-					epc_error = epc_error + " Partial UUID: (" + unstructuredGrid[iter]->getUuid() + ") is not loaded \n";
-				}
-			}
-			else	{
-				createTreeVtk(unstructuredGrid[iter]->getUuid(), uuidParent, unstructuredGrid[iter]->getTitle().c_str(), VtkEpcCommon::UNSTRUC_GRID);
-			}
-			//property
-			auto valuesPropertySet = unstructuredGrid[iter]->getValuesPropertySet();
-			for (size_t i = 0; i < valuesPropertySet.size(); ++i)	{
-				createTreeVtk(valuesPropertySet[i]->getUuid(), unstructuredGrid[iter]->getUuid(), valuesPropertySet[i]->getTitle().c_str(), VtkEpcCommon::PROPERTY);
-			}
-		}
-		//**************
-
-		//**************
-		// WellboreTrajectory
-		std::vector<resqml2_0_1::WellboreTrajectoryRepresentation*> WellboreTrajectory;
-		try	{
-			WellboreTrajectory = repository.getWellboreTrajectoryRepresentationSet();
-		}
-		catch  (const std::exception & e)	{
-			cout << "EXCEPTION in fesapi when call getWellboreTrajectoryRepresentationSet with file: " << fileName << " : " << e.what();
-		}
-		for (size_t iter = 0; iter < WellboreTrajectory.size(); ++iter)	{
-			auto interpretation = WellboreTrajectory[iter]->getInterpretation();
-			std::string uuidParent;
-			if (interpretation) {
-				uuidParent = interpretation->getUuid();
-				createTreeVtk(uuidParent, fileName, interpretation->getTitle().c_str(), VtkEpcCommon::INTERPRETATION);
-			}
-			else {
-				uuidParent = fileName;
-			}
-			if (WellboreTrajectory[iter]->isPartial()) {
-				auto vtkEpcSrc = epcSet->getVtkEpcDocument(WellboreTrajectory[iter]->getUuid());
-				if (vtkEpcSrc)	{
-					auto type_in_epcdoc = epcSet->getTypeInEpcDocument(WellboreTrajectory[iter]->getUuid());
-					if (type_in_epcdoc == VtkEpcCommon::WELL_TRAJ){
-						createTreeVtkPartialRep(WellboreTrajectory[iter]->getUuid(), vtkEpcSrc);
-						uuidIsChildOf[WellboreTrajectory[iter]->getUuid()].setParentType( VtkEpcCommon::WELL_TRAJ);
-					}
-				}
-				else {
-					epc_error = epc_error + " Partial UUID: (" + WellboreTrajectory[iter]->getUuid() + ") is not loaded \n";
-				}
-			}
-			else {
-				createTreeVtk(WellboreTrajectory[iter]->getUuid(), uuidParent, WellboreTrajectory[iter]->getTitle().c_str(), VtkEpcCommon::WELL_TRAJ);
-			}
-			//property
-			auto valuesPropertySet = WellboreTrajectory[iter]->getValuesPropertySet();
-			for (size_t i = 0; i < valuesPropertySet.size(); ++i)		{
-				createTreeVtk(valuesPropertySet[i]->getUuid(), WellboreTrajectory[iter]->getUuid(), valuesPropertySet[i]->getTitle().c_str(), VtkEpcCommon::PROPERTY);
-			}
-		}
-		//**************
-
-
-		//**************
-		// subRepresentation
-		std::vector<resqml2::SubRepresentation*> subRepresentation;
-		try		{
-			subRepresentation = repository.getSubRepresentationSet();
-		}
-		catch  (const std::exception & e)		{
-			cout << "EXCEPTION in fesapi when call getSubRepresentationSet with file: " << fileName << " : " << e.what();
-		}
-		for (size_t iter = 0; iter < subRepresentation.size(); ++iter)		{
-			if (subRepresentation[iter]->isPartial()){
-				auto vtkEpcSrc = epcSet->getVtkEpcDocument(subRepresentation[iter]->getUuid());
-				if (vtkEpcSrc)	{
-					createTreeVtkPartialRep(subRepresentation[iter]->getUuid(), vtkEpcSrc);
-					uuidIsChildOf[subRepresentation[iter]->getUuid()].setParentType( VtkEpcCommon::SUB_REP);
-				}
-				else {
-					epc_error = epc_error + " Partial UUID: (" + ijkGrid[iter]->getUuid() + ") is not loaded \n";
-				}
-			}
-			else {
-				auto uuidParent = subRepresentation[iter]->getSupportingRepresentationUuid(0);
-				createTreeVtk(subRepresentation[iter]->getUuid(), uuidParent, subRepresentation[iter]->getTitle().c_str(), VtkEpcCommon::SUB_REP);
-			}
-			//property
-			auto valuesPropertySet = subRepresentation[iter]->getValuesPropertySet();
-			for (size_t i = 0; i < valuesPropertySet.size(); ++i)	{
-				createTreeVtk(valuesPropertySet[i]->getUuid(), subRepresentation[iter]->getUuid(), valuesPropertySet[i]->getTitle().c_str(), VtkEpcCommon::PROPERTY);
-			}
-		}
-		//**************
-
-
-		//**************
-		// TimeSeries
-		std::vector<resqml2::TimeSeries*> timeSeries;
-		try	{
-			timeSeries = repository.getTimeSeriesSet();
-		}
-		catch  (const std::exception & e)	{
-			cout << "EXCEPTION in fesapi when call getTimeSeriesSet with file: " << fileName << " : " << e.what();
-		}
-
-		for (auto& timeSerie : timeSeries) {
-			auto propSeries = timeSerie->getPropertySet();
-
-			for (auto& propertie : propSeries) {
-				auto prop_uuid = propertie->getUuid();
-				if (uuidIsChildOf.find(prop_uuid) == uuidIsChildOf.end()) {
-					std::cout << "The property " << prop_uuid << " is not supported and consequently cannot be associated to its time series." << std::endl;
-					continue;
-				}
-
-				uuidIsChildOf[prop_uuid].setType(VtkEpcCommon::TIME_SERIES);
-				uuidIsChildOf[prop_uuid].setTimeIndex(propertie->getTimeIndex());
-				uuidIsChildOf[prop_uuid].setTimestamp(propertie->getTimestamp());
-
-				/*
-				if (propSeries[i]->isAssociatedToOneStandardEnergisticsPropertyKind())
-				{
-					auto propKind = propSeries[i]->getEnergisticsPropertyKind();
-				}
-				else
-				{
-					auto propkindUuid = propSeries[i]->getLocalPropertyKindUuid();
-					cout << "name : " << propSeries[i]->getTitle() << " - " <<propkindUuid << "\n";
-				}
-				 */
-
-			}
-		}
-
-		//**************
-		for (auto &iter : uuidRep)	{
-			treeView.push_back(uuidIsChildOf[iter]);
-		}
+	for (auto &iter : uuidRep)	{
+		treeView.push_back(uuidIsChildOf[iter]);
 	}
 }
 
-//----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 VtkEpcDocument::~VtkEpcDocument()
 {
 	for(auto i : uuidToVtkGrid2DRepresentation) {
@@ -519,7 +158,7 @@ VtkEpcDocument::~VtkEpcDocument()
 	//delete repository;
 }
 
-//----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 void VtkEpcDocument::createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, const VtkEpcCommon::Resqml2Type & type)
 {
 	int return_code = 1;
@@ -577,13 +216,13 @@ void VtkEpcDocument::createTreeVtk(const std::string & uuid, const std::string &
 	}
 }
 
-//----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 void VtkEpcDocument::addGrid2DTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name)
 {
 	uuidToVtkGrid2DRepresentation[uuid] = new VtkGrid2DRepresentation(getFileName(), name, uuid, parent, &repository, nullptr);
 }
 
-//----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 void VtkEpcDocument::addPolylineSetTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name)
 {
 	auto object = repository.getDataObjectByUuid(uuid);
@@ -596,7 +235,7 @@ void VtkEpcDocument::addPolylineSetTreeVtk(const std::string & uuid, const std::
 	}
 }
 
-//----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 void VtkEpcDocument::addTriangulatedSetTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name)
 {
 	auto object = repository.getDataObjectByUuid(uuid);
@@ -609,25 +248,25 @@ void VtkEpcDocument::addTriangulatedSetTreeVtk(const std::string & uuid, const s
 	}
 }
 
-//----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 void VtkEpcDocument::addWellTrajTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name)
 {
 	uuidToVtkWellboreTrajectoryRepresentation[uuid] = new VtkWellboreTrajectoryRepresentation(getFileName(), name, uuid, parent, &repository, nullptr);
 }
 
-//----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 void VtkEpcDocument::addIjkGridTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name)
 {
 	uuidToVtkIjkGridRepresentation[uuid] = new VtkIjkGridRepresentation(getFileName(), name, uuid, parent, &repository, nullptr, getIdProc(), getMaxProc());
 }
 
-//----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 void VtkEpcDocument::addUnstrucGridTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name)
 {
 	uuidToVtkUnstructuredGridRepresentation[uuid] = new VtkUnstructuredGridRepresentation(getFileName(), name, uuid, parent, &repository, nullptr);
 }
 
-//----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 int VtkEpcDocument::addSubRepTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name)
 {
 	if (uuidIsChildOf[uuid].getParentType() == VtkEpcCommon::IJK_GRID)	{
@@ -669,7 +308,7 @@ int VtkEpcDocument::addSubRepTreeVtk(const std::string & uuid, const std::string
 	return 0;
 }
 
-//----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 int VtkEpcDocument::addPropertyTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name)
 {
 	switch (uuidIsChildOf[parent].getType()) {
@@ -771,7 +410,7 @@ int VtkEpcDocument::addPropertyTreeVtk(const std::string & uuid, const std::stri
 
 }
 
-//----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 void VtkEpcDocument::createTreeVtkPartialRep(const std::string & uuid, VtkEpcDocument *vtkEpcDowumentWithCompleteRep)
 {
 	uuidIsChildOf[uuid].setType( VtkEpcCommon::PARTIAL);
@@ -779,7 +418,7 @@ void VtkEpcDocument::createTreeVtkPartialRep(const std::string & uuid, VtkEpcDoc
 	uuidToVtkPartialRepresentation[uuid] = new VtkPartialRepresentation(getFileName(), uuid, vtkEpcDowumentWithCompleteRep, &repository);
 }
 
-//----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 void VtkEpcDocument::visualize(const std::string & uuid)
 {
 	auto uuidToAttach = uuidIsChildOf[uuid].getUuid();
@@ -1007,7 +646,7 @@ void VtkEpcDocument::visualize(const std::string & uuid)
 	}
 }
 
-//----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 void VtkEpcDocument::remove(const std::string & uuid)
 {
 	auto uuidtoAttach = uuid;
@@ -1126,7 +765,7 @@ void VtkEpcDocument::remove(const std::string & uuid)
 	}
 }
 
-//----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 void VtkEpcDocument::attach()
 {
 	for (size_t newBlockIndex = 0; newBlockIndex < attachUuids.size(); ++newBlockIndex) {
@@ -1212,7 +851,7 @@ void VtkEpcDocument::attach()
 	}
 }
 
-//----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 void VtkEpcDocument::addProperty(const std::string & uuidProperty, vtkDataArray* dataProperty)
 {
 	switch (uuidIsChildOf[uuidProperty].getType())	{
@@ -1298,7 +937,7 @@ void VtkEpcDocument::addProperty(const std::string & uuidProperty, vtkDataArray*
 	}
 }
 
-//----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 long VtkEpcDocument::getAttachmentPropertyCount(const std::string & uuid, const VtkEpcCommon::FesppAttachmentProperty propertyUnit)
 {
 	long result = 0;
@@ -1336,7 +975,7 @@ long VtkEpcDocument::getAttachmentPropertyCount(const std::string & uuid, const 
 	return result;
 }
 
-//----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 int VtkEpcDocument::getICellCount(const std::string & uuid)
 {
 	long result = 0;
@@ -1358,7 +997,7 @@ int VtkEpcDocument::getICellCount(const std::string & uuid)
 	return result;
 }
 
-//----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 int VtkEpcDocument::getJCellCount(const std::string & uuid)
 {
 	long result = 0;
@@ -1380,7 +1019,7 @@ int VtkEpcDocument::getJCellCount(const std::string & uuid)
 	return result;
 }
 
-//----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 int VtkEpcDocument::getKCellCount(const std::string & uuid)
 {
 	long result = 0;
@@ -1402,7 +1041,7 @@ int VtkEpcDocument::getKCellCount(const std::string & uuid)
 	return result;
 }
 
-//----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 int VtkEpcDocument::getInitKIndex(const std::string & uuid)
 {
 	long result = 0;
@@ -1424,40 +1063,391 @@ int VtkEpcDocument::getInitKIndex(const std::string & uuid)
 	return result;
 }
 
-//----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 VtkEpcCommon::Resqml2Type VtkEpcDocument::getType(std::string uuid)
 {
 	return uuidIsChildOf[uuid].getType();
 }
 
-//----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 VtkEpcCommon VtkEpcDocument::getInfoUuid(std::string uuid)
 {
 	return uuidIsChildOf[uuid];
 }
 
-//----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 COMMON_NS::DataObjectRepository* VtkEpcDocument::getEpcDocument()
 {
 	return &repository;
 }
 
-//----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 std::vector<std::string> VtkEpcDocument::getListUuid()
 {
 	return uuidRep;
 }
 
 
-//----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 std::vector<VtkEpcCommon> VtkEpcDocument::getTreeView() const
 {
 	return treeView;
 }
 
-//----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 std::string VtkEpcDocument::getError()
 {
 
 	return epc_error;
+}
+
+
+// PRIVATE
+
+void VtkEpcDocument::searchFaultPolylines(const std::string & fileName) {
+	std::vector<resqml2_0_1::PolylineSetRepresentation*> polylines;
+	try	{
+		polylines = repository.getFaultPolylineSetRepSet();
+	}
+	catch  (const std::exception & e) {
+		cout << "EXCEPTION in fesapi when call getFaultPolylineSetRepSet with file: " << fileName << " : " << e.what();
+	}
+	for (size_t idx = 0; idx < polylines.size(); ++idx)	{
+		if (polylines[idx]->isPartial()) {
+			auto vtkEpcSrc = epcSet->getVtkEpcDocument(polylines[idx]->getUuid());
+			if (vtkEpcSrc) {
+				auto type_in_epcdoc = epcSet->getTypeInEpcDocument(polylines[idx]->getUuid());
+				if (type_in_epcdoc == VtkEpcCommon::POLYLINE_SET){
+					createTreeVtkPartialRep(polylines[idx]->getUuid(), vtkEpcSrc);
+					uuidIsChildOf[polylines[idx]->getUuid()].setParentType( VtkEpcCommon::POLYLINE_SET);
+				} else {
+					epc_error = epc_error + " Partial UUID (" + polylines[idx]->getUuid() + ") is PolylineSet and is incorrect \n";
+				}
+			} else {
+				epc_error = epc_error + " Partial UUID: (" + polylines[idx]->getUuid() + ") is not loaded \n";
+			}
+		} else {
+			std::string uuidParent= fileName;
+			auto interpretation = polylines[idx]->getInterpretation();
+			if (interpretation) {
+				uuidParent = interpretation->getUuid();
+				createTreeVtk(uuidParent, fileName, interpretation->getTitle().c_str(), VtkEpcCommon::INTERPRETATION);
+			}
+			createTreeVtk(polylines[idx]->getUuid(), uuidParent, polylines[idx]->getTitle().c_str(), VtkEpcCommon::POLYLINE_SET);
+		}
+
+		//property
+		auto valuesPropertySet = polylines[idx]->getValuesPropertySet();
+		for (size_t i = 0; i < valuesPropertySet.size(); ++i)	{
+			//				uuidIsChildOf[valuesPropertySet[i]->getUuid()] = new VtkEpcCommon();
+			createTreeVtk(valuesPropertySet[i]->getUuid(), polylines[idx]->getUuid(), valuesPropertySet[i]->getTitle().c_str(), VtkEpcCommon::PROPERTY);
+		}
+	}
+}
+
+void VtkEpcDocument::searchHorizonPolylines(const std::string & fileName) {
+	std::vector<resqml2_0_1::PolylineSetRepresentation*> polylines;
+	try	{
+		polylines = repository.getHorizonPolylineSetRepSet();
+	}
+	catch  (const std::exception & e) {
+		cout << "EXCEPTION in fesapi when call getHorizonPolylineSetRepSet with file: " << fileName << " : " << e.what();
+	}
+	for (size_t idx = 0; idx < polylines.size(); ++idx)	{
+		if (polylines[idx]->isPartial()) {
+			auto vtkEpcSrc = epcSet->getVtkEpcDocument(polylines[idx]->getUuid());
+			if (vtkEpcSrc)	{
+				auto type_in_epcdoc = epcSet->getTypeInEpcDocument(polylines[idx]->getUuid());
+				if (type_in_epcdoc == VtkEpcCommon::POLYLINE_SET){
+					createTreeVtkPartialRep(polylines[idx]->getUuid(), vtkEpcSrc);
+					uuidIsChildOf[polylines[idx]->getUuid()].setParentType( VtkEpcCommon::POLYLINE_SET);
+				} else {
+					epc_error = epc_error + " Partial UUID (" + polylines[idx]->getUuid() + ") is PolylineSet and is incorrect \n";
+				}
+			} else {
+				epc_error = epc_error + " Partial UUID: (" + polylines[idx]->getUuid() + ") is not loaded \n";
+			}
+		} else {
+			std::string uuidParent = fileName;
+			auto interpretation = polylines[idx]->getInterpretation();
+			if (interpretation) {
+				uuidParent = interpretation->getUuid();
+				createTreeVtk(uuidParent, fileName, interpretation->getTitle().c_str(), VtkEpcCommon::INTERPRETATION);
+			}
+			createTreeVtk(polylines[idx]->getUuid(), uuidParent, polylines[idx]->getTitle().c_str(), VtkEpcCommon::POLYLINE_SET);
+		}
+
+		//property
+		auto valuesPropertySet = polylines[idx]->getValuesPropertySet();
+		for (size_t i = 0; i < valuesPropertySet.size(); ++i)	{
+			//				uuidIsChildOf[valuesPropertySet[i]->getUuid()] = new VtkEpcCommon();
+			createTreeVtk(valuesPropertySet[i]->getUuid(), polylines[idx]->getUuid(), valuesPropertySet[i]->getTitle().c_str(), VtkEpcCommon::PROPERTY);
+		}
+	}
+}
+
+void VtkEpcDocument::searchUnstructuredGrid(const std::string & fileName) {
+	std::vector<resqml2_0_1::UnstructuredGridRepresentation*> unstructuredGrid;
+	try	{
+		unstructuredGrid = repository.getUnstructuredGridRepresentationSet();
+	}
+	catch  (const std::exception & e)	{
+		cout << "EXCEPTION in fesapi when call getUnstructuredGridRepresentationSet with file: " << fileName << " : " << e.what();
+	}
+	for (size_t iter = 0; iter < unstructuredGrid.size(); ++iter)	{
+		if (unstructuredGrid[iter]->isPartial())	{
+			auto vtkEpcSrc = epcSet->getVtkEpcDocument(unstructuredGrid[iter]->getUuid());
+			if (vtkEpcSrc){
+				auto type_in_epcdoc = epcSet->getTypeInEpcDocument(unstructuredGrid[iter]->getUuid());
+				if (type_in_epcdoc == VtkEpcCommon::UNSTRUC_GRID){
+					createTreeVtkPartialRep(unstructuredGrid[iter]->getUuid(), vtkEpcSrc);
+					uuidIsChildOf[unstructuredGrid[iter]->getUuid()].setParentType( VtkEpcCommon::UNSTRUC_GRID);
+				} else {
+					epc_error = epc_error + " Partial UUID (" + unstructuredGrid[iter]->getUuid() + ") is UnstructuredGrid type and is incorrect \n";
+				}
+			} else {
+				epc_error = epc_error + " Partial UUID: (" + unstructuredGrid[iter]->getUuid() + ") is not loaded \n";
+			}
+		} else	{
+			std::string uuidParent = fileName;
+			auto interpretation = unstructuredGrid[iter]->getInterpretation();
+			if (interpretation) {
+				uuidParent = interpretation->getUuid();
+				createTreeVtk(uuidParent, fileName, interpretation->getTitle().c_str(), VtkEpcCommon::INTERPRETATION);
+			}
+			createTreeVtk(unstructuredGrid[iter]->getUuid(), fileName, unstructuredGrid[iter]->getTitle().c_str(), VtkEpcCommon::UNSTRUC_GRID);
+		}
+
+		//property
+		auto valuesPropertySet = unstructuredGrid[iter]->getValuesPropertySet();
+		for (size_t i = 0; i < valuesPropertySet.size(); ++i)	{
+			createTreeVtk(valuesPropertySet[i]->getUuid(), unstructuredGrid[iter]->getUuid(), valuesPropertySet[i]->getTitle().c_str(), VtkEpcCommon::PROPERTY);
+		}
+	}
+}
+
+void VtkEpcDocument::searchTriangulated(const std::string & fileName) {
+	std::vector<resqml2_0_1::TriangulatedSetRepresentation*> triangulated;
+	try	{
+		triangulated = repository.getAllTriangulatedSetRepSet();
+	} catch  (const std::exception & e)	{
+		cout << "EXCEPTION in fesapi when call getAllTriangulatedSetRepSet with file: " << fileName << " : " << e.what();
+	}
+	for (size_t iter = 0; iter < triangulated.size(); ++iter)	{
+		if (triangulated[iter]->isPartial()) {
+			auto vtkEpcSrc = epcSet->getVtkEpcDocument(triangulated[iter]->getUuid());
+			if (vtkEpcSrc)	{
+				auto type_in_epcdoc = epcSet->getTypeInEpcDocument(triangulated[iter]->getUuid());
+				if (type_in_epcdoc == VtkEpcCommon::TRIANGULATED_SET){
+					createTreeVtkPartialRep(triangulated[iter]->getUuid(), vtkEpcSrc);
+					uuidIsChildOf[triangulated[iter]->getUuid()].setParentType( VtkEpcCommon::TRIANGULATED_SET);
+				} else {
+					epc_error = epc_error + " Partial UUID (" + triangulated[iter]->getUuid() + ") is Triangulated type and is incorrect \n";
+				}
+			} else {
+				epc_error = epc_error + " Partial UUID: (" + triangulated[iter]->getUuid() + ") is not loaded \n";
+			}
+		} else {
+			std::string uuidParent= fileName;
+			auto interpretation = triangulated[iter]->getInterpretation();
+			if (interpretation) {
+				uuidParent = interpretation->getUuid();
+				createTreeVtk(uuidParent, fileName, interpretation->getTitle().c_str(), VtkEpcCommon::INTERPRETATION);
+			}
+			createTreeVtk(triangulated[iter]->getUuid(), uuidParent, triangulated[iter]->getTitle().c_str(), VtkEpcCommon::TRIANGULATED_SET);
+		}
+		//property
+		auto valuesPropertySet = triangulated[iter]->getValuesPropertySet();
+		for (size_t i = 0; i < valuesPropertySet.size(); ++i) {
+			createTreeVtk(valuesPropertySet[i]->getUuid(), triangulated[iter]->getUuid(), valuesPropertySet[i]->getTitle().c_str(), VtkEpcCommon::PROPERTY);
+		}
+	}
+}
+
+void VtkEpcDocument::searchGrid2d(const std::string & fileName) {
+	std::vector<resqml2_0_1::Grid2dRepresentation*> grid2D;
+	try	{
+		grid2D = repository.getHorizonGrid2dRepSet();
+	} catch  (const std::exception & e)	{
+		cout << "EXCEPTION in fesapi when call getHorizonGrid2dRepSet with file: " << fileName << " : " << e.what();
+	}
+	for (size_t iter = 0; iter < grid2D.size(); ++iter)	{
+		if (grid2D[iter]->isPartial())	{
+			auto vtkEpcSrc = epcSet->getVtkEpcDocument(grid2D[iter]->getUuid());
+			if (vtkEpcSrc) {
+				auto type_in_epcdoc = epcSet->getTypeInEpcDocument(grid2D[iter]->getUuid());
+				if (type_in_epcdoc == VtkEpcCommon::GRID_2D){
+					createTreeVtkPartialRep(grid2D[iter]->getUuid(), vtkEpcSrc);
+					uuidIsChildOf[grid2D[iter]->getUuid()].setParentType( VtkEpcCommon::GRID_2D);
+				} else {
+					epc_error = epc_error + " Partial UUID (" + grid2D[iter]->getUuid() + ") is Grid2d type and is incorrect \n";
+				}
+			} else {
+				epc_error = epc_error + " Partial UUID: (" + grid2D[iter]->getUuid() + ") is not loaded \n";
+			}
+		} else	{
+			auto interpretation = grid2D[iter]->getInterpretation();
+			std::string uuidParent = fileName;
+			if (interpretation) {
+				uuidParent = interpretation->getUuid();
+				createTreeVtk(uuidParent, fileName, interpretation->getTitle().c_str(), VtkEpcCommon::INTERPRETATION);
+			}
+			createTreeVtk(grid2D[iter]->getUuid(), uuidParent, grid2D[iter]->getTitle().c_str(), VtkEpcCommon::GRID_2D);
+		}
+		//property
+		auto valuesPropertySet = grid2D[iter]->getValuesPropertySet();
+		for (size_t i = 0; i < valuesPropertySet.size(); ++i)	{
+			createTreeVtk(valuesPropertySet[i]->getUuid(), grid2D[iter]->getUuid(), valuesPropertySet[i]->getTitle().c_str(), VtkEpcCommon::PROPERTY);
+		}
+	}
+}
+
+void VtkEpcDocument::searchIjkGrid(const std::string & fileName) {
+	std::vector<resqml2_0_1::AbstractIjkGridRepresentation*> ijkGrid;
+	try	{
+		ijkGrid = repository.getIjkGridRepresentationSet();
+	}
+	catch  (const std::exception & e) {
+		cout << "EXCEPTION in fesapi when call getIjkGridRepresentationSet with file: " << fileName << " : " << e.what();
+	}
+	for (size_t iter = 0; iter < ijkGrid.size(); ++iter) {
+		if (ijkGrid[iter]->isPartial())	{
+			auto vtkEpcSrc = epcSet->getVtkEpcDocument(ijkGrid[iter]->getUuid());
+			if (vtkEpcSrc)	{
+				auto type_in_epcdoc = epcSet->getTypeInEpcDocument(ijkGrid[iter]->getUuid());
+				if (type_in_epcdoc == VtkEpcCommon::IJK_GRID){
+					createTreeVtkPartialRep(ijkGrid[iter]->getUuid(), vtkEpcSrc);
+					uuidIsChildOf[ijkGrid[iter]->getUuid()].setParentType( VtkEpcCommon::IJK_GRID);
+				} else {
+					epc_error = epc_error + " Partial UUID (" + ijkGrid[iter]->getUuid() + ") is IjkGrid type and is incorrect \n";
+				}
+			} else {
+				epc_error = epc_error + " Partial UUID: (" + ijkGrid[iter]->getUuid() + ") is not loaded \n";
+			}
+		} else {
+			auto interpretation = ijkGrid[iter]->getInterpretation();
+			std::string uuidParent = fileName;
+			if (interpretation) {
+				uuidParent = interpretation->getUuid();
+				createTreeVtk(uuidParent, fileName, interpretation->getTitle().c_str(), VtkEpcCommon::INTERPRETATION);
+			}
+			createTreeVtk(ijkGrid[iter]->getUuid(), uuidParent, ijkGrid[iter]->getTitle().c_str(), VtkEpcCommon::IJK_GRID);
+		}
+
+		//property
+		auto valuesPropertySet = ijkGrid[iter]->getValuesPropertySet();
+		for (size_t i = 0; i < valuesPropertySet.size(); ++i)	{
+			createTreeVtk(valuesPropertySet[i]->getUuid(), ijkGrid[iter]->getUuid(), valuesPropertySet[i]->getTitle().c_str(), VtkEpcCommon::PROPERTY);
+		}
+	}
+}
+
+void VtkEpcDocument::searchWellboreTrajectory(const std::string & fileName) {
+	std::vector<resqml2_0_1::WellboreTrajectoryRepresentation*> WellboreTrajectory;
+	try	{
+		WellboreTrajectory = repository.getWellboreTrajectoryRepresentationSet();
+	}
+	catch  (const std::exception & e)	{
+		cout << "EXCEPTION in fesapi when call getWellboreTrajectoryRepresentationSet with file: " << fileName << " : " << e.what();
+	}
+	for (size_t iter = 0; iter < WellboreTrajectory.size(); ++iter)	{
+		if (WellboreTrajectory[iter]->isPartial()) {
+			auto vtkEpcSrc = epcSet->getVtkEpcDocument(WellboreTrajectory[iter]->getUuid());
+			if (vtkEpcSrc)	{
+				auto type_in_epcdoc = epcSet->getTypeInEpcDocument(WellboreTrajectory[iter]->getUuid());
+				if (type_in_epcdoc == VtkEpcCommon::WELL_TRAJ){
+					createTreeVtkPartialRep(WellboreTrajectory[iter]->getUuid(), vtkEpcSrc);
+					uuidIsChildOf[WellboreTrajectory[iter]->getUuid()].setParentType( VtkEpcCommon::WELL_TRAJ);
+				} else {
+					epc_error = epc_error + " Partial UUID (" + WellboreTrajectory[iter]->getUuid() + ") is WellboreTrajectory type and is incorrect \n";
+				}
+			} else {
+				epc_error = epc_error + " Partial UUID: (" + WellboreTrajectory[iter]->getUuid() + ") is not loaded \n";
+			}
+		} else {
+			auto interpretation = WellboreTrajectory[iter]->getInterpretation();
+			std::string uuidParent = fileName;
+			if (interpretation) {
+				uuidParent = interpretation->getUuid();
+				createTreeVtk(uuidParent, fileName, interpretation->getTitle().c_str(), VtkEpcCommon::INTERPRETATION);
+			}
+			createTreeVtk(WellboreTrajectory[iter]->getUuid(), uuidParent, WellboreTrajectory[iter]->getTitle().c_str(), VtkEpcCommon::WELL_TRAJ);
+		}
+
+		//property
+		auto valuesPropertySet = WellboreTrajectory[iter]->getValuesPropertySet();
+		for (size_t i = 0; i < valuesPropertySet.size(); ++i)		{
+			createTreeVtk(valuesPropertySet[i]->getUuid(), WellboreTrajectory[iter]->getUuid(), valuesPropertySet[i]->getTitle().c_str(), VtkEpcCommon::PROPERTY);
+		}
+	}
+}
+
+void VtkEpcDocument::searchSubRepresentation(const std::string & fileName) {
+	std::vector<resqml2::SubRepresentation*> subRepresentationSet;
+	try		{
+		subRepresentationSet = repository.getSubRepresentationSet();
+	}
+	catch  (const std::exception & e)		{
+		cout << "EXCEPTION in fesapi when call getSubRepresentationSet with file: " << fileName << " : " << e.what();
+	}
+	for (auto& subRepresentation : subRepresentationSet) {
+		if (subRepresentation->isPartial()){
+			auto vtkEpcSrc = epcSet->getVtkEpcDocument(subRepresentation->getUuid());
+			if (vtkEpcSrc)	{
+				createTreeVtkPartialRep(subRepresentation->getUuid(), vtkEpcSrc);
+				uuidIsChildOf[subRepresentation->getUuid()].setParentType( VtkEpcCommon::SUB_REP);
+			}
+			else {
+				epc_error = epc_error + " Partial UUID: (" + subRepresentation->getUuid() + ") is not loaded \n";
+			}
+		}
+		else {
+			auto uuidParent = subRepresentation->getSupportingRepresentationUuid(0);
+			createTreeVtk(subRepresentation->getUuid(), uuidParent, subRepresentation->getTitle().c_str(), VtkEpcCommon::SUB_REP);
+		}
+
+		//property
+		auto valuesPropertySet = subRepresentation->getValuesPropertySet();
+		for (auto& valuesProperty : valuesPropertySet) {
+			createTreeVtk(valuesProperty->getUuid(), subRepresentation->getUuid(), valuesProperty->getTitle().c_str(), VtkEpcCommon::PROPERTY);
+		}
+	}
+}
+
+void VtkEpcDocument::searchTimeSeries(const std::string & fileName) {
+	std::vector<resqml2::TimeSeries*> timeSeries;
+	try	{
+		timeSeries = repository.getTimeSeriesSet();
+	}
+	catch  (const std::exception & e)	{
+		cout << "EXCEPTION in fesapi when call getTimeSeriesSet with file: " << fileName << " : " << e.what();
+	}
+
+	for (auto& timeSerie : timeSeries) {
+		auto propSeries = timeSerie->getPropertySet();
+		for (auto& propertie : propSeries) {
+			if (propertie->getXmlTag() != "ContinuousPropertySeries") {
+				auto prop_uuid = propertie->getUuid();
+				if (uuidIsChildOf.find(prop_uuid) == uuidIsChildOf.end()) {
+					std::cout << "The property " << prop_uuid << " is not supported and consequently cannot be associated to its time series." << std::endl;
+					continue;
+				}
+				uuidIsChildOf[prop_uuid].setType(VtkEpcCommon::TIME_SERIES);
+				uuidIsChildOf[prop_uuid].setTimeIndex(propertie->getTimeIndex());
+				uuidIsChildOf[prop_uuid].setTimestamp(propertie->getTimestamp());
+				/*
+			if (propSeries[i]->isAssociatedToOneStandardEnergisticsPropertyKind())
+			{
+				auto propKind = propSeries[i]->getEnergisticsPropertyKind();
+			}
+			else
+			{
+				auto propkindUuid = propSeries[i]->getLocalPropertyKindUuid();
+				cout << "name : " << propSeries[i]->getTitle() << " - " <<propkindUuid << "\n";
+			}
+				 */
+			}
+
+		}
+	}
 }
