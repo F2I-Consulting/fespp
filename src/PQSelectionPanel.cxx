@@ -69,6 +69,7 @@
 #include <qmessagebox.h>
 #include <qprogressbar.h>
 #include <qlayout.h>
+#include <qbuttongroup.h>
 
 // include ParaView
 #include <PQToolsManager.h>
@@ -746,8 +747,7 @@ pqServer * PQSelectionPanel::getActiveServer() {
 //----------------------------------------------------------------------------
 void PQSelectionPanel::uuidKO(const std::string & uuid) {
 	uuidItem[uuid]->setDisabled(true);
-	for (unsigned int idx_child = 0; idx_child < uuidItem[uuid]->childCount();
-			++idx_child) {
+	for (int idx_child = 0; idx_child < uuidItem[uuid]->childCount(); ++idx_child) {
 		uuidItem[uuid]->child(idx_child)->setHidden(true);
 	}
 }

@@ -172,7 +172,7 @@ vtkDataArray* VtkProperty::loadValuesPropertySet(std::vector<resqml2::AbstractVa
 
 			const std::string name = valuesProperty->getTitle();
 
-			if (valuesProperty->getXmlTag() == "ContinuousProperty") {
+			if (valuesProperty->getXmlTag() == resqml2_0_1::ContinuousProperty::XML_TAG) {
 				vtkSmartPointer<vtkDoubleArray> cellDataDouble = vtkSmartPointer<vtkDoubleArray>::New();
 
 				if ( valuesProperty->getElementCountPerValue() == 1) {
@@ -187,16 +187,16 @@ vtkDataArray* VtkProperty::loadValuesPropertySet(std::vector<resqml2::AbstractVa
 					cerr << "does not support vectorial property yet" << endl;
 				}
 			}
-			else if (valuesProperty->getXmlTag() == "DiscreteProperty" || valuesProperty->getXmlTag() == "CategoricalProperty")	{
-				vtkSmartPointer<vtkLongArray> cellDataLong = vtkSmartPointer<vtkLongArray>::New();
+			else if (valuesProperty->getXmlTag() == resqml2_0_1::DiscreteProperty::XML_TAG || valuesProperty->getXmlTag() == resqml2_0_1::CategoricalProperty::XML_TAG)	{
+				vtkSmartPointer<vtkIntArray> cellData = vtkSmartPointer<vtkIntArray>::New();
 
 				if (valuesProperty->getElementCountPerValue() == 1) {
-					long* valuesLongSet = new long[nbElement*valuesProperty->getElementCountPerValue()];
-					valuesProperty->getLongValuesOfPatch(0, valuesLongSet);
+					int* values = new int[nbElement*valuesProperty->getElementCountPerValue()];
+					valuesProperty->getIntValuesOfPatch(0, values);
 
-					cellDataLong->SetName(name.c_str());
-					cellDataLong->SetArray(valuesLongSet, nbElement, 0);
-					cellData = cellDataLong;
+					cellData->SetName(name.c_str());
+					cellData->SetArray(values, nbElement, 0);
+					cellData = cellData;
 				}
 				else {
 					cerr << "does not support vectorial property yet" << endl;

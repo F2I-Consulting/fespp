@@ -1,16 +1,14 @@
 #--------------------------------------------------
-SET (PLUGIN_NAME Fespp)
-SET (PLUGIN_VERSION "2.1.0")
+set (PLUGIN_NAME Fespp)
+
+# version mechanism
+set (PLUGIN_VERSION_MAJOR 2)
+set (PLUGIN_VERSION_MINOR 1)
+set (PLUGIN_VERSION_PATCH 0)
+set (PLUGIN_VERSION ${Fesapi_VERSION_MAJOR}.${Fesapi_VERSION_MINOR}.${Fesapi_VERSION_PATCH})
 
 #--------------------------------------------------
-SET (FESPP_ROOT_DIR ${CMAKE_SOURCE_DIR})
-
-IF (ParaView_SOURCE_DIR)
-  INCLUDE_DIRECTORIES(${VTK_INCLUDE_DIRS})
-ELSE (ParaView_SOURCE_DIR)
-  FIND_PACKAGE(ParaView REQUIRED)
-  INCLUDE(${PARAVIEW_USE_FILE})
-ENDIF (ParaView_SOURCE_DIR)
+set (FESPP_ROOT_DIR ${CMAKE_SOURCE_DIR})
 
 FILE (GLOB FESPP_READER_SOURCES ${FESPP_ROOT_DIR}/src/Fespp.cxx)
 FILE (GLOB FESPP_READER_HEADERS ${FESPP_ROOT_DIR}/src/Fespp.h)
@@ -34,20 +32,13 @@ ELSE(WITH_ETP)
 	LIST (REMOVE_ITEM FESPP_FORMS ${FESPP_FORMSETP})
 ENDIF (WITH_ETP)
 
-
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${FESPP_ROOT_DIR}/cmake/modules)
 
 pv_process_modules()
 
-INCLUDE_DIRECTORIES (
-	${FESAPI_INCLUDE} 
-	${AVRO_INCLUDE_DIR} 
-	${BOOST_INCLUDE_DIR}
-)
-
 IF(PARAVIEW_BUILD_QT_GUI)
 	IF(PARAVIEW_QT_VERSION VERSION_GREATER "4")
-		SET (Qt5_FIND_COMPONENTS Widgets)
+		set (Qt5_FIND_COMPONENTS Widgets)
 #		INCLUDE(ParaViewQt5)
 		QT5_WRAP_CPP(MOC_SRCS ${FESPP_PQ_HEADERS})					
 		QT5_WRAP_UI(UI_SRCS ${FESPP_FORMS})
@@ -68,10 +59,10 @@ IF(PARAVIEW_BUILD_QT_GUI)
 		CLASS_NAME PQMetaDataPanel)
 
 	IF (WITH_ETP)
-			ADD_PARAVIEW_DOCK_WINDOW(
-				IFACES4
-				IFACE4_SRCS
-				CLASS_NAME PQEtpPanel)
+		ADD_PARAVIEW_DOCK_WINDOW(
+			IFACES4
+			IFACE4_SRCS
+			CLASS_NAME PQEtpPanel)
 	ENDIF (WITH_ETP)
 		
 	ADD_PARAVIEW_ACTION_GROUP(
@@ -119,7 +110,6 @@ IF(PARAVIEW_BUILD_QT_GUI)
 		)	
 	ENDIF (WITH_ETP)
 
- 
 ELSE(PARAVIEW_BUILD_QT_GUI)
 
 	# create a Server plugin
@@ -133,7 +123,6 @@ ELSE(PARAVIEW_BUILD_QT_GUI)
 					${FESPP_ETP_SOURCES}
 					${FESPP_ETP_HEADERS}
 		)
-		
 	ELSE (WITH_ETP)
 		ADD_PARAVIEW_PLUGIN(${PLUGIN_NAME} ${PLUGIN_VERSION}
 			SERVER_MANAGER_SOURCES	${FESPP_READER_SOURCES}
@@ -141,18 +130,79 @@ ELSE(PARAVIEW_BUILD_QT_GUI)
 			REQUIRED_ON_SERVER
 			SOURCES ${FESPP_VTK_SOURCES}
 					${FESPP_VTK_HEADERS}
-		)
-		
+		)	
 	ENDIF (WITH_ETP)
 
 ENDIF(PARAVIEW_BUILD_QT_GUI)
-	
-target_link_libraries(Fespp
-	LINK_PRIVATE
-	 ${FESAPI_LIBRARY})
 
-INSTALL (
-	TARGETS Fespp
+# ============================================================================
+# Header files
+# ============================================================================
+
+target_include_directories(${PLUGIN_NAME} PRIVATE ${FESAPI_INCLUDE})
+
+if (WITH_ETP)
+	target_include_directories(${PLUGIN_NAME} PRIVATE ${AVRO_INCLUDE_DIR} ${BOOST_INCLUDE_DIR})
+endif (WITH_ETP)
+
+# ============================================================================
+# compilation options
+# ============================================================================
+
+target_compile_options(${PLUGIN_NAME} PRIVATE
+	$<$<CXX_COMPILER_ID:MSVC>:/MP>
+)
+
+# ============================================================================
+# Linker
+# ============================================================================
+
+if (WIN32)
+
+	if (EXISTS ${FESAPI_LIBRARY_RELEASE} AND EXISTS ${FESAPI_LIBRARY_DEBUG})
+		set(CMAKE_CONFIGURATION_TYPES "Release;MinSizeRel;RelWithDebInfo;Debug" CACHE STRING "" FORCE)
+	endif ()
+	if (NOT EXISTS ${FESAPI_LIBRARY_DEBUG})
+		set(CMAKE_CONFIGURATION_TYPES "Release;MinSizeRel;RelWithDebInfo" CACHE STRING "" FORCE)
+	endif ()
+	if (NOT EXISTS ${FESAPI_LIBRARY_RELEASE})
+		set(CMAKE_CONFIGURATION_TYPES "Debug" CACHE STRING "" FORCE)
+	endif ()
+
+	if (EXISTS ${FESAPI_LIBRARY_RELEASE} AND EXISTS ${FESAPI_LIBRARY_DEBUG}) 
+		target_link_libraries (${PLUGIN_NAME} PRIVATE optimized ${FESAPI_LIBRARY_RELEASE} debug ${FESAPI_LIBRARY_DEBUG})
+	elseif (EXISTS ${FESAPI_LIBRARY_RELEASE})
+		target_link_libraries (${PLUGIN_NAME} PRIVATE ${FESAPI_LIBRARY_RELEASE})
+	elseif (EXISTS ${FESAPI_LIBRARY_DEBUG})
+		target_link_libraries (${PLUGIN_NAME} PRIVATE ${FESAPI_LIBRARY_DEBUG})
+	else ()
+		message(ERROR "No FESAPI library has been set.")
+	endif ()
+	
+elseif (UNIX)
+
+	if (NOT CMAKE_BUILD_TYPE)
+      set(CMAKE_BUILD_TYPE RelWithDebInfo)
+    endif()
+	
+	if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+		target_link_libraries(${PLUGIN_NAME} PRIVATE ${FESAPI_LIBRARY_DEBUG})
+	else ()
+		target_link_libraries(${PLUGIN_NAME} PRIVATE ${FESAPI_LIBRARY_RELEASE})
+	endif()
+	
+	set_target_properties(${PLUGIN_NAME} PROPERTIES
+		VERSION ${PLUGIN_VERSION}
+		SOVERSION ${PLUGIN_VERSION_MAJOR}.${PLUGIN_VERSION_MINOR}
+	)
+	
+endif (WIN32)
+
+# ============================================================================
+# Installation
+# ============================================================================
+
+install (
+	TARGETS ${PLUGIN_NAME}
 	DESTINATION lib
 )
-	
