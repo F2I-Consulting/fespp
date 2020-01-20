@@ -1,4 +1,22 @@
-﻿#include "etp/VtkEtpDocument.h"
+﻿/*-----------------------------------------------------------------------
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"; you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-----------------------------------------------------------------------*/
+#include "etp/VtkEtpDocument.h"
 
 #include <thread>
 
@@ -8,6 +26,15 @@
 #include <vtkSmartPointer.h>
 #include <vtkMultiBlockDataSet.h>
 
+#include <fesapi/etp/EtpHdfProxy.h>
+
+#include <fesapi/resqml2/AbstractRepresentation.h>
+#include <fesapi/common/AbstractObject.h>
+#include <fesapi/resqml2/AbstractFeatureInterpretation.h>
+
+#include <fesapi/resqml2_0_1/AbstractIjkGridRepresentation.h>
+#include <fesapi/resqml2_0_1/ContinuousPropertySeries.h>
+
 // include Fespp
 #include "EtpClientSession.h"
 #include "PQEtpPanel.h"
@@ -15,20 +42,12 @@
 #include "etp/EtpFesppDiscoveryProtocolHandlers.h"
 #include "VTK/VtkIjkGridRepresentation.h"
 
-#include <etp/EtpHdfProxy.h>
-#include "resqml2/AbstractRepresentation.h"
-#include "common/AbstractObject.h"
-#include "resqml2/AbstractFeatureInterpretation.h"
-
-#include <resqml2_0_1/AbstractIjkGridRepresentation.h>
-#include <resqml2_0_1/ContinuousPropertySeries.h>
-
 PQEtpPanel* getPQEtpPanel()
 {
-	PQEtpPanel *panel = 0;
+	PQEtpPanel *panel = nullptr;
 	foreach(QWidget *widget, qApp->topLevelWidgets()) {
 		panel = widget->findChild<PQEtpPanel *>();
-		if (panel) {
+		if (panel != nullptr) {
 			break;
 		}
 	}
@@ -37,8 +56,8 @@ PQEtpPanel* getPQEtpPanel()
 
 void setSessionToEtpHdfProxy(EtpClientSession* myOwnEtpSession)
 {
-	COMMON_NS::EpcDocument& epcDoc = myOwnEtpSession->epcDoc;
-	for (const auto & hdfProxy : epcDoc.getHdfProxySet()) {
+	COMMON_NS::DataObjectRepository& repo = myOwnEtpSession->repo;
+	for (const auto & hdfProxy : repo.getHdfProxySet()) {
 		ETP_NS::EtpHdfProxy* etpHdfProxy = dynamic_cast<ETP_NS::EtpHdfProxy*>(hdfProxy);
 		if (etpHdfProxy != nullptr && etpHdfProxy->getSession() == nullptr) {
 			etpHdfProxy->setSession(myOwnEtpSession->getIoContext(), myOwnEtpSession->getHost(), myOwnEtpSession->getPort(), myOwnEtpSession->getTarget());
@@ -46,7 +65,7 @@ void setSessionToEtpHdfProxy(EtpClientSession* myOwnEtpSession)
 	}
 }
 
-void startio(VtkEtpDocument *etp_document, std::string ipAddress, std::string port, const VtkEpcCommon::modeVtkEpc & mode)
+void startio(VtkEtpDocument *etp_document, std::string ipAddress, std::string port, VtkEpcCommon::modeVtkEpc mode)
 {
 	boost::asio::io_context ioc;
 
@@ -81,39 +100,30 @@ void startio(VtkEtpDocument *etp_document, std::string ipAddress, std::string po
 	protocol.m_role = "store";
 	requestedProtocols.push_back(protocol);
 
-	auto work = boost::asio::make_work_guard(ioc);
-	std::thread thread([&ioc]() {
-		ioc.run();
-	});
+	protocol.m_protocol = Energistics::Etp::v12::Datatypes::Protocol::StoreNotification;
+	protocol.m_protocolVersion = protocolVersion;
+	protocol.m_role = "store";
+	requestedProtocols.push_back(protocol);
 
-	auto client_session_sharedPtr = std::make_shared<EtpClientSession>(ioc, ipAddress, port, "/", "", requestedProtocols, supportedObjects, etp_document, mode);
-	client_session_sharedPtr->run();
-
-	if (mode==VtkEpcCommon::Both || mode==VtkEpcCommon::Representation) {
-		client_session_sharedPtr.get()->epcDoc.open("../../fakeForEtpClient.epc", COMMON_NS::EpcDocument::ETP);
-	}
-
+	auto client_session_sharedPtr = std::make_shared<EtpClientSession>(ipAddress, port, "/", "", requestedProtocols, supportedObjects, mode);
+	client_session_sharedPtr->setCoreProtocolHandlers(std::make_shared<ETP_NS::CoreHandlers>(client_session_sharedPtr));
+	client_session_sharedPtr->setDiscoveryProtocolHandlers(std::make_shared<EtpFesppDiscoveryProtocolHandlers>(client_session_sharedPtr, etp_document));
+	client_session_sharedPtr->setStoreProtocolHandlers(std::make_shared<EtpFesppStoreProtocolHandlers>(client_session_sharedPtr, &client_session_sharedPtr->repo));
+	client_session_sharedPtr->setDataArrayProtocolHandlers(std::make_shared<ETP_NS::DataArrayHandlers>(client_session_sharedPtr));
 	etp_document->setClientSession(client_session_sharedPtr.get());
-
-	work.reset();
-	thread.join();
+	client_session_sharedPtr->run();
 }
 
 //----------------------------------------------------------------------------
 VtkEtpDocument::VtkEtpDocument(const std::string & ipAddress, const std::string & port, const VtkEpcCommon::modeVtkEpc & mode) :
-												VtkResqml2MultiBlockDataSet("EtpDocument", "EtpDocument", "EtpDocument", "", 0, 0), client_session(nullptr)
+	VtkResqml2MultiBlockDataSet("EtpDocument", "EtpDocument", "EtpDocument", "", 0, 0), client_session(nullptr),
+	treeViewMode(mode == VtkEpcCommon::Both || mode == VtkEpcCommon::TreeView), representationMode(mode == VtkEpcCommon::Both || mode == VtkEpcCommon::Representation),
+	last_id(0), loading(false)
 {
-	treeViewMode = (mode==VtkEpcCommon::Both || mode==VtkEpcCommon::TreeView);
-	representationMode = (mode==VtkEpcCommon::Both || mode==VtkEpcCommon::Representation);
-
 	vtkOutput = vtkSmartPointer<vtkMultiBlockDataSet>::New();
 
 	std::thread runSessionThread(startio, this, ipAddress, port, mode);
 	runSessionThread.detach(); // Detach the thread since we don't want it to be a blocking one.
-
-	loading = false;
-
-	last_id = 0;
 }
 
 //----------------------------------------------------------------------------
@@ -122,7 +132,6 @@ VtkEtpDocument::~VtkEtpDocument()
 	loading = false;
 	if (client_session != nullptr)	{
 		client_session->close();
-		client_session->epcDoc.close();
 	}
 	for(auto i : uuidToVtkIjkGridRepresentation) {
 		delete i.second;
@@ -141,31 +150,12 @@ int64_t VtkEtpDocument::push_command(const std::string & command)
 	cout << endl << endl << "command : " << command << endl << endl;
 	auto commandTokens = tokenize(command, ' ');
 
-	if (commandTokens[0] == "GetTreeResources") {
-		Energistics::Etp::v12::Protocol::Discovery::GetTreeResources mb;
-		mb.m_context.m_uri = commandTokens[1];
-		mb.m_context.m_depth = 1;
-
-		if (commandTokens.size() > 2) {
-			mb.m_context.m_depth = std::stoi(commandTokens[2]);
-
-			if (commandTokens.size() > 4) {
-				mb.m_context.m_contentTypes = tokenize(commandTokens[4], ',');
-			}
-		}
-		if (commandTokens.size() > 3 && (commandTokens[3] == "true" || commandTokens[3] == "True" || commandTokens[3] == "TRUE")) {
-			std::static_pointer_cast<EtpFesppDiscoveryProtocolHandlers>(client_session->getDiscoveryProtocolHandlers())->getObjectWhenDiscovered.push_back(client_session->send(mb));
-		}
-		else {
-			client_session->send(mb);
-		}
-	}
-	else if (commandTokens[0] == "GetGraphResources") {
-		Energistics::Etp::v12::Protocol::Discovery::GetGraphResources mb;
+	if (commandTokens[0] == "GetResources") {
+		Energistics::Etp::v12::Protocol::Discovery::GetResources mb;
 		mb.m_context.m_uri = commandTokens[1];
 		mb.m_scope = Energistics::Etp::v12::Datatypes::Object::ContextScopeKind::self;
 		mb.m_context.m_depth = 1;
-		mb.m_groupByType = false;
+		mb.m_countObjects = true;
 
 		if (commandTokens.size() > 2) {
 			if (commandTokens[2] == "self")
@@ -182,13 +172,19 @@ int64_t VtkEtpDocument::push_command(const std::string & command)
 			if (commandTokens.size() > 3) {
 				mb.m_context.m_depth = std::stoi(commandTokens[3]);
 
-				if (commandTokens.size() > 5) {
-					mb.m_context.m_contentTypes = tokenize(commandTokens[5], ',');
+				if (commandTokens.size() > 4) {
+					if (commandTokens[4] == "false" || commandTokens[4] == "False" || commandTokens[4] == "FALSE") {
+						mb.m_countObjects = false;
+					}
+
+					if (commandTokens.size() > 6) {
+						mb.m_context.m_dataObjectTypes = tokenize(commandTokens[6], ',');
+					}
 				}
 			}
 		}
 
-		if (commandTokens.size() > 4 && (commandTokens[4] == "true" || commandTokens[4] == "True" || commandTokens[4] == "TRUE")) {
+		if (commandTokens.size() > 5 && (commandTokens[5] == "true" || commandTokens[5] == "True" || commandTokens[5] == "TRUE")) {
 			std::static_pointer_cast<EtpFesppDiscoveryProtocolHandlers>(client_session->getDiscoveryProtocolHandlers())->getObjectWhenDiscovered.push_back(client_session->send(mb));
 		}
 		else {
@@ -197,18 +193,22 @@ int64_t VtkEtpDocument::push_command(const std::string & command)
 	}
 	else if (commandTokens[0] == "GetDataObject") {
 		Energistics::Etp::v12::Protocol::Store::GetDataObjects getO;
-		getO.m_uris = tokenize(commandTokens[1], ',');
+		std::vector<std::string> tokens = tokenize(commandTokens[1], ',');
+		std::map<std::string, std::string> tokenMaps;
+		for (size_t i = 0; i < tokens.size(); ++i) {
+			tokenMaps[std::to_string(i)] = tokens[i];
+		}
+		getO.m_uris = tokenMaps;
 		auto id = client_session->send(getO);
 		client_session->insertMessageIdTobeAnswered(id);
 		return id;
 	}
 	else if (commandTokens.size() == 2) {
 		if (commandTokens[0] == "GetSourceObjects") {
-			Energistics::Etp::v12::Protocol::Discovery::GetGraphResources mb;
+			Energistics::Etp::v12::Protocol::Discovery::GetResources mb;
 			mb.m_context.m_uri = commandTokens[1];
 			mb.m_scope = Energistics::Etp::v12::Datatypes::Object::ContextScopeKind::sources;
 			mb.m_context.m_depth = 1;
-			mb.m_groupByType = false;
 
 			auto id = client_session->send(mb);
 			std::static_pointer_cast<EtpFesppDiscoveryProtocolHandlers>(client_session->getDiscoveryProtocolHandlers())->getObjectWhenDiscovered.push_back(id);
@@ -216,11 +216,10 @@ int64_t VtkEtpDocument::push_command(const std::string & command)
 			return id;
 		}
 		if (commandTokens[0] == "GetTargetObjects") {
-			Energistics::Etp::v12::Protocol::Discovery::GetGraphResources mb;
+			Energistics::Etp::v12::Protocol::Discovery::GetResources mb;
 			mb.m_context.m_uri = commandTokens[1];
 			mb.m_scope = Energistics::Etp::v12::Datatypes::Object::ContextScopeKind::targets;
 			mb.m_context.m_depth = 1;
-			mb.m_groupByType = false;
 
 			auto id = client_session->send(mb);
 			std::static_pointer_cast<EtpFesppDiscoveryProtocolHandlers>(client_session->getDiscoveryProtocolHandlers())->getObjectWhenDiscovered.push_back(id);
@@ -235,13 +234,14 @@ int64_t VtkEtpDocument::push_command(const std::string & command)
 //----------------------------------------------------------------------------
 void VtkEtpDocument::createTree()
 {
-	Energistics::Etp::v12::Protocol::Discovery::GetTreeResources mb;
-	mb.m_context.m_uri = "eml://";
-	mb.m_context.m_depth = 3;
-	mb.m_context.m_contentTypes.push_back("application/x-resqml+xml;version=2.0;type=obj_IjkGridRepresentation");
-	cout << "Envoie première requête uri:eml:// - depth:3 - contentTypes:application/x-resqml+xml;version=2.0;type=obj_IjkGridRepresentation" << endl;
-	loading = true;
-	client_session->send(mb);
+	Energistics::Etp::v12::Protocol::Discovery::GetResources mb;
+	mb.m_context.m_uri = "eml:///";
+	mb.m_context.m_depth = 1;
+	mb.m_context.m_dataObjectTypes.push_back("resqml20.obj_IjkGridRepresentation");
+	mb.m_scope = Energistics::Etp::v12::Datatypes::Object::ContextScopeKind::self; // Could be whatever enumerated values
+	cout << "Envoie première requête uri:eml:/// - depth:1 - contentTypes:resqml20.obj_IjkGridRepresentation" << endl;
+	int64_t id = client_session->send(mb);
+	client_session->insertMessageIdTobeAnswered(id);
 }
 
 //----------------------------------------------------------------------------
@@ -253,7 +253,6 @@ void VtkEtpDocument::visualize(const std::string & rec_uri)
 	pos1 = rec_uri.find_last_of("(")+1;
 	const std::string uuid = rec_uri.substr(pos1, rec_uri.find_last_of(")") - pos1);
 
-
 	if(type == "obj_IjkGridRepresentation") {
 		push_command("GetDataObject "+rec_uri);
 		push_command("GetSourceObjects "+rec_uri);
@@ -263,7 +262,7 @@ void VtkEtpDocument::visualize(const std::string & rec_uri)
 		} // wait answers
 		setSessionToEtpHdfProxy(client_session);
 
-		RESQML2_0_1_NS::AbstractIjkGridRepresentation const * ijkGrid = client_session->epcDoc.getDataObjectByUuid<RESQML2_0_1_NS::AbstractIjkGridRepresentation>(uuid);
+		RESQML2_0_1_NS::AbstractIjkGridRepresentation const * ijkGrid = client_session->repo.getDataObjectByUuid<RESQML2_0_1_NS::AbstractIjkGridRepresentation>(uuid);
 		if (ijkGrid == nullptr) { // Defensive code
 			std::cerr << "The requested ETP ijk grid " << uuid << " could not have been retrieved from the ETP server." << std::endl;
 		}
@@ -330,7 +329,7 @@ void VtkEtpDocument::createTreeVtk(const std::string & uuid, const std::string &
 
 	if (type == VtkEpcCommon::Resqml2Type::IJK_GRID) {
 		if (uuidToVtkIjkGridRepresentation[uuid] == nullptr) {
-			uuidToVtkIjkGridRepresentation[uuid] = new VtkIjkGridRepresentation("etpDocument", name, uuid, parent, &client_session->epcDoc, nullptr);
+			uuidToVtkIjkGridRepresentation[uuid] = new VtkIjkGridRepresentation("etpDocument", name, uuid, parent, &client_session->repo, nullptr);
 		}
 	}
 	else if (type == VtkEpcCommon::Resqml2Type::PROPERTY) {
@@ -352,9 +351,9 @@ void VtkEtpDocument::addPropertyTreeVtk(const std::string & uuid, const std::str
 void VtkEtpDocument::unvisualize(const std::string & rec_uri)
 {
 	if(representationMode) {
-		auto pos1 = rec_uri.find_last_of("(")+1;
-		auto lenght = rec_uri.find_last_of(")") - pos1;
-		std::string uuid = rec_uri.substr(pos1,lenght);
+		const size_t pos1 = rec_uri.find_last_of("(")+1;
+		const size_t length = rec_uri.find_last_of(")") - pos1;
+		const std::string uuid = rec_uri.substr(pos1,length);
 
 		remove(uuid);
 	}
@@ -386,7 +385,6 @@ long VtkEtpDocument::getAttachmentPropertyCount(const std::string & uuid, const 
 	return 0;
 }
 
-
 //----------------------------------------------------------------------------
 void VtkEtpDocument::attach()
 {
@@ -398,9 +396,9 @@ void VtkEtpDocument::attach()
 }
 
 //----------------------------------------------------------------------------
-void VtkEtpDocument::receive_resources_tree(const std::string & rec_uri, const std::string & rec_name, const std::string & contentType, const int32_t & sourceCount)
+void VtkEtpDocument::receive_resources_tree(const std::string & rec_uri, const std::string & rec_name, const std::string & dataobjectType, int32_t sourceCount)
 {
-	if (contentType == "application/x-resqml+xml;version=2.0;type=obj_IjkGridRepresentation"){
+	if (dataobjectType == "resqml20.obj_IjkGridRepresentation"){
 		VtkEpcCommon leaf;
 		leaf.setName(rec_name);
 		leaf.setUuid(rec_uri);
@@ -410,16 +408,24 @@ void VtkEtpDocument::receive_resources_tree(const std::string & rec_uri, const s
 		leaf.setTimeIndex(-1);
 		leaf.setTimestamp(0);
 
-		push_command("GetGraphResources "+rec_uri+" sources 1 false application/x-resqml+xml;version=2.0;type=obj_ContinuousProperty");
+		//push_command("GetResources " + rec_uri + " sources 1 false resqml20.obj_ContinuousProperty");
+		Energistics::Etp::v12::Protocol::Discovery::GetResources mb;
+		mb.m_context.m_uri = rec_uri;
+		mb.m_scope = Energistics::Etp::v12::Datatypes::Object::ContextScopeKind::sources;
+		mb.m_context.m_depth = 1;
+		mb.m_context.m_dataObjectTypes.push_back("resqml20.obj_ContinuousProperty");
+		client_session->send(mb);
 		response_queue.push_back(leaf);
 		treeView.push_back(leaf);
 
-		push_command("GetGraphResources "+rec_uri+" sources 1 false application/x-resqml+xml;version=2.0;type=obj_DiscreteProperty");
+		//push_command("GetResources " + rec_uri + " sources 1 false application/x-resqml+xml;version=2.0;type=obj_DiscreteProperty");
+		mb.m_scope = Energistics::Etp::v12::Datatypes::Object::ContextScopeKind::sources;
+		mb.m_context.m_dataObjectTypes[0] = "resqml20.obj_DiscreteProperty";
+		client_session->send(mb);
 		response_queue.push_back(leaf);
 		treeView.push_back(leaf);
 	}
-	else if (contentType == "application/x-resqml+xml;version=2.0;type=obj_ContinuousProperty" ||
-			contentType == "application/x-resqml+xml;version=2.0;type=obj_DiscreteProperty" ){
+	else if (dataobjectType == "resqml20.obj_ContinuousProperty" || dataobjectType == "resqml20.obj_DiscreteProperty") {
 		VtkEpcCommon leaf;
 		leaf.setName(rec_name);
 		leaf.setUuid(rec_uri);
@@ -450,20 +456,17 @@ void VtkEtpDocument::receive_resources_tree(const std::string & rec_uri, const s
 void VtkEtpDocument::receive_nbresources_tree(size_t nb_resources)
 {
 	if (!response_queue.empty()){
+		auto copy = response_queue.front();
 		if (nb_resources > 0) {
-			auto copy = response_queue.front();
 			for (size_t nb = 1; nb < nb_resources; ++nb){
 				response_queue.push_front(copy);
 			}
 		}
-		else {
-			response_queue.pop_front();
-			if(response_queue.empty()) {
-				/*				client_session->close();
-				client_session->epcDoc.close();*/
-				getPQEtpPanel()->setEtpTreeView(getTreeView());
-				loading = false;
-			}
+		else if (response_queue.empty()) {
+			/*				client_session->close();
+			client_session->epcDoc.close();*/
+			getPQEtpPanel()->setEtpTreeView(getTreeView());
+			loading = false;
 		}
 	}
 }
@@ -481,7 +484,7 @@ vtkSmartPointer<vtkMultiBlockDataSet> VtkEtpDocument::getVisualization() const
 }
 
 //----------------------------------------------------------------------------
-bool VtkEtpDocument::inloading() const
+bool VtkEtpDocument::isLoading() const
 {
 	return loading;
 }

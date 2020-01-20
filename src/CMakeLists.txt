@@ -146,12 +146,27 @@ if (WITH_ETP)
 endif (WITH_ETP)
 
 # ============================================================================
+# Win32 Visual Studio file hierarchy
+# ============================================================================
+
+if (WIN32)
+	source_group ("VTK" FILES ${FESPP_VTK_SOURCES} ${FESPP_VTK_HEADERS})
+	IF (WITH_ETP)
+		source_group ("Resources" FILES ${FESPP_FORMS} ${FESPP_RESOURCES})
+		source_group ("etp" FILES ${FESPP_ETP_SOURCES} ${FESPP_ETP_HEADERS})
+	ELSE(WITH_ETP)
+		source_group ("Resources" FILES ${FESPP_FORMS} ${FESPP_RESOURCES} ${FESPP_FORMSETP})
+	ENDIF (WITH_ETP)
+endif (WIN32)
+
+# ============================================================================
 # compilation options
 # ============================================================================
 
 target_compile_options(${PLUGIN_NAME} PRIVATE
 	$<$<CXX_COMPILER_ID:MSVC>:/MP>
 )
+target_compile_definitions(${PLUGIN_NAME} PRIVATE BOOST_ALL_NO_LIB)
 
 # ============================================================================
 # Linker
@@ -197,6 +212,10 @@ elseif (UNIX)
 	)
 	
 endif (WIN32)
+	
+if (EXISTS ${AVRO_LIBRARY_RELEASE})
+	target_link_libraries (${PLUGIN_NAME} PRIVATE ${AVRO_LIBRARY_RELEASE})
+endif()
 
 # ============================================================================
 # Installation

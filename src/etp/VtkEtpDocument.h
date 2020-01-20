@@ -1,56 +1,37 @@
 ﻿/*-----------------------------------------------------------------------
-Copyright F2I-CONSULTING, (2014)
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"; you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
 
-cedric.robert@f2i-consulting.com
+  http://www.apache.org/licenses/LICENSE-2.0
 
-This software is a computer program whose purpose is to display data formatted using Energistics standards.
-
-This software is governed by the CeCILL license under French law and
-abiding by the rules of distribution of free software.  You can  use, 
-modify and/ or redistribute the software under the terms of the CeCILL
-license as circulated by CEA, CNRS and INRIA at the following URL
-"http://www.cecill.info". 
-
-As a counterpart to the access to the source code and  rights to copy,
-modify and redistribute granted by the license, users are provided only
-with a limited warranty  and the software's author,  the holder of the
-economic rights,  and the successive licensors  have only  limited
-liability.  
-
-In this respect, the user's attention is drawn to the risks associated
-with loading,  using,  modifying and/or developing or reproducing the
-software by the user in light of its specific status of free software,
-that may mean  that it is complicated to manipulate,  and  that  also
-therefore means  that it is reserved for developers  and  experienced
-professionals having in-depth computer knowledge. Users are therefore
-encouraged to load and test the software's suitability as regards their
-requirements in conditions enabling the security of their systems and/or 
-data to be ensured and,  more generally, to use and operate it in the 
-same conditions as regards security.  
-
-The fact that you are presently reading this means that you have had
-knowledge of the CeCILL license and that you accept its terms.
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
 -----------------------------------------------------------------------*/
-
 #ifndef __vtkEtpDocument_h
 #define __vtkEtpDocument_h
 
+// include system
 #include <string>
 #include <vector>
 #include <list>
-// include VTK
-#include <vtkSmartPointer.h>
-
-#include "VTK/VtkResqml2MultiBlockDataSet.h"
-
-#include <etp/ProtocolHandlers/DiscoveryHandlers.h>
-
-#include "VTK/VtkEpcCommon.h"
-
-// include system
-
 #include <unordered_map>
 
+#include <vtkSmartPointer.h>
+
+#include <fesapi/etp/ProtocolHandlers/DiscoveryHandlers.h>
+
+// include VTK
+#include "VTK/VtkResqml2MultiBlockDataSet.h"
+#include "VTK/VtkEpcCommon.h"
 
 class EtpClientSession;
 
@@ -65,7 +46,6 @@ class VtkWellboreTrajectoryRepresentation;
 
 class VtkEtpDocument  : public VtkResqml2MultiBlockDataSet
 {
-
 public:
 
 	/**
@@ -84,7 +64,7 @@ public:
 	 */
 	void remove(const std::string & uuid);
 
-	void receive_resources_tree(const std::string & rec_uri, const std::string & rec_name, const std::string & contentType, const int32_t & sourceCount);
+	void receive_resources_tree(const std::string & rec_uri, const std::string & rec_name, const std::string & dataobjectType, int32_t sourceCount);
 	void receive_nbresources_tree(size_t);
 
 	EtpClientSession* getClientSession();
@@ -100,10 +80,10 @@ public:
 	std::vector<VtkEpcCommon> getTreeView() const;
 
 	/**
-		 * method : inloading treeView
-		 * variable :
-		 */
-	bool inloading() const;
+	* method : inloading treeView
+	* variable :
+	*/
+	bool isLoading() const;
 
 	/**
 	 * method : visualize
@@ -111,8 +91,6 @@ public:
 	 * create uuid representation.
 	 */
 	void visualize(const std::string & uuid);
-
-	void refresh();
 
 	/**
 	 * method : remove
@@ -136,7 +114,6 @@ private:
 
 	void addPropertyTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name);
 
-
 	void createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, const VtkEpcCommon::Resqml2Type & resqmlType);
 
 	std::list<int> number_response_wait_queue;
@@ -154,9 +131,6 @@ private:
 
 	bool loading;
 
-
 	std::unordered_map<std::string, VtkIjkGridRepresentation*> uuidToVtkIjkGridRepresentation;
-
-
 };
 #endif

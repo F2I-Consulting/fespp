@@ -1,14 +1,30 @@
+/*-----------------------------------------------------------------------
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"; you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-----------------------------------------------------------------------*/
 #include "PQEtpPanel.h"
 #include "ui_PQEtpPanel.h"
-
-//include Fespp
 
 #include <vtkInformation.h>
 #include <qmessagebox.h>
 
+//include Fespp
 #include "PQSelectionPanel.h"
-
-#include <etp/EtpClientSession.h>
+#include "etp/EtpClientSession.h"
 
 namespace {
 	PQSelectionPanel* getPQSelectionPanel()
@@ -32,7 +48,7 @@ void PQEtpPanel::constructor()
 	ui.setupUi(t_widget);
 	setWidget(t_widget);
 
-	this->etpStatus_Button = ui.status;
+	etpStatus_Button = ui.status;
 	QIcon icon;
 	icon.addFile(QString::fromUtf8(":red_status.png"), QSize(), QIcon::Normal, QIcon::Off);
 	etpStatus_Button->setIcon(icon);
@@ -61,9 +77,7 @@ void PQEtpPanel::handleButtonRefresh()
 	VtkEtpDocument etp_document(ipAddress, port, VtkEpcCommon::TreeView);
 
 	// Wait for etp connection
-	while (etp_document.getClientSession() == nullptr) {
-	}
-	while (etp_document.getClientSession()->isEtpSessionClosed()) {
+	while (etp_document.getClientSession() == nullptr || etp_document.getClientSession()->isEtpSessionClosed()) {
 	}
 
 	QIcon icon;
@@ -71,13 +85,13 @@ void PQEtpPanel::handleButtonRefresh()
 	etpStatus_Button->setIcon(icon);
 
 	etp_document.createTree();
-	if (etpSendButton->text() == "Create TreeView"){
+	if (etpSendButton->text() == "Create TreeView") {
 		getPQSelectionPanel()->connectPQEtpPanel();
 		etpSendButton->setText("Refresh");
 	}
 
 	// The tree creation will automatically close the session when done
-	while (etp_document.inloading()) {
+	while (etp_document.getClientSession()->isWaitingForAnswer()) {
 	}
 	// etp_document can now be destroyed without risk
 }
