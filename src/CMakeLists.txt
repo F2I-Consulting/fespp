@@ -157,6 +157,15 @@ if (WIN32)
 	ELSE(WITH_ETP)
 		source_group ("Resources" FILES ${FESPP_FORMS} ${FESPP_RESOURCES} ${FESPP_FORMSETP})
 	ENDIF (WITH_ETP)
+	
+	add_custom_command(
+		TARGET Fespp 
+		POST_BUILD
+		COMMAND ${CMAKE_COMMAND} -E copy
+			$<$<CONFIG:Debug>:$<TARGET_FILE:Fespp>> $<$<CONFIG:Debug>:$<TARGET_PDB_FILE:Fespp>>
+			$<$<CONFIG:RelWithDebInfo>:$<TARGET_FILE:Fespp>> $<$<CONFIG:RelWithDebInfo>:$<TARGET_PDB_FILE:Fespp>>
+			$<$<CONFIG:Debug>:"C:/pv56/install_x64_vs2017/bin"> $<$<CONFIG:RelWithDebInfo>:"C:/pv56/install_x64_vs2017/bin">
+	)
 endif (WIN32)
 
 # ============================================================================

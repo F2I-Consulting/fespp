@@ -16,22 +16,19 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 -----------------------------------------------------------------------*/
-#ifndef _EtpFesppDirectedDiscoveryProtocolHandlers_h
-#define _EtpFesppDirectedDiscoveryProtocolHandlers_h
+#ifndef _IjkGridRepDiscoveryHandler_h
+#define _IjkGridRepDiscoveryHandler_h
 
 #include <fesapi/etp/ProtocolHandlers/DiscoveryHandlers.h>
-#include <fesapi/common/AbstractObject.h>
 
 #include <etp/EtpClientSession.h>
 class VtkEtpDocument;
 
-class EtpFesppDiscoveryProtocolHandlers : public ETP_NS::DiscoveryHandlers
+class IjkGridRepDiscoveryHandler : public ETP_NS::DiscoveryHandlers
 {
 public:
-	EtpFesppDiscoveryProtocolHandlers(std::shared_ptr<EtpClientSession> my_session, VtkEtpDocument* my_etp_document):ETP_NS::DiscoveryHandlers(my_session), etp_document(my_etp_document) {}
-	~EtpFesppDiscoveryProtocolHandlers() {}
-
-	std::vector<int64_t> getObjectWhenDiscovered; // all message id in this vector will result in response where the objects are going to be get in addition to be discovered
+	IjkGridRepDiscoveryHandler(std::shared_ptr<EtpClientSession> my_session, VtkEtpDocument* my_etp_document):ETP_NS::DiscoveryHandlers(my_session), etp_document(my_etp_document) {}
+	~IjkGridRepDiscoveryHandler() {}
 
 	void on_GetResourcesResponse(const Energistics::Etp::v12::Protocol::Discovery::GetResourcesResponse & msg, int64_t correlationId);
 

@@ -30,19 +30,12 @@ under the License.
 #include <fesapi/etp/ProtocolHandlers/DiscoveryHandlers.h>
 
 // include VTK
-#include "VTK/VtkResqml2MultiBlockDataSet.h"
-#include "VTK/VtkEpcCommon.h"
+#include "../VTK/VtkResqml2MultiBlockDataSet.h"
+#include "../VTK/VtkEpcCommon.h"
 
 class EtpClientSession;
 
 class VtkIjkGridRepresentation;
-class VtkUnstructuredGridRepresentation;
-class VtkPartialRepresentation;
-class VtkGrid2DRepresentation;
-class VtkPolylineRepresentation;
-class VtkTriangulatedRepresentation;
-class VtkSetPatch;
-class VtkWellboreTrajectoryRepresentation;
 
 class VtkEtpDocument  : public VtkResqml2MultiBlockDataSet
 {
@@ -64,11 +57,8 @@ public:
 	 */
 	void remove(const std::string & uuid);
 
-	void receive_resources_tree(const std::string & rec_uri, const std::string & rec_name, const std::string & dataobjectType, int32_t sourceCount);
-	void receive_nbresources_tree(size_t);
-
-	EtpClientSession* getClientSession();
-	void setClientSession(EtpClientSession * session) {client_session = session;}
+	std::shared_ptr<EtpClientSession> getClientSession() { return client_session; }
+	void setClientSession(std::shared_ptr<EtpClientSession> session) {client_session = session;}
 
 	void createTree();
 	void attach();
@@ -77,13 +67,7 @@ public:
 	 * method : get TreeView
 	 * variable :
 	 */
-	std::vector<VtkEpcCommon> getTreeView() const;
-
-	/**
-	* method : inloading treeView
-	* variable :
-	*/
-	bool isLoading() const;
+	std::vector<VtkEpcCommon>& getTreeView() { return treeView; }
 
 	/**
 	 * method : visualize
@@ -110,17 +94,14 @@ public:
 
 private:
 
-	int64_t push_command(const std::string & command);
-
 	void addPropertyTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name);
 
 	void createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, const VtkEpcCommon::Resqml2Type & resqmlType);
 
 	std::list<int> number_response_wait_queue;
-	std::list<VtkEpcCommon> response_queue;
 	std::list<std::string> command_queue;
 
-	EtpClientSession * client_session;
+	std::shared_ptr<EtpClientSession> client_session;
 
 	bool treeViewMode;
 	bool representationMode;
@@ -128,8 +109,6 @@ private:
 	std::vector<VtkEpcCommon> treeView; // Tree
 
 	int64_t last_id;
-
-	bool loading;
 
 	std::unordered_map<std::string, VtkIjkGridRepresentation*> uuidToVtkIjkGridRepresentation;
 };

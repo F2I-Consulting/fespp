@@ -16,17 +16,20 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 -----------------------------------------------------------------------*/
-#include "etp/EtpClientSession.h"
+#include "EtpClientSession.h"
+
+#include <fesapi/etp/EtpHdfProxy.h>
 
 EtpClientSession::EtpClientSession(
-		const std::string & host, const std::string & port, const std::string & target, const std::string & authorization,
-		const std::vector<Energistics::Etp::v12::Datatypes::SupportedProtocol> & requestedProtocols,
-		const std::vector<std::string>& supportedObjects,
-		const VtkEpcCommon::modeVtkEpc & mode) :
-	ETP_NS::PlainClientSession(host, port, target, authorization, requestedProtocols, supportedObjects)
+	const std::string & host, const std::string & port, const std::string & target, const std::string & authorization,
+	const std::vector<Energistics::Etp::v12::Datatypes::SupportedProtocol> & requestedProtocols,
+	const std::vector<std::string>& supportedObjects,
+	VtkEpcCommon::modeVtkEpc mode) :
+	ETP_NS::PlainClientSession(host, port, target, authorization, requestedProtocols, supportedObjects),
+	treeViewMode(mode == VtkEpcCommon::Both || mode == VtkEpcCommon::TreeView), representationMode(mode == VtkEpcCommon::Both || mode == VtkEpcCommon::Representation),
+	connectionError(false)
 {
-	treeViewMode = (mode==VtkEpcCommon::Both || mode==VtkEpcCommon::TreeView);
-	representationMode = (mode==VtkEpcCommon::Both || mode==VtkEpcCommon::Representation);
+	repo.setHdfProxyFactory(new ETP_NS::EtpHdfProxyFactory());
 }
 
 bool EtpClientSession::isWaitingForAnswer() const {

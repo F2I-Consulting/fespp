@@ -77,7 +77,12 @@ void PQEtpPanel::handleButtonRefresh()
 	VtkEtpDocument etp_document(ipAddress, port, VtkEpcCommon::TreeView);
 
 	// Wait for etp connection
-	while (etp_document.getClientSession() == nullptr || etp_document.getClientSession()->isEtpSessionClosed()) {
+	while (etp_document.getClientSession() == nullptr) {}
+	while (!etp_document.getClientSession()->hasConnectionError() && etp_document.getClientSession()->isEtpSessionClosed()) {
+	}
+	if (etp_document.getClientSession()->hasConnectionError()) {
+		std::cout << "Connection error on " << ipAddress << ":" << port << std::endl;
+		return;
 	}
 
 	QIcon icon;
@@ -93,6 +98,7 @@ void PQEtpPanel::handleButtonRefresh()
 	// The tree creation will automatically close the session when done
 	while (etp_document.getClientSession()->isWaitingForAnswer()) {
 	}
+	setEtpTreeView(etp_document.getTreeView());
 	// etp_document can now be destroyed without risk
 }
 

@@ -26,7 +26,7 @@ under the License.
 #include <fesapi/common/EpcDocument.h>
 
 //include Fespp
-#include "VTK/VtkEpcCommon.h"
+#include "../VTK/VtkEpcCommon.h"
 
 class VtkEtpDocument;
 class EtpClientSession : public ETP_NS::PlainClientSession
@@ -42,11 +42,11 @@ public:
 			const std::string & host, const std::string & port, const std::string & target, const std::string & authorization,
 			const std::vector<Energistics::Etp::v12::Datatypes::SupportedProtocol> & requestedProtocols,
 			const std::vector<std::string>& supportedObjects,
-			const VtkEpcCommon::modeVtkEpc & mode);
+			VtkEpcCommon::modeVtkEpc mode);
 
 	~EtpClientSession() {};
 
-	bool isTreeViewMode() { return treeViewMode;}
+	bool isTreeViewMode() { return treeViewMode; }
 
 	/**
 	* Indicates if the session is still waiting for answer or not.
@@ -67,6 +67,9 @@ public:
 	*/
 	void eraseMessageIdTobeAnswered(int64_t messageId);
 
+	bool hasConnectionError() const { return connectionError; }
+	void setConnectionError(bool error) { connectionError = error; }
+
 	COMMON_NS::DataObjectRepository repo;
 
 private:
@@ -77,5 +80,7 @@ private:
 	std::set<int64_t> messageIdToBeAnswered;
 	bool treeViewMode;
 	bool representationMode;
+
+	bool connectionError;
 };
 #endif
