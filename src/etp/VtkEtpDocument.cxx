@@ -202,13 +202,17 @@ void VtkEtpDocument::visualize(const std::string & rec_uri)
 		if (prop == nullptr) { // Defensive code
 			std::cerr << "The requested ETP prop " << uuid << " could not have been retrieved from the ETP server." << std::endl;
 		}
+
+		// Build a VTK ijk grid in the ijk grid node in the treeview if necessary
 		std::string ijkGridUuid = prop->getRepresentationUuid();
-		createTreeVtk(prop->getUuid(), ijkGridUuid, prop->getTitle().c_str(), VtkEpcCommon::PROPERTY);
 		if (uuidToVtkIjkGridRepresentation.find(ijkGridUuid) == uuidToVtkIjkGridRepresentation.end()) {
 			RESQML2_0_1_NS::AbstractIjkGridRepresentation const * ijkGrid = client_session->repo.getDataObjectByUuid<RESQML2_0_1_NS::AbstractIjkGridRepresentation>(ijkGridUuid);
 			auto interpretation = ijkGrid->getInterpretation();
 			createTreeVtk(ijkGridUuid, interpretation != nullptr ? interpretation->getUuid() : "etpDocument", ijkGrid->getTitle().c_str(), VtkEpcCommon::IJK_GRID);
 		}
+
+		// Build a VTK property in the property node in the treeview if necessary
+		createTreeVtk(prop->getUuid(), ijkGridUuid, prop->getTitle().c_str(), VtkEpcCommon::PROPERTY);
 		uuidToVtkIjkGridRepresentation[ijkGridUuid]->visualize(uuid);
 	} else {
 		std::cout << "Not implemented yet." << std::endl;
@@ -216,7 +220,7 @@ void VtkEtpDocument::visualize(const std::string & rec_uri)
 }
 
 //----------------------------------------------------------------------------
-void VtkEtpDocument::createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, const VtkEpcCommon::Resqml2Type & type)
+void VtkEtpDocument::createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, VtkEpcCommon::Resqml2Type type)
 {
 	VtkEpcCommon& tmp = uuidIsChildOf[uuid];
 	tmp.setType(type);
@@ -277,7 +281,7 @@ void VtkEtpDocument::remove(const std::string & uuid)
 }
 
 //----------------------------------------------------------------------------
-long VtkEtpDocument::getAttachmentPropertyCount(const std::string & uuid, const VtkEpcCommon::FesppAttachmentProperty propertyUnit)
+long VtkEtpDocument::getAttachmentPropertyCount(const std::string & uuid, VtkEpcCommon::FesppAttachmentProperty propertyUnit)
 {
 	return 0;
 }

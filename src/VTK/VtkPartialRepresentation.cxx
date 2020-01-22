@@ -140,7 +140,7 @@ void VtkPartialRepresentation::visualize(const std::string & uuid)
 }
 
 //----------------------------------------------------------------------------
-void VtkPartialRepresentation::createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, const VtkEpcCommon::Resqml2Type & resqmlType)
+void VtkPartialRepresentation::createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, VtkEpcCommon::Resqml2Type resqmlType)
 {
 	if (resqmlType == VtkEpcCommon::PROPERTY ) {
 		uuidToVtkProperty[uuid] = new VtkProperty(fileName, name, uuid, parent, repository);
@@ -148,10 +148,11 @@ void VtkPartialRepresentation::createTreeVtk(const std::string & uuid, const std
 }
 
 //----------------------------------------------------------------------------
-long VtkPartialRepresentation::getAttachmentPropertyCount(const std::string & uuid, const VtkEpcCommon::FesppAttachmentProperty propertyUnit)
+long VtkPartialRepresentation::getAttachmentPropertyCount(const std::string & uuid, VtkEpcCommon::FesppAttachmentProperty propertyUnit)
 {
 	return vtkEpcDocumentSource->getAttachmentPropertyCount(uuid, propertyUnit);
 }
+
 //----------------------------------------------------------------------------
 void VtkPartialRepresentation::remove(const std::string & uuid)
 {

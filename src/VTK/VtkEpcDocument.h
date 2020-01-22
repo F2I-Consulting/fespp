@@ -87,11 +87,11 @@ public:
 	VtkEpcCommon::Resqml2Type getType(std::string);
 	VtkEpcCommon getInfoUuid(std::string);
 
-	long getAttachmentPropertyCount(const std::string & uuid, const VtkEpcCommon::FesppAttachmentProperty propertyUnit) ;
-	int getICellCount(const std::string & uuid) ;
-	int getJCellCount(const std::string & uuid) ;
-	int getKCellCount(const std::string & uuid) ;
-	int getInitKIndex(const std::string & uuid) ;
+	long getAttachmentPropertyCount(const std::string & uuid, VtkEpcCommon::FesppAttachmentProperty propertyUnit);
+	int getICellCount(const std::string & uuid);
+	int getJCellCount(const std::string & uuid);
+	int getKCellCount(const std::string & uuid);
+	int getInitKIndex(const std::string & uuid);
 
 	std::string getError() ;
 
@@ -130,7 +130,7 @@ private:
 	* variable : uuid, parent uuid, name, type
 	* prepare VtkEpcDocument & Children.
 	*/
-	void createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, const VtkEpcCommon::Resqml2Type & resqmlType);
+	void createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, VtkEpcCommon::Resqml2Type resqmlType);
 
 
 

@@ -35,26 +35,13 @@ under the License.
 
 //----------------------------------------------------------------------------
 VtkIjkGridRepresentation::VtkIjkGridRepresentation(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, COMMON_NS::DataObjectRepository *pckEPCRep, COMMON_NS::DataObjectRepository *pckEPCSubRep, int idProc, int maxProc) :
-VtkResqml2UnstructuredGrid(fileName, name, uuid, uuidParent, pckEPCRep, pckEPCSubRep, idProc, maxProc)
+	VtkResqml2UnstructuredGrid(fileName, name, uuid, uuidParent, pckEPCRep, pckEPCSubRep, idProc, maxProc), lastProperty(""),
+	iCellCount(0), jCellCount(0), kCellCount(0), initKIndex(0), maxKIndex(0), isHyperslabed(false)
 {
-	isHyperslabed = false;
-
-	iCellCount = 0;
-	jCellCount = 0;
-	kCellCount = 0;
-	initKIndex = 0;
-	maxKIndex = 0;
 }
 
 VtkIjkGridRepresentation::~VtkIjkGridRepresentation()
 {
-	lastProperty = "";
-
-	iCellCount = 0;
-	jCellCount = 0;
-	kCellCount = 0;
-	initKIndex = 0;
-	maxKIndex = 0;
 }
 
 //----------------------------------------------------------------------------
@@ -138,39 +125,38 @@ void VtkIjkGridRepresentation::createOutput(const std::string & uuid)
 		if (subRepresentation){
 			// SubRep
 			createWithPoints(points, epcPackageSubRepresentation->getDataObjectByUuid(getUuid()));
-		}else{
+		}
+		else {
 			// Ijk Grid
 			createWithPoints(points, epcPackageRepresentation->getDataObjectByUuid(getUuid()));
 		}
 	}
 
-	if (uuid != getUuid()){ // => PROPERTY UUID
+	if (uuid != getUuid()) { // => PROPERTY UUID
 		if (subRepresentation){
-			auto objRepProp = epcPackageSubRepresentation->getDataObjectByUuid(getUuid());
-			auto property = static_cast<resqml2::SubRepresentation*>(objRepProp);
-			auto cellCount = property->getElementCountOfPatch(0);
+			RESQML2_NS::SubRepresentation* subRep = epcPackageSubRepresentation->getDataObjectByUuid<RESQML2_NS::SubRepresentation>(getUuid());
+			auto cellCount = subRep->getElementCountOfPatch(0);
 			//#ifdef PARAVIEW_USE_MPI
 			if (isHyperslabed) {
-				addProperty(uuid, uuidToVtkProperty[uuid]->loadValuesPropertySet(property->getValuesPropertySet(), iCellCount*jCellCount*(maxKIndex - initKIndex), 0, iCellCount, jCellCount, maxKIndex - initKIndex, initKIndex));
+				addProperty(uuid, uuidToVtkProperty[uuid]->loadValuesPropertySet(subRep->getValuesPropertySet(), iCellCount*jCellCount*(maxKIndex - initKIndex), 0, iCellCount, jCellCount, maxKIndex - initKIndex, initKIndex));
 			}
 			else {
 				//#endif
-				addProperty(uuid, uuidToVtkProperty[uuid]->loadValuesPropertySet(property->getValuesPropertySet(), cellCount, 0));
+				addProperty(uuid, uuidToVtkProperty[uuid]->loadValuesPropertySet(subRep->getValuesPropertySet(), cellCount, 0));
 				//#ifdef PARAVIEW_USE_MPI
 			}
 			//#endif
 		}
 		else {
-			auto objRepProp = epcPackageRepresentation->getDataObjectByUuid(getUuid());
-			auto property = static_cast<resqml2_0_1::AbstractIjkGridRepresentation*>(objRepProp);
+			RESQML2_0_1_NS::AbstractIjkGridRepresentation* ijkGrid = epcPackageRepresentation->getDataObjectByUuid<RESQML2_0_1_NS::AbstractIjkGridRepresentation>(getUuid());
 			auto cellCount = iCellCount*jCellCount*kCellCount;
 			//#ifdef PARAVIEW_USE_MPI
 			if (isHyperslabed) {
-				addProperty(uuid, uuidToVtkProperty[uuid]->loadValuesPropertySet(property->getValuesPropertySet(), iCellCount*jCellCount*(maxKIndex - initKIndex), 0, iCellCount, jCellCount, maxKIndex - initKIndex, initKIndex));
+				addProperty(uuid, uuidToVtkProperty[uuid]->loadValuesPropertySet(ijkGrid->getValuesPropertySet(), iCellCount*jCellCount*(maxKIndex - initKIndex), 0, iCellCount, jCellCount, maxKIndex - initKIndex, initKIndex));
 			}
 			else {
 				//#endif
-				addProperty(uuid, uuidToVtkProperty[uuid]->loadValuesPropertySet(property->getValuesPropertySet(), cellCount, 0));
+				addProperty(uuid, uuidToVtkProperty[uuid]->loadValuesPropertySet(ijkGrid->getValuesPropertySet(), cellCount, 0));
 				//#ifdef PARAVIEW_USE_MPI
 			}
 			//#endif
@@ -182,18 +168,18 @@ void VtkIjkGridRepresentation::createOutput(const std::string & uuid)
 void VtkIjkGridRepresentation::checkHyperslabingCapacity(resqml2_0_1::AbstractIjkGridRepresentation* ijkGridRepresentation)
 {
 	double* allXyzPoints = nullptr;
-	try{
+	try {
 		const auto kInterfaceNodeCount = ijkGridRepresentation->getXyzPointCountOfKInterfaceOfPatch(0);
 		allXyzPoints = new double[kInterfaceNodeCount * 3];
 		ijkGridRepresentation->getXyzPointsOfKInterfaceOfPatch(0, 0, allXyzPoints);
 		isHyperslabed = true;
 		delete[] allXyzPoints;
 	}
-	catch (const std::exception & )
-	{
+	catch (const std::exception&) {
 		isHyperslabed = false;
-		if (allXyzPoints != nullptr)
+		if (allXyzPoints != nullptr) {
 			delete[] allXyzPoints;
+		}
 	}
 }
 
@@ -207,7 +193,7 @@ void VtkIjkGridRepresentation::addProperty(const std::string & uuidProperty, vtk
 }
 
 //----------------------------------------------------------------------------
-long VtkIjkGridRepresentation::getAttachmentPropertyCount(const std::string & uuid, const VtkEpcCommon::FesppAttachmentProperty propertyUnit)
+long VtkIjkGridRepresentation::getAttachmentPropertyCount(const std::string & uuid, VtkEpcCommon::FesppAttachmentProperty propertyUnit)
 {
 	if (propertyUnit == VtkEpcCommon::CELLS) {
 		common::AbstractObject* obj;
@@ -216,7 +202,8 @@ long VtkIjkGridRepresentation::getAttachmentPropertyCount(const std::string & uu
 			obj = epcPackageSubRepresentation->getDataObjectByUuid(getUuid());
 			auto subRepresentation1 = static_cast<resqml2::SubRepresentation*>(obj);
 			return isHyperslabed ? iCellCount*jCellCount*(maxKIndex - initKIndex) : subRepresentation1->getElementCountOfPatch(0);
-		}else {
+		}
+		else {
 			// Ijk Grid
 			obj = epcPackageRepresentation->getDataObjectByUuid(getUuid());
 			auto ijkGridRepresentation = static_cast<resqml2_0_1::AbstractIjkGridRepresentation*>(obj);
@@ -230,55 +217,25 @@ long VtkIjkGridRepresentation::getAttachmentPropertyCount(const std::string & uu
 //----------------------------------------------------------------------------
 int VtkIjkGridRepresentation::getICellCount(const std::string & uuid) const
 {
-	long result = 0;
-
-	if (subRepresentation) {
-		// SubRep
-		result = iCellCount;
-	}else {
-		common::AbstractObject* obj;
-		// Ijk Grid
-		obj = epcPackageRepresentation->getDataObjectByUuid(getUuid());
-		auto ijkGridRepresentation = static_cast<resqml2_0_1::AbstractIjkGridRepresentation*>(obj);
-		result = ijkGridRepresentation->getICellCount();
-	}
-	return result;
+	return subRepresentation
+		? iCellCount
+		: epcPackageRepresentation->getDataObjectByUuid<RESQML2_0_1_NS::AbstractIjkGridRepresentation>(getUuid())->getICellCount();
 }
 
 //----------------------------------------------------------------------------
 int VtkIjkGridRepresentation::getJCellCount(const std::string & uuid) const
 {
-	long result = 0;
-
-	if (subRepresentation)	{
-		// SubRep
-		result = jCellCount;
-	}else	{
-		common::AbstractObject* obj;
-		// Ijk Grid
-		obj = epcPackageRepresentation->getDataObjectByUuid(getUuid());
-		auto ijkGridRepresentation = static_cast<resqml2_0_1::AbstractIjkGridRepresentation*>(obj);
-		result = ijkGridRepresentation->getJCellCount();
-	}
-	return result;
+	return subRepresentation
+		? jCellCount
+		: epcPackageRepresentation->getDataObjectByUuid<RESQML2_0_1_NS::AbstractIjkGridRepresentation>(getUuid())->getJCellCount();
 }
 
 //----------------------------------------------------------------------------
 int VtkIjkGridRepresentation::getKCellCount(const std::string & uuid) const
 {
-	long result = 0;
-
-	if (subRepresentation)	{
-		// SubRep
-		result = kCellCount;
-	}else{
-		common::AbstractObject* obj;
-		// Ijk Grid
-		obj = epcPackageRepresentation->getDataObjectByUuid(getUuid());
-		auto ijkGridRepresentation = static_cast<resqml2_0_1::AbstractIjkGridRepresentation*>(obj);
-		result = ijkGridRepresentation->getKCellCount();
-	}
-	return result;
+	return subRepresentation
+		? kCellCount
+		: epcPackageRepresentation->getDataObjectByUuid<RESQML2_0_1_NS::AbstractIjkGridRepresentation>(getUuid())->getKCellCount();
 }
 
 //----------------------------------------------------------------------------

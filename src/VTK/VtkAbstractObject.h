@@ -34,10 +34,10 @@ public:
 	*/
 	virtual ~VtkAbstractObject();
 
-	std::string getFileName() const;
-	std::string getName() const;
-	std::string getUuid() const;
-	std::string getParent() const;
+	const std::string& getFileName() const { return fileName; }
+	const std::string& getName() const { return name; }
+	const std::string& getUuid() const { return uuid; }
+	const std::string& getParent() const { return uuidParent; }
 	
 	int getIdProc() const;
 	int getMaxProc() const;
@@ -55,7 +55,7 @@ public:
 	/**
 	* create vtk resqml2 element
 	*/
-	virtual void createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, const VtkEpcCommon::Resqml2Type & resqmlType) =0;
+	virtual void createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, VtkEpcCommon::Resqml2Type resqmlType) = 0;
 
 	/**
 	* remove representation uuid's
@@ -64,7 +64,7 @@ public:
 
 	/**
 	*/
-	virtual long getAttachmentPropertyCount(const std::string & uuid, const VtkEpcCommon::FesppAttachmentProperty propertyUnit) = 0;
+	virtual long getAttachmentPropertyCount(const std::string & uuid, VtkEpcCommon::FesppAttachmentProperty propertyUnit) = 0;
 
 private:
 	std::string fileName;

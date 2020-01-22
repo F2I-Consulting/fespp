@@ -55,7 +55,7 @@ void VtkWellboreTrajectoryRepresentationText::addProperty(const std::string & uu
 {
 }
 
-long VtkWellboreTrajectoryRepresentationText::getAttachmentPropertyCount(const std::string & uuid, const VtkEpcCommon::FesppAttachmentProperty propertyUnit)
+long VtkWellboreTrajectoryRepresentationText::getAttachmentPropertyCount(const std::string & uuid, VtkEpcCommon::FesppAttachmentProperty propertyUnit)
 {
 	return 0;
 }

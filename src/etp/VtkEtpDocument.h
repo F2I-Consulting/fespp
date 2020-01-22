@@ -90,13 +90,13 @@ public:
 	 */
 	vtkSmartPointer<vtkMultiBlockDataSet> getVisualization() const;
 
-	long getAttachmentPropertyCount(const std::string & uuid, const VtkEpcCommon::FesppAttachmentProperty propertyUnit) ;
+	long getAttachmentPropertyCount(const std::string & uuid, VtkEpcCommon::FesppAttachmentProperty propertyUnit);
 
 private:
 
 	void addPropertyTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name);
 
-	void createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, const VtkEpcCommon::Resqml2Type & resqmlType);
+	void createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, VtkEpcCommon::Resqml2Type resqmlType);
 
 	std::list<int> number_response_wait_queue;
 	std::list<std::string> command_queue;

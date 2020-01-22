@@ -52,10 +52,10 @@ VtkAbstractRepresentation::~VtkAbstractRepresentation()
 	}
 	uuidToVtkProperty.clear();
 
-	points = NULL;
+	points = nullptr;
 }
 //----------------------------------------------------------------------------
-void VtkAbstractRepresentation::createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, const VtkEpcCommon::Resqml2Type & resqmlType)
+void VtkAbstractRepresentation::createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, VtkEpcCommon::Resqml2Type resqmlType)
 {
 	if (resqmlType==VtkEpcCommon::PROPERTY)	{
 		if (uuidToVtkProperty.find(uuid) == uuidToVtkProperty.end()) {
@@ -74,12 +74,7 @@ vtkSmartPointer<vtkPoints> VtkAbstractRepresentation::createVtkPoints(const ULON
 {
 	points = vtkSmartPointer<vtkPoints>::New();
 
-	double zIndice = 1;
-
-	if (localCRS->isDepthOriented()) {
-
-		zIndice = -1;
-	}
+	const double zIndice = localCRS->isDepthOriented() ? -1 : 1;
 
 	for (ULONG64 nodeIndex = 0; nodeIndex < pointCount * 3; nodeIndex += 3) {
 		points->InsertNextPoint(allXyzPoints[nodeIndex], allXyzPoints[nodeIndex + 1], allXyzPoints[nodeIndex + 2] * zIndice);
@@ -94,5 +89,5 @@ vtkSmartPointer<vtkPoints> VtkAbstractRepresentation::getVtkPoints()
 
 bool VtkAbstractRepresentation::vtkPointsIsCreated()
 {
-	return (points != nullptr);
+	return points != nullptr;
 }

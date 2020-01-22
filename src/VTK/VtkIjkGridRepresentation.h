@@ -66,7 +66,7 @@ public:
 	* variable : uuid,  support property (CELLS or POINTS)
 	* return : count 
 	*/
-	long getAttachmentPropertyCount(const std::string & uuid, const VtkEpcCommon::FesppAttachmentProperty propertyUnit) ;
+	long getAttachmentPropertyCount(const std::string & uuid, VtkEpcCommon::FesppAttachmentProperty propertyUnit) ;
 
 	int getICellCount(const std::string & uuid) const;
 

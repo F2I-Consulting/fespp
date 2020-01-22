@@ -37,30 +37,6 @@ VtkAbstractObject::~VtkAbstractObject()
 }
 
 //----------------------------------------------------------------------------
-std::string VtkAbstractObject::getFileName() const
-{
-	return fileName;
-}
-
-//----------------------------------------------------------------------------
-std::string VtkAbstractObject::getName() const
-{
-	return name;
-}
-
-//----------------------------------------------------------------------------
-std::string VtkAbstractObject::getUuid() const
-{
-	return uuid;
-}
-
-//----------------------------------------------------------------------------
-std::string VtkAbstractObject::getParent() const
-{
-	return uuidParent;
-}
-
-//----------------------------------------------------------------------------
 int VtkAbstractObject::getIdProc() const
 {
 	return idProc;
@@ -69,10 +45,7 @@ int VtkAbstractObject::getIdProc() const
 //----------------------------------------------------------------------------
 int VtkAbstractObject::getMaxProc() const
 {
-	if(maxProc==0)
-		return 1;
-	else
-		return maxProc;
+	return maxProc == 0 ? 1 : maxProc;
 }
 
 //----------------------------------------------------------------------------

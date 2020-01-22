@@ -1,35 +1,20 @@
 ﻿/*-----------------------------------------------------------------------
-Copyright F2I-CONSULTING, (2014)
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"; you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
 
-cedric.robert@f2i-consulting.com
+  http://www.apache.org/licenses/LICENSE-2.0
 
-This software is a computer program whose purpose is to display data formatted using Energistics standards.
-
-This software is governed by the CeCILL license under French law and
-abiding by the rules of distribution of free software.  You can  use,
-modify and/ or redistribute the software under the terms of the CeCILL
-license as circulated by CEA, CNRS and INRIA at the following URL
-"http://www.cecill.info".
-
-As a counterpart to the access to the source code and  rights to copy,
-modify and redistribute granted by the license, users are provided only
-with a limited warranty  and the software's author,  the holder of the
-economic rights,  and the successive licensors  have only  limited
-liability.
-
-In this respect, the user's attention is drawn to the risks associated
-with loading,  using,  modifying and/or developing or reproducing the
-software by the user in light of its specific status of free software,
-that may mean  that it is complicated to manipulate,  and  that  also
-therefore means  that it is reserved for developers  and  experienced
-professionals having in-depth computer knowledge. Users are therefore
-encouraged to load and test the software's suitability as regards their
-requirements in conditions enabling the security of their systems and/or
-data to be ensured and,  more generally, to use and operate it in the
-same conditions as regards security.
-
-The fact that you are presently reading this means that you have had
-knowledge of the CeCILL license and that you accept its terms.
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
 -----------------------------------------------------------------------*/
 #include "VtkEpcDocument.h"
 
@@ -59,7 +44,6 @@ knowledge of the CeCILL license and that you accept its terms.
 #include <fesapi/resqml2_0_1/PropertyKindMapper.h>
 #include <fesapi/resqml2_0_1/SubRepresentation.h>
 #include <fesapi/resqml2_0_1/TimeSeries.h>
-
 
 // FESPP
 #include "VtkEpcDocumentSet.h"
@@ -159,7 +143,7 @@ VtkEpcDocument::~VtkEpcDocument()
 }
 
 // ----------------------------------------------------------------------------
-void VtkEpcDocument::createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, const VtkEpcCommon::Resqml2Type & type)
+void VtkEpcDocument::createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, VtkEpcCommon::Resqml2Type type)
 {
 	int return_code = 1;
 	uuidIsChildOf[uuid].setType( type);
@@ -640,7 +624,7 @@ void VtkEpcDocument::visualize(const std::string & uuid)
 			attach();
 		}
 	}
-	catch (const std::exception & e)
+	catch (const std::exception&)
 	{
 		cout << "ERROR with uuid attachment: " << uuid ;
 	}
@@ -768,7 +752,11 @@ void VtkEpcDocument::remove(const std::string & uuid)
 // ----------------------------------------------------------------------------
 void VtkEpcDocument::attach()
 {
-	for (size_t newBlockIndex = 0; newBlockIndex < attachUuids.size(); ++newBlockIndex) {
+	if (attachUuids.size() > (std::numeric_limits<unsigned int>::max)()) {
+		throw std::range_error("Too much attached uuids");
+	}
+
+	for (unsigned int newBlockIndex = 0; newBlockIndex < attachUuids.size(); ++newBlockIndex) {
 		std::string uuid = attachUuids[newBlockIndex];
 		if (uuidIsChildOf[uuid].getType() == VtkEpcCommon::GRID_2D)	{
 			vtkOutput->SetBlock(newBlockIndex, uuidToVtkGrid2DRepresentation[uuid]->getOutput());
@@ -938,7 +926,7 @@ void VtkEpcDocument::addProperty(const std::string & uuidProperty, vtkDataArray*
 }
 
 // ----------------------------------------------------------------------------
-long VtkEpcDocument::getAttachmentPropertyCount(const std::string & uuid, const VtkEpcCommon::FesppAttachmentProperty propertyUnit)
+long VtkEpcDocument::getAttachmentPropertyCount(const std::string & uuid, VtkEpcCommon::FesppAttachmentProperty propertyUnit)
 {
 	long result = 0;
 	switch (uuidIsChildOf[uuid].getType()) {

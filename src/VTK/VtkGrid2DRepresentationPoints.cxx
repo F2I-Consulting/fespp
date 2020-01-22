@@ -127,7 +127,7 @@ void VtkGrid2DRepresentationPoints::addProperty(const std::string & uuidProperty
 }
 
 //----------------------------------------------------------------------------
-long VtkGrid2DRepresentationPoints::getAttachmentPropertyCount(const std::string & uuid, const VtkEpcCommon::FesppAttachmentProperty propertyUnit)
+long VtkGrid2DRepresentationPoints::getAttachmentPropertyCount(const std::string & uuid, VtkEpcCommon::FesppAttachmentProperty propertyUnit)
 {
 	long result = 0;
 	resqml2_0_1::Grid2dRepresentation* grid2dRepresentation = nullptr;
