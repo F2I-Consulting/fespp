@@ -20,12 +20,10 @@ under the License.
 
 // VTK
 #include <vtkSmartPointer.h>
-#include <vtkMath.h>
 #include <vtkPointData.h>
 #include <vtkCellArray.h>
 
 // FESAPI
-#include <fesapi/common/EpcDocument.h>
 #include <fesapi/resqml2_0_1/Grid2dRepresentation.h>
 
 // FESPP
@@ -33,7 +31,7 @@ under the License.
 
 //----------------------------------------------------------------------------
 VtkGrid2DRepresentationPoints::VtkGrid2DRepresentationPoints(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, COMMON_NS::DataObjectRepository *repoRepresentation, COMMON_NS::DataObjectRepository *repoSubRepresentation) :
-VtkResqml2PolyData(fileName, name, uuid, uuidParent, repoRepresentation, repoSubRepresentation)
+	VtkResqml2PolyData(fileName, name, uuid, uuidParent, repoRepresentation, repoSubRepresentation), lastProperty("")
 {
 }
 
@@ -46,58 +44,43 @@ void VtkGrid2DRepresentationPoints::createOutput(const std::string & uuid)
 {
 	if (!subRepresentation)	{
 
-		resqml2_0_1::Grid2dRepresentation* grid2dRepresentation = nullptr;
-		common::AbstractObject* obj = epcPackageRepresentation->getDataObjectByUuid(getUuid().substr(0, 36));
+		RESQML2_0_1_NS::Grid2dRepresentation const * grid2dRepresentation = epcPackageRepresentation->getDataObjectByUuid<RESQML2_0_1_NS::Grid2dRepresentation>(getUuid().substr(0, 36));
 
-		if (obj != nullptr && obj->getXmlTag() == "Grid2dRepresentation")
-			grid2dRepresentation = static_cast<resqml2_0_1::Grid2dRepresentation*>(obj);
-
-		if (!vtkOutput) {
+		if (vtkOutput == nullptr) {
 			vtkOutput = vtkSmartPointer<vtkPolyData>::New();
 
-			const ULONG64 nbNodeI = grid2dRepresentation->getNodeCountAlongIAxis();
-			const ULONG64 nbNodeJ = grid2dRepresentation->getNodeCountAlongJAxis();
 			const double originX = grid2dRepresentation->getXOriginInGlobalCrs();
 			const double originY = grid2dRepresentation->getYOriginInGlobalCrs();
-			double *z = new double[nbNodeI * nbNodeJ];
-			grid2dRepresentation->getZValuesInGlobalCrs(z);
-			vtkSmartPointer<vtkPoints> points = vtkSmartPointer<vtkPoints>::New();
-			vtkSmartPointer<vtkCellArray> vertices = vtkSmartPointer<vtkCellArray>::New();
 			const double XIOffset = grid2dRepresentation->getXIOffsetInGlobalCrs();
 			const double XJOffset = grid2dRepresentation->getXJOffsetInGlobalCrs();
 			const double YIOffset = grid2dRepresentation->getYIOffsetInGlobalCrs();
 			const double YJOffset = grid2dRepresentation->getYJOffsetInGlobalCrs();
+			const double zIndice = grid2dRepresentation->getLocalCrs(0)->isDepthOriented() ? -1 : 1;
+			const ULONG64 nbNodeI = grid2dRepresentation->getNodeCountAlongIAxis();
+			const ULONG64 nbNodeJ = grid2dRepresentation->getNodeCountAlongJAxis();
+			std::unique_ptr<double[]> z(new double[nbNodeI * nbNodeJ]);
+			grid2dRepresentation->getZValuesInGlobalCrs(z.get());
 
-			double zIndice = 1;
-
-			if (grid2dRepresentation->getLocalCrs(0)->isDepthOriented()) {
-				zIndice = -1;
-			}
-
+			vtkSmartPointer<vtkPoints> points = vtkSmartPointer<vtkPoints>::New();
+			vtkSmartPointer<vtkCellArray> vertices = vtkSmartPointer<vtkCellArray>::New();
 			for (ULONG64 j = 0; j < nbNodeJ; ++j) {
 				for (ULONG64 i = 0; i < nbNodeI; ++i) {
-					size_t ptId = i + j * nbNodeI;
-					if (!(vtkMath::IsNan(z[ptId]))) {
-						vtkIdType pid[1];
-						pid[0] = points->InsertNextPoint(
+					const size_t ptId = i + j * nbNodeI;
+					if (!isnan(z[ptId])) {
+						vtkIdType pid = points->InsertNextPoint(
 								originX + i*XIOffset + j*XJOffset,
 								originY + i*YIOffset + j*YJOffset,
-								z[ptId] * zIndice
-						);
-						vertices->InsertNextCell(1, pid);
+								z[ptId] * zIndice);
+						vertices->InsertNextCell(1, &pid);
 					}
 				}
 			}
-			delete[] z;
-
 			vtkOutput->SetPoints(points);
 			vtkOutput->SetVerts(vertices);
-
 		}
 		else {
 			if (uuid != getUuid().substr(0, 36)) {
-				vtkDataArray* arrayProperty = uuidToVtkProperty[uuid]->visualize(uuid, grid2dRepresentation);
-				addProperty(uuid, arrayProperty);
+				addProperty(uuid, uuidToVtkProperty[uuid]->visualize(uuid, grid2dRepresentation));
 			}
 		}
 	}
@@ -114,15 +97,9 @@ void VtkGrid2DRepresentationPoints::addProperty(const std::string & uuidProperty
 //----------------------------------------------------------------------------
 long VtkGrid2DRepresentationPoints::getAttachmentPropertyCount(const std::string & uuid, VtkEpcCommon::FesppAttachmentProperty propertyUnit)
 {
-	long result = 0;
-	resqml2_0_1::Grid2dRepresentation* grid2dRepresentation = nullptr;
-	common::AbstractObject* obj = epcPackageRepresentation->getDataObjectByUuid(getUuid().substr(0, 36));
-
-	if (obj != nullptr && obj->getXmlTag() == "Grid2dRepresentation"){
-		grid2dRepresentation = static_cast<resqml2_0_1::Grid2dRepresentation*>(obj);
-
-		result = grid2dRepresentation->getNodeCountAlongIAxis() * grid2dRepresentation->getNodeCountAlongJAxis();
-	}
-	return result;
+	RESQML2_0_1_NS::Grid2dRepresentation const * grid2dRepresentation = epcPackageRepresentation->getDataObjectByUuid<RESQML2_0_1_NS::Grid2dRepresentation>(getUuid().substr(0, 36));
+	
+	return grid2dRepresentation != nullptr
+		? grid2dRepresentation->getNodeCountAlongIAxis() * grid2dRepresentation->getNodeCountAlongJAxis()
+		: 0;
 }
-

@@ -26,14 +26,10 @@ under the License.
 #include <vtkSmartPointer.h>
 #include <vtkMultiBlockDataSet.h>
 
-#include <fesapi/etp/EtpHdfProxy.h>
-
-#include <fesapi/resqml2/AbstractRepresentation.h>
-#include <fesapi/common/AbstractObject.h>
 #include <fesapi/resqml2/AbstractFeatureInterpretation.h>
-
 #include <fesapi/resqml2_0_1/AbstractIjkGridRepresentation.h>
-#include <fesapi/resqml2_0_1/ContinuousPropertySeries.h>
+
+#include <fesapi/etp/EtpHdfProxy.h>
 
 // include Fespp
 #include "EtpClientSession.h"
@@ -108,7 +104,7 @@ void startio(VtkEtpDocument *etp_document, std::string ipAddress, std::string po
 	auto clientSession = std::make_shared<EtpClientSession>(ipAddress, port, "/", "", requestedProtocols, supportedObjects, mode);
 	clientSession->setCoreProtocolHandlers(std::make_shared<ETP_NS::CoreHandlers>(clientSession));
 	clientSession->setDiscoveryProtocolHandlers(std::make_shared<ETP_NS::DiscoveryHandlers>(clientSession));
-	clientSession->setStoreProtocolHandlers(std::make_shared<EtpFesppStoreProtocolHandlers>(clientSession, &clientSession->repo));
+	clientSession->setStoreProtocolHandlers(std::make_shared<EtpFesppStoreProtocolHandlers>(clientSession));
 	clientSession->setDataArrayProtocolHandlers(std::make_shared<ETP_NS::DataArrayHandlers>(clientSession));
 	clientSession->setStoreNotificationProtocolHandlers(std::make_shared<ETP_NS::StoreNotificationHandlers>(clientSession));
 	etp_document->setClientSession(clientSession);
@@ -118,8 +114,7 @@ void startio(VtkEtpDocument *etp_document, std::string ipAddress, std::string po
 //----------------------------------------------------------------------------
 VtkEtpDocument::VtkEtpDocument(const std::string & ipAddress, const std::string & port, const VtkEpcCommon::modeVtkEpc & mode) :
 	VtkResqml2MultiBlockDataSet("EtpDocument", "EtpDocument", "EtpDocument", "", 0, 0), client_session(nullptr),
-	treeViewMode(mode == VtkEpcCommon::Both || mode == VtkEpcCommon::TreeView), representationMode(mode == VtkEpcCommon::Both || mode == VtkEpcCommon::Representation),
-	last_id(0)
+	treeViewMode(mode == VtkEpcCommon::Both || mode == VtkEpcCommon::TreeView), representationMode(mode == VtkEpcCommon::Both || mode == VtkEpcCommon::Representation)
 {
 	vtkOutput = vtkSmartPointer<vtkMultiBlockDataSet>::New();
 
@@ -147,7 +142,7 @@ void VtkEtpDocument::createTree()
 	mb.m_context.m_depth = 1;
 	mb.m_context.m_dataObjectTypes.push_back("resqml20.obj_IjkGridRepresentation");
 	mb.m_scope = Energistics::Etp::v12::Datatypes::Object::ContextScopeKind::self; // Could be whatever enumerated values
-	const int64_t id = client_session->sendWithSpecificHandler(mb, std::make_shared<IjkGridRepDiscoveryHandler>(client_session, this));
+	const int64_t id = client_session->sendWithSpecificHandler(mb, std::make_shared<IjkGridRepDiscoveryHandler>(this));
 	client_session->insertMessageIdTobeAnswered(id);
 }
 

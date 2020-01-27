@@ -27,11 +27,11 @@ under the License.
 class EtpFesppStoreProtocolHandlers : public ETP_NS::StoreHandlers
 {
 public:
-	EtpFesppStoreProtocolHandlers(std::shared_ptr<EtpClientSession> mySession, COMMON_NS::DataObjectRepository* repo_): ETP_NS::StoreHandlers(mySession), repo(repo_) {}
+	EtpFesppStoreProtocolHandlers(std::shared_ptr<EtpClientSession> mySession): ETP_NS::StoreHandlers(mySession), repo(mySession->repo) {}
 	~EtpFesppStoreProtocolHandlers() {}
 
 	void on_GetDataObjectsResponse(const Energistics::Etp::v12::Protocol::Store::GetDataObjectsResponse & msg, int64_t correlationId);
 private:
-	COMMON_NS::DataObjectRepository* repo;
+	COMMON_NS::DataObjectRepository& repo;
 };
 #endif

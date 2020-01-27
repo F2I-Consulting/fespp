@@ -18,6 +18,11 @@ under the License.
 -----------------------------------------------------------------------*/
 #include "Fespp.h"
 
+#include <exception>
+#include <iostream>
+#include <utility>
+#include <algorithm>
+
 #include <vtkDataArraySelection.h>
 #include <vtkIndent.h>
 #include <vtkInformation.h>
@@ -28,10 +33,6 @@ under the License.
 #include <vtkOStreamWrapper.h>
 #include <vtkSetGet.h>
 #include <vtkSmartPointer.h>
-#include <exception>
-#include <iostream>
-#include <utility>
-#include <algorithm>
 
 // Fespp include
 #include "VTK/VtkEpcDocument.h"
@@ -52,17 +53,19 @@ vtkCxxSetObjectMacro(Fespp, Controller, vtkMultiProcessController);
 
 //----------------------------------------------------------------------------
 Fespp::Fespp() :
-		FileName(nullptr), Controller(nullptr), loadedFile(false), idProc(0), nbProc(0), countTest(0)
+	FileName(nullptr), SubFileName(nullptr),
+	uuidList(vtkDataArraySelection::New()), Controller(nullptr),
+	loadedFile(false), fileNameSet(std::vector<std::string>()),
+	epcDocumentSet(nullptr), isEpcDocument(false)
+#ifdef WITH_ETP
+	, etpDocument(nullptr), isEtpDocument(false),
+	port(""), ip("")
+#endif
 {
 	SetNumberOfInputPorts(0);
 	SetNumberOfOutputPorts(1);
 
-	loadedFile = false;
-
-	uuidList = vtkDataArraySelection::New();
-
 	SetController(vtkMultiProcessController::GetGlobalController());
-
 
 #ifdef PARAVIEW_USE_MPI
 	auto comm = GetMPICommunicator();
@@ -74,15 +77,6 @@ Fespp::Fespp() :
 #else
 	idProc = 0;
 	nbProc = 1;
-#endif
-
-	countTest = 0;
-	epcDocumentSet = nullptr;
-	isEpcDocument=false;
-
-#ifdef WITH_ETP
-	etpDocument = nullptr;
-	isEtpDocument=false;
 #endif
 }
 
@@ -110,19 +104,20 @@ Fespp::~Fespp()
 //----------------------------------------------------------------------------
 void Fespp::SetSubFileName(const char* name)
 {
+	const std::string nameStr = std::string(name);
 #ifdef WITH_ETP
-	if(isEtpDocument) {
-		auto it = std::string(name).find(":");
-		if(it != std::string::npos) {
-			port = std::string(name).substr(it+1);
-			ip = std::string(name).substr(0,it);
+	if (isEtpDocument) {
+		const auto it = nameStr.find(":");
+		if (it != std::string::npos) {
+			port = nameStr.substr(it+1);
+			ip = nameStr.substr(0,it);
 		}
 	}
 #endif
-	if(isEpcDocument) {
-		if (std::find(fileNameSet.begin(), fileNameSet.end(),std::string(name))==fileNameSet.end())	{
-			fileNameSet.push_back(std::string(name));
-			OpenEpcDocument(name);
+	if (isEpcDocument) {
+		if (std::find(fileNameSet.begin(), fileNameSet.end(), nameStr) == fileNameSet.end())	{
+			fileNameSet.push_back(nameStr);
+			OpenEpcDocument(nameStr);
 		}
 	}
 }
@@ -135,7 +130,8 @@ int Fespp::GetuuidListArrayStatus(const char* uuid)
 //----------------------------------------------------------------------------
 void Fespp::SetUuidList(const char* uuid, int status)
 {
-	if (std::string(uuid)=="connect") {
+	const std::string uuidStr = std::string(uuid);
+	if (uuidStr == "connect") {
 #ifdef WITH_ETP
 		if(etpDocument == nullptr) {
 			loadedFile = true;
@@ -144,24 +140,24 @@ void Fespp::SetUuidList(const char* uuid, int status)
 #endif
 	} else if (status != 0) {
 		if(isEpcDocument) {
-			auto msg = epcDocumentSet->visualize(std::string(uuid));
+			auto msg = epcDocumentSet->visualize(uuidStr);
 			if  (!msg.empty()){
 				displayError(msg);
 			}
 		}
 #ifdef WITH_ETP
 		if(isEtpDocument && etpDocument!=nullptr) {
-			etpDocument->visualize(std::string(uuid));
+			etpDocument->visualize(uuidStr);
 		}
 #endif
 	}
 	else {
 		if(isEpcDocument) {
-			epcDocumentSet->unvisualize(std::string(uuid));
+			epcDocumentSet->unvisualize(uuidStr);
 		}
 #ifdef WITH_ETP
 		if(isEtpDocument && etpDocument!=nullptr) {
-			etpDocument->unvisualize(std::string(uuid));
+			etpDocument->unvisualize(uuidStr);
 		}
 #endif
 	}
@@ -185,8 +181,6 @@ const char* Fespp::GetuuidListArrayName(int index)
 	return uuidList->GetArrayName(index);
 }
 
-
-
 #ifdef PARAVIEW_USE_MPI
 //----------------------------------------------------------------------------
 MPI_Comm Fespp::GetMPICommunicator()
@@ -206,15 +200,14 @@ MPI_Comm Fespp::GetMPICommunicator()
 }
 #endif
 
-
 //----------------------------------------------------------------------------
-void Fespp::displayError(std::string msg)
+void Fespp::displayError(const std::string & msg)
 {
 	vtkErrorMacro(<< msg.c_str());
 }
 
 //----------------------------------------------------------------------------
-void Fespp::displayWarning(std::string msg)
+void Fespp::displayWarning(const std::string & msg)
 {
 	vtkWarningMacro(<< msg.c_str());
 }
@@ -226,21 +219,21 @@ int Fespp::RequestInformation(
 		vtkInformationVector *outputVector)
 {
 	if ( !loadedFile ) {
-		auto stringFileName = std::string(FileName);
-		auto lengthFileName = stringFileName.length();
-		auto extension = stringFileName.substr(lengthFileName -3, lengthFileName);
+		std::string stringFileName = std::string(FileName);
 		if (stringFileName == "EpcDocument") {
-			isEpcDocument=true;
+			isEpcDocument = true;
 			loadedFile = true;
 			epcDocumentSet = new VtkEpcDocumentSet(idProc, nbProc, VtkEpcCommon::Both);
 		}
 #ifdef WITH_ETP
-		if(stringFileName == "EtpDocument")	{
-			isEtpDocument=true;
+		else if(stringFileName == "EtpDocument") {
+			isEtpDocument = true;
 		}
 #endif
-		if(extension=="epc") {
-			isEpcDocument=true;
+		const size_t lengthFileName = stringFileName.length();
+		const std::string extension = stringFileName.substr(lengthFileName - 3, lengthFileName);
+		if(extension == "epc") {
+			isEpcDocument = true;
 			loadedFile = true;
 			epcDocumentSet = new VtkEpcDocumentSet(idProc, nbProc, VtkEpcCommon::Both);
 			OpenEpcDocument(stringFileName);
@@ -253,7 +246,7 @@ int Fespp::RequestInformation(
 //----------------------------------------------------------------------------
 void Fespp::OpenEpcDocument(const std::string & name)
 {
-	auto msg = epcDocumentSet->addEpcDocument(name);
+	const std::string msg = epcDocumentSet->addEpcDocument(name);
 	if  (!msg.empty()){
 		displayWarning(msg);
 	}
@@ -286,8 +279,9 @@ void Fespp::RequestDataEpcDocument(vtkInformation *request,
 		t1 = MPI_Wtime();
 #endif
 
-	if (idProc == 0)
-		cout << "traitement fait avec " <<  nbProc << " processeur(s) \n";
+	if (idProc == 0) {
+		cout << "Running with " << nbProc << " processor(s)" << std::endl;
+	}
 
 	vtkInformation *outInfo = outputVector->GetInformationObject(0);
 	vtkMultiBlockDataSet *output = vtkMultiBlockDataSet::SafeDownCast(outInfo->Get(vtkMultiBlockDataSet::DATA_OBJECT()));
@@ -304,7 +298,7 @@ void Fespp::RequestDataEpcDocument(vtkInformation *request,
 		}
 		catch (const std::exception & e)
 		{
-			vtkErrorMacro("EXCEPTION fesapi.dll:" << e.what());
+			vtkErrorMacro("EXCEPTION in FESAPI library: " << e.what());
 		}
 	}
 

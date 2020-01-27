@@ -73,8 +73,7 @@ PQDataLoadManager::~PQDataLoadManager()
 //-----------------------------------------------------------------------------
 void PQDataLoadManager::checkInputValid()
 {
-	auto valid = (ui->epcFile->filenames().isEmpty()) ? false : true;
-	this->ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(valid);
+	this->ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(!ui->epcFile->filenames().isEmpty());
 }
 
 //-----------------------------------------------------------------------------
@@ -98,14 +97,13 @@ void PQDataLoadManager::setupPipeline()
 	}
 	QStringList epcFiles =	ui->epcFile->filenames();
 
-	if (!epcFiles.isEmpty() && fesppReader) 	{
-
-		for (auto i=0; i < epcFiles.length(); ++i){
+	if (!epcFiles.isEmpty() && fesppReader != nullptr) {
+		for (int i = 0; i < epcFiles.length(); ++i){
 			pqActiveObjects *activeObjects = &pqActiveObjects::instance();
 			activeObjects->setActiveSource(fesppReader);
 
 			vtkSMProxy* fesppReaderProxy = fesppReader->getProxy();
-			vtkSMPropertyHelper( fesppReaderProxy, "SubFileName" ).Set(epcFiles[i].toStdString().c_str());
+			vtkSMPropertyHelper(fesppReaderProxy, "SubFileName").Set(epcFiles[i].toStdString().c_str());
 
 			fesppReaderProxy->UpdateSelfAndAllInputs();
 

@@ -22,7 +22,7 @@ void EtpFesppStoreProtocolHandlers::on_GetDataObjectsResponse(const Energistics:
 {
 	std::cout << " store received." << std::endl;
 	for (const auto & dataObject : msg.m_dataObjects) {
-		COMMON_NS::AbstractObject* importedObj  = repo->addOrReplaceGsoapProxy(dataObject.second.m_data, dataObject.second.m_resource.m_dataObjectType);
+		COMMON_NS::AbstractObject* importedObj  = repo.addOrReplaceGsoapProxy(dataObject.second.m_data, dataObject.second.m_resource.m_dataObjectType);
 		importedObj->loadTargetRelationships();
 	}
 	std::static_pointer_cast<EtpClientSession>(session)->eraseMessageIdTobeAnswered(correlationId);

@@ -92,12 +92,12 @@ public:
 	* variable : std::string uuid , FESAPI representation
 	* create the vtkDataArray.
 	*/
-	vtkDataArray* visualize(const std::string & uuid, RESQML2_0_1_NS::PolylineSetRepresentation* polylineSetRepresentation);
-	vtkDataArray* visualize(const std::string & uuid, RESQML2_0_1_NS::TriangulatedSetRepresentation* triangulatedSetRepresentation);
-	vtkDataArray* visualize(const std::string & uuid, RESQML2_0_1_NS::Grid2dRepresentation* grid2dRepresentation);
-	vtkDataArray* visualize(const std::string & uuid, RESQML2_0_1_NS::AbstractIjkGridRepresentation* ijkGridRepresentation);
-	vtkDataArray* visualize(const std::string & uuid, RESQML2_0_1_NS::UnstructuredGridRepresentation* unstructuredGridRepresentation);
-	vtkDataArray* visualize(const std::string & uuid, RESQML2_0_1_NS::WellboreTrajectoryRepresentation* wellboreTrajectoryRepresentation);
+	vtkDataArray* visualize(const std::string & uuid, RESQML2_0_1_NS::PolylineSetRepresentation const * polylineSetRepresentation);
+	vtkDataArray* visualize(const std::string & uuid, RESQML2_0_1_NS::TriangulatedSetRepresentation const * triangulatedSetRepresentation);
+	vtkDataArray* visualize(const std::string & uuid, RESQML2_0_1_NS::Grid2dRepresentation const * grid2dRepresentation);
+	vtkDataArray* visualize(const std::string & uuid, RESQML2_0_1_NS::AbstractIjkGridRepresentation const * ijkGridRepresentation);
+	vtkDataArray* visualize(const std::string & uuid, RESQML2_0_1_NS::UnstructuredGridRepresentation const * unstructuredGridRepresentation);
+	vtkDataArray* visualize(const std::string & uuid, RESQML2_0_1_NS::WellboreTrajectoryRepresentation const * wellboreTrajectoryRepresentation);
 
 	unsigned int getSupport();
 	vtkSmartPointer<vtkDataArray> loadValuesPropertySet(const std::vector<RESQML2_NS::AbstractValuesProperty*>& valuesPropertySet, long cellCount, long pointCount);

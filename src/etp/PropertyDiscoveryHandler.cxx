@@ -18,24 +18,22 @@ under the License.
 -----------------------------------------------------------------------*/
 #include "PropertyDiscoveryHandler.h"
 
-#include "VtkEtpDocument.h"
-
 void PropertyDiscoveryHandler::on_GetResourcesResponse(const Energistics::Etp::v12::Protocol::Discovery::GetResourcesResponse & msg, int64_t correlationId)
 {
 	std::cout << msg.m_resources.size() << " property resources received." << std::endl;
 	for (Energistics::Etp::v12::Datatypes::Object::Resource resource : msg.m_resources) {
-		if(std::static_pointer_cast<EtpClientSession>(session)->isTreeViewMode()) {
+		if(etp_document_->getClientSession()->isTreeViewMode()) {
 			VtkEpcCommon leaf;
 			leaf.setName(resource.m_name);
 			leaf.setUuid(resource.m_uri);
 			leaf.setType(VtkEpcCommon::PROPERTY);
-			leaf.setParent(parent);
-			leaf.setParentType(parentType);
+			leaf.setParent(parent_);
+			leaf.setParentType(parentType_);
 			leaf.setTimeIndex(-1);
 			leaf.setTimestamp(0);
-			etp_document->getTreeView().push_back(leaf);
+			etp_document_->getTreeView().push_back(leaf);
 		}
 	}
 
-	std::static_pointer_cast<EtpClientSession>(session)->eraseMessageIdTobeAnswered(correlationId);
+	etp_document_->getClientSession()->eraseMessageIdTobeAnswered(correlationId);
 }

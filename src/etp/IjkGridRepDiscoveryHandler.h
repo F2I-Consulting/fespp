@@ -21,13 +21,13 @@ under the License.
 
 #include <fesapi/etp/ProtocolHandlers/DiscoveryHandlers.h>
 
-#include <etp/EtpClientSession.h>
-class VtkEtpDocument;
+#include "EtpClientSession.h"
+#include "VtkEtpDocument.h"
 
 class IjkGridRepDiscoveryHandler : public ETP_NS::DiscoveryHandlers
 {
 public:
-	IjkGridRepDiscoveryHandler(std::shared_ptr<EtpClientSession> my_session, VtkEtpDocument* my_etp_document):ETP_NS::DiscoveryHandlers(my_session), etp_document(my_etp_document) {}
+	IjkGridRepDiscoveryHandler(VtkEtpDocument* my_etp_document):ETP_NS::DiscoveryHandlers(my_etp_document->getClientSession()), etp_document(my_etp_document) {}
 	~IjkGridRepDiscoveryHandler() {}
 
 	void on_GetResourcesResponse(const Energistics::Etp::v12::Protocol::Discovery::GetResourcesResponse & msg, int64_t correlationId);

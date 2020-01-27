@@ -154,6 +154,5 @@ private:
 	std::vector<VtkEpcCommon> treeView; // Tree
 
 	std::string epc_error;
-
 };
 #endif

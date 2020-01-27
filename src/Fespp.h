@@ -23,7 +23,6 @@ under the License.
 
 // include system
 #include <string>
-#include <unordered_map>
 #include <vector>
 
 #include <fesapi/common/EpcDocument.h>
@@ -32,15 +31,15 @@ under the License.
 	#include "etp/VtkEtpDocument.h"
 #endif
 
+#ifdef PARAVIEW_USE_MPI
+#include <mpi.h>
+#endif // PARAVIEW_USE_MPI
+
 class VtkEpcDocumentSet;
 class vtkStdString;
 class vtkCallbackCommand;
 class vtkMultiProcessController;
 class vtkDataArraySelection;
-
-#ifdef PARAVIEW_USE_MPI
-#include <mpi.h>
-#endif // PARAVIEW_USE_MPI
 
 class Fespp : public vtkMultiBlockDataSetAlgorithm
 {
@@ -59,8 +58,8 @@ public:
 	vtkGetStringMacro(SubFileName);
 
 	// Description:
-	// Get/set the multi process controller to use for coordinated reads.  By
-	// default, set to the global controller.
+	// Get/set the multi process controller to use for coordinated reads.
+	// By default, set to the global controller.
 	vtkGetObjectMacro(Controller, vtkMultiProcessController);
 	virtual void SetController(vtkMultiProcessController *);
 
@@ -70,8 +69,8 @@ public:
 	const char* GetuuidListArrayName(int index);
 	void SetUuidList(const char* name, int status);
 
-	void displayError(std::string);
-	void displayWarning(std::string);
+	void displayError(const std::string&);
+	void displayWarning(const std::string&);
 
 protected:
 	Fespp();
@@ -87,18 +86,18 @@ protected:
 
 	void OpenEpcDocument(const std::string &);
 
-	char*						FileName;
-	char*						SubFileName;
+	char* FileName;
+	char* SubFileName;
 
-	vtkDataArraySelection* 				uuidList;
+	vtkDataArraySelection* uuidList;
 
-	vtkMultiProcessController*	Controller;
+	vtkMultiProcessController* Controller;
 
 private:
 	Fespp(const Fespp&);
 	void operator=(const Fespp&);
 	
-	bool 						loadedFile;
+	bool loadedFile;
 
 	// id of process
 	int idProc;
@@ -109,20 +108,17 @@ private:
 	MPI_Comm GetMPICommunicator();
 #endif // PARAVIEW_USE_MPI
 
+	std::vector<std::string> fileNameSet;
+
 	VtkEpcDocumentSet* epcDocumentSet;
+	bool isEpcDocument;
 
 #ifdef WITH_ETP
 	VtkEtpDocument* etpDocument;
-#endif
-
-	int countTest;
-
-	std::vector<std::string> fileNameSet;
+	bool isEtpDocument;
 	std::string port;
 	std::string ip;
-
-	bool isEtpDocument;
-	bool isEpcDocument;
+#endif
 };
 #endif
 

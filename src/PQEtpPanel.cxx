@@ -74,14 +74,14 @@ PQEtpPanel::~PQEtpPanel()
 
 void PQEtpPanel::handleButtonRefresh()
 {
-	VtkEtpDocument etp_document(ipAddress, port, VtkEpcCommon::TreeView);
+	VtkEtpDocument etp_document(ipAddress_, port_, VtkEpcCommon::TreeView);
 
 	// Wait for etp connection
 	while (etp_document.getClientSession() == nullptr) {}
 	while (!etp_document.getClientSession()->hasConnectionError() && etp_document.getClientSession()->isEtpSessionClosed()) {
 	}
 	if (etp_document.getClientSession()->hasConnectionError()) {
-		std::cout << "Connection error on " << ipAddress << ":" << port << std::endl;
+		std::cout << "Connection error on " << ipAddress_ << ":" << port_ << std::endl;
 		return;
 	}
 
@@ -105,8 +105,8 @@ void PQEtpPanel::handleButtonRefresh()
 //******************************* Etp Document ************************************
 void PQEtpPanel::etpClientConnect(const std::string & ipAddress, const std::string & port)
 {
-	this->ipAddress = ipAddress;
-	this->port = port;
+	ipAddress_ = ipAddress;
+	port_ = port;
 
 	handleButtonRefresh();
 }

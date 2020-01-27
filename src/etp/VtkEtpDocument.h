@@ -108,8 +108,6 @@ private:
 
 	std::vector<VtkEpcCommon> treeView; // Tree
 
-	int64_t last_id;
-
 	std::unordered_map<std::string, VtkIjkGridRepresentation*> uuidToVtkIjkGridRepresentation;
 };
 #endif

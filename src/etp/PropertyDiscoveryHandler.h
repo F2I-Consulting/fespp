@@ -21,23 +21,23 @@ under the License.
 
 #include <fesapi/etp/ProtocolHandlers/DiscoveryHandlers.h>
 
-#include <etp/EtpClientSession.h>
-class VtkEtpDocument;
+#include "EtpClientSession.h"
+#include "VtkEtpDocument.h"
 
 class PropertyDiscoveryHandler : public ETP_NS::DiscoveryHandlers
 {
 public:
-	PropertyDiscoveryHandler(std::shared_ptr<EtpClientSession> my_session, VtkEtpDocument* my_etp_document,
-		const std::string & parent_, VtkEpcCommon::Resqml2Type parentType_) :
-		ETP_NS::DiscoveryHandlers(my_session), etp_document(my_etp_document), parent(parent_), parentType(parentType_){}
+	PropertyDiscoveryHandler(VtkEtpDocument* etp_document,
+		const std::string & parent, VtkEpcCommon::Resqml2Type parentType) :
+		ETP_NS::DiscoveryHandlers(etp_document->getClientSession()), etp_document_(etp_document), parent_(parent), parentType_(parentType){}
 	~PropertyDiscoveryHandler() {}
 
 	void on_GetResourcesResponse(const Energistics::Etp::v12::Protocol::Discovery::GetResourcesResponse & msg, int64_t correlationId);
 
 private:
-	VtkEtpDocument* etp_document;
+	VtkEtpDocument* etp_document_;
 
-	std::string parent;
-	VtkEpcCommon::Resqml2Type parentType;
+	std::string parent_;
+	VtkEpcCommon::Resqml2Type parentType_;
 };
 #endif

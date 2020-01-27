@@ -62,7 +62,7 @@ public:
 
 	/**
 	* Erase a message id from the list of message if to be answered.
-	* Generally it means that the associated message hase been answered by the server.
+	* Generally it means that the associated message has been answered by the server.
 	* @param messageId	The message id which must be removed
 	*/
 	void eraseMessageIdTobeAnswered(int64_t messageId);

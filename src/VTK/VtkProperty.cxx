@@ -83,7 +83,7 @@ unsigned int VtkProperty::getSupport()
 }
 
 //----------------------------------------------------------------------------
-vtkDataArray* VtkProperty::visualize(const std::string & uuid, resqml2_0_1::PolylineSetRepresentation* polylineSetRepresentation)
+vtkDataArray* VtkProperty::visualize(const std::string & uuid, resqml2_0_1::PolylineSetRepresentation const * polylineSetRepresentation)
 {
 	std::vector<resqml2::AbstractValuesProperty*> valuesPropertySet = polylineSetRepresentation->getValuesPropertySet();
 
@@ -92,7 +92,7 @@ vtkDataArray* VtkProperty::visualize(const std::string & uuid, resqml2_0_1::Poly
 }
 
 //----------------------------------------------------------------------------
-vtkDataArray* VtkProperty::visualize(const std::string & uuid, resqml2_0_1::TriangulatedSetRepresentation* triangulatedSetRepresentation)
+vtkDataArray* VtkProperty::visualize(const std::string & uuid, resqml2_0_1::TriangulatedSetRepresentation const * triangulatedSetRepresentation)
 {
 	std::vector<resqml2::AbstractValuesProperty*> valuesPropertySet = triangulatedSetRepresentation->getValuesPropertySet();
 	long pointCount = triangulatedSetRepresentation->getXyzPointCountOfAllPatches();
@@ -100,7 +100,7 @@ vtkDataArray* VtkProperty::visualize(const std::string & uuid, resqml2_0_1::Tria
 }
 
 //----------------------------------------------------------------------------
-vtkDataArray* VtkProperty::visualize(const std::string & uuid, resqml2_0_1::Grid2dRepresentation* grid2dRepresentation)
+vtkDataArray* VtkProperty::visualize(const std::string & uuid, resqml2_0_1::Grid2dRepresentation const * grid2dRepresentation)
 {
 	std::vector<resqml2::AbstractValuesProperty*> valuesPropertySet = grid2dRepresentation->getValuesPropertySet();
 	long pointCount = grid2dRepresentation->getNodeCountAlongIAxis() * grid2dRepresentation->getNodeCountAlongJAxis();
@@ -108,7 +108,7 @@ vtkDataArray* VtkProperty::visualize(const std::string & uuid, resqml2_0_1::Grid
 }
 
 //----------------------------------------------------------------------------
-vtkDataArray* VtkProperty::visualize(const std::string & uuid, resqml2_0_1::AbstractIjkGridRepresentation* ijkGridRepresentation )
+vtkDataArray* VtkProperty::visualize(const std::string & uuid, resqml2_0_1::AbstractIjkGridRepresentation const * ijkGridRepresentation )
 {
 	std::vector<resqml2::AbstractValuesProperty*> valuesPropertySet = ijkGridRepresentation->getValuesPropertySet();
 
@@ -117,7 +117,7 @@ vtkDataArray* VtkProperty::visualize(const std::string & uuid, resqml2_0_1::Abst
 }
 
 //----------------------------------------------------------------------------
-vtkDataArray* VtkProperty::visualize(const std::string & uuid, resqml2_0_1::UnstructuredGridRepresentation* unstructuredGridRepresentation)
+vtkDataArray* VtkProperty::visualize(const std::string & uuid, resqml2_0_1::UnstructuredGridRepresentation const * unstructuredGridRepresentation)
 {
 	std::vector<resqml2::AbstractValuesProperty*> valuesPropertySet = unstructuredGridRepresentation->getValuesPropertySet();
 
@@ -127,7 +127,7 @@ vtkDataArray* VtkProperty::visualize(const std::string & uuid, resqml2_0_1::Unst
 }
 
 //----------------------------------------------------------------------------
-vtkDataArray* VtkProperty::visualize(const std::string & uuid, resqml2_0_1::WellboreTrajectoryRepresentation* wellboreTrajectoryRepresentation)
+vtkDataArray* VtkProperty::visualize(const std::string & uuid, resqml2_0_1::WellboreTrajectoryRepresentation const * wellboreTrajectoryRepresentation)
 {
 	std::vector<resqml2::AbstractValuesProperty*> valuesPropertySet = wellboreTrajectoryRepresentation->getValuesPropertySet();
 	long pointCount = wellboreTrajectoryRepresentation->getXyzPointCountOfAllPatches();

@@ -18,7 +18,6 @@ under the License.
 -----------------------------------------------------------------------*/
 #include "IjkGridRepDiscoveryHandler.h"
 
-#include "VtkEtpDocument.h"
 #include "PropertyDiscoveryHandler.h"
 
 void IjkGridRepDiscoveryHandler::on_GetResourcesResponse(const Energistics::Etp::v12::Protocol::Discovery::GetResourcesResponse & msg, int64_t correlationId)
@@ -44,7 +43,7 @@ void IjkGridRepDiscoveryHandler::on_GetResourcesResponse(const Energistics::Etp:
 			mb.m_context.m_depth = 1;
 			mb.m_context.m_dataObjectTypes.push_back("resqml20.obj_ContinuousProperty");
 			mb.m_context.m_dataObjectTypes.push_back("resqml20.obj_DiscreteProperty");
-			auto msgId = session->sendWithSpecificHandler(mb, std::make_shared<PropertyDiscoveryHandler>(fesppSession, etp_document, resource.m_uri, VtkEpcCommon::IJK_GRID));
+			auto msgId = session->sendWithSpecificHandler(mb, std::make_shared<PropertyDiscoveryHandler>(etp_document, resource.m_uri, VtkEpcCommon::IJK_GRID));
 			fesppSession->insertMessageIdTobeAnswered(msgId);
 		}
 	}
