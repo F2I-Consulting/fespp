@@ -172,9 +172,6 @@ void VtkEtpDocument::visualize(const std::string & rec_uri)
 
 	if(type == "resqml20.obj_IjkGridRepresentation") {
 		RESQML2_0_1_NS::AbstractIjkGridRepresentation const * ijkGrid = client_session->repo.getDataObjectByUuid<RESQML2_0_1_NS::AbstractIjkGridRepresentation>(uuid);
-		if (ijkGrid == nullptr) { // Defensive code
-			std::cerr << "The requested ETP ijk grid " << uuid << " could not have been retrieved from the ETP server." << std::endl;
-		}
 
 		// If the grid is not partial, create a VTK object for the ijk grid and visualize it.
 		if (ijkGrid->isPartial()) {
@@ -199,22 +196,13 @@ void VtkEtpDocument::visualize(const std::string & rec_uri)
 	}
 	else if(type=="resqml20.obj_ContinuousProperty" || type=="resqml20.obj_DiscreteProperty" ) {
 		RESQML2_NS::AbstractValuesProperty const * prop = client_session->repo.getDataObjectByUuid<RESQML2_NS::AbstractValuesProperty>(uuid);
-		if (prop == nullptr) { // Defensive code
-			std::cerr << "The requested ETP prop " << uuid << " could not have been retrieved from the ETP server." << std::endl;
-		}
-
-		// Build a VTK ijk grid in the ijk grid node in the treeview if necessary
-		std::string ijkGridUuid = prop->getRepresentationUuid();
-		if (uuidToVtkIjkGridRepresentation.find(ijkGridUuid) == uuidToVtkIjkGridRepresentation.end()) {
-			RESQML2_0_1_NS::AbstractIjkGridRepresentation const * ijkGrid = client_session->repo.getDataObjectByUuid<RESQML2_0_1_NS::AbstractIjkGridRepresentation>(ijkGridUuid);
-			auto interpretation = ijkGrid->getInterpretation();
-			createTreeVtk(ijkGridUuid, interpretation != nullptr ? interpretation->getUuid() : "etpDocument", ijkGrid->getTitle().c_str(), VtkEpcCommon::IJK_GRID);
-		}
 
 		// Build a VTK property in the property node in the treeview if necessary
+		const std::string ijkGridUuid = prop->getRepresentationUuid();
 		createTreeVtk(prop->getUuid(), ijkGridUuid, prop->getTitle().c_str(), VtkEpcCommon::PROPERTY);
 		uuidToVtkIjkGridRepresentation[ijkGridUuid]->visualize(uuid);
-	} else {
+	}
+	else {
 		std::cout << "Not implemented yet." << std::endl;
 	}
 }
