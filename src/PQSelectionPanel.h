@@ -159,6 +159,8 @@ protected slots:
 	// right click
 	void treeCustomMenu(const QPoint &);
 	void test_slot();
+	void subscribe_slot();
+	void subscribeChildren_slot();
 
 #ifdef WITH_TEST
 	void handleButtonTest();
@@ -252,7 +254,10 @@ private:
 	bool debug_verif;
 	bool etpCreated;
 
+	// var: subscribe etp
 	std::string pickedBlocksEtp;
+	std::vector<std::string> uri_subscribe;
+	std::vector<std::string> list_uri_etp;
 
 #ifdef WITH_TEST
 	QPushButton *button_test_perf;

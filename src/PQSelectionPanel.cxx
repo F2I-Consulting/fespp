@@ -237,13 +237,41 @@ PQSelectionPanel::~PQSelectionPanel() {
 //----------------------------------------------------------------------------
 void PQSelectionPanel::treeCustomMenu(const QPoint & pos) {
 	pickedBlocksEtp = itemUuid[treeWidget->itemAt(pos)];
-	auto menu = new QMenu;
-	menu->addAction(QString("subscribe/unsubscribe"), this, SLOT(test_slot()));
-	menu->exec(treeWidget->mapToGlobal(pos));
-	//Implement your menu here using myTreeView->itemAt(pos);
+	auto it = std::find (list_uri_etp.begin(), list_uri_etp.end(), pickedBlocksEtp);
+	if (it != uri_subscribe.end()) {  // subscribe
+		auto menu = new QMenu;
+		menu->addAction(QString("1 - subscribe/unsubscribe"), this, SLOT(test_slot()));
+		menu->addAction(QString("2 - subscribe/unsubscribe ~ NEW ~"), this, SLOT(subscribe_slot()));
+		menu->exec(treeWidget->mapToGlobal(pos));
+	}
 }
 
+//----------------------------------------------------------------------------
 void PQSelectionPanel::test_slot() {
+	QIcon icon;
+	icon.addFile(QString::fromUtf8(":pqEyeball16.png"),
+			QSize(), QIcon::Normal, QIcon::Off);
+	uuidItem[pickedBlocksEtp]->setIcon(1, icon);
+	cout << pickedBlocksEtp << endl;
+}
+
+//----------------------------------------------------------------------------
+void PQSelectionPanel::subscribe_slot() {
+	QIcon icon;
+	auto it = std::find (uri_subscribe.begin(), uri_subscribe.end(), pickedBlocksEtp);
+	if (it == uri_subscribe.end()) {  // subscribe
+		uri_subscribe.push_back(pickedBlocksEtp);
+		icon.addFile(QString::fromUtf8(":pqEyeball16.png"),
+				QSize(), QIcon::Normal, QIcon::Off);
+		uuidItem[pickedBlocksEtp]->setIcon(1, icon);
+	} else {  // unsubscribe
+		uri_subscribe.erase(it);
+		uuidItem[pickedBlocksEtp]->setIcon(1, QIcon());
+	}
+}
+
+//----------------------------------------------------------------------------
+void PQSelectionPanel::subscribeChildren_slot() {
 	QIcon icon;
 	icon.addFile(QString::fromUtf8(":pqEyeball16.png"),
 			QSize(), QIcon::Normal, QIcon::Off);
@@ -460,7 +488,7 @@ void PQSelectionPanel::updateTimeSeries(const std::string & uuid,
 
 	for (const auto &uuid_displayed : ts_displayed) {
 		foreach(time_t t, ts_timestamp_to_uuid[uuid_displayed].keys())
-							list << t;
+											list << t;
 	}
 
 	qSort(list.begin(), list.end());
@@ -768,10 +796,12 @@ void PQSelectionPanel::setEtpTreeView(std::vector<VtkEpcCommon> treeView) {
 	for (auto &leaf : treeView) {
 		uuidToPipeName[leaf.getUuid()] = "EtpDocument";
 		if (leaf.getTimeIndex() < 0) {
+			list_uri_etp.push_back(leaf.getUuid());
 			populateTreeView(leaf.getParent(), leaf.getParentType(),
 					leaf.getUuid(), leaf.getName(), leaf.getType());
 		} else {
 			if (name_to_uuid.count(leaf.getName()) <= 0) {
+				list_uri_etp.push_back(leaf.getUuid());
 				populateTreeView(leaf.getParent(), leaf.getParentType(),
 						leaf.getUuid(), leaf.getName(),
 						leaf.getType());
