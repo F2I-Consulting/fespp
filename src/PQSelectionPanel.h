@@ -156,6 +156,10 @@ protected slots:
 	void timeChangedComboBox(int);
 	void sliderMoved(int);
 
+	// right click
+	void treeCustomMenu(const QPoint &);
+	void test_slot();
+
 #ifdef WITH_TEST
 	void handleButtonTest();
 #endif
@@ -247,6 +251,8 @@ private:
 
 	bool debug_verif;
 	bool etpCreated;
+
+	std::string pickedBlocksEtp;
 
 #ifdef WITH_TEST
 	QPushButton *button_test_perf;

@@ -22,7 +22,11 @@ under the License.
 #include "VtkEpcCommon.h"
 
 // include system
-#include <unordered_map>
+#if (defined(_WIN32) && _MSC_VER >= 1600)
+	#include <unordered_map>
+#else
+	#include <tr1/unordered_map>
+#endif
 #include <vector>
 
 // include VTK

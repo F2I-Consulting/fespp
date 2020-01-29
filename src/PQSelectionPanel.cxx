@@ -87,18 +87,18 @@ under the License.
 
 namespace {
 #ifdef WITH_ETP
- PQEtpPanel* getPQEtpPanel() {
- 	PQEtpPanel *panel = nullptr;
- 	foreach(QWidget *widget, qApp->topLevelWidgets())
- 	{
- 		panel = widget->findChild<PQEtpPanel *>();
+PQEtpPanel* getPQEtpPanel() {
+	PQEtpPanel *panel = nullptr;
+	foreach(QWidget *widget, qApp->topLevelWidgets())
+	{
+		panel = widget->findChild<PQEtpPanel *>();
 
- 		if (panel!=nullptr) {
- 			break;
- 		}
- 	}
- 	return panel;
- }
+		if (panel!=nullptr) {
+			break;
+		}
+	}
+	return panel;
+}
 #endif
 
 pqPropertiesPanel* getpqPropertiesPanel() {
@@ -127,10 +127,10 @@ void PQSelectionPanel::constructor() {
 
 	treeWidget->setStyleSheet(
 			"QWidget::branch:has-siblings:!adjoins-item{border-image: url(:vline.png) 0;}"
-					"QWidget::branch:has-siblings:adjoins-item{border-image: url(:branch-more.png) 0;}"
-					"QWidget::branch:!has-children:!has-siblings:adjoins-item{border-image: url(:branch-end.png) 0;}"
-					"QWidget::branch:has-children:!has-siblings:closed,QTreeView::branch:closed:has-children:has-siblings{border-image: none; image: url(:branch-closed.png);}"
-					"QWidget::branch:open:has-children:!has-siblings,QTreeView::branch:open:has-children:has-siblings{border-image: none; image: url(:branch-open.png);}");
+			"QWidget::branch:has-siblings:adjoins-item{border-image: url(:branch-more.png) 0;}"
+			"QWidget::branch:!has-children:!has-siblings:adjoins-item{border-image: url(:branch-end.png) 0;}"
+			"QWidget::branch:has-children:!has-siblings:closed,QTreeView::branch:closed:has-children:has-siblings{border-image: none; image: url(:branch-closed.png);}"
+			"QWidget::branch:open:has-children:!has-siblings,QTreeView::branch:open:has-children:has-siblings{border-image: none; image: url(:branch-open.png);}");
 
 	treeWidget->header()->setStretchLastSection(false);
 	treeWidget->header()->resizeSection(1, 20);
@@ -143,6 +143,10 @@ void PQSelectionPanel::constructor() {
 	treeWidget->header()->close();
 
 	//	connect(ui.treeWidget, SIGNAL(itemClicked(QTreeWidgetItem*, int)), this, SLOT(clicSelection(QTreeWidgetItem*, int)));
+	treeWidget->setContextMenuPolicy(Qt::CustomContextMenu);
+	connect(ui.treeWidget, SIGNAL(customContextMenuRequested(QPoint)),
+			this, SLOT(treeCustomMenu(QPoint)));
+
 	connect(ui.treeWidget, SIGNAL(itemChanged(QTreeWidgetItem*, int)), this,
 			SLOT(onItemCheckedUnchecked(QTreeWidgetItem*, int)));
 
@@ -229,6 +233,23 @@ PQSelectionPanel::~PQSelectionPanel() {
 }
 
 //******************************* ACTIONS ************************************
+
+//----------------------------------------------------------------------------
+void PQSelectionPanel::treeCustomMenu(const QPoint & pos) {
+	pickedBlocksEtp = itemUuid[treeWidget->itemAt(pos)];
+	auto menu = new QMenu;
+	menu->addAction(QString("subscribe/unsubscribe"), this, SLOT(test_slot()));
+	menu->exec(treeWidget->mapToGlobal(pos));
+	//Implement your menu here using myTreeView->itemAt(pos);
+}
+
+void PQSelectionPanel::test_slot() {
+	QIcon icon;
+	icon.addFile(QString::fromUtf8(":pqEyeball16.png"),
+			QSize(), QIcon::Normal, QIcon::Off);
+	uuidItem[pickedBlocksEtp]->setIcon(1, icon);
+	cout << pickedBlocksEtp << endl;
+}
 
 //----------------------------------------------------------------------------
 void PQSelectionPanel::clicSelection(QTreeWidgetItem* item, int column) {
@@ -439,7 +460,7 @@ void PQSelectionPanel::updateTimeSeries(const std::string & uuid,
 
 	for (const auto &uuid_displayed : ts_displayed) {
 		foreach(time_t t, ts_timestamp_to_uuid[uuid_displayed].keys())
-			list << t;
+							list << t;
 	}
 
 	qSort(list.begin(), list.end());
@@ -468,7 +489,7 @@ void PQSelectionPanel::updateTimeSeries(const std::string & uuid,
 //----------------------------------------------------------------------------
 void PQSelectionPanel::addFileName(const std::string & fileName) {
 	if (std::find(allFileName.begin(), allFileName.end(), fileName)
-			== allFileName.end()) {
+	== allFileName.end()) {
 		vtkEpcDocumentSet->addEpcDocument(fileName);
 		allFileName.push_back(fileName);
 		uuidToFilename[fileName] = fileName;
