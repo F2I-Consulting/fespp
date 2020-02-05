@@ -60,7 +60,19 @@ public:
 protected:
 
 private:
+	// if all cells are VTK_TETRA
 	vtkSmartPointer<vtkCellArray> createOutputVtkTetra(const resqml2_0_1::UnstructuredGridRepresentation*);
+
+	// verify and add cell if is VTK_TETRA
+	bool cellVtkTetra(const resqml2_0_1::UnstructuredGridRepresentation*, const ULONG64, const ULONG64);
+	// verify and add cell if is  VTK_WEDGE or VTK_PYRAMID
+	bool cellVtkWedgeOrPyramid(const resqml2_0_1::UnstructuredGridRepresentation*, const ULONG64, const ULONG64);
+	// verify and add cell if is  VTK_HEXAHEDRON
+	bool cellVtkHexahedron(const resqml2_0_1::UnstructuredGridRepresentation*, const ULONG64, const ULONG64);
+	// verify and add cell if is  VTK_PENTAGONAL_PRISM
+	bool cellVtkPentagonalPrism(const resqml2_0_1::UnstructuredGridRepresentation*, const ULONG64, const ULONG64);
+	// verify and add cell if is  VTK_HEXAGONAL_PRISM
+	bool cellVtkHexagonalPrism(const resqml2_0_1::UnstructuredGridRepresentation*, const ULONG64, const ULONG64);
 
 	// PROPERTY
 	std::string lastProperty;

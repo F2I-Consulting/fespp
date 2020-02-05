@@ -236,6 +236,7 @@ private:
 	int radioButtonCount;
 	QMap<int, std::string> radioButton_to_id;
 	QMap<std::string, QRadioButton*> mapUuidParentButtonInvisible;
+	std::string noLoadUuid;
 
 
 	QMap<std::string, common::EpcDocument *> pcksave;

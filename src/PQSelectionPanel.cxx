@@ -224,6 +224,7 @@ void PQSelectionPanel::constructor() {
 
 	vtkEpcDocumentSet = new VtkEpcDocumentSet(0, 0, VtkEpcCommon::TreeView);
 	etpCreated = false;
+	noLoadUuid = "";
 
 }
 
@@ -302,7 +303,11 @@ void PQSelectionPanel::onItemCheckedUnchecked(QTreeWidgetItem * item, int column
 	std::string uuid = itemUuid[item];
 	if (!uuid.empty()) {
 		if (item->checkState(0) == Qt::Checked) {
-			loadUuid(uuid);
+			if (noLoadUuid == uuid) {
+				noLoadUuid = "";
+			} else {
+				loadUuid(uuid);
+			}
 		} else if (item->checkState(0) == Qt::Unchecked) {
 			// Property exist
 			if (uuidItem[uuid]->childCount() > 0
@@ -361,11 +366,13 @@ void PQSelectionPanel::checkedRadioButton(int rbNo) {
 
 		std::string uuidParent = itemUuid[uuidParentItem[uuid]];
 		if (uuidParentItem[uuid]->checkState(0) != Qt::Checked) {
-			uuidParentItem[uuid]->setCheckState(0, Qt::Checked);
-		} else {
-			uuidParentItem[uuid]->setCheckState(0, Qt::PartiallyChecked);
+			noLoadUuid = uuidParent;
 			uuidParentItem[uuid]->setCheckState(0, Qt::Checked);
 		}
+//		else {
+//			uuidParentItem[uuid]->setCheckState(0, Qt::PartiallyChecked);
+//			uuidParentItem[uuid]->setCheckState(0, Qt::Checked);
+//		}
 
 		std::string uuidOld = mapUuidWithProperty[uuidParent];
 

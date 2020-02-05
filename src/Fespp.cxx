@@ -48,6 +48,8 @@ under the License.
 #define MPICH_IGNORE_CXX_SEEK
 #endif
 
+#include <ctime>
+
 vtkStandardNewMacro(Fespp);
 vtkCxxSetObjectMacro(Fespp, Controller, vtkMultiProcessController);
 
@@ -203,6 +205,7 @@ MPI_Comm Fespp::GetMPICommunicator()
 //----------------------------------------------------------------------------
 void Fespp::displayError(const std::string & msg)
 {
+
 	vtkErrorMacro(<< msg.c_str());
 }
 

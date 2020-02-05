@@ -57,6 +57,9 @@ under the License.
 #include "VtkSetPatch.h"
 #include "VtkEpcCommon.h"
 
+#include <ctime>
+
+
 // ----------------------------------------------------------------------------
 VtkEpcDocument::VtkEpcDocument(const std::string & fileName, const int & idProc, const int & maxProc, VtkEpcDocumentSet* epcDocSet) :
 VtkResqml2MultiBlockDataSet(fileName, fileName, fileName, "", idProc, maxProc),
