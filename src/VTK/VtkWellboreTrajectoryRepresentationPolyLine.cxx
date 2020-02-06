@@ -76,11 +76,9 @@ void VtkWellboreTrajectoryRepresentationPolyLine::createOutput(const std::string
 			points = nullptr;
 		}
 		// PROPERTY(IES)
-		else {
-			if (uuid != getUuid().substr(0, 36)) {
-				vtkDataArray* arrayProperty = uuidToVtkProperty[uuid]->visualize(uuid, wellboreSetRepresentation);
-				addProperty(uuid, arrayProperty);
-			}
+		if (uuid != getUuid().substr(0, 36)) {
+			vtkDataArray* arrayProperty = uuidToVtkProperty[uuid]->visualize(uuid, wellboreSetRepresentation);
+			addProperty(uuid, arrayProperty);
 		}
 	}
 }

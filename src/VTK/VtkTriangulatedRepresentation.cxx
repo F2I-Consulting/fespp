@@ -85,11 +85,9 @@ void VtkTriangulatedRepresentation::createOutput(const std::string &uuid)
 
 			delete[] triangleIndices;
 		}
-		else {
-			if (uuid != getUuid()) {
-				vtkDataArray* arrayProperty = uuidToVtkProperty[uuid]->visualize(uuid, triangulatedSetRepresentation);
-				addProperty(uuid, arrayProperty);
-			}
+		if (uuid != getUuid()) {
+			vtkDataArray* arrayProperty = uuidToVtkProperty[uuid]->visualize(uuid, triangulatedSetRepresentation);
+			addProperty(uuid, arrayProperty);
 		}
 	}
 }

@@ -33,7 +33,7 @@ under the License.
 
 //----------------------------------------------------------------------------
 VtkPolylineRepresentation::VtkPolylineRepresentation(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, unsigned int patchNo, COMMON_NS::DataObjectRepository *repoRepresentation, COMMON_NS::DataObjectRepository *repoSubRepresentation) :
-	VtkResqml2PolyData(fileName, name, uuid, uuidParent, repoRepresentation, repoSubRepresentation), patchIndex(patchNo)
+VtkResqml2PolyData(fileName, name, uuid, uuidParent, repoRepresentation, repoSubRepresentation), patchIndex(patchNo)
 {
 }
 
@@ -91,11 +91,9 @@ void VtkPolylineRepresentation::createOutput(const std::string & uuid)
 			points = nullptr;
 			delete[] countNodePolylineInPatch;
 		}
-		else {
-			if (uuid != getUuid()) {
-				vtkDataArray* arrayProperty = uuidToVtkProperty[uuid]->visualize(uuid, polylineSetRepresentation);
-				addProperty(uuid, arrayProperty);
-			}
+		if (uuid != getUuid()) {
+			vtkDataArray* arrayProperty = uuidToVtkProperty[uuid]->visualize(uuid, polylineSetRepresentation);
+			addProperty(uuid, arrayProperty);
 		}
 	}
 }

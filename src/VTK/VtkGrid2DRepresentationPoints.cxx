@@ -31,7 +31,7 @@ under the License.
 
 //----------------------------------------------------------------------------
 VtkGrid2DRepresentationPoints::VtkGrid2DRepresentationPoints(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, COMMON_NS::DataObjectRepository *repoRepresentation, COMMON_NS::DataObjectRepository *repoSubRepresentation) :
-	VtkResqml2PolyData(fileName, name, uuid, uuidParent, repoRepresentation, repoSubRepresentation), lastProperty("")
+VtkResqml2PolyData(fileName, name, uuid, uuidParent, repoRepresentation, repoSubRepresentation), lastProperty("")
 {
 }
 
@@ -78,10 +78,8 @@ void VtkGrid2DRepresentationPoints::createOutput(const std::string & uuid)
 			vtkOutput->SetPoints(points);
 			vtkOutput->SetVerts(vertices);
 		}
-		else {
-			if (uuid != getUuid().substr(0, 36)) {
-				addProperty(uuid, uuidToVtkProperty[uuid]->visualize(uuid, grid2dRepresentation));
-			}
+		if (uuid != getUuid().substr(0, 36)) {
+			addProperty(uuid, uuidToVtkProperty[uuid]->visualize(uuid, grid2dRepresentation));
 		}
 	}
 }
@@ -98,8 +96,8 @@ void VtkGrid2DRepresentationPoints::addProperty(const std::string & uuidProperty
 long VtkGrid2DRepresentationPoints::getAttachmentPropertyCount(const std::string & uuid, VtkEpcCommon::FesppAttachmentProperty propertyUnit)
 {
 	RESQML2_0_1_NS::Grid2dRepresentation const * grid2dRepresentation = epcPackageRepresentation->getDataObjectByUuid<RESQML2_0_1_NS::Grid2dRepresentation>(getUuid().substr(0, 36));
-	
+
 	return grid2dRepresentation != nullptr
-		? grid2dRepresentation->getNodeCountAlongIAxis() * grid2dRepresentation->getNodeCountAlongJAxis()
-		: 0;
+			? grid2dRepresentation->getNodeCountAlongIAxis() * grid2dRepresentation->getNodeCountAlongJAxis()
+					: 0;
 }
