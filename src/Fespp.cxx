@@ -38,16 +38,6 @@ under the License.
 #include "VTK/VtkEpcDocument.h"
 #include "VTK/VtkEpcDocumentSet.h"
 
-#ifdef PARAVIEW_USE_MPI
-#include <vtkMPI.h>
-#include <vtkMPICommunicator.h>
-#include <vtkMPIController.h>
-#endif // PARAVIEW_USE_MPI
-
-#ifndef MPICH_IGNORE_CXX_SEEK
-#define MPICH_IGNORE_CXX_SEEK
-#endif
-
 #include <ctime>
 
 vtkStandardNewMacro(Fespp);
@@ -55,13 +45,13 @@ vtkCxxSetObjectMacro(Fespp, Controller, vtkMultiProcessController);
 
 //----------------------------------------------------------------------------
 Fespp::Fespp() :
-	FileName(nullptr), SubFileName(nullptr),
-	uuidList(vtkDataArraySelection::New()), Controller(nullptr),
-	loadedFile(false), fileNameSet(std::vector<std::string>()),
-	epcDocumentSet(nullptr), isEpcDocument(false)
+			FileName(nullptr), SubFileName(nullptr),
+			uuidList(vtkDataArraySelection::New()), Controller(nullptr),
+			loadedFile(false), fileNameSet(std::vector<std::string>()),
+			epcDocumentSet(nullptr), isEpcDocument(false)
 #ifdef WITH_ETP
-	, etpDocument(nullptr), isEtpDocument(false),
-	port(""), ip("")
+, etpDocument(nullptr), isEtpDocument(false),
+port(""), ip("")
 #endif
 {
 	SetNumberOfInputPorts(0);
@@ -69,17 +59,16 @@ Fespp::Fespp() :
 
 	SetController(vtkMultiProcessController::GetGlobalController());
 
-#ifdef PARAVIEW_USE_MPI
-	auto comm = GetMPICommunicator();
-	if (comm != MPI_COMM_NULL)
+	vtkMultiProcessController* controller = vtkMultiProcessController::GetGlobalController();
+	if (controller)
 	{
-		MPI_Comm_rank(comm, &idProc);
-		MPI_Comm_size(comm, &nbProc);
+		idProc = controller->GetLocalProcessId();
+		nbProc = controller->GetNumberOfProcesses();
 	}
-#else
-	idProc = 0;
-	nbProc = 1;
-#endif
+	else {
+		idProc = 0;
+		nbProc = 1;
+	}
 }
 
 //----------------------------------------------------------------------------
@@ -183,25 +172,6 @@ const char* Fespp::GetuuidListArrayName(int index)
 	return uuidList->GetArrayName(index);
 }
 
-#ifdef PARAVIEW_USE_MPI
-//----------------------------------------------------------------------------
-MPI_Comm Fespp::GetMPICommunicator()
-{
-	MPI_Comm comm = MPI_COMM_NULL;
-
-	vtkMPIController *MPIController = vtkMPIController::SafeDownCast(Controller);
-
-	if (MPIController != nullptr) {
-		vtkMPICommunicator *mpiComm = vtkMPICommunicator::SafeDownCast(MPIController->GetCommunicator());
-
-		if (mpiComm != nullptr)	{
-			comm = *mpiComm->GetMPIComm()->GetHandle();
-		}
-	}
-	return comm;
-}
-#endif
-
 //----------------------------------------------------------------------------
 void Fespp::displayError(const std::string & msg)
 {
@@ -275,24 +245,12 @@ void Fespp::RequestDataEpcDocument(vtkInformation *request,
 		vtkInformationVector **inputVector,
 		vtkInformationVector *outputVector)
 {
-#ifdef PARAVIEW_USE_MPI
-	auto comm = GetMPICommunicator();
-	double t1;
-	if (comm != MPI_COMM_NULL)
-		t1 = MPI_Wtime();
-#endif
-
 	if (idProc == 0) {
 		cout << "Running with " << nbProc << " processor(s)" << std::endl;
 	}
 
 	vtkInformation *outInfo = outputVector->GetInformationObject(0);
 	vtkMultiBlockDataSet *output = vtkMultiBlockDataSet::SafeDownCast(outInfo->Get(vtkMultiBlockDataSet::DATA_OBJECT()));
-
-#ifdef PARAVIEW_USE_MPI
-	if (comm != MPI_COMM_NULL)
-		MPI_Barrier(comm);
-#endif
 
 	if (loadedFile)
 	{
@@ -304,17 +262,6 @@ void Fespp::RequestDataEpcDocument(vtkInformation *request,
 			vtkErrorMacro("EXCEPTION in FESAPI library: " << e.what());
 		}
 	}
-
-#ifdef PARAVIEW_USE_MPI
-	if (comm != MPI_COMM_NULL)
-	{
-		double t2;
-		MPI_Barrier(comm);
-		t2 = MPI_Wtime();
-		if (idProc == 0)
-			cout << "Elapsed time is " << (t2-t1) << "\n";
-	}
-#endif
 }
 
 //----------------------------------------------------------------------------

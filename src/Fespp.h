@@ -31,10 +31,6 @@ under the License.
 	#include "etp/VtkEtpDocument.h"
 #endif
 
-#ifdef PARAVIEW_USE_MPI
-#include <mpi.h>
-#endif // PARAVIEW_USE_MPI
-
 class VtkEpcDocumentSet;
 class vtkStdString;
 class vtkCallbackCommand;
@@ -103,10 +99,6 @@ private:
 	int idProc;
 	// number of process
 	int nbProc;
-
-#ifdef PARAVIEW_USE_MPI
-	MPI_Comm GetMPICommunicator();
-#endif // PARAVIEW_USE_MPI
 
 	std::vector<std::string> fileNameSet;
 
