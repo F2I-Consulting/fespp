@@ -33,6 +33,10 @@ under the License.
 #include "pqRenderView.h"
 #include "pqPipelineSource.h"
 #include "pqPropertiesPanel.h"
+#include "pqPipelineBrowserWidget.h"
+#include "pqObjectBuilder.h"
+#include "vtkSMPropertyHelper.h"
+
 
 #include "VTK/VtkEpcCommon.h"
 
@@ -70,19 +74,6 @@ PQSelectionPanel* getPQSelectionPanel()
 	}
 	return panel;
 }
-
-PQMetaDataPanel* getPQMetadataPanel()
-{
-	PQMetaDataPanel *panel = nullptr;
-	foreach(QWidget *widget, qApp->topLevelWidgets()) {
-		panel = widget->findChild<PQMetaDataPanel *>();
-
-		if (panel != nullptr) {
-			break;
-		}
-	}
-	return panel;
-}
 }
 
 //=============================================================================
@@ -106,7 +97,6 @@ PQToolsManager* PQToolsManager::instance()
 			qFatal("Cannot use the Tools without an application core instance.");
 			return nullptr;
 		}
-
 		PQToolsManagerInstance = new PQToolsManager(core);
 	}
 
@@ -133,14 +123,19 @@ PQToolsManager::PQToolsManager(QObject* p)
 	panelMetadataVisible = false;
 
 	QObject::connect(actionDataLoadManager(), SIGNAL(triggered(bool)), this, SLOT(showDataLoadManager()));
-	//QObject::connect(actionPanelSelection(), SIGNAL(triggered(bool)), this, SLOT(showPanelSelection()));
-	//	QObject::connect(actionPanelMetadata(), SIGNAL(triggered(bool)), this, SLOT(showPanelMetadata()));
+
 #ifdef WITH_ETP
 	QObject::connect(actionEtpCommand(), SIGNAL(triggered(bool)), this, SLOT(showEtpConnectionManager()));
 #endif
 
-	//	actionPanelMetadata()->setEnabled(false);
-	//	actionPanelSelection()->setEnabled(false);
+	pqServerManagerModel* smModel = pqApplicationCore::instance()->getServerManagerModel();
+	connect(smModel, SIGNAL(sourceRemoved(pqPipelineSource*)), this,
+			SLOT(deletePipelineSource(pqPipelineSource*)));
+
+	pqApplicationCore* core = pqApplicationCore::instance();
+	pqObjectBuilder* builder = core->getObjectBuilder();
+	connect(builder, SIGNAL(readerCreated(pqPipelineSource*, const QStringList &)), this,
+			SLOT(newPipelineSource(pqPipelineSource*, const QStringList &)));
 }
 
 PQToolsManager::~PQToolsManager()
@@ -154,20 +149,6 @@ QAction* PQToolsManager::actionDataLoadManager()
 {
 	return Internal->Actions.actionDataLoadManager;
 }
-
-//-----------------------------------------------------------------------------
-/*
-QAction* PQToolsManager::actionPanelSelection()
-{
-	return Internal->Actions.actionPanelSelection;
-}
- */
-
-//-----------------------------------------------------------------------------
-//QAction* PQToolsManager::actionPanelMetadata()
-//{
-//	return Internal->Actions.actionPanelMetadata;
-//}
 
 //-----------------------------------------------------------------------------
 #ifdef WITH_ETP
@@ -205,35 +186,9 @@ void PQToolsManager::setVisibilityPanelSelection(bool visible)
 }
 
 //-----------------------------------------------------------------------------
-void PQToolsManager::showPanelMetadata()
-{
-	if(panelMetadataVisible) {
-		setVisibilityPanelMetadata(false);
-		panelMetadataVisible = false;
-	}
-	else {
-		setVisibilityPanelMetadata(true);
-		panelMetadataVisible = true;
-	}
-}
-
-//-----------------------------------------------------------------------------
-void PQToolsManager::setVisibilityPanelMetadata(bool visible)
-{
-	getPQMetadataPanel()->setVisible(visible);
-	panelSelectionVisible=visible;
-}
-
-//-----------------------------------------------------------------------------
 pqPipelineSource* PQToolsManager::getFesppReader()
 {
-	return findPipelineSource("Fespp");
-}
-
-//-----------------------------------------------------------------------------
-pqView* PQToolsManager::getFesppView()
-{
-	return findView(getFesppReader(), 0, pqRenderView::renderViewType());
+	return findPipelineSource("EpcDocument");
 }
 
 //-----------------------------------------------------------------------------
@@ -264,36 +219,10 @@ pqPipelineSource* PQToolsManager::findPipelineSource(const char* SMName)
 
 	QList<pqPipelineSource*> sources = smModel->findItems<pqPipelineSource*>(getActiveServer());
 	foreach (pqPipelineSource* s, sources) {
-		if (strcmp(s->getProxy()->GetXMLName(), SMName) == 0)
+		if (strcmp(s->getSMName().toStdString().c_str(), SMName) == 0) {
 			return s;
-	}
-
-	return nullptr;
-}
-
-//-----------------------------------------------------------------------------
-pqView* PQToolsManager::findView(pqPipelineSource* source, int port, const QString& viewType)
-{
-	if (source) {
-		foreach (pqView* view, source->getViews())
-    										{
-			pqDataRepresentation* repr = source->getRepresentation(port, view);
-			if (repr && repr->isVisible())
-				return view;
-    										}
-	}
-	pqView* view = pqActiveObjects::instance().activeView();
-	if (view->getViewType() == viewType)
-		return view;
-
-	pqApplicationCore* core = pqApplicationCore::instance();
-	pqServerManagerModel* smModel = core->getServerManagerModel();
-	foreach (view, smModel->findItems<pqView*>()) {
-		if (view && (view->getViewType() == viewType) && (view->getNumberOfVisibleRepresentations() < 1)) {
-			return view;
 		}
 	}
-
 	return nullptr;
 }
 
@@ -334,32 +263,63 @@ void PQToolsManager::deletePipelineSource(pqPipelineSource* pipe)
 {
 	if(existPipe())
 	{
-		pqPipelineSource * source = findPipelineSource("EpcDocument");
-		if (!source) {
+		if (pipe->getSMName() == "EpcDocument") {
 			getPQSelectionPanel()->deleteTreeView();
 			existEpcPipe = false;
 		}
 #ifdef WITH_ETP
-		source = findPipelineSource("EtpDocument");
-		if (!source) {
+		if (pipe->getSMName() == "EtpDocument") {
 			getPQSelectionPanel()->deleteTreeView();
 			existEtpPipe = false;
 		}
 #endif
 	}
-	//	actionPanelMetadata()->setEnabled(false);
-	//	setVisibilityPanelMetadata(false);
-	//	panelMetadataVisible = false;
+}
+
+//----------------------------------------------------------------------------
+void PQToolsManager::newPipelineSource(pqPipelineSource* pipe, const QStringList &filenames)
+{
+	std::vector<std::string> epcfiles;
+	if (!filenames.isEmpty()) {
+		for (int i = 0; i < filenames.length(); ++i){
+			const size_t lengthFileName = filenames[i].toStdString().length();
+			const std::string extension = filenames[i].toStdString().substr(lengthFileName - 3, lengthFileName);
+			if(extension == "epc") {
+				epcfiles.push_back(filenames[i].toStdString());
+			}
+		}
+	}
+	if (epcfiles.size() > 0){
+		pqApplicationCore* core = pqApplicationCore::instance();
+		pqObjectBuilder* builder = core->getObjectBuilder();
+
+		// get or create reader pipe
+		pqPipelineSource* fesppReader;
+		if (existPipe()) {
+			fesppReader = getFesppReader();
+		}
+		else {
+			fesppReader = builder->createReader("sources", "Fespp", QStringList("EpcDocument"), getActiveServer());
+			existPipe(true);
+		}
+
+		// rename file pipe & add file to EpcDocument pipe
+		vtkSMProxy* fesppReaderProxy = fesppReader->getProxy();
+		std::string newName = "To delete (Artefact create by File-Open EPC)";
+		for (int i = 0; i < epcfiles.size(); ++i){
+			pipe->rename(QString(newName.c_str()));
+			// add file to EpcDocument pipe
+			vtkSMPropertyHelper(fesppReaderProxy, "SubFileName").Set(epcfiles[i].c_str());
+			fesppReaderProxy->UpdateSelfAndAllInputs();
+			// add file to Selection Panel
+			newFile(epcfiles[i].c_str());
+		}
+	}
 }
 
 //----------------------------------------------------------------------------
 void PQToolsManager::newFile(const std::string & fileName)
 {
-	//	actionPanelMetadata()->setEnabled(true);
 	getPQSelectionPanel()->addFileName(fileName);
-	//	actionPanelSelection()->setEnabled(true);
-
-	connect(getpqPropertiesPanel(), SIGNAL(deleteRequested(pqPipelineSource*)), this, SLOT(deletePipelineSource(pqPipelineSource*)));
-
 }
 

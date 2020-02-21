@@ -53,17 +53,12 @@ public:
 
 	~PQToolsManager();
 
-	// Get the action for the respective operation.
 	QAction* actionDataLoadManager();
-//	QAction* actionPanelSelection();
-	QAction* actionPanelMetadata();
 #ifdef WITH_ETP
 	QAction* actionEtpCommand();
 #endif
 
 	pqPipelineSource* getFesppReader();
-
-	pqView* getFesppView();
 
 	QWidget* getMainWindow();
 	pqServer* getActiveServer();
@@ -87,15 +82,14 @@ public slots:
 
 protected:
 	virtual pqPipelineSource* findPipelineSource(const char* SMName);
-	virtual pqView* findView(pqPipelineSource* source, int port, const QString& viewType);
 	void setVisibilityPanelSelection(bool visible);
-	void setVisibilityPanelMetadata(bool visible);
 
 protected slots:
 	/**
 	 * When a pipeline source is deleted
 	 */
 	void deletePipelineSource(pqPipelineSource*);
+	void newPipelineSource(pqPipelineSource*, const QStringList &);
 
 private:
 	PQToolsManager(QObject* p);
@@ -109,7 +103,7 @@ private:
 #endif
 	bool panelSelectionVisible;
 	bool panelMetadataVisible;
-	Q_DISABLE_COPY(PQToolsManager)
+	Q_DISABLE_COPY(PQToolsManager);
 };
 
 #endif

@@ -22,27 +22,28 @@ under the License.
 #include <QDialog>
 
 class pqServer;
+class pqPipelineSource;
 
 class PQDataLoadManager : public QDialog
 {
-  Q_OBJECT;
+	Q_OBJECT;
 
 public:
-  PQDataLoadManager(QWidget* p, Qt::WindowFlags f = 0);
-  ~PQDataLoadManager();
+	PQDataLoadManager(QWidget* p, Qt::WindowFlags f = 0);
+	~PQDataLoadManager();
 
-public slots:
-  virtual void checkInputValid();
-  virtual void setupPipeline();
+	public slots:
+	virtual void checkInputValid();
+	virtual void setupPipeline();
 
-protected:
-  pqServer* Server;
+	protected:
+	pqServer* Server;
 
-private:
-  Q_DISABLE_COPY(PQDataLoadManager)
+	private:
+	Q_DISABLE_COPY(PQDataLoadManager)
 
-  class pqUI;
-  pqUI* ui;
+	class pqUI;
+	pqUI* ui;
 
 };
 

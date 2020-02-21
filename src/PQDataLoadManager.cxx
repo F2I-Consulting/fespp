@@ -19,6 +19,7 @@ under the License.
 #include "PQDataLoadManager.h"
 
 #include "PQToolsManager.h"
+#include "PQSelectionPanel.h"
 
 #include "pqApplicationCore.h"
 #include "pqObjectBuilder.h"
@@ -28,6 +29,11 @@ under the License.
 #include "pqDataRepresentation.h"
 #include "pqSMAdaptor.h"
 #include "pqUndoStack.h"
+#include "pqPipelineSource.h"
+#include "pqServerManagerModel.h"
+#include "pqServer.h"
+#include "pqPipelineFilter.h"
+
 
 #include <pqPropertiesPanel.h>
 #include <pqActiveObjects.h>
@@ -40,6 +46,25 @@ under the License.
 #include <QPushButton>
 
 #include "ui_PQDataLoadManager.h"
+
+namespace
+{
+
+PQSelectionPanel* getPQSelectionPanel()
+{
+	PQSelectionPanel *panel = nullptr;
+	foreach(QWidget *widget, qApp->topLevelWidgets())
+	{
+		panel = widget->findChild<PQSelectionPanel *>();
+
+		if (panel != nullptr) {
+			break;
+		}
+	}
+	return panel;
+}
+}
+
 class PQDataLoadManager::pqUI : public Ui::PQDataLoadManager
 {
 };
@@ -87,7 +112,6 @@ void PQDataLoadManager::setupPipeline()
 	BEGIN_UNDO_SET("EPC Data Load");
 
 	pqPipelineSource* fesppReader;
-
 	if (manager->existPipe()) {
 		fesppReader = manager->getFesppReader();
 	}

@@ -45,10 +45,10 @@ vtkCxxSetObjectMacro(Fespp, Controller, vtkMultiProcessController);
 
 //----------------------------------------------------------------------------
 Fespp::Fespp() :
-			FileName(nullptr), SubFileName(nullptr),
-			uuidList(vtkDataArraySelection::New()), Controller(nullptr),
-			loadedFile(false), fileNameSet(std::vector<std::string>()),
-			epcDocumentSet(nullptr), isEpcDocument(false)
+									FileName(nullptr), SubFileName(nullptr),
+									uuidList(vtkDataArraySelection::New()), Controller(nullptr),
+									loadedFile(false), fileNameSet(std::vector<std::string>()),
+									epcDocumentSet(nullptr), isEpcDocument(false)
 #ifdef WITH_ETP
 , etpDocument(nullptr), isEtpDocument(false),
 port(""), ip("")
@@ -74,7 +74,6 @@ port(""), ip("")
 //----------------------------------------------------------------------------
 Fespp::~Fespp()
 {
-	SetFileName(nullptr);
 	SetController(nullptr);
 	fileNameSet.clear();
 	uuidList->Delete();
@@ -203,15 +202,6 @@ int Fespp::RequestInformation(
 			isEtpDocument = true;
 		}
 #endif
-		const size_t lengthFileName = stringFileName.length();
-		const std::string extension = stringFileName.substr(lengthFileName - 3, lengthFileName);
-		if(extension == "epc") {
-			isEpcDocument = true;
-			loadedFile = true;
-			epcDocumentSet = new VtkEpcDocumentSet(idProc, nbProc, VtkEpcCommon::Both);
-			OpenEpcDocument(stringFileName);
-			epcDocumentSet->visualizeFull();
-		}
 	}
 	return 1;
 }
