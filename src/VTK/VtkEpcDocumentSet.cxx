@@ -88,11 +88,14 @@ void VtkEpcDocumentSet::visualizeFull()
 }
 
 //----------------------------------------------------------------------------
-void VtkEpcDocumentSet::visualizeFullWell()
+void VtkEpcDocumentSet::visualizeFullWell(std::string fileName)
 {
 	if(representationMode) {
 		for (auto &vtkEpcElem : vtkEpcList) {
-			vtkEpcElem->visualizeFullWell();
+			if (vtkEpcElem->getFileName() == fileName) {
+				vtkEpcElem->visualizeFullWell();
+				break;
+			}
 		}
 	}
 }
@@ -102,6 +105,19 @@ void VtkEpcDocumentSet::unvisualize(const std::string & uuid)
 {
 	if(representationMode) {
 		uuidToVtkEpc[uuid]->remove(uuid);
+	}
+}
+
+//----------------------------------------------------------------------------
+void VtkEpcDocumentSet::unvisualizeFullWell(std::string fileName)
+{
+	if(representationMode) {
+		for (auto &vtkEpcElem : vtkEpcList) {
+			if (vtkEpcElem->getFileName() == fileName) {
+				vtkEpcElem->unvisualizeFullWell();
+				break;
+			}
+		}
 	}
 }
 

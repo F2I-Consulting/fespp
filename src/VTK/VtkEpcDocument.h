@@ -63,6 +63,7 @@ public:
 	* create uuid representation with all Welbore_trajectory
 	*/
 	void visualizeFullWell();
+	void unvisualizeFullWell();
 	
 
 	/**

@@ -225,7 +225,6 @@ void PQSelectionPanel::constructor() {
 	vtkEpcDocumentSet = new VtkEpcDocumentSet(0, 0, VtkEpcCommon::TreeView);
 	etpCreated = false;
 	canLoad = false;
-
 }
 
 PQSelectionPanel::~PQSelectionPanel() {
@@ -238,25 +237,51 @@ PQSelectionPanel::~PQSelectionPanel() {
 //----------------------------------------------------------------------------
 void PQSelectionPanel::treeCustomMenu(const QPoint & pos) {
 	auto menu = new QMenu;
-	pickedBlocksEtp = itemUuid[treeWidget->itemAt(pos)];
-	auto it = std::find (list_uri_etp.begin(), list_uri_etp.end(), pickedBlocksEtp);
-	if (it != uri_subscribe.end() && list_uri_etp.size() > 0) {  // subscribe
-		menu->addAction(QString("subscribe/unsubscribe"), this, SLOT(subscribe_slot()));
-	} else {
-		menu->addAction(QString("Select all wellbores"), this, SLOT(selectAllWell()));
+	if (treeWidget->itemAt(pos)) {
+		pickedBlocksEtp = itemUuid[treeWidget->itemAt(pos)];
+		auto it = std::find (list_uri_etp.begin(), list_uri_etp.end(), pickedBlocksEtp);
+		if (it != uri_subscribe.end() && list_uri_etp.size() > 0) {  // subscribe
+			menu->addAction(QString("subscribe/unsubscribe"), this, SLOT(subscribe_slot()));
+			menu->exec(treeWidget->mapToGlobal(pos));
+		} else {
+			for (auto & file_name : allFileName) {
+				if (file_name == pickedBlocksEtp) {
+					QList<std::string> values = uuidsWellbore.keys(true);
+					if (values.size() == uuidsWellbore.size()) {
+						menu->addAction(QString("Unselect all wellbores"), this, SLOT(unselectAllWell()));
+					} else {
+						menu->addAction(QString("Select all wellbores"), this, SLOT(selectAllWell()));
+					}
+					menu->exec(treeWidget->mapToGlobal(pos));
+					break;
+				}
+			}
+		}
 	}
-	menu->exec(treeWidget->mapToGlobal(pos));
 }
 
 //----------------------------------------------------------------------------
 void PQSelectionPanel::selectAllWell() {
-	loadUuid("allWell");
+	loadUuid("allWell-"+pickedBlocksEtp);
 	canLoad = false;
-	for (auto &uuid : uuidsWellbore) {
+	for (auto &uuid : uuidsWellbore.keys().toStdList()) {
 		uuidItem[uuid]->setCheckState(0, Qt::Checked);
+		uuidsWellbore[uuid] = true;
 	}
 	canLoad = true;
 }
+
+//----------------------------------------------------------------------------
+void PQSelectionPanel::unselectAllWell() {
+	removeUuid("allWell-"+pickedBlocksEtp);
+	canLoad = false;
+	for (auto &uuid : uuidsWellbore.keys().toStdList()) {
+		uuidItem[uuid]->setCheckState(0, Qt::Unchecked);
+		uuidsWellbore[uuid] = false;
+	}
+	canLoad = true;
+}
+
 
 //----------------------------------------------------------------------------
 void PQSelectionPanel::subscribe_slot() {
@@ -304,7 +329,7 @@ void PQSelectionPanel::onItemCheckedUnchecked(QTreeWidgetItem * item, int column
 	std::string uuid = itemUuid[item];
 	if (!uuid.empty()) {
 		if (item->checkState(0) == Qt::Checked) {
-				loadUuid(uuid);
+			loadUuid(uuid);
 		} else if (item->checkState(0) == Qt::Unchecked) {
 			// Property exist
 			if (uuidItem[uuid]->childCount() > 0
@@ -488,7 +513,7 @@ void PQSelectionPanel::updateTimeSeries(const std::string & uuid,
 
 	for (const auto &uuid_displayed : ts_displayed) {
 		foreach(time_t t, ts_timestamp_to_uuid[uuid_displayed].keys())
-															list << t;
+																									list << t;
 	}
 
 	qSort(list.begin(), list.end());
@@ -577,8 +602,18 @@ void PQSelectionPanel::populateTreeView(const std::string & parent,
 							treeItem->flags() | Qt::ItemIsSelectable);
 
 					switch (type) {
-					case VtkEpcCommon::Resqml2Type::INTERPRETATION: {
-						icon.addFile(QString::fromUtf8(":Grid2D.png"), QSize(),
+					case VtkEpcCommon::Resqml2Type::INTERPRETATION_1D: {
+						icon.addFile(QString::fromUtf8(":Interpretation_1D.png"), QSize(),
+								QIcon::Normal, QIcon::Off);
+						break;
+					}
+					case VtkEpcCommon::Resqml2Type::INTERPRETATION_2D: {
+						icon.addFile(QString::fromUtf8(":Interpretation_2D.png"), QSize(),
+								QIcon::Normal, QIcon::Off);
+						break;
+					}
+					case VtkEpcCommon::Resqml2Type::INTERPRETATION_3D: {
+						icon.addFile(QString::fromUtf8(":Interpretation_3D.png"), QSize(),
 								QIcon::Normal, QIcon::Off);
 						break;
 					}
@@ -604,7 +639,7 @@ void PQSelectionPanel::populateTreeView(const std::string & parent,
 						icon.addFile(QString::fromUtf8(":WellTraj.png"),
 								QSize(), QIcon::Normal, QIcon::Off);
 						treeItem->setCheckState(0, Qt::Unchecked);
-						uuidsWellbore.push_back(uuid);
+						uuidsWellbore.insert(uuid, false);
 						break;
 					}
 					case VtkEpcCommon::Resqml2Type::IJK_GRID: {
@@ -699,7 +734,7 @@ std::string PQSelectionPanel::searchSource(const std::string & uuid) {
 void PQSelectionPanel::loadUuid(const std::string & uuid) {
 	if (canLoad) {
 		std::string pipe_name;
-		if (uuid == "allWell") {
+		if (uuid.find("allWell-") != std::string::npos) {
 			pipe_name = "EpcDocument";
 		}else {
 			pipe_name = searchSource(uuid);
@@ -728,14 +763,23 @@ void PQSelectionPanel::loadUuid(const std::string & uuid) {
 				getpqPropertiesPanel()->apply();
 			}
 		}
+		if (uuidsWellbore.contains(uuid)) {
+
+			uuidsWellbore[uuid] = true;
+		}
 	}
 }
 
 //----------------------------------------------------------------------------
 void PQSelectionPanel::removeUuid(const std::string & uuid) {
 	if (canLoad) {
-		auto sourceName = searchSource(uuid);
-		pqPipelineSource * source = findPipelineSource(sourceName.c_str());
+		std::string pipe_name;
+		if (uuid.find("allWell-") != std::string::npos) {
+			pipe_name = "EpcDocument";
+		}else {
+			pipe_name = searchSource(uuid);
+		}
+		pqPipelineSource * source = findPipelineSource(pipe_name.c_str());
 		if (source!=nullptr) {
 			pqActiveObjects *activeObjects = &pqActiveObjects::instance();
 			activeObjects->setActiveSource(source);
@@ -758,6 +802,9 @@ void PQSelectionPanel::removeUuid(const std::string & uuid) {
 				getpqPropertiesPanel()->update();
 				getpqPropertiesPanel()->apply();
 			}
+		}
+		if (uuidsWellbore.contains(uuid)) {
+			uuidsWellbore[uuid] = false;
 		}
 	}
 }

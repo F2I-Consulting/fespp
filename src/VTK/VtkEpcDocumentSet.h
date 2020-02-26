@@ -22,11 +22,7 @@ under the License.
 #include "VtkEpcCommon.h"
 
 // include system
-#if (defined(_WIN32) && _MSC_VER >= 1600)
-	#include <unordered_map>
-#else
-	#include <tr1/unordered_map>
-#endif
+#include <unordered_map>
 #include <vector>
 
 // include VTK
@@ -55,7 +51,7 @@ public:
 	*/
 	std::string visualize(const std::string & uuid);
 	void visualizeFull();
-	void visualizeFullWell();
+	void visualizeFullWell(std::string fileName);
 	
 	/**
 	* method : remove
@@ -63,6 +59,7 @@ public:
 	* delete uuid representation.
 	*/
 	void unvisualize(const std::string & uuid);
+	void unvisualizeFullWell(std::string fileName);
 
 	VtkEpcCommon::Resqml2Type getType(std::string uuid);
 	VtkEpcCommon getInfoUuid(std::string);
@@ -85,11 +82,8 @@ private:
 	std::vector<VtkEpcDocument*> vtkEpcList;
 	std::vector<std::string> vtkEpcNameList;
 
-#if _MSC_VER < 1600
-	std::tr1::unordered_map<std::string, VtkEpcDocument*> uuidToVtkEpc; // link uuid/VtkEpcdocument
-#else
 	std::unordered_map<std::string, VtkEpcDocument*> uuidToVtkEpc; // link uuid/VtkEpcdocument
-#endif
+
 
 	std::vector<VtkEpcCommon> treeView; // Tree
 

@@ -45,10 +45,10 @@ vtkCxxSetObjectMacro(Fespp, Controller, vtkMultiProcessController);
 
 //----------------------------------------------------------------------------
 Fespp::Fespp() :
-															FileName(nullptr), SubFileName(nullptr),
-															uuidList(vtkDataArraySelection::New()), Controller(nullptr),
-															loadedFile(false), fileNameSet(std::vector<std::string>()),
-															epcDocumentSet(nullptr), isEpcDocument(false)
+				FileName(nullptr), SubFileName(nullptr),
+				uuidList(vtkDataArraySelection::New()), Controller(nullptr),
+				loadedFile(false), fileNameSet(std::vector<std::string>()),
+				epcDocumentSet(nullptr), isEpcDocument(false)
 #ifdef WITH_ETP
 , etpDocument(nullptr), isEtpDocument(false),
 port(""), ip("")
@@ -128,8 +128,12 @@ void Fespp::SetUuidList(const char* uuid, int status)
 			etpDocument = new VtkEtpDocument(ip, port, VtkEpcCommon::Representation);
 		}
 #endif
-	} else if (uuidStr == "allWell") {
-		epcDocumentSet->visualizeFullWell();
+	} else if (uuidStr.find("allWell-") != std::string::npos) {
+		if (status == 0) {
+			epcDocumentSet->unvisualizeFullWell(uuidStr.substr(8));
+		} else {
+			epcDocumentSet->visualizeFullWell(uuidStr.substr(8));
+		}
 	} else if (status == 0) {
 		if(isEpcDocument) {
 			epcDocumentSet->unvisualize(uuidStr);

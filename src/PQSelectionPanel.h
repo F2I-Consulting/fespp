@@ -159,6 +159,7 @@ protected slots:
 	// right click
 	void treeCustomMenu(const QPoint &);
 	void selectAllWell();
+	void unselectAllWell();
 	void subscribe_slot();
 	void subscribeChildren_slot();
 
@@ -244,7 +245,7 @@ private:
 
 	QMap<std::string, QMap<time_t, std::string>> ts_timestamp_to_uuid;
 
-	std::vector<std::string> uuidsWellbore;
+	QMap<std::string, bool> uuidsWellbore;
 
 	time_t save_time;
 

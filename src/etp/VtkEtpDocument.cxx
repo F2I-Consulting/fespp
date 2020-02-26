@@ -212,7 +212,7 @@ void VtkEtpDocument::createTreeVtk(const std::string & uuid, const std::string &
 	tmp.setName(name);
 	tmp.setTimeIndex(-1);
 	tmp.setTimestamp(0);
-	tmp.setParentType(uuidIsChildOf[parent].getUuid().empty() ? VtkEpcCommon::INTERPRETATION : uuidIsChildOf[parent].getType());
+	tmp.setParentType(uuidIsChildOf[parent].getUuid().empty() ? VtkEpcCommon::INTERPRETATION_3D : uuidIsChildOf[parent].getType());
 
 	if (type == VtkEpcCommon::Resqml2Type::IJK_GRID) {
 		if (uuidToVtkIjkGridRepresentation[uuid] == nullptr) {

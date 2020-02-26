@@ -157,7 +157,17 @@ void VtkEpcDocument::createTreeVtk(const std::string & uuid, const std::string &
 	uuidIsChildOf[uuid].setTimestamp(0);
 
 	if(uuidIsChildOf[parent].getUuid().empty()) {
-		uuidIsChildOf[uuid].setParentType( VtkEpcCommon::INTERPRETATION);
+		if (type == VtkEpcCommon::Resqml2Type::GRID_2D ||
+				type == VtkEpcCommon::Resqml2Type::POLYLINE_SET ||
+				type == VtkEpcCommon::Resqml2Type::TRIANGULATED_SET) {
+			uuidIsChildOf[uuid].setParentType( VtkEpcCommon::INTERPRETATION_2D);
+		} else if (type == VtkEpcCommon::Resqml2Type::WELL_TRAJ) {
+			uuidIsChildOf[uuid].setParentType( VtkEpcCommon::INTERPRETATION_1D);
+		} else if (type == VtkEpcCommon::Resqml2Type::IJK_GRID ||
+				type == VtkEpcCommon::Resqml2Type::UNSTRUC_GRID ||
+				type == VtkEpcCommon::Resqml2Type::SUB_REP) {
+			uuidIsChildOf[uuid].setParentType( VtkEpcCommon::INTERPRETATION_3D);
+		}
 	}
 	else {
 		uuidIsChildOf[uuid].setParentType( uuidIsChildOf[parent].getType());
@@ -657,6 +667,21 @@ void VtkEpcDocument::visualizeFullWell()
 }
 
 // ----------------------------------------------------------------------------
+void VtkEpcDocument::unvisualizeFullWell()
+{
+	for (auto &vtkEpcCommon : treeView) {
+		if (std::find(attachUuids.begin(), attachUuids.end(), vtkEpcCommon.getUuid()) != attachUuids.end()) {
+			if (uuidIsChildOf[vtkEpcCommon.getUuid()].getType() == VtkEpcCommon::WELL_TRAJ) {
+				uuidToVtkWellboreTrajectoryRepresentation[vtkEpcCommon.getUuid()]->remove(vtkEpcCommon.getUuid());
+				detach();
+				attachUuids.erase(std::find(attachUuids.begin(), attachUuids.end(), vtkEpcCommon.getUuid()));
+				attach();
+			}
+		}
+	}
+}
+
+// ----------------------------------------------------------------------------
 void VtkEpcDocument::remove(const std::string & uuid)
 {
 	auto uuidtoAttach = uuid;
@@ -1145,7 +1170,7 @@ void VtkEpcDocument::searchFaultPolylines(const std::string & fileName) {
 			auto interpretation = polylines[idx]->getInterpretation();
 			if (interpretation) {
 				uuidParent = interpretation->getUuid();
-				createTreeVtk(uuidParent, fileName, interpretation->getTitle().c_str(), VtkEpcCommon::INTERPRETATION);
+				createTreeVtk(uuidParent, fileName, interpretation->getTitle().c_str(), VtkEpcCommon::INTERPRETATION_2D);
 			}
 			createTreeVtk(polylines[idx]->getUuid(), uuidParent, polylines[idx]->getTitle().c_str(), VtkEpcCommon::POLYLINE_SET);
 		}
@@ -1186,7 +1211,7 @@ void VtkEpcDocument::searchHorizonPolylines(const std::string & fileName) {
 			auto interpretation = polylines[idx]->getInterpretation();
 			if (interpretation) {
 				uuidParent = interpretation->getUuid();
-				createTreeVtk(uuidParent, fileName, interpretation->getTitle().c_str(), VtkEpcCommon::INTERPRETATION);
+				createTreeVtk(uuidParent, fileName, interpretation->getTitle().c_str(), VtkEpcCommon::INTERPRETATION_2D);
 			}
 			createTreeVtk(polylines[idx]->getUuid(), uuidParent, polylines[idx]->getTitle().c_str(), VtkEpcCommon::POLYLINE_SET);
 		}
@@ -1227,7 +1252,7 @@ void VtkEpcDocument::searchUnstructuredGrid(const std::string & fileName) {
 			auto interpretation = unstructuredGrid[iter]->getInterpretation();
 			if (interpretation) {
 				uuidParent = interpretation->getUuid();
-				createTreeVtk(uuidParent, fileName, interpretation->getTitle().c_str(), VtkEpcCommon::INTERPRETATION);
+				createTreeVtk(uuidParent, fileName, interpretation->getTitle().c_str(), VtkEpcCommon::INTERPRETATION_3D);
 			}
 			createTreeVtk(unstructuredGrid[iter]->getUuid(), fileName, unstructuredGrid[iter]->getTitle().c_str(), VtkEpcCommon::UNSTRUC_GRID);
 		}
@@ -1266,7 +1291,7 @@ void VtkEpcDocument::searchTriangulated(const std::string & fileName) {
 			auto interpretation = triangulated[iter]->getInterpretation();
 			if (interpretation) {
 				uuidParent = interpretation->getUuid();
-				createTreeVtk(uuidParent, fileName, interpretation->getTitle().c_str(), VtkEpcCommon::INTERPRETATION);
+				createTreeVtk(uuidParent, fileName, interpretation->getTitle().c_str(), VtkEpcCommon::INTERPRETATION_2D);
 			}
 			createTreeVtk(triangulated[iter]->getUuid(), uuidParent, triangulated[iter]->getTitle().c_str(), VtkEpcCommon::TRIANGULATED_SET);
 		}
@@ -1304,7 +1329,7 @@ void VtkEpcDocument::searchGrid2d(const std::string & fileName) {
 			std::string uuidParent = fileName;
 			if (interpretation) {
 				uuidParent = interpretation->getUuid();
-				createTreeVtk(uuidParent, fileName, interpretation->getTitle().c_str(), VtkEpcCommon::INTERPRETATION);
+				createTreeVtk(uuidParent, fileName, interpretation->getTitle().c_str(), VtkEpcCommon::INTERPRETATION_2D);
 			}
 			createTreeVtk(grid2D[iter]->getUuid(), uuidParent, grid2D[iter]->getTitle().c_str(), VtkEpcCommon::GRID_2D);
 		}
@@ -1343,7 +1368,7 @@ void VtkEpcDocument::searchIjkGrid(const std::string & fileName) {
 			std::string uuidParent = fileName;
 			if (interpretation) {
 				uuidParent = interpretation->getUuid();
-				createTreeVtk(uuidParent, fileName, interpretation->getTitle().c_str(), VtkEpcCommon::INTERPRETATION);
+				createTreeVtk(uuidParent, fileName, interpretation->getTitle().c_str(), VtkEpcCommon::INTERPRETATION_3D);
 			}
 			createTreeVtk(ijkGrid[iter]->getUuid(), uuidParent, ijkGrid[iter]->getTitle().c_str(), VtkEpcCommon::IJK_GRID);
 		}
@@ -1383,7 +1408,7 @@ void VtkEpcDocument::searchWellboreTrajectory(const std::string & fileName) {
 			std::string uuidParent = fileName;
 			if (interpretation) {
 				uuidParent = interpretation->getUuid();
-				createTreeVtk(uuidParent, fileName, interpretation->getTitle().c_str(), VtkEpcCommon::INTERPRETATION);
+				createTreeVtk(uuidParent, fileName, interpretation->getTitle().c_str(), VtkEpcCommon::INTERPRETATION_1D);
 			}
 			createTreeVtk(WellboreTrajectory[iter]->getUuid(), uuidParent, WellboreTrajectory[iter]->getTitle().c_str(), VtkEpcCommon::WELL_TRAJ);
 		}

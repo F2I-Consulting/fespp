@@ -31,7 +31,7 @@ void IjkGridRepDiscoveryHandler::on_GetResourcesResponse(const Energistics::Etp:
 			leaf.setUuid(resource.m_uri);
 			leaf.setType(VtkEpcCommon::IJK_GRID);
 			leaf.setParent("EtpDoc");
-			leaf.setParentType(VtkEpcCommon::INTERPRETATION);
+			leaf.setParentType(VtkEpcCommon::INTERPRETATION_3D);
 			leaf.setTimeIndex(-1);
 			leaf.setTimestamp(0);
 			etp_document->getTreeView().push_back(leaf);
