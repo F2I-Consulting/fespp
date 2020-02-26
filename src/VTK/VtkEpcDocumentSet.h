@@ -55,6 +55,7 @@ public:
 	*/
 	std::string visualize(const std::string & uuid);
 	void visualizeFull();
+	void visualizeFullWell();
 	
 	/**
 	* method : remove

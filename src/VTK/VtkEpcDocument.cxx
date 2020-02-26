@@ -634,6 +634,29 @@ void VtkEpcDocument::visualize(const std::string & uuid)
 }
 
 // ----------------------------------------------------------------------------
+void VtkEpcDocument::visualizeFullWell()
+{
+	for (auto &vtkEpcCommon : treeView) {
+		if (vtkEpcCommon.getType() == VtkEpcCommon::WELL_TRAJ) {
+			uuidToVtkWellboreTrajectoryRepresentation[vtkEpcCommon.getUuid()]->visualize(vtkEpcCommon.getUuid());
+			try
+			{
+				// attach representation to EpcDocument VtkMultiBlockDataSet
+				if (std::find(attachUuids.begin(), attachUuids.end(), vtkEpcCommon.getUuid()) == attachUuids.end()) {
+					detach();
+					attachUuids.push_back(vtkEpcCommon.getUuid());
+					attach();
+				}
+			}
+			catch (const std::exception&)
+			{
+				cout << "ERROR with uuid attachment: " << vtkEpcCommon.getUuid() ;
+			}
+		}
+	}
+}
+
+// ----------------------------------------------------------------------------
 void VtkEpcDocument::remove(const std::string & uuid)
 {
 	auto uuidtoAttach = uuid;

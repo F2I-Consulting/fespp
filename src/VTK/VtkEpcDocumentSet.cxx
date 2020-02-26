@@ -88,6 +88,16 @@ void VtkEpcDocumentSet::visualizeFull()
 }
 
 //----------------------------------------------------------------------------
+void VtkEpcDocumentSet::visualizeFullWell()
+{
+	if(representationMode) {
+		for (auto &vtkEpcElem : vtkEpcList) {
+			vtkEpcElem->visualizeFullWell();
+		}
+	}
+}
+
+//----------------------------------------------------------------------------
 void VtkEpcDocumentSet::unvisualize(const std::string & uuid)
 {
 	if(representationMode) {

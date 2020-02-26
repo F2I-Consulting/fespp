@@ -224,7 +224,7 @@ void PQSelectionPanel::constructor() {
 
 	vtkEpcDocumentSet = new VtkEpcDocumentSet(0, 0, VtkEpcCommon::TreeView);
 	etpCreated = false;
-	noLoadUuid = "";
+	canLoad = false;
 
 }
 
@@ -237,23 +237,25 @@ PQSelectionPanel::~PQSelectionPanel() {
 
 //----------------------------------------------------------------------------
 void PQSelectionPanel::treeCustomMenu(const QPoint & pos) {
+	auto menu = new QMenu;
 	pickedBlocksEtp = itemUuid[treeWidget->itemAt(pos)];
 	auto it = std::find (list_uri_etp.begin(), list_uri_etp.end(), pickedBlocksEtp);
-	if (it != uri_subscribe.end()) {  // subscribe
-		auto menu = new QMenu;
-		menu->addAction(QString("1 - subscribe/unsubscribe"), this, SLOT(test_slot()));
-		menu->addAction(QString("2 - subscribe/unsubscribe ~ NEW ~"), this, SLOT(subscribe_slot()));
-		menu->exec(treeWidget->mapToGlobal(pos));
+	if (it != uri_subscribe.end() && list_uri_etp.size() > 0) {  // subscribe
+		menu->addAction(QString("subscribe/unsubscribe"), this, SLOT(subscribe_slot()));
+	} else {
+		menu->addAction(QString("Select all wellbores"), this, SLOT(selectAllWell()));
 	}
+	menu->exec(treeWidget->mapToGlobal(pos));
 }
 
 //----------------------------------------------------------------------------
-void PQSelectionPanel::test_slot() {
-	QIcon icon;
-	icon.addFile(QString::fromUtf8(":pqEyeball16.png"),
-			QSize(), QIcon::Normal, QIcon::Off);
-	uuidItem[pickedBlocksEtp]->setIcon(1, icon);
-	cout << pickedBlocksEtp << endl;
+void PQSelectionPanel::selectAllWell() {
+	loadUuid("allWell");
+	canLoad = false;
+	for (auto &uuid : uuidsWellbore) {
+		uuidItem[uuid]->setCheckState(0, Qt::Checked);
+	}
+	canLoad = true;
 }
 
 //----------------------------------------------------------------------------
@@ -277,7 +279,6 @@ void PQSelectionPanel::subscribeChildren_slot() {
 	icon.addFile(QString::fromUtf8(":pqEyeball16.png"),
 			QSize(), QIcon::Normal, QIcon::Off);
 	uuidItem[pickedBlocksEtp]->setIcon(1, icon);
-	cout << pickedBlocksEtp << endl;
 }
 
 //----------------------------------------------------------------------------
@@ -303,11 +304,7 @@ void PQSelectionPanel::onItemCheckedUnchecked(QTreeWidgetItem * item, int column
 	std::string uuid = itemUuid[item];
 	if (!uuid.empty()) {
 		if (item->checkState(0) == Qt::Checked) {
-			if (noLoadUuid == uuid) {
-				noLoadUuid = "";
-			} else {
 				loadUuid(uuid);
-			}
 		} else if (item->checkState(0) == Qt::Unchecked) {
 			// Property exist
 			if (uuidItem[uuid]->childCount() > 0
@@ -342,8 +339,6 @@ void PQSelectionPanel::deleteTreeView() {
 	mapUuidProperty.clear();
 	mapUuidWithProperty.clear();
 
-	displayUuid.clear();
-
 	radioButton_to_id.clear();
 
 	mapUuidParentButtonInvisible.clear();
@@ -362,19 +357,16 @@ void PQSelectionPanel::deleteTreeView() {
 void PQSelectionPanel::checkedRadioButton(int rbNo) {
 	emit button_Time_Pause->released();
 	if (radioButton_to_id.contains(rbNo)) {
+		canLoad = false;
 		std::string uuid = radioButton_to_id[rbNo];
 
 		std::string uuidParent = itemUuid[uuidParentItem[uuid]];
 		if (uuidParentItem[uuid]->checkState(0) != Qt::Checked) {
-			noLoadUuid = uuidParent;
 			uuidParentItem[uuid]->setCheckState(0, Qt::Checked);
 		}
-//		else {
-//			uuidParentItem[uuid]->setCheckState(0, Qt::PartiallyChecked);
-//			uuidParentItem[uuid]->setCheckState(0, Qt::Checked);
-//		}
 
 		std::string uuidOld = mapUuidWithProperty[uuidParent];
+		canLoad = true;
 
 		if (!(uuidOld == "")) {
 			if (ts_timestamp_to_uuid.count(uuidOld) > 0) {
@@ -390,6 +382,7 @@ void PQSelectionPanel::checkedRadioButton(int rbNo) {
 			}
 		}
 		mapUuidWithProperty[uuidParent] = uuid;
+
 		if (ts_timestamp_to_uuid.count(uuid) > 0) {
 			updateTimeSeries(uuid, true);
 
@@ -495,7 +488,7 @@ void PQSelectionPanel::updateTimeSeries(const std::string & uuid,
 
 	for (const auto &uuid_displayed : ts_displayed) {
 		foreach(time_t t, ts_timestamp_to_uuid[uuid_displayed].keys())
-											list << t;
+															list << t;
 	}
 
 	qSort(list.begin(), list.end());
@@ -555,6 +548,7 @@ void PQSelectionPanel::addFileName(const std::string & fileName) {
 void PQSelectionPanel::populateTreeView(const std::string & parent,
 		VtkEpcCommon::Resqml2Type parentType, const std::string & uuid,
 		const std::string & name, VtkEpcCommon::Resqml2Type type) {
+	canLoad = false;
 	if (uuid != "") {
 		if (!uuidItem[uuid]) {
 			if (parentType == VtkEpcCommon::Resqml2Type::PARTIAL
@@ -610,6 +604,7 @@ void PQSelectionPanel::populateTreeView(const std::string & parent,
 						icon.addFile(QString::fromUtf8(":WellTraj.png"),
 								QSize(), QIcon::Normal, QIcon::Off);
 						treeItem->setCheckState(0, Qt::Unchecked);
+						uuidsWellbore.push_back(uuid);
 						break;
 					}
 					case VtkEpcCommon::Resqml2Type::IJK_GRID: {
@@ -647,6 +642,7 @@ void PQSelectionPanel::populateTreeView(const std::string & parent,
 			}
 		}
 	}
+	canLoad = true;
 }
 
 //----------------------------------------------------------------------------
@@ -701,58 +697,67 @@ std::string PQSelectionPanel::searchSource(const std::string & uuid) {
 
 //----------------------------------------------------------------------------
 void PQSelectionPanel::loadUuid(const std::string & uuid) {
-	auto pipe_name = searchSource(uuid);
-	pqPipelineSource * source = findPipelineSource(pipe_name.c_str());
-	if (source!=nullptr) {
-		pqActiveObjects *activeObjects = &pqActiveObjects::instance();
-		activeObjects->setActiveSource(source);
-
-		PQToolsManager* manager = PQToolsManager::instance();
-		auto fesppReader = manager->getFesppReader();
-
-		if (fesppReader) {
+	if (canLoad) {
+		std::string pipe_name;
+		if (uuid == "allWell") {
+			pipe_name = "EpcDocument";
+		}else {
+			pipe_name = searchSource(uuid);
+		}
+		pqPipelineSource * source = findPipelineSource(pipe_name.c_str());
+		if (source!=nullptr) {
 			pqActiveObjects *activeObjects = &pqActiveObjects::instance();
-			activeObjects->setActiveSource(fesppReader);
+			activeObjects->setActiveSource(source);
 
-			// add uuid to property panel
-			vtkSMProxy* fesppReaderProxy = fesppReader->getProxy();
+			PQToolsManager* manager = PQToolsManager::instance();
+			auto fesppReader = manager->getFesppReader();
 
-			vtkSMPropertyHelper(fesppReaderProxy, "uuidList").SetStatus(
-					uuid.c_str(), 1);
+			if (fesppReader) {
+				pqActiveObjects *activeObjects = &pqActiveObjects::instance();
+				activeObjects->setActiveSource(fesppReader);
 
-			fesppReaderProxy->UpdatePropertyInformation();
-			fesppReaderProxy->UpdateVTKObjects();
-			getpqPropertiesPanel()->update();
-			getpqPropertiesPanel()->apply();
+				// add uuid to property panel
+				vtkSMProxy* fesppReaderProxy = fesppReader->getProxy();
+
+				vtkSMPropertyHelper(fesppReaderProxy, "uuidList").SetStatus(
+						uuid.c_str(), 1);
+
+				fesppReaderProxy->UpdatePropertyInformation();
+				fesppReaderProxy->UpdateVTKObjects();
+				getpqPropertiesPanel()->update();
+				getpqPropertiesPanel()->apply();
+			}
 		}
 	}
 }
 
 //----------------------------------------------------------------------------
 void PQSelectionPanel::removeUuid(const std::string & uuid) {
-	auto sourceName = searchSource(uuid);
-	pqPipelineSource * source = findPipelineSource(sourceName.c_str());
-	if (source!=nullptr) {
-		pqActiveObjects *activeObjects = &pqActiveObjects::instance();
-		activeObjects->setActiveSource(source);
-
-		PQToolsManager* manager = PQToolsManager::instance();
-		auto fesppReader = manager->getFesppReader();
-
-		if (fesppReader) {
+	if (canLoad) {
+		auto sourceName = searchSource(uuid);
+		pqPipelineSource * source = findPipelineSource(sourceName.c_str());
+		if (source!=nullptr) {
 			pqActiveObjects *activeObjects = &pqActiveObjects::instance();
-			activeObjects->setActiveSource(fesppReader);
+			activeObjects->setActiveSource(source);
 
-			// add file to property
-			vtkSMProxy* fesppReaderProxy = fesppReader->getProxy();
+			PQToolsManager* manager = PQToolsManager::instance();
+			auto fesppReader = manager->getFesppReader();
 
-			vtkSMPropertyHelper(fesppReaderProxy, "uuidList").SetStatus(
-					uuid.c_str(), 0);
+			if (fesppReader) {
+				pqActiveObjects *activeObjects = &pqActiveObjects::instance();
+				activeObjects->setActiveSource(fesppReader);
 
-			fesppReaderProxy->UpdatePropertyInformation();
-			fesppReaderProxy->UpdateVTKObjects();
-			getpqPropertiesPanel()->update();
-			getpqPropertiesPanel()->apply();
+				// add file to property
+				vtkSMProxy* fesppReaderProxy = fesppReader->getProxy();
+
+				vtkSMPropertyHelper(fesppReaderProxy, "uuidList").SetStatus(
+						uuid.c_str(), 0);
+
+				fesppReaderProxy->UpdatePropertyInformation();
+				fesppReaderProxy->UpdateVTKObjects();
+				getpqPropertiesPanel()->update();
+				getpqPropertiesPanel()->apply();
+			}
 		}
 	}
 }

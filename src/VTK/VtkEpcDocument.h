@@ -57,6 +57,12 @@ public:
 	* create uuid representation.
 	*/
 	void visualize(const std::string & uuid);
+
+	/**
+	* method : visualizeFullWell
+	* create uuid representation with all Welbore_trajectory
+	*/
+	void visualizeFullWell();
 	
 
 	/**

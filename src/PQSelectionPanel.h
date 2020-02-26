@@ -158,7 +158,7 @@ protected slots:
 
 	// right click
 	void treeCustomMenu(const QPoint &);
-	void test_slot();
+	void selectAllWell();
 	void subscribe_slot();
 	void subscribeChildren_slot();
 
@@ -230,13 +230,11 @@ private:
 	
 	QMap<std::string, std::string> mapUuidWithProperty;
 
-	std::vector<std::string> displayUuid;
-
 	// radio-button
 	int radioButtonCount;
 	QMap<int, std::string> radioButton_to_id;
 	QMap<std::string, QRadioButton*> mapUuidParentButtonInvisible;
-	std::string noLoadUuid;
+	bool canLoad;
 
 
 	QMap<std::string, common::EpcDocument *> pcksave;
@@ -245,6 +243,8 @@ private:
 	QMap<QAbstractButton *, std::string> radioButton_to_uuid;
 
 	QMap<std::string, QMap<time_t, std::string>> ts_timestamp_to_uuid;
+
+	std::vector<std::string> uuidsWellbore;
 
 	time_t save_time;
 
