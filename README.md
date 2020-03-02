@@ -1,5 +1,5 @@
 ## BUILD dependencies
-- [Fesapi v0.16.0.0](https://github.com/F2I-Consulting/fesapi/archive/v0.16.0.0.tar.gz)
+- [Fesapi v1.1.0.0](https://github.com/F2I-Consulting/fesapi/releases/tag/v1.1.0.0)
 - ParaView with same HDF5 libraries used by Fesapi
 	 > known to work on Linux and Windows with ParaView 5.6.0
 
@@ -17,23 +17,22 @@ A FindFesapi script will automatically use the above variable to set the FESAPI_
  
 	- On Linux:
 	   - <span>libFesapiCpp.so</span> (from Fesapi built)
-	   - libFesapiCpp.so.0.16 (from Fesapi built)
-	   - libFesapiCpp.so.0.16.0 (from Fesapi built)
+	   - libFesapiCpp.so.1.1 (from Fesapi built)
+	   - libFesapiCpp.so.1.1.0 (from Fesapi built)
 	   - <span>libFespp.so</span> (from Fespp built)
    
 	- on Windows:
-	   -  FesapiCpp.0.16.0.0.dll (from Fesapi built)
+	   -  FesapiCpp.1.1.0.0.dll (from Fesapi built)
 	   -  Fespp.dll (from Fespp built)
 ## Execution
-1. **Run** the **Paraview server** (Caution : use **MPI** build of ParaView!!!) : 
+1. Only if you use MPI Paraview version, **Run** the **Paraview server** (Caution : use **MPI** build of ParaView!!!) : 
 	> mpirun -np 8 ./pvserver
 2. **Run** the **Paraview client** : 
 	> ./paraview
-3. **Connect** the **Client to** the **Server**
+3. Only if you use MPI Paraview version, **Connect** the **Client to** the **Server**
 On client side : File->Connect...  and then fill in the required fields.
-4. **Loading** of the **Fespp plugins** (Caution: on **both client** and **server** sides!!!)
+4. **Loading** of the **Fespp plugins** (Caution: on **client** and, only if you use MPI Paraview version, **server** sides!!!)
 	> Menu Tools->Manage plugins...
 	> and then select and Load <span>libFespp.so</span>
 5. You can now load a RESQML file (epc document)
 	- via epc load manager (icon)
-Partial object support and improved memory management (only what is visualized)
