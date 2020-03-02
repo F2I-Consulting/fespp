@@ -22,7 +22,7 @@ under the License.
 
 //----------------------------------------------------------------------------
 VtkResqml2UnstructuredGrid::VtkResqml2UnstructuredGrid(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, COMMON_NS::DataObjectRepository *repoRepresentation, COMMON_NS::DataObjectRepository *repoSubRepresentation, int idProc, int maxProc) :
-VtkAbstractRepresentation(fileName, name, uuid, uuidParent, repoRepresentation, repoSubRepresentation, idProc, maxProc)
+	VtkAbstractRepresentation(fileName, name, uuid, uuidParent, repoRepresentation, repoSubRepresentation, idProc, maxProc)
 {
 }
 
@@ -48,4 +48,3 @@ void VtkResqml2UnstructuredGrid::remove(const std::string & uuid)
 		vtkOutput->GetCellData()->RemoveArray(0);
 	}
 }
-

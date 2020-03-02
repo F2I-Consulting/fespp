@@ -33,7 +33,6 @@ class VtkEpcDocument;
 
 class VtkEpcDocumentSet
 {
-
 public:
 	/**
 	* Constructor
@@ -83,7 +82,6 @@ private:
 	std::vector<std::string> vtkEpcNameList;
 
 	std::unordered_map<std::string, VtkEpcDocument*> uuidToVtkEpc; // link uuid/VtkEpcdocument
-
 
 	std::vector<VtkEpcCommon> treeView; // Tree
 

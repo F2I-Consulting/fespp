@@ -21,18 +21,13 @@ under the License.
 
 #include "VtkResqml2PolyData.h"
 
-namespace COMMON_NS
-{
-	class DataObjectRepository;
-}
-
 class VtkTriangulatedRepresentation : public VtkResqml2PolyData
 {
 public:
 	/**
 	* Constructor
 	*/
-	VtkTriangulatedRepresentation(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, const unsigned int & patchNo, COMMON_NS::DataObjectRepository *pckEPCRep, COMMON_NS::DataObjectRepository *pckEPCSubRep);
+	VtkTriangulatedRepresentation(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, unsigned int patchNo, COMMON_NS::DataObjectRepository *pckEPCRep, COMMON_NS::DataObjectRepository *pckEPCSubRep);
 	
 	/**
 	* Destructor

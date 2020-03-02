@@ -16,18 +16,16 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 -----------------------------------------------------------------------*/
-// VTK
-#include <vtkPointData.h>
-
-//FESAPI
-#include <fesapi/common/EpcDocument.h>
-
 // FESPP
 #include "VtkResqml2PolyData.h"
 
+// VTK
+#include <vtkPointData.h>
+
 //----------------------------------------------------------------------------
-VtkResqml2PolyData::VtkResqml2PolyData(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, COMMON_NS::DataObjectRepository *pckRep, COMMON_NS::DataObjectRepository *pckSubRep, const int & idProc, const int & maxProc) :
-VtkAbstractRepresentation(fileName, name, uuid, uuidParent, pckRep, pckSubRep, idProc, maxProc)
+VtkResqml2PolyData::VtkResqml2PolyData(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, COMMON_NS::DataObjectRepository *pckRep, COMMON_NS::DataObjectRepository *pckSubRep,
+	int idProc, int maxProc) :
+	VtkAbstractRepresentation(fileName, name, uuid, uuidParent, pckRep, pckSubRep, idProc, maxProc)
 {
 }
 
@@ -49,11 +47,7 @@ void VtkResqml2PolyData::remove(const std::string & uuid)
 	if (uuid == getUuid()) {
 		vtkOutput = nullptr;
 	}
-	else if(uuidToVtkProperty[uuid] != nullptr) {
+	else if (uuidToVtkProperty[uuid] != nullptr) {
 		vtkOutput->GetPointData()->RemoveArray(0);
 	}
 }
-
-
-
-

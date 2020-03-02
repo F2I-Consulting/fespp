@@ -21,8 +21,7 @@ under the License.
 
 // include system
 #include <unordered_map>
-#include<vector>
-#include<string>
+#include <string>
 
 // include VTK
 #include <vtkSmartPointer.h> 
@@ -50,7 +49,7 @@ public:
 	/**
 	* Destructor
 	*/
-	~VtkAbstractRepresentation();
+	virtual ~VtkAbstractRepresentation();
 
 	/**
 	* load & display representation uuid's
@@ -67,7 +66,7 @@ public:
 	*/
 	virtual void createOutput(const std::string & uuid) = 0;
 	
-	vtkSmartPointer<vtkPoints> createVtkPoints(const ULONG64 & pointCount, const double * allXyzPoints, const resqml2::AbstractLocal3dCrs * localCRS);
+	vtkSmartPointer<vtkPoints> createVtkPoints(ULONG64 pointCount, const double * allXyzPoints, const RESQML2_NS::AbstractLocal3dCrs * localCRS);
 
 	virtual void addProperty(const std::string & uuidProperty, vtkDataArray* dataProperty) = 0;
 
@@ -75,9 +74,7 @@ public:
 
 	bool vtkPointsIsCreated();
 
-	void createWithPoints(const vtkSmartPointer<vtkPoints> & pointsRepresentation);
-
-	void setSubRepresentation(){ subRepresentation = true; }
+	void setSubRepresentation() { subRepresentation = true; }
 
 protected:
 	std::unordered_map<std::string, VtkProperty *> uuidToVtkProperty;

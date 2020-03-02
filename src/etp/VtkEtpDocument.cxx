@@ -112,7 +112,7 @@ void startio(VtkEtpDocument *etp_document, std::string ipAddress, std::string po
 }
 
 //----------------------------------------------------------------------------
-VtkEtpDocument::VtkEtpDocument(const std::string & ipAddress, const std::string & port, const VtkEpcCommon::modeVtkEpc & mode) :
+VtkEtpDocument::VtkEtpDocument(const std::string & ipAddress, const std::string & port, VtkEpcCommon::modeVtkEpc mode) :
 	VtkResqml2MultiBlockDataSet("EtpDocument", "EtpDocument", "EtpDocument", "", 0, 0), client_session(nullptr),
 	treeViewMode(mode == VtkEpcCommon::Both || mode == VtkEpcCommon::TreeView), representationMode(mode == VtkEpcCommon::Both || mode == VtkEpcCommon::Representation)
 {

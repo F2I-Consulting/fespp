@@ -23,9 +23,9 @@ under the License.
 
 namespace COMMON_NS
 {
-	class DataObjectRepository;
 	class AbstractObject;
 }
+
 namespace RESQML2_0_1_NS
 {
 	class AbstractIjkGridRepresentation;
@@ -112,7 +112,7 @@ private:
 	* variable : ijkGridRepresentation
 	* calc if ijkgrid isHyperslabed
 	*/	
-	void checkHyperslabingCapacity(resqml2_0_1::AbstractIjkGridRepresentation* ijkGridRepresentation);
+	void checkHyperslabingCapacity(RESQML2_0_1_NS::AbstractIjkGridRepresentation* ijkGridRepresentation);
 
 	std::string lastProperty;
 

@@ -44,8 +44,8 @@ public:
 	/**
 	* Constructor
 	*/
+	VtkEpcDocument (const std::string & fileName, int idProc=0, int maxProc=0, VtkEpcDocumentSet * epcDocSet =nullptr);
 
-	VtkEpcDocument (const std::string & fileName, const int & idProc=0, const int & maxProc=0, VtkEpcDocumentSet * epcDocSet=nullptr);
 	/**
 	* Destructor
 	*/

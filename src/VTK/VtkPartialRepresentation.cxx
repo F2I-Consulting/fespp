@@ -19,7 +19,7 @@ under the License.
 #include "VtkPartialRepresentation.h"
 
 // FESPP
-#include"VtkEpcDocument.h"
+#include "VtkEpcDocument.h"
 #include "VtkProperty.h"
 
 // VTK

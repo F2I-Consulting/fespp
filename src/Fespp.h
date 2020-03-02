@@ -25,22 +25,17 @@ under the License.
 #include <string>
 #include <vector>
 
-#include <fesapi/common/EpcDocument.h>
-
 #ifdef WITH_ETP
 	#include "etp/VtkEtpDocument.h"
 #endif
 
 class VtkEpcDocumentSet;
-class vtkStdString;
-class vtkCallbackCommand;
 class vtkMultiProcessController;
 class vtkDataArraySelection;
 
 class Fespp : public vtkMultiBlockDataSetAlgorithm
 {
 public:
-
 	static Fespp *New();
 	vtkTypeMacro(Fespp, vtkMultiBlockDataSetAlgorithm);
 	void PrintSelf(ostream& os, vtkIndent indent);
@@ -113,4 +108,3 @@ private:
 #endif
 };
 #endif
-

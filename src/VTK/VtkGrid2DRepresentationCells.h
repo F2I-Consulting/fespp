@@ -21,11 +21,6 @@ under the License.
 
 #include "VtkResqml2StructuredGrid.h"
 
-namespace COMMON_NS
-{
-	class DataObjectRepository;
-}
-
 class VtkGrid2DRepresentationCells : public VtkResqml2StructuredGrid
 {
 public:

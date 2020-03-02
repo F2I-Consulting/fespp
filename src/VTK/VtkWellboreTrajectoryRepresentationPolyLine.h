@@ -21,11 +21,6 @@ under the License.
 
 #include "VtkResqml2PolyData.h"
 
-namespace COMMON_NS
-{
-	class DataObjectRepository;
-}
-
 class VtkWellboreTrajectoryRepresentationPolyLine : public VtkResqml2PolyData 
 {
 public:

@@ -22,11 +22,6 @@ under the License.
 // FESPP
 #include "VtkResqml2PolyData.h"
 
-namespace COMMON_NS
-{
-	class DataObjectRepository;
-}
-
 class VtkGrid2DRepresentationPoints : public VtkResqml2PolyData
 {
 public:

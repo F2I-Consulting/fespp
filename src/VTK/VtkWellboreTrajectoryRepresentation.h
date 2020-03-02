@@ -19,17 +19,11 @@ under the License.
 #ifndef __VtkWellboreTrajectoryRepresentation_h
 #define __VtkWellboreTrajectoryRepresentation_h
 
-#include <vtkDataArray.h>
-
 #include "VtkResqml2MultiBlockDataSet.h"
+
 #include "VtkWellboreTrajectoryRepresentationPolyLine.h"
 #include "VtkWellboreTrajectoryRepresentationDatum.h"
 #include "VtkWellboreTrajectoryRepresentationText.h"
-
-namespace resqml2_0_1
-{
-	class AbstractValuesProperty;
-}
 
 namespace COMMON_NS
 {
@@ -70,7 +64,7 @@ public:
 	*/
 	void remove(const std::string & uuid);
 
-	void addProperty(const std::string & uuidProperty, vtkDataArray* dataProperty);
+	void addProperty(const std::string & uuidProperty, class vtkDataArray* dataProperty);
 
 	long getAttachmentPropertyCount(const std::string & uuid, VtkEpcCommon::FesppAttachmentProperty propertyUnit);
 protected:
@@ -88,7 +82,6 @@ protected:
 	*/
 	void attach();
 	
-
 private:
 	// EPC DOCUMENT
 	COMMON_NS::DataObjectRepository *repositoryRepresentation;

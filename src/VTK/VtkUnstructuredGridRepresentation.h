@@ -20,6 +20,7 @@ under the License.
 #define __VtkUnstructuredGridRepresentation_h
 
 #include "VtkResqml2UnstructuredGrid.h"
+
 class VtkProperty;
 
 namespace COMMON_NS

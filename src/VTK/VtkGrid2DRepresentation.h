@@ -21,12 +21,8 @@ under the License.
 
 #include <vtkDataArray.h>
 
-#include <fesapi/common/DataObjectRepository.h>
-
 #include "VtkResqml2MultiBlockDataSet.h"
 #include "VtkGrid2DRepresentationPoints.h"
-
-class VtkGrid2DRepresentationCells;
 
 class VtkGrid2DRepresentation : public VtkResqml2MultiBlockDataSet
 {
@@ -87,6 +83,5 @@ private:
 	COMMON_NS::DataObjectRepository *repositorySubRepresentation;
 
 	VtkGrid2DRepresentationPoints grid2DPoints;
-//	VtkGrid2DRepresentationCells* grid2DCells;
 };
 #endif

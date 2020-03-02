@@ -22,18 +22,18 @@ under the License.
 #include <vtkDataArray.h>
 #include <vtkSmartPointer.h>
 
+#include <fesapi/nsDefinitions.h>
+
 #include "VtkAbstractObject.h"
-
-#include <fesapi/common/DataObjectRepository.h>
-
-namespace RESQML2_NS
-{
-	class AbstractValuesProperty;
-}
 
 namespace COMMON_NS
 {
 	class DataObjectRepository;
+}
+
+namespace RESQML2_NS
+{
+	class AbstractValuesProperty;
 }
 
 namespace RESQML2_0_1_NS

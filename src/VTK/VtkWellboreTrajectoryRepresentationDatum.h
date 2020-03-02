@@ -21,11 +21,6 @@ under the License.
 
 #include "VtkResqml2UnstructuredGrid.h"
 
-namespace COMMON_NS
-{
-	class DataObjectRepository;
-}
-
 class VtkWellboreTrajectoryRepresentationDatum : public VtkResqml2UnstructuredGrid
 {
 public:

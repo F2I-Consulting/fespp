@@ -44,7 +44,7 @@ public:
 	/**
 	 * Constructor
 	 */
-	VtkEtpDocument (const std::string & ipAddress, const std::string & port, const VtkEpcCommon::modeVtkEpc & mode);
+	VtkEtpDocument (const std::string & ipAddress, const std::string & port, VtkEpcCommon::modeVtkEpc mode);
 	/**
 	 * Destructor
 	 */

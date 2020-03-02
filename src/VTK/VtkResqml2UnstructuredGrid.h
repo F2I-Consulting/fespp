@@ -37,7 +37,7 @@ public:
 	/**
 	* Destructor
 	*/
-	~VtkResqml2UnstructuredGrid();
+	virtual ~VtkResqml2UnstructuredGrid();
 
 	/**
 	* method : getOutput
@@ -61,8 +61,5 @@ public:
 
 protected:
 	vtkSmartPointer<vtkUnstructuredGrid> vtkOutput;
-
-private:
-
 };
 #endif

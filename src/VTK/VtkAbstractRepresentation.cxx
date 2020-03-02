@@ -20,19 +20,16 @@ under the License.
 
 #include <vtkDataArray.h>
 
-// FESAPI
-#include <fesapi/common/EpcDocument.h>
-
 #include "VtkProperty.h"
 
 //----------------------------------------------------------------------------
 VtkAbstractRepresentation::VtkAbstractRepresentation(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, COMMON_NS::DataObjectRepository *pckEPCRep, COMMON_NS::DataObjectRepository *pckEPCSubRep, int idProc, int maxProc) :
 VtkAbstractObject(fileName, name, uuid, uuidParent, idProc, maxProc), epcPackageRepresentation(pckEPCRep), epcPackageSubRepresentation(pckEPCSubRep)
 {
-	if (!pckEPCSubRep){
+	if (pckEPCSubRep == nullptr) {
 		subRepresentation = false;
 	}
-	else{
+	else {
 		subRepresentation = true;
 	}
 }
@@ -47,7 +44,7 @@ VtkAbstractRepresentation::~VtkAbstractRepresentation()
 		epcPackageSubRepresentation = nullptr;
 	}
 
-	for(auto i : uuidToVtkProperty) {
+	for (auto i : uuidToVtkProperty) {
 		delete i.second;
 	}
 	uuidToVtkProperty.clear();
@@ -70,7 +67,7 @@ void VtkAbstractRepresentation::visualize(const std::string & uuid)
 	createOutput(uuid);
 }
 
-vtkSmartPointer<vtkPoints> VtkAbstractRepresentation::createVtkPoints(const ULONG64 & pointCount, const double * allXyzPoints, const resqml2::AbstractLocal3dCrs * localCRS)
+vtkSmartPointer<vtkPoints> VtkAbstractRepresentation::createVtkPoints(ULONG64 pointCount, const double * allXyzPoints, const RESQML2_NS::AbstractLocal3dCrs * localCRS)
 {
 	points = vtkSmartPointer<vtkPoints>::New();
 

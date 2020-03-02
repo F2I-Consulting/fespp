@@ -23,7 +23,7 @@ under the License.
 #include <unordered_map>
 #include <string>
 
-#include <fesapi/common/DataObjectRepository.h>
+#include <fesapi/nsDefinitions.h>
 
 // FESPP
 #include "VtkAbstractObject.h"
