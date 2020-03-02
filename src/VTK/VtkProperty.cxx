@@ -174,7 +174,7 @@ vtkSmartPointer<vtkDataArray> VtkProperty::loadValuesPropertySet(const std::vect
 			}
 			else if (valuesProperty->getXmlTag() == RESQML2_0_1_NS::DiscreteProperty::XML_TAG || valuesProperty->getXmlTag() == RESQML2_0_1_NS::CategoricalProperty::XML_TAG)	{
 				int* values = new int[nbElement * elementCountPerValue]; // deleted by VTK cellData vtkSmartPointer
-				valuesProperty->getIntValuesOfPatch(0, values);
+				static_cast<RESQML2_NS::AbstractDiscreteOrCategoricalProperty*>(valuesProperty)->getIntValuesOfPatch(0, values);
 
 				vtkSmartPointer<vtkIntArray> cellDataInt = vtkSmartPointer<vtkIntArray>::New();
 				cellDataInt->SetName(name.c_str());

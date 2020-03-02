@@ -63,7 +63,7 @@ void PQMetaDataPanel::constructor()
 
   ui.tableView->setModel(tableViewModel);
 
-  connect(getPQSelectionPanel(), SIGNAL(selectionName(std::string, std::string, common::EpcDocument *)), this, SLOT(displayMetaData(std::string, std::string, common::EpcDocument *)));
+  connect(getPQSelectionPanel(), SIGNAL(selectionName(std::string, std::string, COMMON_NS::EpcDocument *)), this, SLOT(displayMetaData(std::string, std::string, COMMON_NS::EpcDocument *)));
   setVisible(false);
 }
 
@@ -72,7 +72,7 @@ PQMetaDataPanel::~PQMetaDataPanel()
 	delete tableViewModel;
 }
 
-void PQMetaDataPanel::displayMetaData(const std::string & fileName, const std::string & uuid, common::EpcDocument *pck)
+void PQMetaDataPanel::displayMetaData(const std::string & fileName, const std::string & uuid, COMMON_NS::EpcDocument *pck)
 {
 /*	common::AbstractObject *object = pck->getResqmlAbstractObjectByUuid(uuid);
 	

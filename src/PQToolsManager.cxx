@@ -18,6 +18,9 @@ under the License.
 -----------------------------------------------------------------------*/
 #include "PQToolsManager.h"
 
+#include <QMainWindow>
+#include <QPointer>
+
 #include "PQDataLoadManager.h"
 #include "PQSelectionPanel.h"
 #ifdef WITH_ETP
@@ -37,11 +40,7 @@ under the License.
 #include "pqObjectBuilder.h"
 #include "vtkSMPropertyHelper.h"
 
-
 #include "VTK/VtkEpcCommon.h"
-
-#include <QMainWindow>
-#include <QPointer>
 
 #include "ui_PQActionHolder.h"
 
@@ -83,8 +82,6 @@ public:
 	Ui::PQActionHolder Actions;
 	QWidget* ActionPlaceholder;
 };
-
-
 
 //=============================================================================
 QPointer<PQToolsManager> PQToolsManagerInstance = nullptr;
