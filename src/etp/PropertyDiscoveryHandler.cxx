@@ -16,22 +16,24 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 -----------------------------------------------------------------------*/
-#ifndef _EtpFesppStoreProtocolHandlers_h
-#define _EtpFesppStoreProtocolHandlers_h
+#include "PropertyDiscoveryHandler.h"
 
-#include <fesapi/etp/ProtocolHandlers/StoreHandlers.h>
-#include <fesapi/common/AbstractObject.h>
-
-#include "etp/EtpClientSession.h"
-
-class EtpFesppStoreProtocolHandlers : public ETP_NS::StoreHandlers
+void PropertyDiscoveryHandler::on_GetResourcesResponse(const Energistics::Etp::v12::Protocol::Discovery::GetResourcesResponse & msg, int64_t correlationId)
 {
-public:
-	EtpFesppStoreProtocolHandlers(std::shared_ptr<EtpClientSession> mySession): ETP_NS::StoreHandlers(mySession), repo(mySession->repo) {}
-	~EtpFesppStoreProtocolHandlers() {}
+	std::cout << msg.m_resources.size() << " property resources received." << std::endl;
+	for (Energistics::Etp::v12::Datatypes::Object::Resource resource : msg.m_resources) {
+		if(etp_document_->getClientSession()->isTreeViewMode()) {
+			VtkEpcCommon leaf;
+			leaf.setName(resource.m_name);
+			leaf.setUuid(resource.m_uri);
+			leaf.setType(VtkEpcCommon::PROPERTY);
+			leaf.setParent(parent_);
+			leaf.setParentType(parentType_);
+			leaf.setTimeIndex(-1);
+			leaf.setTimestamp(0);
+			etp_document_->getTreeView().push_back(leaf);
+		}
+	}
 
-	void on_GetDataObjectsResponse(const Energistics::Etp::v12::Protocol::Store::GetDataObjectsResponse & msg, int64_t correlationId);
-private:
-	COMMON_NS::DataObjectRepository& repo;
-};
-#endif
+	etp_document_->getClientSession()->eraseMessageIdTobeAnswered(correlationId);
+}

@@ -1,39 +1,27 @@
 /*-----------------------------------------------------------------------
-Copyright F2I-CONSULTING, (2014)
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"; you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
 
-cedric.robert@f2i-consulting.com
+  http://www.apache.org/licenses/LICENSE-2.0
 
-This software is a computer program whose purpose is to display data formatted using Energistics standards.
-
-This software is governed by the CeCILL license under French law and
-abiding by the rules of distribution of free software.  You can  use, 
-modify and/ or redistribute the software under the terms of the CeCILL
-license as circulated by CEA, CNRS and INRIA at the following URL
-"http://www.cecill.info". 
-
-As a counterpart to the access to the source code and  rights to copy,
-modify and redistribute granted by the license, users are provided only
-with a limited warranty  and the software's author,  the holder of the
-economic rights,  and the successive licensors  have only  limited
-liability.  
-
-In this respect, the user's attention is drawn to the risks associated
-with loading,  using,  modifying and/or developing or reproducing the
-software by the user in light of its specific status of free software,
-that may mean  that it is complicated to manipulate,  and  that  also
-therefore means  that it is reserved for developers  and  experienced
-professionals having in-depth computer knowledge. Users are therefore
-encouraged to load and test the software's suitability as regards their
-requirements in conditions enabling the security of their systems and/or 
-data to be ensured and,  more generally, to use and operate it in the 
-same conditions as regards security.  
-
-The fact that you are presently reading this means that you have had
-knowledge of the CeCILL license and that you accept its terms.
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
 -----------------------------------------------------------------------*/
-
 #ifndef _PQSelectionPanel_h
 #define _PQSelectionPanel_h
+
+// include system
+#include <string>
+#include <vector>
 
 #include <QDockWidget>
 #include <qprogressbar.h>
@@ -52,39 +40,18 @@ knowledge of the CeCILL license and that you accept its terms.
 #include <qprogressdialog.h>
 #include <qfuturewatcher.h>
 
-// include system
-//#include <unordered_map>
-#include <string>
-#include <vector>
+#include <fesapi/nsDefinitions.h>
 
 #include "VTK/VtkEpcCommon.h"
 
+namespace COMMON_NS
+{
+	class EpcDocument;
+}
+
 class pqPipelineSource;
 class pqServer;
-//class pqOutputPort;
-//class pqView;
 class VtkEpcDocumentSet;
-
-#include "common/EpcDocument.h"
-
-namespace resqml2
-{
-	class AbstractFeatureInterpretation;
-	class AbstractValuesProperty;
-	class SubRepresentation;
-
-}
-
-namespace resqml2_0_1
-{
-	class PolylineSetRepresentation;
-	class AbstractFeatureInterpretation;
-	class TriangulatedSetRepresentation;
-	class Grid2dRepresentation;
-	class AbstractIjkGridRepresentation;
-	class UnstructuredGridRepresentation;
-	class WellboreTrajectoryRepresentation;
-}
 
 class PQSelectionPanel : public QDockWidget
 {
@@ -117,13 +84,11 @@ public:
 	void connectPQEtpPanel();
 #endif
 
-
-
 signals:
 	/**
 	* Signal emit when a item is selected
 	*/
-	void selectionName(const std::string &, const std::string &, common::EpcDocument *);
+	void selectionName(const std::string &, const std::string &, COMMON_NS::EpcDocument*);
 
 protected slots:
 
@@ -155,6 +120,13 @@ protected slots:
 
 	void timeChangedComboBox(int);
 	void sliderMoved(int);
+
+	// right click
+	void treeCustomMenu(const QPoint &);
+	void selectAllWell();
+	void unselectAllWell();
+	void subscribe_slot();
+	void subscribeChildren_slot();
 
 #ifdef WITH_TEST
 	void handleButtonTest();
@@ -224,20 +196,20 @@ private:
 	
 	QMap<std::string, std::string> mapUuidWithProperty;
 
-	std::vector<std::string> displayUuid;
-
 	// radio-button
 	int radioButtonCount;
 	QMap<int, std::string> radioButton_to_id;
 	QMap<std::string, QRadioButton*> mapUuidParentButtonInvisible;
+	bool canLoad;
 
-
-	QMap<std::string, common::EpcDocument *> pcksave;
+	QMap<std::string, COMMON_NS::EpcDocument *> pcksave;
 
 	QMap<std::string, QButtonGroup *> uuidParent_to_groupButton;
 	QMap<QAbstractButton *, std::string> radioButton_to_uuid;
 
 	QMap<std::string, QMap<time_t, std::string>> ts_timestamp_to_uuid;
+
+	QMap<std::string, bool> uuidsWellbore;
 
 	time_t save_time;
 
@@ -247,6 +219,11 @@ private:
 
 	bool debug_verif;
 	bool etpCreated;
+
+	// var: subscribe etp
+	std::string pickedBlocksEtp;
+	std::vector<std::string> uri_subscribe;
+	std::vector<std::string> list_uri_etp;
 
 #ifdef WITH_TEST
 	QPushButton *button_test_perf;

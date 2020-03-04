@@ -16,22 +16,23 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 -----------------------------------------------------------------------*/
-#ifndef _EtpFesppStoreProtocolHandlers_h
-#define _EtpFesppStoreProtocolHandlers_h
+#ifndef _IjkGridRepDiscoveryHandler_h
+#define _IjkGridRepDiscoveryHandler_h
 
-#include <fesapi/etp/ProtocolHandlers/StoreHandlers.h>
-#include <fesapi/common/AbstractObject.h>
+#include <fesapi/etp/ProtocolHandlers/DiscoveryHandlers.h>
 
-#include "etp/EtpClientSession.h"
+#include "EtpClientSession.h"
+#include "VtkEtpDocument.h"
 
-class EtpFesppStoreProtocolHandlers : public ETP_NS::StoreHandlers
+class IjkGridRepDiscoveryHandler : public ETP_NS::DiscoveryHandlers
 {
 public:
-	EtpFesppStoreProtocolHandlers(std::shared_ptr<EtpClientSession> mySession): ETP_NS::StoreHandlers(mySession), repo(mySession->repo) {}
-	~EtpFesppStoreProtocolHandlers() {}
+	IjkGridRepDiscoveryHandler(VtkEtpDocument* my_etp_document):ETP_NS::DiscoveryHandlers(my_etp_document->getClientSession()), etp_document(my_etp_document) {}
+	~IjkGridRepDiscoveryHandler() {}
 
-	void on_GetDataObjectsResponse(const Energistics::Etp::v12::Protocol::Store::GetDataObjectsResponse & msg, int64_t correlationId);
+	void on_GetResourcesResponse(const Energistics::Etp::v12::Protocol::Discovery::GetResourcesResponse & msg, int64_t correlationId);
+
 private:
-	COMMON_NS::DataObjectRepository& repo;
+	VtkEtpDocument* etp_document;
 };
 #endif

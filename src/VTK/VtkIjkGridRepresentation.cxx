@@ -1,37 +1,24 @@
 ﻿/*-----------------------------------------------------------------------
-Copyright F2I-CONSULTING, (2014)
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"; you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
 
-cedric.robert@f2i-consulting.com
+  http://www.apache.org/licenses/LICENSE-2.0
 
-This software is a computer program whose purpose is to display data formatted using Energistics standards.
-
-This software is governed by the CeCILL license under French law and
-abiding by the rules of distribution of free software.  You can  use,
-modify and/ or redistribute the software under the terms of the CeCILL
-license as circulated by CEA, CNRS and INRIA at the following URL
-"http://www.cecill.info".
-
-As a counterpart to the access to the source code and  rights to copy,
-modify and redistribute granted by the license, users are provided only
-with a limited warranty  and the software's author,  the holder of the
-economic rights,  and the successive licensors  have only  limited
-liability.
-
-In this respect, the user's attention is drawn to the risks associated
-with loading,  using,  modifying and/or developing or reproducing the
-software by the user in light of its specific status of free software,
-that may mean  that it is complicated to manipulate,  and  that  also
-therefore means  that it is reserved for developers  and  experienced
-professionals having in-depth computer knowledge. Users are therefore
-encouraged to load and test the software's suitability as regards their
-requirements in conditions enabling the security of their systems and/or
-data to be ensured and,  more generally, to use and operate it in the
-same conditions as regards security.
-
-The fact that you are presently reading this means that you have had
-knowledge of the CeCILL license and that you accept its terms.
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
 -----------------------------------------------------------------------*/
 #include "VtkIjkGridRepresentation.h"
+
+#include <sstream>
 
 // include VTK library
 #include <vtkHexahedron.h>
@@ -40,36 +27,21 @@ knowledge of the CeCILL license and that you accept its terms.
 #include <vtkDataArray.h>
 
 // include F2i-consulting Energistics Standards API
-#include <resqml2_0_1/AbstractIjkGridRepresentation.h>
-#include <resqml2/SubRepresentation.h>
+#include <fesapi/resqml2_0_1/AbstractIjkGridRepresentation.h>
+#include <fesapi/resqml2/SubRepresentation.h>
 
 // include F2i-consulting Energistics Standards ParaView Plugin
 #include "VtkProperty.h"
 
-#include <sstream>
-
 //----------------------------------------------------------------------------
-VtkIjkGridRepresentation::VtkIjkGridRepresentation(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, common::EpcDocument *pckEPCRep, common::EpcDocument *pckEPCSubRep, const int & idProc, const int & maxProc) :
-VtkResqml2UnstructuredGrid(fileName, name, uuid, uuidParent, pckEPCRep, pckEPCSubRep, idProc, maxProc)
+VtkIjkGridRepresentation::VtkIjkGridRepresentation(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, COMMON_NS::DataObjectRepository *pckEPCRep, COMMON_NS::DataObjectRepository *pckEPCSubRep, int idProc, int maxProc) :
+	VtkResqml2UnstructuredGrid(fileName, name, uuid, uuidParent, pckEPCRep, pckEPCSubRep, idProc, maxProc), lastProperty(""),
+	iCellCount(0), jCellCount(0), kCellCount(0), initKIndex(0), maxKIndex(0), isHyperslabed(false)
 {
-	isHyperslabed = false;
-
-	iCellCount = 0;
-	jCellCount = 0;
-	kCellCount = 0;
-	initKIndex = 0;
-	maxKIndex = 0;
 }
 
 VtkIjkGridRepresentation::~VtkIjkGridRepresentation()
 {
-	lastProperty = "";
-
-	iCellCount = 0;
-	jCellCount = 0;
-	kCellCount = 0;
-	initKIndex = 0;
-	maxKIndex = 0;
 }
 
 //----------------------------------------------------------------------------
@@ -114,7 +86,7 @@ vtkSmartPointer<vtkPoints> VtkIjkGridRepresentation::createpoint()
 				ijkGridRepresentation->getXyzPointsOfKInterfaceOfPatch(kInterface, 0, allXyzPoints);
 				double zIndice = 1;
 
-				if (ijkGridRepresentation->getLocalCrs()->isDepthOriented())
+				if (ijkGridRepresentation->getLocalCrs(0)->isDepthOriented())
 					zIndice = -1;
 
 				for (ULONG64 nodeIndex = 0; nodeIndex < kInterfaceNodeCount * 3; nodeIndex += 3) {
@@ -137,7 +109,7 @@ vtkSmartPointer<vtkPoints> VtkIjkGridRepresentation::createpoint()
 			const auto nodeCount = ijkGridRepresentation->getXyzPointCountOfAllPatches();
 			auto allXyzPoints = new double[nodeCount * 3];
 			ijkGridRepresentation->getXyzPointsOfAllPatchesInGlobalCrs(allXyzPoints);
-			createVtkPoints(nodeCount, allXyzPoints, ijkGridRepresentation->getLocalCrs());
+			createVtkPoints(nodeCount, allXyzPoints, ijkGridRepresentation->getLocalCrs(0));
 
 			delete[] allXyzPoints;
 		}
@@ -153,39 +125,38 @@ void VtkIjkGridRepresentation::createOutput(const std::string & uuid)
 		if (subRepresentation){
 			// SubRep
 			createWithPoints(points, epcPackageSubRepresentation->getDataObjectByUuid(getUuid()));
-		}else{
+		}
+		else {
 			// Ijk Grid
 			createWithPoints(points, epcPackageRepresentation->getDataObjectByUuid(getUuid()));
 		}
 	}
 
-	if (uuid != getUuid()){ // => PROPERTY UUID
+	if (uuid != getUuid()) { // => PROPERTY UUID
 		if (subRepresentation){
-			auto objRepProp = epcPackageSubRepresentation->getDataObjectByUuid(getUuid());
-			auto property = static_cast<resqml2::SubRepresentation*>(objRepProp);
-			auto cellCount = property->getElementCountOfPatch(0);
+			RESQML2_NS::SubRepresentation* subRep = epcPackageSubRepresentation->getDataObjectByUuid<RESQML2_NS::SubRepresentation>(getUuid());
+			auto cellCount = subRep->getElementCountOfPatch(0);
 			//#ifdef PARAVIEW_USE_MPI
 			if (isHyperslabed) {
-				addProperty(uuid, uuidToVtkProperty[uuid]->loadValuesPropertySet(property->getValuesPropertySet(), iCellCount*jCellCount*(maxKIndex - initKIndex), 0, iCellCount, jCellCount, maxKIndex - initKIndex, initKIndex));
+				addProperty(uuid, uuidToVtkProperty[uuid]->loadValuesPropertySet(subRep->getValuesPropertySet(), iCellCount*jCellCount*(maxKIndex - initKIndex), 0, iCellCount, jCellCount, maxKIndex - initKIndex, initKIndex));
 			}
 			else {
 				//#endif
-				addProperty(uuid, uuidToVtkProperty[uuid]->loadValuesPropertySet(property->getValuesPropertySet(), cellCount, 0));
+				addProperty(uuid, uuidToVtkProperty[uuid]->loadValuesPropertySet(subRep->getValuesPropertySet(), cellCount, 0));
 				//#ifdef PARAVIEW_USE_MPI
 			}
 			//#endif
 		}
 		else {
-			auto objRepProp = epcPackageRepresentation->getDataObjectByUuid(getUuid());
-			auto property = static_cast<resqml2_0_1::AbstractIjkGridRepresentation*>(objRepProp);
+			RESQML2_0_1_NS::AbstractIjkGridRepresentation* ijkGrid = epcPackageRepresentation->getDataObjectByUuid<RESQML2_0_1_NS::AbstractIjkGridRepresentation>(getUuid());
 			auto cellCount = iCellCount*jCellCount*kCellCount;
 			//#ifdef PARAVIEW_USE_MPI
 			if (isHyperslabed) {
-				addProperty(uuid, uuidToVtkProperty[uuid]->loadValuesPropertySet(property->getValuesPropertySet(), iCellCount*jCellCount*(maxKIndex - initKIndex), 0, iCellCount, jCellCount, maxKIndex - initKIndex, initKIndex));
+				addProperty(uuid, uuidToVtkProperty[uuid]->loadValuesPropertySet(ijkGrid->getValuesPropertySet(), iCellCount*jCellCount*(maxKIndex - initKIndex), 0, iCellCount, jCellCount, maxKIndex - initKIndex, initKIndex));
 			}
 			else {
 				//#endif
-				addProperty(uuid, uuidToVtkProperty[uuid]->loadValuesPropertySet(property->getValuesPropertySet(), cellCount, 0));
+				addProperty(uuid, uuidToVtkProperty[uuid]->loadValuesPropertySet(ijkGrid->getValuesPropertySet(), cellCount, 0));
 				//#ifdef PARAVIEW_USE_MPI
 			}
 			//#endif
@@ -197,18 +168,18 @@ void VtkIjkGridRepresentation::createOutput(const std::string & uuid)
 void VtkIjkGridRepresentation::checkHyperslabingCapacity(resqml2_0_1::AbstractIjkGridRepresentation* ijkGridRepresentation)
 {
 	double* allXyzPoints = nullptr;
-	try{
+	try {
 		const auto kInterfaceNodeCount = ijkGridRepresentation->getXyzPointCountOfKInterfaceOfPatch(0);
 		allXyzPoints = new double[kInterfaceNodeCount * 3];
 		ijkGridRepresentation->getXyzPointsOfKInterfaceOfPatch(0, 0, allXyzPoints);
 		isHyperslabed = true;
 		delete[] allXyzPoints;
 	}
-	catch (const std::exception & )
-	{
+	catch (const std::exception&) {
 		isHyperslabed = false;
-		if (allXyzPoints != nullptr)
+		if (allXyzPoints != nullptr) {
 			delete[] allXyzPoints;
+		}
 	}
 }
 
@@ -222,7 +193,7 @@ void VtkIjkGridRepresentation::addProperty(const std::string & uuidProperty, vtk
 }
 
 //----------------------------------------------------------------------------
-long VtkIjkGridRepresentation::getAttachmentPropertyCount(const std::string & uuid, const VtkEpcCommon::FesppAttachmentProperty propertyUnit)
+long VtkIjkGridRepresentation::getAttachmentPropertyCount(const std::string & uuid, VtkEpcCommon::FesppAttachmentProperty propertyUnit)
 {
 	if (propertyUnit == VtkEpcCommon::CELLS) {
 		common::AbstractObject* obj;
@@ -231,7 +202,8 @@ long VtkIjkGridRepresentation::getAttachmentPropertyCount(const std::string & uu
 			obj = epcPackageSubRepresentation->getDataObjectByUuid(getUuid());
 			auto subRepresentation1 = static_cast<resqml2::SubRepresentation*>(obj);
 			return isHyperslabed ? iCellCount*jCellCount*(maxKIndex - initKIndex) : subRepresentation1->getElementCountOfPatch(0);
-		}else {
+		}
+		else {
 			// Ijk Grid
 			obj = epcPackageRepresentation->getDataObjectByUuid(getUuid());
 			auto ijkGridRepresentation = static_cast<resqml2_0_1::AbstractIjkGridRepresentation*>(obj);
@@ -245,55 +217,25 @@ long VtkIjkGridRepresentation::getAttachmentPropertyCount(const std::string & uu
 //----------------------------------------------------------------------------
 int VtkIjkGridRepresentation::getICellCount(const std::string & uuid) const
 {
-	long result = 0;
-
-	if (subRepresentation) {
-		// SubRep
-		result = iCellCount;
-	}else {
-		common::AbstractObject* obj;
-		// Ijk Grid
-		obj = epcPackageRepresentation->getDataObjectByUuid(getUuid());
-		auto ijkGridRepresentation = static_cast<resqml2_0_1::AbstractIjkGridRepresentation*>(obj);
-		result = ijkGridRepresentation->getICellCount();
-	}
-	return result;
+	return subRepresentation
+		? iCellCount
+		: epcPackageRepresentation->getDataObjectByUuid<RESQML2_0_1_NS::AbstractIjkGridRepresentation>(getUuid())->getICellCount();
 }
 
 //----------------------------------------------------------------------------
 int VtkIjkGridRepresentation::getJCellCount(const std::string & uuid) const
 {
-	long result = 0;
-
-	if (subRepresentation)	{
-		// SubRep
-		result = jCellCount;
-	}else	{
-		common::AbstractObject* obj;
-		// Ijk Grid
-		obj = epcPackageRepresentation->getDataObjectByUuid(getUuid());
-		auto ijkGridRepresentation = static_cast<resqml2_0_1::AbstractIjkGridRepresentation*>(obj);
-		result = ijkGridRepresentation->getJCellCount();
-	}
-	return result;
+	return subRepresentation
+		? jCellCount
+		: epcPackageRepresentation->getDataObjectByUuid<RESQML2_0_1_NS::AbstractIjkGridRepresentation>(getUuid())->getJCellCount();
 }
 
 //----------------------------------------------------------------------------
 int VtkIjkGridRepresentation::getKCellCount(const std::string & uuid) const
 {
-	long result = 0;
-
-	if (subRepresentation)	{
-		// SubRep
-		result = kCellCount;
-	}else{
-		common::AbstractObject* obj;
-		// Ijk Grid
-		obj = epcPackageRepresentation->getDataObjectByUuid(getUuid());
-		auto ijkGridRepresentation = static_cast<resqml2_0_1::AbstractIjkGridRepresentation*>(obj);
-		result = ijkGridRepresentation->getKCellCount();
-	}
-	return result;
+	return subRepresentation
+		? kCellCount
+		: epcPackageRepresentation->getDataObjectByUuid<RESQML2_0_1_NS::AbstractIjkGridRepresentation>(getUuid())->getKCellCount();
 }
 
 //----------------------------------------------------------------------------

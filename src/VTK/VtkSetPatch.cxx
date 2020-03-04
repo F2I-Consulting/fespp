@@ -1,58 +1,43 @@
 /*-----------------------------------------------------------------------
-Copyright F2I-CONSULTING, (2014)
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"; you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
 
-cedric.robert@f2i-consulting.com
+  http://www.apache.org/licenses/LICENSE-2.0
 
-This software is a computer program whose purpose is to display data formatted using Energistics standards.
-
-This software is governed by the CeCILL license under French law and
-abiding by the rules of distribution of free software.  You can  use,
-modify and/ or redistribute the software under the terms of the CeCILL
-license as circulated by CEA, CNRS and INRIA at the following URL
-"http://www.cecill.info".
-
-As a counterpart to the access to the source code and  rights to copy,
-modify and redistribute granted by the license, users are provided only
-with a limited warranty  and the software's author,  the holder of the
-economic rights,  and the successive licensors  have only  limited
-liability.
-
-In this respect, the user's attention is drawn to the risks associated
-with loading,  using,  modifying and/or developing or reproducing the
-software by the user in light of its specific status of free software,
-that may mean  that it is complicated to manipulate,  and  that  also
-therefore means  that it is reserved for developers  and  experienced
-professionals having in-depth computer knowledge. Users are therefore
-encouraged to load and test the software's suitability as regards their
-requirements in conditions enabling the security of their systems and/or
-data to be ensured and,  more generally, to use and operate it in the
-same conditions as regards security.
-
-The fact that you are presently reading this means that you have had
-knowledge of the CeCILL license and that you accept its terms.
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
 -----------------------------------------------------------------------*/
 #include "VtkSetPatch.h"
 
-// include system
+// system
 #include <algorithm>
 #include <sstream>
 
-// include VTK library
+// VTK
 #include <vtkInformation.h>
 
-// include F2i-consulting Energistics Standards API
-#include <resqml2_0_1/SubRepresentation.h>
-#include <resqml2_0_1/PolylineSetRepresentation.h>
-#include <resqml2_0_1/TriangulatedSetRepresentation.h>
+// FESAPI
+#include <fesapi/resqml2_0_1/SubRepresentation.h>
+#include <fesapi/resqml2_0_1/PolylineSetRepresentation.h>
+#include <fesapi/resqml2_0_1/TriangulatedSetRepresentation.h>
 
-// include F2i-consulting Energistics Standards ParaView Plugin
+// FESPP
 #include "VtkPolylineRepresentation.h"
 #include "VtkTriangulatedRepresentation.h"
 #include "VtkProperty.h"
 
 //----------------------------------------------------------------------------
-VtkSetPatch::VtkSetPatch(const std::string & fileName, const std::string & name, const std:: string & uuid, const std::string & uuidParent, common::EpcDocument *pck, const int & idProc, const int & maxProc):
-VtkResqml2MultiBlockDataSet(fileName, name, uuid, uuidParent, idProc, maxProc), epcPackage(pck)
+VtkSetPatch::VtkSetPatch(const std::string & fileName, const std::string & name, const std:: string & uuid, const std::string & uuidParent, COMMON_NS::DataObjectRepository *pck, int idProc, int maxProc):
+	VtkResqml2MultiBlockDataSet(fileName, name, uuid, uuidParent, idProc, maxProc), epcPackage(pck)
 {
 	//	uuidIsChildOf[uuid] = new VtkEpcCommon();
 	resqml2_0_1::PolylineSetRepresentation* polylineSetRep = nullptr;
@@ -110,7 +95,7 @@ VtkSetPatch::~VtkSetPatch()
 }
 
 //----------------------------------------------------------------------------
-void VtkSetPatch::createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, const VtkEpcCommon::Resqml2Type & type)
+void VtkSetPatch::createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, VtkEpcCommon::Resqml2Type type)
 {
 	uuidIsChildOf[uuid].setType( type);
 	uuidIsChildOf[uuid].setUuid( uuid);
@@ -264,7 +249,7 @@ void VtkSetPatch::addProperty(const std::string & uuidProperty, vtkDataArray* da
 }
 
 //----------------------------------------------------------------------------
-long VtkSetPatch::getAttachmentPropertyCount(const std::string & uuid, const VtkEpcCommon::FesppAttachmentProperty propertyUnit)
+long VtkSetPatch::getAttachmentPropertyCount(const std::string & uuid, VtkEpcCommon::FesppAttachmentProperty propertyUnit)
 {
 	long result = 0;
 	std::vector<VtkPolylineRepresentation *> vectPolyPatch;

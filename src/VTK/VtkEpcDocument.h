@@ -1,47 +1,32 @@
 ﻿/*-----------------------------------------------------------------------
-Copyright F2I-CONSULTING, (2014)
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"; you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
 
-cedric.robert@f2i-consulting.com
+  http://www.apache.org/licenses/LICENSE-2.0
 
-This software is a computer program whose purpose is to display data formatted using Energistics standards.
-
-This software is governed by the CeCILL license under French law and
-abiding by the rules of distribution of free software.  You can  use, 
-modify and/ or redistribute the software under the terms of the CeCILL
-license as circulated by CEA, CNRS and INRIA at the following URL
-"http://www.cecill.info". 
-
-As a counterpart to the access to the source code and  rights to copy,
-modify and redistribute granted by the license, users are provided only
-with a limited warranty  and the software's author,  the holder of the
-economic rights,  and the successive licensors  have only  limited
-liability.  
-
-In this respect, the user's attention is drawn to the risks associated
-with loading,  using,  modifying and/or developing or reproducing the
-software by the user in light of its specific status of free software,
-that may mean  that it is complicated to manipulate,  and  that  also
-therefore means  that it is reserved for developers  and  experienced
-professionals having in-depth computer knowledge. Users are therefore
-encouraged to load and test the software's suitability as regards their
-requirements in conditions enabling the security of their systems and/or 
-data to be ensured and,  more generally, to use and operate it in the 
-same conditions as regards security.  
-
-The fact that you are presently reading this means that you have had
-knowledge of the CeCILL license and that you accept its terms.
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
 -----------------------------------------------------------------------*/
-
 #ifndef __VtkEpcDocument_h
 #define __VtkEpcDocument_h
 
 #include <vtkDataArray.h>
 
+// Fesapi namespaces
+#include <fesapi/nsDefinitions.h>
+#include <fesapi/common/DataObjectRepository.h>
+
 #include "VtkResqml2MultiBlockDataSet.h"
 #include "VtkEpcDocumentSet.h"
-
-// Fesapi namespaces
-#include "nsDefinitions.h"
 
 class VtkIjkGridRepresentation;
 class VtkUnstructuredGridRepresentation;
@@ -52,11 +37,6 @@ class VtkTriangulatedRepresentation;
 class VtkSetPatch;
 class VtkWellboreTrajectoryRepresentation;
 
-namespace COMMON_NS
-{
-	class EpcDocument;
-}
-
 class VtkEpcDocument : public VtkResqml2MultiBlockDataSet
 {
 
@@ -64,7 +44,8 @@ public:
 	/**
 	* Constructor
 	*/
-	VtkEpcDocument (const std::string & fileName, const int & idProc=0, const int & maxProc=0, VtkEpcDocumentSet * epcDocSet=nullptr);
+	VtkEpcDocument (const std::string & fileName, int idProc=0, int maxProc=0, VtkEpcDocumentSet * epcDocSet =nullptr);
+
 	/**
 	* Destructor
 	*/
@@ -76,6 +57,13 @@ public:
 	* create uuid representation.
 	*/
 	void visualize(const std::string & uuid);
+
+	/**
+	* method : visualizeFullWell
+	* create uuid representation with all Welbore_trajectory
+	*/
+	void visualizeFullWell();
+	void unvisualizeFullWell();
 	
 
 	/**
@@ -106,15 +94,15 @@ public:
 	VtkEpcCommon::Resqml2Type getType(std::string);
 	VtkEpcCommon getInfoUuid(std::string);
 
-	long getAttachmentPropertyCount(const std::string & uuid, const VtkEpcCommon::FesppAttachmentProperty propertyUnit) ;
-	int getICellCount(const std::string & uuid) ;
-	int getJCellCount(const std::string & uuid) ;
-	int getKCellCount(const std::string & uuid) ;
-	int getInitKIndex(const std::string & uuid) ;
+	long getAttachmentPropertyCount(const std::string & uuid, VtkEpcCommon::FesppAttachmentProperty propertyUnit);
+	int getICellCount(const std::string & uuid);
+	int getJCellCount(const std::string & uuid);
+	int getKCellCount(const std::string & uuid);
+	int getInitKIndex(const std::string & uuid);
 
 	std::string getError() ;
 
-	COMMON_NS::EpcDocument *getEpcDocument();
+	COMMON_NS::DataObjectRepository* getEpcDocument();
 
 private:
 	void addGrid2DTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name);
@@ -126,6 +114,17 @@ private:
 	int addSubRepTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name);
 	int addPropertyTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name);
 	
+	void searchFaultPolylines(const std::string & fileName);
+	void searchHorizonPolylines(const std::string & fileName);
+	void searchUnstructuredGrid(const std::string & fileName);
+	void searchTriangulated(const std::string & fileName);
+	void searchGrid2d(const std::string & fileName);
+	void searchIjkGrid(const std::string & fileName);
+	void searchWellboreTrajectory(const std::string & fileName);
+	void searchSubRepresentation(const std::string & fileName);
+	void searchTimeSeries(const std::string & fileName);
+
+
 	/**
 	* method : createTreeVtkPartialRep
 	* variable : uuid, VtkEpcDocument with complete representation
@@ -138,12 +137,12 @@ private:
 	* variable : uuid, parent uuid, name, type
 	* prepare VtkEpcDocument & Children.
 	*/
-	void createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, const VtkEpcCommon::Resqml2Type & resqmlType);
+	void createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, VtkEpcCommon::Resqml2Type resqmlType);
 
 
 
 	// EPC DOCUMENT
-	COMMON_NS::EpcDocument *epcPackage;
+	COMMON_NS::DataObjectRepository repository;
 
 	std::unordered_map<std::string, VtkGrid2DRepresentation*> uuidToVtkGrid2DRepresentation;
 	std::unordered_map<std::string, VtkPolylineRepresentation*> uuidToVtkPolylineRepresentation;
@@ -162,6 +161,5 @@ private:
 	std::vector<VtkEpcCommon> treeView; // Tree
 
 	std::string epc_error;
-
 };
 #endif

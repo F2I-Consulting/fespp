@@ -16,22 +16,27 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 -----------------------------------------------------------------------*/
-#ifndef _EtpFesppStoreProtocolHandlers_h
-#define _EtpFesppStoreProtocolHandlers_h
+#include "GetWhenDiscoverHandler.h"
 
-#include <fesapi/etp/ProtocolHandlers/StoreHandlers.h>
 #include <fesapi/common/AbstractObject.h>
 
-#include "etp/EtpClientSession.h"
+#include "EtpClientSession.h"
 
-class EtpFesppStoreProtocolHandlers : public ETP_NS::StoreHandlers
+void GetWhenDiscoverHandler::on_GetResourcesResponse(const Energistics::Etp::v12::Protocol::Discovery::GetResourcesResponse & msg, int64_t correlationId)
 {
-public:
-	EtpFesppStoreProtocolHandlers(std::shared_ptr<EtpClientSession> mySession): ETP_NS::StoreHandlers(mySession), repo(mySession->repo) {}
-	~EtpFesppStoreProtocolHandlers() {}
+	std::cout << msg.m_resources.size() << " resources received which will be got." << std::endl;
 
-	void on_GetDataObjectsResponse(const Energistics::Etp::v12::Protocol::Store::GetDataObjectsResponse & msg, int64_t correlationId);
-private:
-	COMMON_NS::DataObjectRepository& repo;
-};
-#endif
+	Energistics::Etp::v12::Protocol::Store::GetDataObjects toGetMsg;
+	for (Energistics::Etp::v12::Datatypes::Object::Resource resource : msg.m_resources) {
+		auto dataObject = std::static_pointer_cast<EtpClientSession>(session)->repo.getDataObjectByUuid(resource.m_uri);
+		if (dataObject == nullptr || dataObject->isPartial()) {
+			toGetMsg.m_uris[resource.m_uri] = resource.m_uri;
+		}
+	}
+
+	if (!toGetMsg.m_uris.empty()) {
+		std::static_pointer_cast<EtpClientSession>(session)->insertMessageIdTobeAnswered(session->send(toGetMsg));
+	}
+
+	std::static_pointer_cast<EtpClientSession>(session)->eraseMessageIdTobeAnswered(correlationId);
+}

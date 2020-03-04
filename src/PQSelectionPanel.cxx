@@ -1,36 +1,21 @@
 /*-----------------------------------------------------------------------
- Copyright F2I-CONSULTING, (2014)
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"; you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
 
- cedric.robert@f2i-consulting.com
+  http://www.apache.org/licenses/LICENSE-2.0
 
- This software is a computer program whose purpose is to display data formatted using Energistics standards.
-
- This software is governed by the CeCILL license under French law and
- abiding by the rules of distribution of free software.  You can  use,
- modify and/ or redistribute the software under the terms of the CeCILL
- license as circulated by CEA, CNRS and INRIA at the following URL
- "http://www.cecill.info".
-
- As a counterpart to the access to the source code and  rights to copy,
- modify and redistribute granted by the license, users are provided only
- with a limited warranty  and the software's author,  the holder of the
- economic rights,  and the successive licensors  have only  limited
- liability.
-
- In this respect, the user's attention is drawn to the risks associated
- with loading,  using,  modifying and/or developing or reproducing the
- software by the user in light of its specific status of free software,
- that may mean  that it is complicated to manipulate,  and  that  also
- therefore means  that it is reserved for developers  and  experienced
- professionals having in-depth computer knowledge. Users are therefore
- encouraged to load and test the software's suitability as regards their
- requirements in conditions enabling the security of their systems and/or
- data to be ensured and,  more generally, to use and operate it in the
- same conditions as regards security.
-
- The fact that you are presently reading this means that you have had
- knowledge of the CeCILL license and that you accept its terms.
- -----------------------------------------------------------------------*/
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-----------------------------------------------------------------------*/
 #include "ui_PQSelectionPanel.h"
 #include "PQSelectionPanel.h"
 #include "PQToolsManager.h"
@@ -39,24 +24,23 @@
 #endif
 
 // include API Resqml2
-#include "resqml2_0_1/PolylineSetRepresentation.h"
-#include "resqml2_0_1/TriangulatedSetRepresentation.h"
-#include "resqml2_0_1/Horizon.h"
-#include "resqml2_0_1/TectonicBoundaryFeature.h"
-#include "resqml2_0_1/HorizonInterpretation.h"
-#include "resqml2_0_1/FaultInterpretation.h"
-#include "resqml2_0_1/PointSetRepresentation.h"
-#include "resqml2_0_1/Grid2dRepresentation.h"
-#include "common/AbstractObject.h"
-#include "resqml2_0_1/SubRepresentation.h"
-#include "resqml2_0_1/AbstractIjkGridRepresentation.h"
-#include "resqml2/AbstractValuesProperty.h"
-#include "resqml2_0_1/UnstructuredGridRepresentation.h"
-#include "resqml2_0_1/WellboreTrajectoryRepresentation.h"
-#include "resqml2_0_1/PropertyKindMapper.h"
-#include "resqml2_0_1/SubRepresentation.h"
-
-#include "resqml2/TimeSeries.h"
+#include <fesapi/resqml2_0_1/PolylineSetRepresentation.h>
+#include <fesapi/resqml2_0_1/TriangulatedSetRepresentation.h>
+#include <fesapi/resqml2_0_1/Horizon.h>
+#include <fesapi/resqml2_0_1/TectonicBoundaryFeature.h>
+#include <fesapi/resqml2_0_1/HorizonInterpretation.h>
+#include <fesapi/resqml2_0_1/FaultInterpretation.h>
+#include <fesapi/resqml2_0_1/PointSetRepresentation.h>
+#include <fesapi/resqml2_0_1/Grid2dRepresentation.h>
+#include <fesapi/common/AbstractObject.h>
+#include <fesapi/resqml2_0_1/SubRepresentation.h>
+#include <fesapi/resqml2_0_1/AbstractIjkGridRepresentation.h>
+#include <fesapi/resqml2/AbstractValuesProperty.h>
+#include <fesapi/resqml2_0_1/UnstructuredGridRepresentation.h>
+#include <fesapi/resqml2_0_1/WellboreTrajectoryRepresentation.h>
+#include <fesapi/resqml2_0_1/PropertyKindMapper.h>
+#include <fesapi/resqml2_0_1/SubRepresentation.h>
+#include <fesapi/resqml2/TimeSeries.h>
 
 // include Qt
 #include <QtGui>
@@ -70,6 +54,7 @@
 #include <qmessagebox.h>
 #include <qprogressbar.h>
 #include <qlayout.h>
+#include <qbuttongroup.h>
 
 // include ParaView
 #include <PQToolsManager.h>
@@ -102,18 +87,18 @@
 
 namespace {
 #ifdef WITH_ETP
- PQEtpPanel* getPQEtpPanel() {
- 	PQEtpPanel *panel = nullptr;
- 	foreach(QWidget *widget, qApp->topLevelWidgets())
- 	{
- 		panel = widget->findChild<PQEtpPanel *>();
+PQEtpPanel* getPQEtpPanel() {
+	PQEtpPanel *panel = nullptr;
+	foreach(QWidget *widget, qApp->topLevelWidgets())
+	{
+		panel = widget->findChild<PQEtpPanel *>();
 
- 		if (panel!=nullptr) {
- 			break;
- 		}
- 	}
- 	return panel;
- }
+		if (panel!=nullptr) {
+			break;
+		}
+	}
+	return panel;
+}
 #endif
 
 pqPropertiesPanel* getpqPropertiesPanel() {
@@ -142,10 +127,10 @@ void PQSelectionPanel::constructor() {
 
 	treeWidget->setStyleSheet(
 			"QWidget::branch:has-siblings:!adjoins-item{border-image: url(:vline.png) 0;}"
-					"QWidget::branch:has-siblings:adjoins-item{border-image: url(:branch-more.png) 0;}"
-					"QWidget::branch:!has-children:!has-siblings:adjoins-item{border-image: url(:branch-end.png) 0;}"
-					"QWidget::branch:has-children:!has-siblings:closed,QTreeView::branch:closed:has-children:has-siblings{border-image: none; image: url(:branch-closed.png);}"
-					"QWidget::branch:open:has-children:!has-siblings,QTreeView::branch:open:has-children:has-siblings{border-image: none; image: url(:branch-open.png);}");
+			"QWidget::branch:has-siblings:adjoins-item{border-image: url(:branch-more.png) 0;}"
+			"QWidget::branch:!has-children:!has-siblings:adjoins-item{border-image: url(:branch-end.png) 0;}"
+			"QWidget::branch:has-children:!has-siblings:closed,QTreeView::branch:closed:has-children:has-siblings{border-image: none; image: url(:branch-closed.png);}"
+			"QWidget::branch:open:has-children:!has-siblings,QTreeView::branch:open:has-children:has-siblings{border-image: none; image: url(:branch-open.png);}");
 
 	treeWidget->header()->setStretchLastSection(false);
 	treeWidget->header()->resizeSection(1, 20);
@@ -158,6 +143,10 @@ void PQSelectionPanel::constructor() {
 	treeWidget->header()->close();
 
 	//	connect(ui.treeWidget, SIGNAL(itemClicked(QTreeWidgetItem*, int)), this, SLOT(clicSelection(QTreeWidgetItem*, int)));
+	treeWidget->setContextMenuPolicy(Qt::CustomContextMenu);
+	connect(ui.treeWidget, SIGNAL(customContextMenuRequested(QPoint)),
+			this, SLOT(treeCustomMenu(QPoint)));
+
 	connect(ui.treeWidget, SIGNAL(itemChanged(QTreeWidgetItem*, int)), this,
 			SLOT(onItemCheckedUnchecked(QTreeWidgetItem*, int)));
 
@@ -235,7 +224,7 @@ void PQSelectionPanel::constructor() {
 
 	vtkEpcDocumentSet = new VtkEpcDocumentSet(0, 0, VtkEpcCommon::TreeView);
 	etpCreated = false;
-
+	canLoad = false;
 }
 
 PQSelectionPanel::~PQSelectionPanel() {
@@ -244,6 +233,78 @@ PQSelectionPanel::~PQSelectionPanel() {
 }
 
 //******************************* ACTIONS ************************************
+
+//----------------------------------------------------------------------------
+void PQSelectionPanel::treeCustomMenu(const QPoint & pos) {
+	auto menu = new QMenu;
+	if (treeWidget->itemAt(pos)) {
+		pickedBlocksEtp = itemUuid[treeWidget->itemAt(pos)];
+		auto it = std::find (list_uri_etp.begin(), list_uri_etp.end(), pickedBlocksEtp);
+		if (it != uri_subscribe.end() && list_uri_etp.size() > 0) {  // subscribe
+			menu->addAction(QString("subscribe/unsubscribe"), this, SLOT(subscribe_slot()));
+			menu->exec(treeWidget->mapToGlobal(pos));
+		} else {
+			for (auto & file_name : allFileName) {
+				if (file_name == pickedBlocksEtp) {
+					QList<std::string> values = uuidsWellbore.keys(true);
+					if (values.size() == uuidsWellbore.size()) {
+						menu->addAction(QString("Unselect all wellbores"), this, SLOT(unselectAllWell()));
+					} else {
+						menu->addAction(QString("Select all wellbores"), this, SLOT(selectAllWell()));
+					}
+					menu->exec(treeWidget->mapToGlobal(pos));
+					break;
+				}
+			}
+		}
+	}
+}
+
+//----------------------------------------------------------------------------
+void PQSelectionPanel::selectAllWell() {
+	loadUuid("allWell-"+pickedBlocksEtp);
+	canLoad = false;
+	for (auto &uuid : uuidsWellbore.keys().toStdList()) {
+		uuidItem[uuid]->setCheckState(0, Qt::Checked);
+		uuidsWellbore[uuid] = true;
+	}
+	canLoad = true;
+}
+
+//----------------------------------------------------------------------------
+void PQSelectionPanel::unselectAllWell() {
+	removeUuid("allWell-"+pickedBlocksEtp);
+	canLoad = false;
+	for (auto &uuid : uuidsWellbore.keys().toStdList()) {
+		uuidItem[uuid]->setCheckState(0, Qt::Unchecked);
+		uuidsWellbore[uuid] = false;
+	}
+	canLoad = true;
+}
+
+
+//----------------------------------------------------------------------------
+void PQSelectionPanel::subscribe_slot() {
+	QIcon icon;
+	auto it = std::find (uri_subscribe.begin(), uri_subscribe.end(), pickedBlocksEtp);
+	if (it == uri_subscribe.end()) {  // subscribe
+		uri_subscribe.push_back(pickedBlocksEtp);
+		icon.addFile(QString::fromUtf8(":pqEyeball16.png"),
+				QSize(), QIcon::Normal, QIcon::Off);
+		uuidItem[pickedBlocksEtp]->setIcon(1, icon);
+	} else {  // unsubscribe
+		uri_subscribe.erase(it);
+		uuidItem[pickedBlocksEtp]->setIcon(1, QIcon());
+	}
+}
+
+//----------------------------------------------------------------------------
+void PQSelectionPanel::subscribeChildren_slot() {
+	QIcon icon;
+	icon.addFile(QString::fromUtf8(":pqEyeball16.png"),
+			QSize(), QIcon::Normal, QIcon::Off);
+	uuidItem[pickedBlocksEtp]->setIcon(1, icon);
+}
 
 //----------------------------------------------------------------------------
 void PQSelectionPanel::clicSelection(QTreeWidgetItem* item, int column) {
@@ -303,8 +364,6 @@ void PQSelectionPanel::deleteTreeView() {
 	mapUuidProperty.clear();
 	mapUuidWithProperty.clear();
 
-	displayUuid.clear();
-
 	radioButton_to_id.clear();
 
 	mapUuidParentButtonInvisible.clear();
@@ -323,17 +382,16 @@ void PQSelectionPanel::deleteTreeView() {
 void PQSelectionPanel::checkedRadioButton(int rbNo) {
 	emit button_Time_Pause->released();
 	if (radioButton_to_id.contains(rbNo)) {
+		canLoad = false;
 		std::string uuid = radioButton_to_id[rbNo];
 
 		std::string uuidParent = itemUuid[uuidParentItem[uuid]];
 		if (uuidParentItem[uuid]->checkState(0) != Qt::Checked) {
 			uuidParentItem[uuid]->setCheckState(0, Qt::Checked);
-		} else {
-			uuidParentItem[uuid]->setCheckState(0, Qt::PartiallyChecked);
-			uuidParentItem[uuid]->setCheckState(0, Qt::Checked);
 		}
 
 		std::string uuidOld = mapUuidWithProperty[uuidParent];
+		canLoad = true;
 
 		if (!(uuidOld == "")) {
 			if (ts_timestamp_to_uuid.count(uuidOld) > 0) {
@@ -349,6 +407,7 @@ void PQSelectionPanel::checkedRadioButton(int rbNo) {
 			}
 		}
 		mapUuidWithProperty[uuidParent] = uuid;
+
 		if (ts_timestamp_to_uuid.count(uuid) > 0) {
 			updateTimeSeries(uuid, true);
 
@@ -454,7 +513,7 @@ void PQSelectionPanel::updateTimeSeries(const std::string & uuid,
 
 	for (const auto &uuid_displayed : ts_displayed) {
 		foreach(time_t t, ts_timestamp_to_uuid[uuid_displayed].keys())
-			list << t;
+																									list << t;
 	}
 
 	qSort(list.begin(), list.end());
@@ -483,7 +542,7 @@ void PQSelectionPanel::updateTimeSeries(const std::string & uuid,
 //----------------------------------------------------------------------------
 void PQSelectionPanel::addFileName(const std::string & fileName) {
 	if (std::find(allFileName.begin(), allFileName.end(), fileName)
-			== allFileName.end()) {
+	== allFileName.end()) {
 		vtkEpcDocumentSet->addEpcDocument(fileName);
 		allFileName.push_back(fileName);
 		uuidToFilename[fileName] = fileName;
@@ -514,6 +573,7 @@ void PQSelectionPanel::addFileName(const std::string & fileName) {
 void PQSelectionPanel::populateTreeView(const std::string & parent,
 		VtkEpcCommon::Resqml2Type parentType, const std::string & uuid,
 		const std::string & name, VtkEpcCommon::Resqml2Type type) {
+	canLoad = false;
 	if (uuid != "") {
 		if (!uuidItem[uuid]) {
 			if (parentType == VtkEpcCommon::Resqml2Type::PARTIAL
@@ -542,8 +602,18 @@ void PQSelectionPanel::populateTreeView(const std::string & parent,
 							treeItem->flags() | Qt::ItemIsSelectable);
 
 					switch (type) {
-					case VtkEpcCommon::Resqml2Type::INTERPRETATION: {
-						icon.addFile(QString::fromUtf8(":Grid2D.png"), QSize(),
+					case VtkEpcCommon::Resqml2Type::INTERPRETATION_1D: {
+						icon.addFile(QString::fromUtf8(":Interpretation_1D.png"), QSize(),
+								QIcon::Normal, QIcon::Off);
+						break;
+					}
+					case VtkEpcCommon::Resqml2Type::INTERPRETATION_2D: {
+						icon.addFile(QString::fromUtf8(":Interpretation_2D.png"), QSize(),
+								QIcon::Normal, QIcon::Off);
+						break;
+					}
+					case VtkEpcCommon::Resqml2Type::INTERPRETATION_3D: {
+						icon.addFile(QString::fromUtf8(":Interpretation_3D.png"), QSize(),
 								QIcon::Normal, QIcon::Off);
 						break;
 					}
@@ -569,6 +639,7 @@ void PQSelectionPanel::populateTreeView(const std::string & parent,
 						icon.addFile(QString::fromUtf8(":WellTraj.png"),
 								QSize(), QIcon::Normal, QIcon::Off);
 						treeItem->setCheckState(0, Qt::Unchecked);
+						uuidsWellbore.insert(uuid, false);
 						break;
 					}
 					case VtkEpcCommon::Resqml2Type::IJK_GRID: {
@@ -606,6 +677,7 @@ void PQSelectionPanel::populateTreeView(const std::string & parent,
 			}
 		}
 	}
+	canLoad = true;
 }
 
 //----------------------------------------------------------------------------
@@ -660,58 +732,79 @@ std::string PQSelectionPanel::searchSource(const std::string & uuid) {
 
 //----------------------------------------------------------------------------
 void PQSelectionPanel::loadUuid(const std::string & uuid) {
-	auto pipe_name = searchSource(uuid);
-	pqPipelineSource * source = findPipelineSource(pipe_name.c_str());
-	if (source!=nullptr) {
-		pqActiveObjects *activeObjects = &pqActiveObjects::instance();
-		activeObjects->setActiveSource(source);
-
-		PQToolsManager* manager = PQToolsManager::instance();
-		auto fesppReader = manager->getFesppReader();
-
-		if (fesppReader) {
+	if (canLoad) {
+		std::string pipe_name;
+		if (uuid.find("allWell-") != std::string::npos) {
+			pipe_name = "EpcDocument";
+		}else {
+			pipe_name = searchSource(uuid);
+		}
+		pqPipelineSource * source = findPipelineSource(pipe_name.c_str());
+		if (source!=nullptr) {
 			pqActiveObjects *activeObjects = &pqActiveObjects::instance();
-			activeObjects->setActiveSource(fesppReader);
+			activeObjects->setActiveSource(source);
 
-			// add uuid to property panel
-			vtkSMProxy* fesppReaderProxy = fesppReader->getProxy();
+			PQToolsManager* manager = PQToolsManager::instance();
+			auto fesppReader = manager->getFesppReader();
 
-			vtkSMPropertyHelper(fesppReaderProxy, "uuidList").SetStatus(
-					uuid.c_str(), 1);
+			if (fesppReader) {
+				pqActiveObjects *activeObjects = &pqActiveObjects::instance();
+				activeObjects->setActiveSource(fesppReader);
 
-			fesppReaderProxy->UpdatePropertyInformation();
-			fesppReaderProxy->UpdateVTKObjects();
-			getpqPropertiesPanel()->update();
-			getpqPropertiesPanel()->apply();
+				// add uuid to property panel
+				vtkSMProxy* fesppReaderProxy = fesppReader->getProxy();
+
+				vtkSMPropertyHelper(fesppReaderProxy, "uuidList").SetStatus(
+						uuid.c_str(), 1);
+
+				fesppReaderProxy->UpdatePropertyInformation();
+				fesppReaderProxy->UpdateVTKObjects();
+				getpqPropertiesPanel()->update();
+				getpqPropertiesPanel()->apply();
+			}
+		}
+		if (uuidsWellbore.contains(uuid)) {
+
+			uuidsWellbore[uuid] = true;
 		}
 	}
 }
 
 //----------------------------------------------------------------------------
 void PQSelectionPanel::removeUuid(const std::string & uuid) {
-	auto sourceName = searchSource(uuid);
-	pqPipelineSource * source = findPipelineSource(sourceName.c_str());
-	if (source!=nullptr) {
-		pqActiveObjects *activeObjects = &pqActiveObjects::instance();
-		activeObjects->setActiveSource(source);
-
-		PQToolsManager* manager = PQToolsManager::instance();
-		auto fesppReader = manager->getFesppReader();
-
-		if (fesppReader) {
+	if (canLoad) {
+		std::string pipe_name;
+		if (uuid.find("allWell-") != std::string::npos) {
+			pipe_name = "EpcDocument";
+		}else {
+			pipe_name = searchSource(uuid);
+		}
+		pqPipelineSource * source = findPipelineSource(pipe_name.c_str());
+		if (source!=nullptr) {
 			pqActiveObjects *activeObjects = &pqActiveObjects::instance();
-			activeObjects->setActiveSource(fesppReader);
+			activeObjects->setActiveSource(source);
 
-			// add file to property
-			vtkSMProxy* fesppReaderProxy = fesppReader->getProxy();
+			PQToolsManager* manager = PQToolsManager::instance();
+			auto fesppReader = manager->getFesppReader();
 
-			vtkSMPropertyHelper(fesppReaderProxy, "uuidList").SetStatus(
-					uuid.c_str(), 0);
+			if (fesppReader) {
+				pqActiveObjects *activeObjects = &pqActiveObjects::instance();
+				activeObjects->setActiveSource(fesppReader);
 
-			fesppReaderProxy->UpdatePropertyInformation();
-			fesppReaderProxy->UpdateVTKObjects();
-			getpqPropertiesPanel()->update();
-			getpqPropertiesPanel()->apply();
+				// add file to property
+				vtkSMProxy* fesppReaderProxy = fesppReader->getProxy();
+
+				vtkSMPropertyHelper(fesppReaderProxy, "uuidList").SetStatus(
+						uuid.c_str(), 0);
+
+				fesppReaderProxy->UpdatePropertyInformation();
+				fesppReaderProxy->UpdateVTKObjects();
+				getpqPropertiesPanel()->update();
+				getpqPropertiesPanel()->apply();
+			}
+		}
+		if (uuidsWellbore.contains(uuid)) {
+			uuidsWellbore[uuid] = false;
 		}
 	}
 }
@@ -747,8 +840,7 @@ pqServer * PQSelectionPanel::getActiveServer() {
 //----------------------------------------------------------------------------
 void PQSelectionPanel::uuidKO(const std::string & uuid) {
 	uuidItem[uuid]->setDisabled(true);
-	for (unsigned int idx_child = 0; idx_child < uuidItem[uuid]->childCount();
-			++idx_child) {
+	for (int idx_child = 0; idx_child < uuidItem[uuid]->childCount(); ++idx_child) {
 		uuidItem[uuid]->child(idx_child)->setHidden(true);
 	}
 }
@@ -763,10 +855,12 @@ void PQSelectionPanel::setEtpTreeView(std::vector<VtkEpcCommon> treeView) {
 	for (auto &leaf : treeView) {
 		uuidToPipeName[leaf.getUuid()] = "EtpDocument";
 		if (leaf.getTimeIndex() < 0) {
+			list_uri_etp.push_back(leaf.getUuid());
 			populateTreeView(leaf.getParent(), leaf.getParentType(),
 					leaf.getUuid(), leaf.getName(), leaf.getType());
 		} else {
 			if (name_to_uuid.count(leaf.getName()) <= 0) {
+				list_uri_etp.push_back(leaf.getUuid());
 				populateTreeView(leaf.getParent(), leaf.getParentType(),
 						leaf.getUuid(), leaf.getName(),
 						leaf.getType());
