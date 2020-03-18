@@ -42,7 +42,7 @@ public:
 	QAction* actionEtpCommand();
 #endif
 
-	pqPipelineSource* getFesppReader();
+	pqPipelineSource* getFesppReader(const std::string & pipe_name);
 
 	QWidget* getMainWindow();
 	pqServer* getActiveServer();

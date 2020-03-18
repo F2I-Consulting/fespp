@@ -382,10 +382,11 @@ void PQSelectionPanel::deleteTreeView() {
 void PQSelectionPanel::checkedRadioButton(int rbNo) {
 	emit button_Time_Pause->released();
 	if (radioButton_to_id.contains(rbNo)) {
-		canLoad = false;
 		std::string uuid = radioButton_to_id[rbNo];
-
 		std::string uuidParent = itemUuid[uuidParentItem[uuid]];
+
+		canLoad = (searchSource(uuidParent) == "EtpDocument")?true:false;
+
 		if (uuidParentItem[uuid]->checkState(0) != Qt::Checked) {
 			uuidParentItem[uuid]->setCheckState(0, Qt::Checked);
 		}
@@ -745,7 +746,7 @@ void PQSelectionPanel::loadUuid(const std::string & uuid) {
 			activeObjects->setActiveSource(source);
 
 			PQToolsManager* manager = PQToolsManager::instance();
-			auto fesppReader = manager->getFesppReader();
+			auto fesppReader = manager->getFesppReader(pipe_name);
 
 			if (fesppReader) {
 				pqActiveObjects *activeObjects = &pqActiveObjects::instance();
@@ -785,7 +786,7 @@ void PQSelectionPanel::removeUuid(const std::string & uuid) {
 			activeObjects->setActiveSource(source);
 
 			PQToolsManager* manager = PQToolsManager::instance();
-			auto fesppReader = manager->getFesppReader();
+			auto fesppReader = manager->getFesppReader(pipe_name);
 
 			if (fesppReader) {
 				pqActiveObjects *activeObjects = &pqActiveObjects::instance();
@@ -878,9 +879,8 @@ void PQSelectionPanel::setEtpTreeView(std::vector<VtkEpcCommon> treeView) {
 			activeObjects->setActiveSource(source);
 
 			PQToolsManager* manager = PQToolsManager::instance();
-			auto fesppReader = manager->getFesppReader();
-
-			if (fesppReader!=nullptr) {
+			auto fesppReader = manager->getFesppReader("EtpDocument");
+			if (fesppReader) {
 				pqActiveObjects *activeObjects = &pqActiveObjects::instance();
 				activeObjects->setActiveSource(fesppReader);
 

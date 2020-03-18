@@ -113,7 +113,7 @@ void PQDataLoadManager::setupPipeline()
 
 	pqPipelineSource* fesppReader;
 	if (manager->existPipe()) {
-		fesppReader = manager->getFesppReader();
+		fesppReader = manager->getFesppReader("EpcDocument");
 	}
 	else {
 		fesppReader = builder->createReader("sources", "Fespp", QStringList("EpcDocument"), Server);

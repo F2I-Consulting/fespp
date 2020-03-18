@@ -27,17 +27,17 @@ under the License.
 #include "etp/EtpClientSession.h"
 
 namespace {
-	PQSelectionPanel* getPQSelectionPanel()
-	{
-		PQSelectionPanel *panel = nullptr;
-		foreach(QWidget *widget, qApp->topLevelWidgets()) {
-			panel = widget->findChild<PQSelectionPanel *>();
-			if(panel != nullptr) {
-				break;
-			}
+PQSelectionPanel* getPQSelectionPanel()
+{
+	PQSelectionPanel *panel = nullptr;
+	foreach(QWidget *widget, qApp->topLevelWidgets()) {
+		panel = widget->findChild<PQSelectionPanel *>();
+		if(panel != nullptr) {
+			break;
 		}
-		return panel;
 	}
+	return panel;
+}
 }
 
 void PQEtpPanel::constructor()
@@ -76,27 +76,26 @@ void PQEtpPanel::handleButtonRefresh()
 {
 	VtkEtpDocument etp_document(ipAddress_, port_, VtkEpcCommon::TreeView);
 
-	// Wait for etp connection
-	while (etp_document.getClientSession() == nullptr) {}
-	while (!etp_document.getClientSession()->hasConnectionError() && etp_document.getClientSession()->isEtpSessionClosed()) {
+	volatile bool thread_wait = true;
+	while (thread_wait) {
+		thread_wait = (etp_document.getClientSession() == nullptr);
 	}
-	if (etp_document.getClientSession()->hasConnectionError()) {
-		std::cout << "Connection error on " << ipAddress_ << ":" << port_ << std::endl;
-		return;
+	thread_wait = true;
+	while (thread_wait) {
+		thread_wait = (!etp_document.getClientSession()->hasConnectionError() && etp_document.getClientSession()->isEtpSessionClosed());
 	}
-
 	QIcon icon;
 	icon.addFile(QString::fromUtf8(":green_status.png"), QSize(), QIcon::Normal, QIcon::Off);
 	etpStatus_Button->setIcon(icon);
-
+	thread_wait = true;
 	etp_document.createTree();
+	// The tree creation will automatically close the session when done
+	while (thread_wait) {
+		thread_wait = etp_document.getClientSession()->waiting;
+	}
 	if (etpSendButton->text() == "Create TreeView") {
 		getPQSelectionPanel()->connectPQEtpPanel();
 		etpSendButton->setText("Refresh");
-	}
-
-	// The tree creation will automatically close the session when done
-	while (etp_document.getClientSession()->isWaitingForAnswer()) {
 	}
 	setEtpTreeView(etp_document.getTreeView());
 	// etp_document can now be destroyed without risk

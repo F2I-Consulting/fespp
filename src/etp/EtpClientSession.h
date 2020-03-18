@@ -52,7 +52,7 @@ public:
 	* Indicates if the session is still waiting for answer or not.
 	* @return True if the session is not waiting for any message else False
 	*/
-	bool isWaitingForAnswer() const;
+	volatile bool isWaitingForAnswer() const;
 
 	/**
 	* Insert a message id which requires an answer by the server.
@@ -71,7 +71,7 @@ public:
 	void setConnectionError(bool error) { connectionError = error; }
 
 	COMMON_NS::DataObjectRepository repo;
-
+	volatile bool waiting;
 private:
 	/**
 	* A set of message ids which has not been answered yet by the server
@@ -82,5 +82,6 @@ private:
 	bool representationMode;
 
 	bool connectionError;
+
 };
 #endif

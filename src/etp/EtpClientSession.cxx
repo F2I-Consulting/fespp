@@ -29,17 +29,21 @@ EtpClientSession::EtpClientSession(
 	treeViewMode(mode == VtkEpcCommon::Both || mode == VtkEpcCommon::TreeView), representationMode(mode == VtkEpcCommon::Both || mode == VtkEpcCommon::Representation),
 	connectionError(false)
 {
+	waiting = false;
 	repo.setHdfProxyFactory(new ETP_NS::EtpHdfProxyFactory());
 }
 
-bool EtpClientSession::isWaitingForAnswer() const {
-	return !messageIdToBeAnswered.empty();
+volatile bool EtpClientSession::isWaitingForAnswer() const {
+	//return !messageIdToBeAnswered.empty();
+	return waiting;
 }
 
 void EtpClientSession::insertMessageIdTobeAnswered(int64_t messageId) {
 	messageIdToBeAnswered.insert(messageId);
+	waiting = true;
 }
 
 void EtpClientSession::eraseMessageIdTobeAnswered(int64_t messageId) {
 	messageIdToBeAnswered.erase(messageId);
+	waiting = !messageIdToBeAnswered.empty();
 }

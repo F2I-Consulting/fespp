@@ -183,9 +183,9 @@ void PQToolsManager::setVisibilityPanelSelection(bool visible)
 }
 
 //-----------------------------------------------------------------------------
-pqPipelineSource* PQToolsManager::getFesppReader()
+pqPipelineSource* PQToolsManager::getFesppReader(const std::string & pipe_name)
 {
-	return findPipelineSource("EpcDocument");
+	return findPipelineSource(pipe_name.c_str());
 }
 
 //-----------------------------------------------------------------------------
@@ -293,7 +293,7 @@ void PQToolsManager::newPipelineSource(pqPipelineSource* pipe, const QStringList
 		// get or create reader pipe
 		pqPipelineSource* fesppReader;
 		if (existPipe()) {
-			fesppReader = getFesppReader();
+			fesppReader = getFesppReader("EpcDocument");
 		}
 		else {
 			fesppReader = builder->createReader("sources", "Fespp", QStringList("EpcDocument"), getActiveServer());

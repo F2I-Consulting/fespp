@@ -101,7 +101,7 @@ void PQEtpConnectionManager::setupPipeline()
 	pqPipelineSource* fesppReader;
 
 	if (manager->etp_existPipe()) 	{
-		fesppReader = manager->getFesppReader();
+		fesppReader = manager->getFesppReader("EtpDocument");
 	}
 	else {
 		fesppReader = builder->createReader("sources", "Fespp", QStringList("EtpDocument"), Server);
