@@ -49,7 +49,7 @@ void VtkTriangulatedRepresentation::createOutput(const std::string &uuid)
 	if (!subRepresentation)	{
 		RESQML2_0_1_NS::TriangulatedSetRepresentation* triangulatedSetRepresentation = epcPackageRepresentation->getDataObjectByUuid<RESQML2_0_1_NS::TriangulatedSetRepresentation>(getUuid());
 
-		if (vtkOutput != nullptr && triangulatedSetRepresentation != nullptr) {
+		if (vtkOutput == nullptr && triangulatedSetRepresentation != nullptr) {
 			vtkOutput = vtkSmartPointer<vtkPolyData>::New();
 
 			// POINT
