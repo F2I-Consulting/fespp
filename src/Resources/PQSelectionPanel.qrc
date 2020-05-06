@@ -23,5 +23,7 @@
 	<file>Interpretation_2D.png</file>
 	<file>Interpretation_3D.png</file>
 	<file>WellBoreMarker.png</file>
+	<file>WellBoreFrameMarker.png</file>
+	<file>WellBoreFrame.png</file>
   </qresource>
 </RCC>

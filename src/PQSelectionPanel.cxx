@@ -644,6 +644,8 @@ void PQSelectionPanel::populateTreeView(const std::string & parent,
 						break;
 					}
 					case VtkEpcCommon::Resqml2Type::WELL_MARKER_FRAME: {
+						icon.addFile(QString::fromUtf8(":WellBoreFrameMarker.png"),
+								QSize(), QIcon::Normal, QIcon::Off);
 						treeItem->setCheckState(0, Qt::Unchecked);
 						break;
 					}
@@ -654,7 +656,7 @@ void PQSelectionPanel::populateTreeView(const std::string & parent,
 						break;
 					}
 					case VtkEpcCommon::Resqml2Type::WELL_FRAME: {
-						icon.addFile(QString::fromUtf8(":Interpretation_2D.png"),
+						icon.addFile(QString::fromUtf8(":WellBoreFrame.png"),
 								QSize(), QIcon::Normal, QIcon::Off);
 						treeItem->setCheckState(0, Qt::Unchecked);
 						break;
