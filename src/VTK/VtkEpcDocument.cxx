@@ -188,6 +188,14 @@ void VtkEpcDocument::createTreeVtk(const std::string & uuid, const std::string &
 			addWellTrajTreeVtk(uuid, parent, name);
 			break;
 		}
+		case VtkEpcCommon::Resqml2Type::WELL_FRAME: {
+			addWellTrajTreeVtk(uuid, parent, name);
+			break;
+		}
+		case VtkEpcCommon::Resqml2Type::WELL_MARKER: {
+			addWellTrajTreeVtk(uuid, parent, name);
+			break;
+		}
 		case VtkEpcCommon::Resqml2Type::IJK_GRID: {
 			addIjkGridTreeVtk(uuid, parent, name);
 			break;
@@ -244,6 +252,17 @@ void VtkEpcDocument::addTriangulatedSetTreeVtk(const std::string & uuid, const s
 void VtkEpcDocument::addWellTrajTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name)
 {
 	uuidToVtkWellboreTrajectoryRepresentation[uuid] = new VtkWellboreTrajectoryRepresentation(getFileName(), name, uuid, parent, &repository, nullptr);
+}
+
+// ----------------------------------------------------------------------------
+void VtkEpcDocument::addWellFrameTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name)
+{
+	uuidToVtkWellboreTrajectoryRepresentation[parent]->addWellboreFrame(uuid);
+}
+// ----------------------------------------------------------------------------
+void VtkEpcDocument::addWellMarkerTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name)
+{
+	uuidToVtkWellboreTrajectoryRepresentation[parent]->addWellboreMarker(uuid);
 }
 
 // ----------------------------------------------------------------------------
@@ -333,6 +352,11 @@ int VtkEpcDocument::addPropertyTreeVtk(const std::string & uuid, const std::stri
 	}
 	case VtkEpcCommon::WELL_TRAJ: {
 		uuidToVtkWellboreTrajectoryRepresentation[parent]->createTreeVtk(uuid, parent, name, uuidIsChildOf[uuid].getType());
+		return 1;
+		break;
+	}
+	case VtkEpcCommon::WELL_FRAME: {
+		uuidToVtkWellboreTrajectoryRepresentation[parent]->createTreeVtk(uuid, uuidIsChildOf[parent].getParent(), name, uuidIsChildOf[parent].getType());
 		return 1;
 		break;
 	}
@@ -1373,41 +1397,54 @@ void VtkEpcDocument::searchIjkGrid(const std::string & fileName) {
 }
 
 void VtkEpcDocument::searchWellboreTrajectory(const std::string & fileName) {
-	std::vector<resqml2_0_1::WellboreTrajectoryRepresentation*> WellboreTrajectory;
+	std::vector<resqml2_0_1::WellboreTrajectoryRepresentation*> wellboreTrajectory_set;
 	try	{
-		WellboreTrajectory = repository.getWellboreTrajectoryRepresentationSet();
+		wellboreTrajectory_set = repository.getWellboreTrajectoryRepresentationSet();
 	}
 	catch  (const std::exception & e)	{
 		cout << "EXCEPTION in fesapi when call getWellboreTrajectoryRepresentationSet with file: " << fileName << " : " << e.what();
 	}
-	for (size_t iter = 0; iter < WellboreTrajectory.size(); ++iter)	{
-		if (WellboreTrajectory[iter]->isPartial()) {
-			auto vtkEpcSrc = epcSet->getVtkEpcDocument(WellboreTrajectory[iter]->getUuid());
+	for (const auto& wellboreTrajectory: wellboreTrajectory_set)	{
+		if (wellboreTrajectory->isPartial()) {
+			auto vtkEpcSrc = epcSet->getVtkEpcDocument(wellboreTrajectory->getUuid());
 			if (vtkEpcSrc)	{
-				auto type_in_epcdoc = epcSet->getTypeInEpcDocument(WellboreTrajectory[iter]->getUuid());
+				auto type_in_epcdoc = epcSet->getTypeInEpcDocument(wellboreTrajectory->getUuid());
 				if (type_in_epcdoc == VtkEpcCommon::WELL_TRAJ){
-					createTreeVtkPartialRep(WellboreTrajectory[iter]->getUuid(), vtkEpcSrc);
-					uuidIsChildOf[WellboreTrajectory[iter]->getUuid()].setParentType( VtkEpcCommon::WELL_TRAJ);
+					createTreeVtkPartialRep(wellboreTrajectory->getUuid(), vtkEpcSrc);
+					uuidIsChildOf[wellboreTrajectory->getUuid()].setParentType( VtkEpcCommon::WELL_TRAJ);
 				} else {
-					epc_error = epc_error + " Partial UUID (" + WellboreTrajectory[iter]->getUuid() + ") is WellboreTrajectory type and is incorrect \n";
+					epc_error = epc_error + " Partial UUID (" + wellboreTrajectory->getUuid() + ") is WellboreTrajectory type and is incorrect \n";
 				}
 			} else {
-				epc_error = epc_error + " Partial UUID: (" + WellboreTrajectory[iter]->getUuid() + ") is not loaded \n";
+				epc_error = epc_error + " Partial UUID: (" + wellboreTrajectory->getUuid() + ") is not loaded \n";
 			}
 		} else {
-			auto interpretation = WellboreTrajectory[iter]->getInterpretation();
+			auto interpretation = wellboreTrajectory->getInterpretation();
 			std::string uuidParent = fileName;
 			if (interpretation) {
 				uuidParent = interpretation->getUuid();
 				createTreeVtk(uuidParent, fileName, interpretation->getTitle().c_str(), VtkEpcCommon::INTERPRETATION_1D);
 			}
-			createTreeVtk(WellboreTrajectory[iter]->getUuid(), uuidParent, WellboreTrajectory[iter]->getTitle().c_str(), VtkEpcCommon::WELL_TRAJ);
+			createTreeVtk(wellboreTrajectory->getUuid(), uuidParent, wellboreTrajectory->getTitle().c_str(), VtkEpcCommon::WELL_TRAJ);
 		}
 
-		//property
-		auto valuesPropertySet = WellboreTrajectory[iter]->getValuesPropertySet();
-		for (size_t i = 0; i < valuesPropertySet.size(); ++i)		{
-			createTreeVtk(valuesPropertySet[i]->getUuid(), WellboreTrajectory[iter]->getUuid(), valuesPropertySet[i]->getTitle().c_str(), VtkEpcCommon::PROPERTY);
+		//wellboreFrame
+		auto wellboreFrame_set = wellboreTrajectory->getWellboreFrameRepresentationSet();
+		for(const auto& wellboreFrame: wellboreFrame_set) {
+			if (wellboreFrame->getXmlTag() == "WellboreFrameRepresentation") { // WellboreFrame
+				createTreeVtk(wellboreFrame->getUuid(), wellboreTrajectory->getUuid(), wellboreFrame->getTitle().c_str(), VtkEpcCommon::WELL_FRAME);
+				auto valuesPropertySet = wellboreFrame->getValuesPropertySet();
+				for (const auto& property: valuesPropertySet)		{
+					createTreeVtk(property->getUuid(), wellboreFrame->getUuid(), property->getTitle().c_str(), VtkEpcCommon::PROPERTY);
+				}
+			} else if (wellboreFrame->getXmlTag() == "WellboreMarkerFrameRepresentation") { // WellboreMarker
+				createTreeVtk(wellboreFrame->getUuid(), wellboreTrajectory->getUuid(), wellboreFrame->getTitle().c_str(), VtkEpcCommon::WELL_MARKER_FRAME);
+				auto wellboreMarkerFrame = static_cast<resqml2_0_1::WellboreMarkerFrameRepresentation*>(wellboreFrame);
+				auto wellboreMarker_set = wellboreMarkerFrame->getWellboreMarkerSet();
+				for(const auto& wellboreMarker: wellboreMarker_set) {
+					createTreeVtk(wellboreMarker->getUuid(), wellboreMarkerFrame->getUuid(), wellboreMarker->getTitle().c_str(), VtkEpcCommon::WELL_MARKER);
+				}
+			}
 		}
 	}
 }

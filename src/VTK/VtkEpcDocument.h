@@ -109,6 +109,8 @@ private:
 	void addPolylineSetTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name);
 	void addTriangulatedSetTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name);
 	void addWellTrajTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name);
+	void addWellFrameTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name);
+	void addWellMarkerTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name);
 	void addIjkGridTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name);
 	void addUnstrucGridTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name);
 	int addSubRepTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name);

@@ -643,6 +643,22 @@ void PQSelectionPanel::populateTreeView(const std::string & parent,
 						uuidsWellbore.insert(uuid, false);
 						break;
 					}
+					case VtkEpcCommon::Resqml2Type::WELL_MARKER_FRAME: {
+						treeItem->setCheckState(0, Qt::Unchecked);
+						break;
+					}
+					case VtkEpcCommon::Resqml2Type::WELL_MARKER: {
+						icon.addFile(QString::fromUtf8(":WellBoreMarker.png"),
+								QSize(), QIcon::Normal, QIcon::Off);
+						treeItem->setCheckState(0, Qt::Unchecked);
+						break;
+					}
+					case VtkEpcCommon::Resqml2Type::WELL_FRAME: {
+						icon.addFile(QString::fromUtf8(":Interpretation_2D.png"),
+								QSize(), QIcon::Normal, QIcon::Off);
+						treeItem->setCheckState(0, Qt::Unchecked);
+						break;
+					}
 					case VtkEpcCommon::Resqml2Type::IJK_GRID: {
 						icon.addFile(QString::fromUtf8(":IjkGrid.png"), QSize(),
 								QIcon::Normal, QIcon::Off);

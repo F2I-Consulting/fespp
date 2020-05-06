@@ -29,16 +29,12 @@ under the License.
 #include <fesapi/resqml2_0_1/WellboreTrajectoryRepresentation.h>
 
 // FESPP
-#include "VtkWellboreTrajectoryRepresentationDatum.h"
-#include "VtkWellboreTrajectoryRepresentationText.h"
 #include "VtkWellboreTrajectoryRepresentationPolyLine.h"
 
 //----------------------------------------------------------------------------
 VtkWellboreTrajectoryRepresentation::VtkWellboreTrajectoryRepresentation(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, COMMON_NS::DataObjectRepository *repoRepresentation, COMMON_NS::DataObjectRepository *repoSubRepresentation) :
 VtkResqml2MultiBlockDataSet(fileName, name, uuid, uuidParent), repositoryRepresentation(repoRepresentation), repositorySubRepresentation(repoSubRepresentation),
-polyline(getFileName(), name, uuid+"-Polyline", uuidParent, repoRepresentation, repoSubRepresentation),
-head(getFileName(), name, uuid+"-Head", uuidParent, repoRepresentation, repoSubRepresentation),
-text(getFileName(), name, uuid+"-Text", uuidParent, repoRepresentation, repoSubRepresentation)
+polyline(getFileName(), name, uuid+"-Polyline", uuidParent, repoRepresentation, repoSubRepresentation)
 {
 }
 
@@ -67,7 +63,6 @@ void VtkWellboreTrajectoryRepresentation::createTreeVtk(const std::string & uuid
 int VtkWellboreTrajectoryRepresentation::createOutput(const std::string & uuid)
 {
 	polyline.createOutput(uuid);
-	//	head.createOutput(uuid);
 	return 1;
 }
 //----------------------------------------------------------------------------
@@ -95,15 +90,24 @@ void VtkWellboreTrajectoryRepresentation::attach()
 	unsigned int index =0;
 	vtkOutput->SetBlock(index, polyline.getOutput());
 	vtkOutput->GetMetaData(index++)->Set(vtkCompositeDataSet::NAME(),polyline.getName().c_str());
-
-	vtkOutput->SetBlock(index, head.getOutput());
-	vtkOutput->GetMetaData(index++)->Set(vtkCompositeDataSet::NAME(),head.getName().c_str());
 }
 
 //----------------------------------------------------------------------------
 void VtkWellboreTrajectoryRepresentation::addProperty(const std::string & uuidProperty, vtkDataArray* dataProperty)
 {
 	polyline.addProperty(uuidProperty, dataProperty);
+}
+
+//----------------------------------------------------------------------------
+void VtkWellboreTrajectoryRepresentation::addWellboreFrame(const std::string & uuid)
+{
+	uuid_wellboreFrame_set.push_back(uuid);
+}
+
+//----------------------------------------------------------------------------
+void VtkWellboreTrajectoryRepresentation::addWellboreMarker(const std::string & uuid)
+{
+	uuid_wellboreMarker_set.push_back(uuid);
 }
 
 //----------------------------------------------------------------------------

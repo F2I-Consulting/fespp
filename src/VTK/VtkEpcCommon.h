@@ -1,4 +1,4 @@
-﻿/*-----------------------------------------------------------------------
+﻿/* ----------------------------------------------------------------------
 Licensed to the Apache Software Foundation (ASF) under one
 or more contributor license agreements.  See the NOTICE file
 distributed with this work for additional information
@@ -31,7 +31,29 @@ public:
 
 	enum FesppAttachmentProperty { POINTS = 0, CELLS = 1 };
 	enum modeVtkEpc {TreeView=0, Representation=1, Both=2};
-	enum Resqml2Type { UNKNOW = -1, EPC_DOC = 0, ETP_DOC = 1, /*FEATURE = 1,*/ INTERPRETATION_1D = 2, INTERPRETATION_2D = 3, INTERPRETATION_3D = 4, POLYLINE_SET = 5, TRIANGULATED_SET = 6, POLYLINE = 7, TRIANGULATED = 8, IJK_GRID = 9, GRID_2D = 16, PROPERTY = 15, UNSTRUC_GRID = 10, WELL_TRAJ = 11, PARTIAL = 12, SUB_REP = 13, TIME_SERIES = 14 };
+	enum Resqml2Type {
+		UNKNOW = -1,
+		EPC_DOC = 0,
+		ETP_DOC = 1,
+		INTERPRETATION_1D = 2,
+		INTERPRETATION_2D = 3,
+		INTERPRETATION_3D = 4,
+		POLYLINE_SET = 5,
+		TRIANGULATED_SET = 6,
+		POLYLINE = 7,
+		TRIANGULATED = 8,
+		IJK_GRID = 9,
+		UNSTRUC_GRID = 10,
+		WELL_TRAJ = 11,
+		WELL_MARKER = 12,
+		WELL_MARKER_FRAME = 13,
+		WELL_FRAME = 14,
+		PROPERTY = 15,
+		GRID_2D = 16,
+		PARTIAL = 17,
+		SUB_REP = 18,
+		TIME_SERIES = 19
+	};
 
 	std::string	getUuid() const;
 	void setUuid(const std::string &);
