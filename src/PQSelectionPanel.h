@@ -121,10 +121,16 @@ protected slots:
 	void timeChangedComboBox(int);
 	void sliderMoved(int);
 
+	//*************
 	// right click
+	//*************
 	void treeCustomMenu(const QPoint &);
-	void selectAllWell();
-	void unselectAllWell();
+	/**
+	* Toogle the status of all wells in the treeview
+	*
+	* @param select true if we want to select all wells, false otherwise
+	*/
+	void toggleAllWells(bool select);
 	void subscribe_slot();
 	void subscribeChildren_slot();
 
@@ -138,7 +144,6 @@ private:
 
 	void populateTreeView(const std::string &  parent, VtkEpcCommon::Resqml2Type parentType, const std::string &  uuid, const std::string &  name, VtkEpcCommon::Resqml2Type type);
 	void updateTimeSeries(const std::string & uuid, bool isnew);
-	void deleteUUID(QTreeWidgetItem *item);
 
 	void constructor();
 	
@@ -158,14 +163,11 @@ private:
 	void addTreeProperty(QTreeWidgetItem *parent, const std::string & parentUUid, const std::string & name, const std::string & uuid);
 
 	/**
-	* Load representation/property uuid's
+	* Load/Unload representation/property uuid's
+	*
+	* @param load true if we want to load the UUID, other wise false.
 	*/
-	void loadUuid(const std::string & uuid);
-	
-	/**
-	* Remove representation/property uuid's
-	*/
-	void removeUuid(const std::string & uuid);
+	void toggleUuid(const std::string & uuid, bool load);
 	
 	QTreeWidget *treeWidget;
 	QPushButton *button_Time_After;
@@ -180,7 +182,6 @@ private:
 
 	bool time_Changed;
 
-	unsigned int indexFile;
 	std::vector<std::string> allFileName;
 	QMap<std::string, std::string> uuidToFilename;
 	QMap<std::string, std::string> uuidToPipeName;
