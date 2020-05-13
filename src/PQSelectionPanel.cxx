@@ -291,20 +291,58 @@ void PQSelectionPanel::clicSelection(QTreeWidgetItem* item, int column) {
 void PQSelectionPanel::onItemCheckedUnchecked(QTreeWidgetItem * item, int column)
 {
 	std::string uuid = itemUuid[item];
-	if (!uuid.empty()) {
-		if (item->checkState(0) == Qt::Checked) {
-			toggleUuid(uuid, true);
-		}
-		else if (item->checkState(0) == Qt::Unchecked) {
-			// Property exist
-			if (uuidItem[uuid]->childCount() > 0 && mapUuidWithProperty[uuid] != "") {
-				toggleUuid(mapUuidWithProperty[uuid], false);
+	if (canLoad) {
+		if (!uuid.empty()) {
+			if (item->checkState(0) == Qt::Checked) {
+				canLoad = false;
+				if (item->parent()) {
+					item->parent()->setCheckState(0, Qt::Checked);
+				}
+				canLoad = true;
+				toggleUuid(uuid, true);
+			} else if (item->checkState(0) == Qt::Unchecked) {
 
-				mapUuidWithProperty[uuid] = "";
-				mapUuidParentButtonInvisible[uuid]->setChecked(true);
-				uuidItem[uuid]->setData(0, Qt::CheckStateRole, QVariant());
+				// Uncheck all children
+				int childCount = item->childCount();
+				canLoad = false;
+				for (int idx_child = 0; idx_child < childCount; idx_child++) {
+					item->child(idx_child)->setCheckState(0, Qt::Unchecked);
+				}
+				if (childCount > 0) {
+					item->setData(0, Qt::CheckStateRole, QVariant());
+				}
+
+				// Verify if all children of parent are Unchecked
+				int parentChildren_count = item->parent()->childCount();
+				bool exist_childChecked = false;
+				for (int idx_child = 0; idx_child < parentChildren_count; idx_child++) {
+					if (item->parent()->child(idx_child)->checkState(0) == Qt::Checked) {
+						exist_childChecked = true;
+					}
+				}
+				if (!exist_childChecked) {
+					item->parent()->setCheckState(0, Qt::Unchecked);
+				}
+
+				canLoad = true;
+				toggleUuid(uuid, false);
 			}
-			toggleUuid(uuid, false);
+		}
+	} else { // check/uncheck => parent/children without load or remove representation
+		if (!uuid.empty()) {
+			if (item->checkState(0) == Qt::Checked) {
+				if (item->parent()) {
+					item->parent()->setCheckState(0, Qt::Checked);
+				}
+			} else if (item->checkState(0) == Qt::Unchecked) {
+				int childCount = item->childCount();
+				for (int idx_child = 0; idx_child < childCount; idx_child++) {
+					item->child(idx_child)->setCheckState(0, Qt::Unchecked);
+				}
+				if (childCount > 0) {
+					item->setData(0, Qt::CheckStateRole, QVariant());
+				}
+			}
 		}
 	}
 }
@@ -313,7 +351,6 @@ void PQSelectionPanel::onItemCheckedUnchecked(QTreeWidgetItem * item, int column
 void PQSelectionPanel::deleteTreeView() {
 	treeWidget->clear();
 
-	radioButtonCount = 0;
 	allFileName.clear();
 	uuidToFilename.clear();
 	filenameToUuids.clear();
@@ -321,65 +358,15 @@ void PQSelectionPanel::deleteTreeView() {
 
 	uuidItem.clear();
 	itemUuid.clear();
-	uuidParentItem.clear();
 
 	mapUuidProperty.clear();
 	mapUuidWithProperty.clear();
 
-	radioButton_to_id.clear();
-
-	mapUuidParentButtonInvisible.clear();
-
 	pcksave.clear();
-	uuidParent_to_groupButton.clear();
-	radioButton_to_uuid.clear();
 
-	if (vtkEpcDocumentSet != nullptr) {
+	if (vtkEpcDocumentSet!=nullptr) {
 		delete vtkEpcDocumentSet;
 		vtkEpcDocumentSet = new VtkEpcDocumentSet(0, 0, VtkEpcCommon::TreeView);
-	}
-}
-
-//----------------------------------------------------------------------------
-void PQSelectionPanel::checkedRadioButton(int rbNo) {
-	emit button_Time_Pause->released();
-	if (radioButton_to_id.contains(rbNo)) {
-		std::string uuid = radioButton_to_id[rbNo];
-		std::string uuidParent = itemUuid[uuidParentItem[uuid]];
-
-		canLoad = searchSource(uuidParent) == "EtpDocument";
-
-		if (uuidParentItem[uuid]->checkState(0) != Qt::Checked) {
-			uuidParentItem[uuid]->setCheckState(0, Qt::Checked);
-		}
-
-		std::string uuidOld = mapUuidWithProperty[uuidParent];
-		canLoad = true;
-
-		if (!uuidOld.empty()) {
-			if (ts_timestamp_to_uuid.count(uuidOld) > 0) {
-				time_t time = QDateTime::fromString(time_series->currentText()).toTime_t();
-
-				toggleUuid(ts_timestamp_to_uuid[uuidOld][time], false);
-
-				updateTimeSeries(uuidOld, false);
-			}
-			else {
-				toggleUuid(uuidOld, false);
-			}
-		}
-		mapUuidWithProperty[uuidParent] = uuid;
-
-		if (ts_timestamp_to_uuid.count(uuid) > 0) {
-			updateTimeSeries(uuid, true);
-
-			time_t time = QDateTime::fromString(time_series->currentText()).toTime_t();
-
-			toggleUuid(ts_timestamp_to_uuid[uuid][time], true);
-		}
-		else {
-			toggleUuid(uuid, true);
-		}
 	}
 }
 
@@ -537,13 +524,12 @@ void PQSelectionPanel::populateTreeView(const std::string & parent,
 		VtkEpcCommon::Resqml2Type parentType, const std::string & uuid,
 		const std::string & name, VtkEpcCommon::Resqml2Type type) {
 	canLoad = false;
-	if (!uuid.empty()) {
-		if (uuidItem[uuid] == nullptr) {
+	if (uuid != "") {
+		if (!uuidItem[uuid]) {
 			if (parentType == VtkEpcCommon::Resqml2Type::PARTIAL
 					&& !uuidItem[parent]) {
-			}
-			else {
-				if (uuidItem[parent] == nullptr) {
+			} else {
+				if (!uuidItem[parent]) {
 					QTreeWidgetItem *treeItem = new QTreeWidgetItem(treeWidget);
 
 					treeItem->setExpanded(true);
@@ -553,151 +539,133 @@ void PQSelectionPanel::populateTreeView(const std::string & parent,
 					itemUuid[treeItem] = parent;
 				}
 
-				if (type == VtkEpcCommon::PROPERTY
-						|| type == VtkEpcCommon::TIME_SERIES) {
-					addTreeProperty(uuidItem[parent], parent, name, uuid);
-				} else {
+				QIcon icon;
+				QTreeWidgetItem *treeItem = new QTreeWidgetItem();
 
-					QTreeWidgetItem *treeItem = new QTreeWidgetItem();
+				treeItem->setText(0, name.c_str());
+				treeItem->setFlags(
+						treeItem->flags() | Qt::ItemIsSelectable);
 
-					treeItem->setText(0, name.c_str());
-					treeItem->setFlags(
-							treeItem->flags() | Qt::ItemIsSelectable);
-
-					QIcon icon;
-					switch (type) {
-					case VtkEpcCommon::Resqml2Type::INTERPRETATION_1D: {
-						icon.addFile(QString::fromUtf8(":Interpretation_1D.png"), QSize(),
-								QIcon::Normal, QIcon::Off);
-						break;
+				switch (type) {
+				case VtkEpcCommon::Resqml2Type::PROPERTY: {
+					if (uuidItem[parent]->checkState(0)!=Qt::Checked) {
+						uuidItem[parent]->setData(0, Qt::CheckStateRole, QVariant());
 					}
-					case VtkEpcCommon::Resqml2Type::INTERPRETATION_2D: {
-						icon.addFile(QString::fromUtf8(":Interpretation_2D.png"), QSize(),
-								QIcon::Normal, QIcon::Off);
-						break;
-					}
-					case VtkEpcCommon::Resqml2Type::INTERPRETATION_3D: {
-						icon.addFile(QString::fromUtf8(":Interpretation_3D.png"), QSize(),
-								QIcon::Normal, QIcon::Off);
-						break;
-					}
-					case VtkEpcCommon::Resqml2Type::GRID_2D: {
-						icon.addFile(QString::fromUtf8(":Grid2D.png"), QSize(),
-								QIcon::Normal, QIcon::Off);
-						treeItem->setCheckState(0, Qt::Unchecked);
-						break;
-					}
-					case VtkEpcCommon::Resqml2Type::POLYLINE_SET: {
-						icon.addFile(QString::fromUtf8(":Polyline.png"),
-								QSize(), QIcon::Normal, QIcon::Off);
-						treeItem->setCheckState(0, Qt::Unchecked);
-						break;
-					}
-					case VtkEpcCommon::Resqml2Type::TRIANGULATED_SET: {
-						icon.addFile(QString::fromUtf8(":Triangulated.png"),
-								QSize(), QIcon::Normal, QIcon::Off);
-						treeItem->setCheckState(0, Qt::Unchecked);
-						break;
-					}
-					case VtkEpcCommon::Resqml2Type::WELL_TRAJ: {
-						icon.addFile(QString::fromUtf8(":WellTraj.png"),
-								QSize(), QIcon::Normal, QIcon::Off);
-						treeItem->setCheckState(0, Qt::Unchecked);
-						uuidsWellbore.insert(uuid, false);
-						break;
-					}
-					case VtkEpcCommon::Resqml2Type::WELL_MARKER_FRAME: {
-						icon.addFile(QString::fromUtf8(":WellBoreFrameMarker.png"),
-								QSize(), QIcon::Normal, QIcon::Off);
-						treeItem->setCheckState(0, Qt::Unchecked);
-						break;
-					}
-					case VtkEpcCommon::Resqml2Type::WELL_MARKER: {
-						icon.addFile(QString::fromUtf8(":WellBoreMarker.png"),
-								QSize(), QIcon::Normal, QIcon::Off);
-						treeItem->setCheckState(0, Qt::Unchecked);
-						break;
-					}
-					case VtkEpcCommon::Resqml2Type::WELL_FRAME: {
-						icon.addFile(QString::fromUtf8(":WellBoreFrame.png"),
-								QSize(), QIcon::Normal, QIcon::Off);
-						treeItem->setCheckState(0, Qt::Unchecked);
-						break;
-					}
-					case VtkEpcCommon::Resqml2Type::IJK_GRID: {
-						icon.addFile(QString::fromUtf8(":IjkGrid.png"), QSize(),
-								QIcon::Normal, QIcon::Off);
-						treeItem->setCheckState(0, Qt::Unchecked);
-						break;
-					}
-					case VtkEpcCommon::Resqml2Type::UNSTRUC_GRID: {
-						icon.addFile(QString::fromUtf8(":UnstructuredGrid.png"),
-								QSize(), QIcon::Normal, QIcon::Off);
-						treeItem->setCheckState(0, Qt::Unchecked);
-						break;
-					}
-					case VtkEpcCommon::Resqml2Type::SUB_REP: {
-						icon.addFile(
-								QString::fromUtf8(":SubRepresentation.png"),
-								QSize(), QIcon::Normal, QIcon::Off);
-						treeItem->setCheckState(0, Qt::Unchecked);
-						break;
-					}
-					default:
-						break;
-					}
-
-					treeItem->setIcon(0, icon);
-
-					uuidItem[parent]->addChild(treeItem);
-
-					uuidItem[uuid] = treeItem;
-					itemUuid[treeItem] = uuid;
-
-					filenameToUuids[uuidToFilename[uuid]].push_back(uuid);
+					treeItem->setCheckState(0, Qt::Unchecked);
+					break;
 				}
+				case VtkEpcCommon::Resqml2Type::TIME_SERIES: {
+					if (uuidItem[parent]->checkState(0)!=Qt::Checked) {
+						uuidItem[parent]->setData(0, Qt::CheckStateRole, QVariant());
+					}
+					treeItem->setCheckState(0, Qt::Unchecked);
+					break;
+				}
+ 				case VtkEpcCommon::Resqml2Type::INTERPRETATION_1D: {
+					icon.addFile(QString::fromUtf8(":Interpretation_1D.png"), QSize(),
+							QIcon::Normal, QIcon::Off);
+					cout << icon.name().toStdString() << endl;
+					break;
+				}
+				case VtkEpcCommon::Resqml2Type::INTERPRETATION_2D: {
+					icon.addFile(QString::fromUtf8(":Interpretation_2D.png"), QSize(),
+							QIcon::Normal, QIcon::Off);
+					cout << icon.name().toStdString() << endl;
+					break;
+				}
+				case VtkEpcCommon::Resqml2Type::INTERPRETATION_3D: {
+					icon.addFile(QString::fromUtf8(":Interpretation_3D.png"), QSize(),
+							QIcon::Normal, QIcon::Off);
+					cout << icon.name().toStdString() << endl;
+					break;
+				}
+				case VtkEpcCommon::Resqml2Type::GRID_2D: {
+					icon.addFile(QString::fromUtf8(":Grid2D.png"), QSize(),
+							QIcon::Normal, QIcon::Off);
+					treeItem->setCheckState(0, Qt::Unchecked);
+					break;
+				}
+				case VtkEpcCommon::Resqml2Type::POLYLINE_SET: {
+					icon.addFile(QString::fromUtf8(":Polyline.png"),
+							QSize(), QIcon::Normal, QIcon::Off);
+					treeItem->setCheckState(0, Qt::Unchecked);
+					break;
+				}
+				case VtkEpcCommon::Resqml2Type::TRIANGULATED_SET: {
+					icon.addFile(QString::fromUtf8(":Triangulated.png"),
+							QSize(), QIcon::Normal, QIcon::Off);
+					treeItem->setCheckState(0, Qt::Unchecked);
+					break;
+				}
+				case VtkEpcCommon::Resqml2Type::WELL_TRAJ: {
+					icon.addFile(QString::fromUtf8(":WellTraj.png"),
+							QSize(), QIcon::Normal, QIcon::Off);
+					treeItem->setCheckState(0, Qt::Unchecked);
+					uuidsWellbore.insert(uuid, false);
+					break;
+				}
+				case VtkEpcCommon::Resqml2Type::WELL_MARKER_FRAME: {
+					icon.addFile(QString::fromUtf8(":WellBoreFrameMarker.png"),
+							QSize(), QIcon::Normal, QIcon::Off);
+					if (uuidItem[parent]->checkState(0)!=Qt::Checked) {
+						uuidItem[parent]->setData(0, Qt::CheckStateRole, QVariant());
+					}
+					treeItem->setCheckState(0, Qt::Unchecked);
+					break;
+				}
+				case VtkEpcCommon::Resqml2Type::WELL_MARKER: {
+					icon.addFile(QString::fromUtf8(":WellBoreMarker.png"),
+							QSize(), QIcon::Normal, QIcon::Off);
+					if (uuidItem[parent]->checkState(0)!=Qt::Checked) {
+						uuidItem[parent]->setData(0, Qt::CheckStateRole, QVariant());
+					}
+					treeItem->setCheckState(0, Qt::Unchecked);
+					break;
+				}
+				case VtkEpcCommon::Resqml2Type::WELL_FRAME: {
+					icon.addFile(QString::fromUtf8(":WellBoreFrame.png"),
+							QSize(), QIcon::Normal, QIcon::Off);
+					if (uuidItem[parent]->checkState(0)!=Qt::Checked) {
+						uuidItem[parent]->setData(0, Qt::CheckStateRole, QVariant());
+					}
+					treeItem->setCheckState(0, Qt::Unchecked);
+					break;
+				}
+				case VtkEpcCommon::Resqml2Type::IJK_GRID: {
+					icon.addFile(QString::fromUtf8(":IjkGrid.png"), QSize(),
+							QIcon::Normal, QIcon::Off);
+					treeItem->setCheckState(0, Qt::Unchecked);
+					break;
+				}
+				case VtkEpcCommon::Resqml2Type::UNSTRUC_GRID: {
+					icon.addFile(QString::fromUtf8(":UnstructuredGrid.png"),
+							QSize(), QIcon::Normal, QIcon::Off);
+					treeItem->setCheckState(0, Qt::Unchecked);
+					break;
+				}
+				case VtkEpcCommon::Resqml2Type::SUB_REP: {
+					icon.addFile(
+							QString::fromUtf8(":SubRepresentation.png"),
+							QSize(), QIcon::Normal, QIcon::Off);
+					treeItem->setCheckState(0, Qt::Unchecked);
+					break;
+				}
+				default:
+					break;
+				}
+
+				treeItem->setIcon(0, icon);
+
+				uuidItem[parent]->addChild(treeItem);
+				uuidItem[uuid] = treeItem;
+				itemUuid[treeItem] = uuid;
+
+				filenameToUuids[uuidToFilename[uuid]].push_back(uuid);
 			}
+			//		}
 		}
 	}
 	canLoad = true;
-}
-
-//----------------------------------------------------------------------------
-void PQSelectionPanel::addTreeProperty(QTreeWidgetItem *parent,
-		const std::string & parentUuid, const std::string & name,
-		const std::string & uuid) {
-	QButtonGroup *buttonGroup;
-	if (uuidParent_to_groupButton.count(parentUuid) < 1) {
-		buttonGroup = new QButtonGroup();
-		buttonGroup->setExclusive(true);
-		QRadioButton *radioButtonInvisible = new QRadioButton("invisible");
-		buttonGroup->addButton(radioButtonInvisible, radioButtonCount++);
-		mapUuidParentButtonInvisible[parentUuid] = radioButtonInvisible;
-		connect(buttonGroup, QOverload<int>::of(&QButtonGroup::buttonClicked),
-			this, &PQSelectionPanel::checkedRadioButton);
-	}
-	else {
-		buttonGroup = uuidParent_to_groupButton[itemUuid[parent]];
-	}
-	QTreeWidgetItem *treeItem = new QTreeWidgetItem();
-	QRadioButton *radioButton = new QRadioButton(QString::fromStdString(name));
-	radioButton_to_id[radioButtonCount] = uuid;
-	buttonGroup->addButton(radioButton, radioButtonCount);
-	parent->addChild(treeItem);
-	treeWidget->setItemWidget(treeItem, 0, radioButton);
-	uuidItem[uuid] = treeItem;
-	uuidParentItem[uuid] = parent;
-	itemUuid[treeItem] = uuid;
-	uuidToFilename[uuid] = uuidToFilename[itemUuid[parent]];
-
-	radioButtonCount++;
-	radioButton_to_uuid[radioButton] = uuid;
-
-	if (parent->checkState(0)!=Qt::Checked) {
-		parent->setData(0, Qt::CheckStateRole, QVariant());
-	}
-
-	uuidParent_to_groupButton[itemUuid[parent]] = buttonGroup;
 }
 
 //********************************* Interfacing ******************************

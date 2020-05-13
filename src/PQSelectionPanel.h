@@ -105,11 +105,6 @@ protected slots:
 	*/
 	void onItemCheckedUnchecked(QTreeWidgetItem*,int);
 
-	/**
-	* When a row is checked.
-	*/
-	void checkedRadioButton(int);
-
 	void handleButtonAfter();
 	void handleButtonBefore();
 	void handleButtonPlay();
@@ -156,11 +151,6 @@ private:
 	* Return the active server
 	*/
     virtual pqServer * getActiveServer();
-
-	/**
-	* Add the Properties
-	*/
-	void addTreeProperty(QTreeWidgetItem *parent, const std::string & parentUUid, const std::string & name, const std::string & uuid);
 
 	/**
 	* Load/Unload representation/property uuid's
