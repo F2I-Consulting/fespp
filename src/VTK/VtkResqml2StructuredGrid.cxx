@@ -19,6 +19,9 @@ under the License.
 #include "VtkResqml2StructuredGrid.h"
 
 #include <vtkCellData.h>
+#include <vtkPointData.h>
+// FESPP
+#include "VtkProperty.h"
 
 //----------------------------------------------------------------------------
 VtkResqml2StructuredGrid::VtkResqml2StructuredGrid(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, COMMON_NS::DataObjectRepository *pckRep, COMMON_NS::DataObjectRepository *pckSubRep, const int & idProc, const int & maxProc) :
@@ -45,6 +48,12 @@ void VtkResqml2StructuredGrid::remove(const std::string & uuid)
 		vtkOutput = nullptr;
 	}
 	else if(uuidToVtkProperty[uuid]) {
-		vtkOutput->GetCellData()-> RemoveArray(0);
+		const unsigned int propertyAttachmentKind = uuidToVtkProperty[uuid]->getSupport();
+		if (propertyAttachmentKind == VtkProperty::typeSupport::CELLS) {
+			vtkOutput->GetCellData()->RemoveArray(uuidToVtkProperty[uuid]->getName().c_str());
+		}
+		else if (propertyAttachmentKind == VtkProperty::typeSupport::POINTS) {
+			vtkOutput->GetPointData()->RemoveArray(uuidToVtkProperty[uuid]->getName().c_str());
+		}
 	}
 }

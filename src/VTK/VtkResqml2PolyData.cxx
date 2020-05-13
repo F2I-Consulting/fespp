@@ -21,6 +21,8 @@ under the License.
 
 // VTK
 #include <vtkPointData.h>
+// FESPP
+#include "VtkProperty.h"
 
 //----------------------------------------------------------------------------
 VtkResqml2PolyData::VtkResqml2PolyData(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, COMMON_NS::DataObjectRepository *pckRep, COMMON_NS::DataObjectRepository *pckSubRep,
@@ -48,6 +50,6 @@ void VtkResqml2PolyData::remove(const std::string & uuid)
 		vtkOutput = nullptr;
 	}
 	else if (uuidToVtkProperty[uuid] != nullptr) {
-		vtkOutput->GetPointData()->RemoveArray(0);
+		vtkOutput->GetPointData()->RemoveArray(uuidToVtkProperty[uuid]->getName().c_str());
 	}
 }
