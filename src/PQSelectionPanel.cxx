@@ -524,12 +524,12 @@ void PQSelectionPanel::populateTreeView(const std::string & parent,
 		VtkEpcCommon::Resqml2Type parentType, const std::string & uuid,
 		const std::string & name, VtkEpcCommon::Resqml2Type type) {
 	canLoad = false;
-	if (uuid != "") {
-		if (!uuidItem[uuid]) {
+	if (!uuid.empty()) {
+		if (uuidItem[uuid] == nullptr) {
 			if (parentType == VtkEpcCommon::Resqml2Type::PARTIAL
-					&& !uuidItem[parent]) {
+					&& uuidItem[parent] == nullptr) {
 			} else {
-				if (!uuidItem[parent]) {
+				if (uuidItem[parent] == nullptr) {
 					QTreeWidgetItem *treeItem = new QTreeWidgetItem(treeWidget);
 
 					treeItem->setExpanded(true);
@@ -564,19 +564,16 @@ void PQSelectionPanel::populateTreeView(const std::string & parent,
  				case VtkEpcCommon::Resqml2Type::INTERPRETATION_1D: {
 					icon.addFile(QString::fromUtf8(":Interpretation_1D.png"), QSize(),
 							QIcon::Normal, QIcon::Off);
-					cout << icon.name().toStdString() << endl;
 					break;
 				}
 				case VtkEpcCommon::Resqml2Type::INTERPRETATION_2D: {
 					icon.addFile(QString::fromUtf8(":Interpretation_2D.png"), QSize(),
 							QIcon::Normal, QIcon::Off);
-					cout << icon.name().toStdString() << endl;
 					break;
 				}
 				case VtkEpcCommon::Resqml2Type::INTERPRETATION_3D: {
 					icon.addFile(QString::fromUtf8(":Interpretation_3D.png"), QSize(),
 							QIcon::Normal, QIcon::Off);
-					cout << icon.name().toStdString() << endl;
 					break;
 				}
 				case VtkEpcCommon::Resqml2Type::GRID_2D: {
