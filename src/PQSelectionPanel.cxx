@@ -363,7 +363,8 @@ void PQSelectionPanel::checkedRadioButton(int rbNo) {
 				toggleUuid(ts_timestamp_to_uuid[uuidOld][time], false);
 
 				updateTimeSeries(uuidOld, false);
-			} else {
+			}
+			else {
 				toggleUuid(uuidOld, false);
 			}
 		}
@@ -375,7 +376,8 @@ void PQSelectionPanel::checkedRadioButton(int rbNo) {
 			time_t time = QDateTime::fromString(time_series->currentText()).toTime_t();
 
 			toggleUuid(ts_timestamp_to_uuid[uuid][time], true);
-		} else {
+		}
+		else {
 			toggleUuid(uuid, true);
 		}
 	}
@@ -387,7 +389,8 @@ void PQSelectionPanel::handleButtonAfter() {
 	if (++idx < time_series->count()) {
 		// change the TimeStamp
 		time_series->setCurrentIndex(idx);
-	} else {
+	}
+	else {
 		time_Changed = false;
 	}
 }
@@ -432,7 +435,7 @@ void PQSelectionPanel::updateTimer() {
 void PQSelectionPanel::timeChangedComboBox(int) {
 	slider_Time_Step->setValue(time_series->currentIndex());
 
-	time_t time = QDateTime::fromString(time_series->currentText()).toTime_t();
+	time_t time = QDateTime::fromString(time_series->currentText()).toSecsSinceEpoch();
 
 	if (time != save_time) {
 		// remove old time properties
@@ -722,7 +725,7 @@ void PQSelectionPanel::toggleUuid(const std::string & uuid, bool load) {
 				// add uuid to property panel
 				vtkSMProxy* fesppReaderProxy = fesppReader->getProxy();
 
-				vtkSMPropertyHelper(fesppReaderProxy, "uuidList").SetStatus(
+				vtkSMPropertyHelper(fesppReaderProxy, "UuidList").SetStatus(
 						uuid.c_str(), load ? 1 : 0);
 
 				fesppReaderProxy->UpdatePropertyInformation();
@@ -809,7 +812,7 @@ void PQSelectionPanel::setEtpTreeView(std::vector<VtkEpcCommon> treeView) {
 				// add file to property
 				vtkSMProxy* fesppReaderProxy = fesppReader->getProxy();
 
-				vtkSMPropertyHelper(fesppReaderProxy, "uuidList").SetStatus(
+				vtkSMPropertyHelper(fesppReaderProxy, "UuidList").SetStatus(
 						"connect", 0);
 				etpCreated = true;
 

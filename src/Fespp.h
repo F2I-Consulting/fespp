@@ -19,7 +19,8 @@ under the License.
 #ifndef __FESPP_h
 #define __FESPP_h
 
-#include "vtkMultiBlockDataSetAlgorithm.h"
+#include <vtkMultiBlockDataSetAlgorithm.h>
+#include <vtkMultiProcessController.h>
 
 // include system
 #include <string>
@@ -30,7 +31,6 @@ under the License.
 #endif
 
 class VtkEpcDocumentSet;
-class vtkMultiProcessController;
 class vtkDataArraySelection;
 
 class Fespp : public vtkMultiBlockDataSetAlgorithm
@@ -52,13 +52,15 @@ public:
 	// Get/set the multi process controller to use for coordinated reads.
 	// By default, set to the global controller.
 	vtkGetObjectMacro(Controller, vtkMultiProcessController);
-	virtual void SetController(vtkMultiProcessController *);
+	vtkSetObjectMacro(Controller, vtkMultiProcessController);
 
-	vtkGetObjectMacro(uuidList, vtkDataArraySelection);
-	int GetuuidListArrayStatus(const char* name);
-	int GetNumberOfuuidListArrays();
-	const char* GetuuidListArrayName(int index);
+	vtkGetObjectMacro(UuidList, vtkDataArraySelection);
 	void SetUuidList(const char* name, int status);
+
+	// Used by Paraview, derived from the attribute UuidList
+	int GetUuidListArrayStatus(const char* name);
+	int GetNumberOfUuidListArrays();
+	const char* GetUuidListArrayName(int index);
 
 	void displayError(const std::string&);
 	void displayWarning(const std::string&);
@@ -67,8 +69,8 @@ protected:
 	Fespp();
 	~Fespp();
 
-	int RequestInformation(vtkInformation *, vtkInformationVector **, vtkInformationVector *);
-	int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *);
+	int RequestInformation(vtkInformation *, vtkInformationVector **, vtkInformationVector *) final;
+	int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) final;
 
 	void RequestDataEpcDocument(vtkInformation *, vtkInformationVector **, vtkInformationVector *);
 #ifdef WITH_ETP
@@ -77,16 +79,15 @@ protected:
 
 	void OpenEpcDocument(const std::string &);
 
+private:
+	Fespp(const Fespp&);
+
 	char* FileName;
 	char* SubFileName;
 
-	vtkDataArraySelection* uuidList;
+	vtkDataArraySelection* UuidList;
 
 	vtkMultiProcessController* Controller;
-
-private:
-	Fespp(const Fespp&);
-	void operator=(const Fespp&);
 	
 	bool loadedFile;
 

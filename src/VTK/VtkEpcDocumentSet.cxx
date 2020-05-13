@@ -80,7 +80,7 @@ void VtkEpcDocumentSet::visualizeFull()
 	if(representationMode) {
 		for (auto &vtkEpcElem : vtkEpcList) {
 			auto uuidList = vtkEpcElem->getListUuid();
-			for (auto &uuidListElem : uuidList)	{
+			for (const auto& uuidListElem : uuidList)	{
 				vtkEpcElem->visualize(uuidListElem);
 			}
 		}
@@ -91,7 +91,7 @@ void VtkEpcDocumentSet::visualizeFull()
 void VtkEpcDocumentSet::visualizeFullWell(std::string fileName)
 {
 	if(representationMode) {
-		for (auto &vtkEpcElem : vtkEpcList) {
+		for (const auto& vtkEpcElem : vtkEpcList) {
 			if (vtkEpcElem->getFileName() == fileName) {
 				vtkEpcElem->visualizeFullWell();
 				break;

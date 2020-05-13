@@ -28,7 +28,6 @@ under the License.
 #include <vtkInformation.h>
 #include <vtkInformationVector.h>
 #include <vtkMultiBlockDataSet.h>
-#include <vtkMultiProcessController.h>
 #include <vtkObjectFactory.h>
 #include <vtkOStreamWrapper.h>
 #include <vtkSetGet.h>
@@ -41,12 +40,11 @@ under the License.
 #include <ctime>
 
 vtkStandardNewMacro(Fespp);
-vtkCxxSetObjectMacro(Fespp, Controller, vtkMultiProcessController);
 
 //----------------------------------------------------------------------------
 Fespp::Fespp() :
 				FileName(nullptr), SubFileName(nullptr),
-				uuidList(vtkDataArraySelection::New()), Controller(nullptr),
+				UuidList(vtkDataArraySelection::New()), Controller(nullptr),
 				loadedFile(false), fileNameSet(std::vector<std::string>()),
 				epcDocumentSet(nullptr), isEpcDocument(false)
 #ifdef WITH_ETP
@@ -76,7 +74,7 @@ Fespp::~Fespp()
 {
 	SetController(nullptr);
 	fileNameSet.clear();
-	uuidList->Delete();
+	UuidList->Delete();
 
 	if (epcDocumentSet != nullptr) {
 		delete epcDocumentSet;
@@ -113,9 +111,9 @@ void Fespp::SetSubFileName(const char* name)
 }
 
 //----------------------------------------------------------------------------
-int Fespp::GetuuidListArrayStatus(const char* uuid)
+int Fespp::GetUuidListArrayStatus(const char* uuid)
 {
-	return (uuidList->ArrayIsEnabled(uuid));
+	return (UuidList->ArrayIsEnabled(uuid));
 }
 //----------------------------------------------------------------------------
 void Fespp::SetUuidList(const char* uuid, int status)
@@ -128,13 +126,15 @@ void Fespp::SetUuidList(const char* uuid, int status)
 			etpDocument = new VtkEtpDocument(ip, port, VtkEpcCommon::Representation);
 		}
 #endif
-	} else if (uuidStr.find("allWell-") != std::string::npos) {
+	}
+	else if (uuidStr.find("allWell-") != std::string::npos) {
 		if (status == 0) {
 			epcDocumentSet->unvisualizeFullWell(uuidStr.substr(8));
 		} else {
 			epcDocumentSet->visualizeFullWell(uuidStr.substr(8));
 		}
-	} else if (status == 0) {
+	}
+	else if (status == 0) {
 		if(isEpcDocument) {
 			epcDocumentSet->unvisualize(uuidStr);
 		}
@@ -166,15 +166,15 @@ void Fespp::SetUuidList(const char* uuid, int status)
 }
 
 //----------------------------------------------------------------------------
-int Fespp::GetNumberOfuuidListArrays()
+int Fespp::GetNumberOfUuidListArrays()
 {
-	return uuidList->GetNumberOfArrays();
+	return UuidList->GetNumberOfArrays();
 }
 
 //----------------------------------------------------------------------------
-const char* Fespp::GetuuidListArrayName(int index)
+const char* Fespp::GetUuidListArrayName(int index)
 {
-	return uuidList->GetArrayName(index);
+	return UuidList->GetArrayName(index);
 }
 
 //----------------------------------------------------------------------------
