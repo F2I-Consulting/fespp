@@ -18,6 +18,8 @@ under the License.
 -----------------------------------------------------------------------*/
 #include "VtkResqml2UnstructuredGrid.h"
 
+#include <stdexcept>
+
 #include <vtkCellData.h>
 #include <vtkPointData.h>
 // FESPP
@@ -27,12 +29,6 @@ under the License.
 VtkResqml2UnstructuredGrid::VtkResqml2UnstructuredGrid(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, COMMON_NS::DataObjectRepository *repoRepresentation, COMMON_NS::DataObjectRepository *repoSubRepresentation, int idProc, int maxProc) :
 	VtkAbstractRepresentation(fileName, name, uuid, uuidParent, repoRepresentation, repoSubRepresentation, idProc, maxProc)
 {
-}
-
-//----------------------------------------------------------------------------
-VtkResqml2UnstructuredGrid::~VtkResqml2UnstructuredGrid()
-{
-	vtkOutput = nullptr;
 }
 
 //----------------------------------------------------------------------------
@@ -47,13 +43,11 @@ void VtkResqml2UnstructuredGrid::remove(const std::string & uuid)
 	if (uuid == getUuid()) {
 		vtkOutput = nullptr;
 	}
-	else if(uuidToVtkProperty[uuid]) {
-		const unsigned int propertyAttachmentKind = uuidToVtkProperty[uuid]->getSupport();
-		if (propertyAttachmentKind == VtkProperty::typeSupport::CELLS) {
-			vtkOutput->GetCellData()->RemoveArray(uuidToVtkProperty[uuid]->getName().c_str());
-		}
-		else if (propertyAttachmentKind == VtkProperty::typeSupport::POINTS) {
-			vtkOutput->GetPointData()->RemoveArray(uuidToVtkProperty[uuid]->getName().c_str());
+	else if(uuidToVtkProperty[uuid] != nullptr) {
+		switch (uuidToVtkProperty[uuid]->getSupport()) {
+		case VtkProperty::typeSupport::CELLS: vtkOutput->GetCellData()->RemoveArray(uuidToVtkProperty[uuid]->getName().c_str()); break;
+		case VtkProperty::typeSupport::POINTS: vtkOutput->GetPointData()->RemoveArray(uuidToVtkProperty[uuid]->getName().c_str()); break;
+		default: throw std::invalid_argument("The property is attached on a non supported topological element i.e. not cell, not point.");
 		}
 	}
 }

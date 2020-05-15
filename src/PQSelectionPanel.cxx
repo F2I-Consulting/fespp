@@ -659,7 +659,6 @@ void PQSelectionPanel::populateTreeView(const std::string & parent,
 
 				filenameToUuids[uuidToFilename[uuid]].push_back(uuid);
 			}
-			//		}
 		}
 	}
 	canLoad = true;

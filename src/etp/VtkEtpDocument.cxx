@@ -149,23 +149,23 @@ void VtkEtpDocument::createTree()
 //----------------------------------------------------------------------------
 void VtkEtpDocument::visualize(const std::string & rec_uri)
 {
-	size_t pos1 = rec_uri.find_last_of("/")+1;
-	const std::string type = rec_uri.substr(pos1,rec_uri.find_last_of("(") - pos1);
-
-	pos1 = rec_uri.find_last_of("(")+1;
-	const std::string uuid = rec_uri.substr(pos1, rec_uri.find_last_of(")") - pos1);
-
 	// Get the dataobject and its targets
 	Energistics::Etp::v12::Protocol::Discovery::GetResources mb;
 	mb.m_context.m_uri = rec_uri;
-	mb.m_context.m_depth = 1;
+	mb.m_context.m_depth = 2;
 	mb.m_scope = Energistics::Etp::v12::Datatypes::Object::ContextScopeKind::targetsOrSelf;
 	const int64_t id = client_session->sendWithSpecificHandler(mb, std::make_shared<GetWhenDiscoverHandler>(client_session));
 	client_session->insertMessageIdTobeAnswered(id);
 	while (client_session->isWaitingForAnswer()) {} // wait answers
 	setSessionToEtpHdfProxy(client_session);
 
-	if(type == "resqml20.obj_IjkGridRepresentation") {
+	size_t charPosition = rec_uri.find_last_of("/") + 1;
+	const std::string type = rec_uri.substr(charPosition, rec_uri.find_last_of("(") - charPosition);
+
+	charPosition = rec_uri.find_last_of("(") + 1;
+	const std::string uuid = rec_uri.substr(charPosition, rec_uri.find_last_of(")") - charPosition);
+	std::string repUuid;
+	if (type == "resqml20.obj_IjkGridRepresentation") {
 		RESQML2_0_1_NS::AbstractIjkGridRepresentation const * ijkGrid = client_session->repo.getDataObjectByUuid<RESQML2_0_1_NS::AbstractIjkGridRepresentation>(uuid);
 
 		// If the grid is not partial, create a VTK object for the ijk grid and visualize it.
@@ -182,23 +182,39 @@ void VtkEtpDocument::visualize(const std::string & rec_uri)
 			}
 		}
 
-		// attach representation to EtpDocument VtkMultiBlockDataSet
-		if (std::find(attachUuids.begin(), attachUuids.end(), uuid) == attachUuids.end()) {
-			detach();
-			attachUuids.push_back(uuid);
-			attach();
-		}
+		repUuid = uuid;
 	}
-	else if(type=="resqml20.obj_ContinuousProperty" || type=="resqml20.obj_DiscreteProperty" ) {
+	else if (type == "resqml20.obj_ContinuousProperty" || type == "resqml20.obj_DiscreteProperty") {
 		RESQML2_NS::AbstractValuesProperty const * prop = client_session->repo.getDataObjectByUuid<RESQML2_NS::AbstractValuesProperty>(uuid);
 
 		// Build a VTK property in the property node in the treeview if necessary
 		const std::string ijkGridUuid = prop->getRepresentationUuid();
+		if (uuidToVtkIjkGridRepresentation.find(ijkGridUuid) == uuidToVtkIjkGridRepresentation.end()) {
+			RESQML2_0_1_NS::AbstractIjkGridRepresentation const * ijkGrid = client_session->repo.getDataObjectByUuid<RESQML2_0_1_NS::AbstractIjkGridRepresentation>(ijkGridUuid);
+			auto interpretation = ijkGrid->getInterpretation();
+			createTreeVtk(ijkGrid->getUuid(), interpretation != nullptr ? interpretation->getUuid() : "etpDocument", ijkGrid->getTitle().c_str(), VtkEpcCommon::IJK_GRID);
+		}
 		createTreeVtk(prop->getUuid(), ijkGridUuid, prop->getTitle().c_str(), VtkEpcCommon::PROPERTY);
 		uuidToVtkIjkGridRepresentation[ijkGridUuid]->visualize(uuid);
+
+		repUuid = ijkGridUuid;
 	}
 	else {
 		std::cout << "Not implemented yet." << std::endl;
+	}
+
+	try
+	{
+		// attach representation to EpcDocument VtkMultiBlockDataSet
+		if (std::find(attachUuids.begin(), attachUuids.end(), repUuid) == attachUuids.end()) {
+			detach();
+			attachUuids.push_back(repUuid);
+			attach();
+		}
+	}
+	catch (const std::exception&)
+	{
+		cout << "ERROR with uuid attachment: " << uuid;
 	}
 }
 

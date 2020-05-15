@@ -37,7 +37,7 @@ public:
 	/**
 	* Destructor
 	*/
-	virtual ~VtkResqml2UnstructuredGrid();
+	virtual ~VtkResqml2UnstructuredGrid() {}
 
 	/**
 	* method : getOutput
