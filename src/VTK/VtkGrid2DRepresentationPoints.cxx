@@ -93,11 +93,11 @@ void VtkGrid2DRepresentationPoints::addProperty(const std::string & uuidProperty
 }
 
 //----------------------------------------------------------------------------
-long VtkGrid2DRepresentationPoints::getAttachmentPropertyCount(const std::string & uuid, VtkEpcCommon::FesppAttachmentProperty propertyUnit)
+long VtkGrid2DRepresentationPoints::getAttachmentPropertyCount(const std::string &, VtkEpcCommon::FesppAttachmentProperty)
 {
 	RESQML2_0_1_NS::Grid2dRepresentation const * grid2dRepresentation = epcPackageRepresentation->getDataObjectByUuid<RESQML2_0_1_NS::Grid2dRepresentation>(getUuid().substr(0, 36));
 
 	return grid2dRepresentation != nullptr
-			? grid2dRepresentation->getNodeCountAlongIAxis() * grid2dRepresentation->getNodeCountAlongJAxis()
-					: 0;
+		? grid2dRepresentation->getNodeCountAlongIAxis() * grid2dRepresentation->getNodeCountAlongJAxis()
+		: 0;
 }

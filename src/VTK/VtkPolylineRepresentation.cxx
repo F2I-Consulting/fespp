@@ -107,7 +107,7 @@ void VtkPolylineRepresentation::addProperty(const std::string & uuidProperty, vt
 }
 
 //----------------------------------------------------------------------------
-long VtkPolylineRepresentation::getAttachmentPropertyCount(const std::string & uuid, VtkEpcCommon::FesppAttachmentProperty propertyUnit)
+long VtkPolylineRepresentation::getAttachmentPropertyCount(const std::string &, VtkEpcCommon::FesppAttachmentProperty)
 {
 	long result = 0;
 	resqml2_0_1::PolylineSetRepresentation* polylineSetRepresentation = nullptr;

@@ -85,7 +85,6 @@ private:
 	bool existEtpPipe;
 #endif
 	bool panelSelectionVisible;
-	bool panelMetadataVisible;
 	Q_DISABLE_COPY(PQToolsManager);
 };
 

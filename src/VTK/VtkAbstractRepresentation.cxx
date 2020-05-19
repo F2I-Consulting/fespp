@@ -24,15 +24,9 @@ under the License.
 
 //----------------------------------------------------------------------------
 VtkAbstractRepresentation::VtkAbstractRepresentation(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, COMMON_NS::DataObjectRepository *pckEPCRep, COMMON_NS::DataObjectRepository *pckEPCSubRep, int idProc, int maxProc) :
-VtkAbstractObject(fileName, name, uuid, uuidParent, idProc, maxProc), epcPackageRepresentation(pckEPCRep), epcPackageSubRepresentation(pckEPCSubRep)
-{
-	if (pckEPCSubRep == nullptr) {
-		subRepresentation = false;
-	}
-	else {
-		subRepresentation = true;
-	}
-}
+	VtkAbstractObject(fileName, name, uuid, uuidParent, idProc, maxProc), epcPackageRepresentation(pckEPCRep), epcPackageSubRepresentation(pckEPCSubRep),
+	subRepresentation(pckEPCSubRep != nullptr)
+{}
 
 VtkAbstractRepresentation::~VtkAbstractRepresentation()
 {
@@ -54,10 +48,9 @@ VtkAbstractRepresentation::~VtkAbstractRepresentation()
 //----------------------------------------------------------------------------
 void VtkAbstractRepresentation::createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, VtkEpcCommon::Resqml2Type resqmlType)
 {
-	if (resqmlType==VtkEpcCommon::PROPERTY)	{
-		if (uuidToVtkProperty.find(uuid) == uuidToVtkProperty.end()) {
-			uuidToVtkProperty[uuid] = new VtkProperty(getFileName(), name, uuid, parent, subRepresentation ? epcPackageSubRepresentation : epcPackageRepresentation);
-		}
+	if (resqmlType == VtkEpcCommon::PROPERTY &&
+		uuidToVtkProperty.find(uuid) == uuidToVtkProperty.end()) {
+		uuidToVtkProperty[uuid] = new VtkProperty(getFileName(), name, uuid, parent, subRepresentation ? epcPackageSubRepresentation : epcPackageRepresentation);
 	}
 }
 
@@ -82,9 +75,4 @@ vtkSmartPointer<vtkPoints> VtkAbstractRepresentation::createVtkPoints(ULONG64 po
 vtkSmartPointer<vtkPoints> VtkAbstractRepresentation::getVtkPoints()
 {
 	return points;
-}
-
-bool VtkAbstractRepresentation::vtkPointsIsCreated()
-{
-	return points != nullptr;
 }

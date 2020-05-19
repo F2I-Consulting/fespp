@@ -139,7 +139,7 @@ long VtkPartialRepresentation::getAttachmentPropertyCount(const std::string & uu
 }
 
 //----------------------------------------------------------------------------
-void VtkPartialRepresentation::remove(const std::string & uuid)
+void VtkPartialRepresentation::remove(const std::string &)
 {
 }
 

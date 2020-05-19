@@ -390,7 +390,7 @@ void VtkUnstructuredGridRepresentation::addProperty(const std::string & uuidProp
 }
 
 //----------------------------------------------------------------------------
-long VtkUnstructuredGridRepresentation::getAttachmentPropertyCount(const std::string & uuid, VtkEpcCommon::FesppAttachmentProperty propertyUnit)
+long VtkUnstructuredGridRepresentation::getAttachmentPropertyCount(const std::string &, VtkEpcCommon::FesppAttachmentProperty propertyUnit)
 {
 	long result = 0;
 	RESQML2_0_1_NS::UnstructuredGridRepresentation* unstructuredGridRep = epcPackageRepresentation->getDataObjectByUuid<RESQML2_0_1_NS::UnstructuredGridRepresentation>(getUuid());

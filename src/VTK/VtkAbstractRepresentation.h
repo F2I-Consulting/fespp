@@ -72,8 +72,6 @@ public:
 
 	vtkSmartPointer<vtkPoints> getVtkPoints();
 
-	bool vtkPointsIsCreated();
-
 	void setSubRepresentation() { subRepresentation = true; }
 
 protected:

@@ -91,7 +91,7 @@ void VtkTriangulatedRepresentation::addProperty(const std::string & uuidProperty
 	lastProperty = uuidProperty;
 }
 
-long VtkTriangulatedRepresentation::getAttachmentPropertyCount(const std::string & uuid, VtkEpcCommon::FesppAttachmentProperty propertyUnit)
+long VtkTriangulatedRepresentation::getAttachmentPropertyCount(const std::string &, VtkEpcCommon::FesppAttachmentProperty)
 {
 	RESQML2_0_1_NS::TriangulatedSetRepresentation* triangulatedSetRepresentation = epcPackageRepresentation->getDataObjectByUuid<RESQML2_0_1_NS::TriangulatedSetRepresentation>(getUuid());
 	return triangulatedSetRepresentation != nullptr ? triangulatedSetRepresentation->getXyzPointCountOfAllPatches() : 0;

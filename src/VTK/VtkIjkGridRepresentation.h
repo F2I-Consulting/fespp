@@ -42,7 +42,7 @@ public:
 	/**
 	* Destructor
 	*/
-	~VtkIjkGridRepresentation();
+	~VtkIjkGridRepresentation() {}
 	
 	/**
 	* method : createOutput
@@ -76,15 +76,15 @@ public:
 
 	int getInitKIndex(const std::string & uuid) const;
 
-	void setICellCount(const int & value) {	iCellCount = value; }
+	void setICellCount(int value) {	iCellCount = value; }
 
-	void setJCellCount(const int & value) { jCellCount = value; }
+	void setJCellCount(int value) { jCellCount = value; }
 
-	void setKCellCount(const int & value) { kCellCount = value; }
+	void setKCellCount(int value) { kCellCount = value; }
 
-	void setInitKIndex(const int & value) { initKIndex = value; }
+	void setInitKIndex(int value) { initKIndex = value; }
 
-	void setMaxKIndex(const int & value) { maxKIndex = value; }
+	void setMaxKIndex(int value) { maxKIndex = value; }
 	/**
 	* method : createWithPoints
 	* variable : points de l'ijkGrid,  ijkGrid or sub-rep

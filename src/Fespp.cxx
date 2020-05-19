@@ -48,18 +48,16 @@ Fespp::Fespp() :
 				loadedFile(false), fileNameSet(std::vector<std::string>()),
 				epcDocumentSet(nullptr), isEpcDocument(false)
 #ifdef WITH_ETP
-, etpDocument(nullptr), isEtpDocument(false),
-port(""), ip("")
+				, etpDocument(nullptr), isEtpDocument(false),
+				port(""), ip("")
 #endif
 {
 	SetNumberOfInputPorts(0);
 	SetNumberOfOutputPorts(1);
 
-	SetController(vtkMultiProcessController::GetGlobalController());
-
 	vtkMultiProcessController* controller = vtkMultiProcessController::GetGlobalController();
-	if (controller)
-	{
+	if (controller != nullptr) {
+		SetController(controller);
 		idProc = controller->GetLocalProcessId();
 		nbProc = controller->GetNumberOfProcesses();
 	}
@@ -73,7 +71,6 @@ port(""), ip("")
 Fespp::~Fespp()
 {
 	SetController(nullptr);
-	fileNameSet.clear();
 	UuidList->Delete();
 
 	if (epcDocumentSet != nullptr) {
@@ -192,12 +189,12 @@ void Fespp::displayWarning(const std::string & msg)
 
 //----------------------------------------------------------------------------
 int Fespp::RequestInformation(
-		vtkInformation *request,
-		vtkInformationVector **inputVector,
-		vtkInformationVector *outputVector)
+		vtkInformation *,
+		vtkInformationVector **,
+		vtkInformationVector *)
 {
 	if ( !loadedFile ) {
-		std::string stringFileName = std::string(FileName);
+		const std::string stringFileName = std::string(FileName);
 		if (stringFileName == "EpcDocument") {
 			isEpcDocument = true;
 			loadedFile = true;
@@ -222,24 +219,22 @@ void Fespp::OpenEpcDocument(const std::string & name)
 }
 
 //----------------------------------------------------------------------------
-int Fespp::RequestData(vtkInformation *request,
-		vtkInformationVector **inputVector,
+int Fespp::RequestData(vtkInformation *,
+		vtkInformationVector **,
 		vtkInformationVector *outputVector)
 {
 #ifdef WITH_ETP
 	if (isEtpDocument)	{
-		RequestDataEtpDocument(request, inputVector, outputVector);
+		RequestDataEtpDocument(outputVector);
 	}
 #endif
 	if (isEpcDocument)	{
-		RequestDataEpcDocument(request, inputVector, outputVector);
+		RequestDataEpcDocument(outputVector);
 	}
 	return 1;
 }
 //----------------------------------------------------------------------------
-void Fespp::RequestDataEpcDocument(vtkInformation *request,
-		vtkInformationVector **inputVector,
-		vtkInformationVector *outputVector)
+void Fespp::RequestDataEpcDocument(vtkInformationVector *outputVector)
 {
 	if (idProc == 0) {
 		cout << "Running with " << nbProc << " processor(s)" << std::endl;
@@ -248,9 +243,8 @@ void Fespp::RequestDataEpcDocument(vtkInformation *request,
 	vtkInformation *outInfo = outputVector->GetInformationObject(0);
 	vtkMultiBlockDataSet *output = vtkMultiBlockDataSet::SafeDownCast(outInfo->Get(vtkMultiBlockDataSet::DATA_OBJECT()));
 
-	if (loadedFile)
-	{
-		try{
+	if (loadedFile) {
+		try {
 			output->DeepCopy(epcDocumentSet->getVisualization());
 		}
 		catch (const std::exception & e)
@@ -262,9 +256,7 @@ void Fespp::RequestDataEpcDocument(vtkInformation *request,
 
 //----------------------------------------------------------------------------
 #ifdef WITH_ETP
-void Fespp::RequestDataEtpDocument(vtkInformation *request,
-		vtkInformationVector **inputVector,
-		vtkInformationVector *outputVector)
+void Fespp::RequestDataEtpDocument(vtkInformationVector * outputVector)
 {
 	vtkInformation *outInfo = outputVector->GetInformationObject(0);
 	vtkMultiBlockDataSet *output = vtkMultiBlockDataSet::SafeDownCast(outInfo->Get(vtkMultiBlockDataSet::DATA_OBJECT()));

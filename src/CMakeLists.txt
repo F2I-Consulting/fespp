@@ -1,184 +1,154 @@
-#--------------------------------------------------
-set (PLUGIN_NAME Fespp)
+# -----------------------------------------------------------------------------
+# Identify all non QT source files
+# -----------------------------------------------------------------------------
+FILE (GLOB FESPP_VTK_SOURCES ${CMAKE_SOURCE_DIR}/src/VTK/*.cxx)
+FILE (GLOB FESPP_VTK_HEADERS ${CMAKE_SOURCE_DIR}/src/VTK/*.h)
 
-# version mechanism
-set (PLUGIN_VERSION_MAJOR 2)
-set (PLUGIN_VERSION_MINOR 2)
-set (PLUGIN_VERSION_PATCH 0)
-set (PLUGIN_VERSION ${PLUGIN_VERSION_MAJOR}.${PLUGIN_VERSION_MINOR}.${PLUGIN_VERSION_PATCH})
-
-#--------------------------------------------------
-set (FESPP_ROOT_DIR ${CMAKE_SOURCE_DIR})
-
-FILE (GLOB FESPP_READER_SOURCES ${FESPP_ROOT_DIR}/src/Fespp.cxx)
-FILE (GLOB FESPP_READER_HEADERS ${FESPP_ROOT_DIR}/src/Fespp.h)
-FILE (GLOB FESPP_READER_XML ${FESPP_ROOT_DIR}/src/Fespp.xml)
-FILE (GLOB FESPP_VTK_SOURCES ${FESPP_ROOT_DIR}/src/VTK/*.cxx)
-FILE (GLOB FESPP_VTK_HEADERS ${FESPP_ROOT_DIR}/src/VTK/*.h)
-FILE (GLOB FESPP_PQ_SOURCES ${FESPP_ROOT_DIR}/src/PQ*.cxx)
-FILE (GLOB FESPP_PQ_HEADERS ${FESPP_ROOT_DIR}/src/PQ*.h)
-FILE (GLOB FESPP_FORMS ${FESPP_ROOT_DIR}/src/Resources/*.ui)
-FILE (GLOB FESPP_RESOURCES ${FESPP_ROOT_DIR}/src/Resources/*.qrc)
-
-IF (WITH_ETP)
-	FILE (GLOB FESPP_ETP_SOURCES ${FESPP_ROOT_DIR}/src/etp/*.cxx)
-	FILE (GLOB FESPP_ETP_HEADERS ${FESPP_ROOT_DIR}/src/etp/*.h)
-ELSE(WITH_ETP)
-	FILE (GLOB FESPP_PQETP_SOURCES ${FESPP_ROOT_DIR}/src/PQEtp*.cxx)
-	FILE (GLOB FESPP_PQETP_HEADERS ${FESPP_ROOT_DIR}/src/PQEtp*.h)
-	FILE (GLOB FESPP_FORMSETP ${FESPP_ROOT_DIR}/src/Resources/PQEtp*.ui)
-	LIST (REMOVE_ITEM FESPP_PQ_SOURCES ${FESPP_PQETP_SOURCES})
-	LIST (REMOVE_ITEM FESPP_PQ_HEADERS ${FESPP_PQETP_HEADERS})
-	LIST (REMOVE_ITEM FESPP_FORMS ${FESPP_FORMSETP})
+if (WITH_ETP)
+	FILE (GLOB FESPP_ETP_SOURCES ${CMAKE_SOURCE_DIR}/src/etp/*.cxx)
+	FILE (GLOB FESPP_ETP_HEADERS ${CMAKE_SOURCE_DIR}/src/etp/*.h)
 ENDIF (WITH_ETP)
 
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${FESPP_ROOT_DIR}/cmake/modules)
+set (FESPP_NO_QT_SOURCES ${FESPP_VTK_SOURCES} ${FESPP_VTK_HEADERS} ${FESPP_ETP_SOURCES} ${FESPP_ETP_HEADERS})
 
-pv_process_modules()
+# -----------------------------------------------------------------------------
+# Build the Paraview plugins
+# -----------------------------------------------------------------------------
 
-IF(PARAVIEW_BUILD_QT_GUI)
-	IF(PARAVIEW_QT_VERSION VERSION_GREATER "4")
+find_package(ParaView REQUIRED)
+include ("${PARAVIEW_USE_FILE}")
+
+if (PARAVIEW_BUILD_QT_GUI)
+
+	# -----------------------------------------------------------------------------
+	# Identify all QT related source files
+	# -----------------------------------------------------------------------------
+	file (GLOB FESPP_PQ_HEADERS ${CMAKE_SOURCE_DIR}/src/PQ*.h)
+	file (GLOB FESPP_PQ_SOURCES ${CMAKE_SOURCE_DIR}/src/PQ*.cxx)
+	file (GLOB FESPP_FORMS ${CMAKE_SOURCE_DIR}/src/Resources/*.ui)
+	file (GLOB FESPP_RESOURCES ${CMAKE_SOURCE_DIR}/src/Resources/*.qrc)
+	if (NOT WITH_ETP)
+		file (GLOB FESPP_PQ_HEADERS_ETP ${CMAKE_SOURCE_DIR}/src/PQEtp*.h)
+		file (GLOB FESPP_PQ_SOURCES_ETP ${CMAKE_SOURCE_DIR}/src/PQEtp*.cxx)
+		file (GLOB FESPP_FORMS_ETP ${CMAKE_SOURCE_DIR}/src/Resources/PQEtp*.ui)
+		file (GLOB FESPP_RESOURCES_ETP ${CMAKE_SOURCE_DIR}/src/Resources/PQEtp*.qrc)
+		list (REMOVE_ITEM FESPP_PQ_HEADERS ${FESPP_PQ_HEADERS_ETP})
+		list (REMOVE_ITEM FESPP_PQ_SOURCES ${FESPP_PQ_SOURCES_ETP})
+		list (REMOVE_ITEM FESPP_FORMS ${FESPP_FORMS_ETP})
+		list (REMOVE_ITEM FESPP_RESOURCES ${FESPP_RESOURCES_ETP})
+	endif ()
+	
+	if (PARAVIEW_QT_VERSION VERSION_GREATER "4")
 		set (Qt5_FIND_COMPONENTS Widgets)
-#		INCLUDE(ParaViewQt5)
 		QT5_WRAP_CPP(MOC_SRCS ${FESPP_PQ_HEADERS})					
 		QT5_WRAP_UI(UI_SRCS ${FESPP_FORMS})
-	ELSE()
-		INCLUDE(${QT_USE_FILE})
-		QT4_WRAP_CPP(MOC_SRCS ${FESPP_PQ_HEADERS})				
-		QT4_WRAP_UI(UI_SRCS ${FESPP_FORMS})
-	ENDIF()
+	else ()
+		message(ERROR "Qt version must be at least 5.")
+	endif ()
 
 	ADD_PARAVIEW_DOCK_WINDOW(
 		IFACES
 		IFACE_SRCS
-		CLASS_NAME PQSelectionPanel)
-		
-	ADD_PARAVIEW_DOCK_WINDOW(
-		IFACES2
-		IFACE2_SRCS
-		CLASS_NAME PQMetaDataPanel)
-
-	IF (WITH_ETP)
-		ADD_PARAVIEW_DOCK_WINDOW(
-			IFACES4
-			IFACE4_SRCS
-			CLASS_NAME PQEtpPanel)
-	ENDIF (WITH_ETP)
+		CLASS_NAME PQSelectionPanel
+	)
 		
 	ADD_PARAVIEW_ACTION_GROUP(
 		IFACES3
 		IFACE3_SRCS
 		CLASS_NAME PQToolsActionGroup
-		GROUP_NAME "ToolBar/EPC")
+		GROUP_NAME "ToolBar/EPC"
+	)
+	
+	set (FESPP_IFACES
+		${IFACES}
+		${IFACES3}
+	)
+	set (FESPP_QT_SOURCES
+		${FESPP_PQ_HEADERS}
+		${FESPP_PQ_SOURCES}
+		${MOC_SRCS}
+		${UI_SRCS}
+		${IFACE_SRCS} 
+		${IFACE3_SRCS}
+	)
+	if (WITH_ETP)
+		ADD_PARAVIEW_DOCK_WINDOW(
+			IFACES4
+			IFACE4_SRCS
+			CLASS_NAME PQEtpPanel
+		)		
+		list (APPEND FESPP_IFACES ${IFACES4})
+		list (APPEND FESPP_QT_SOURCES ${IFACE4_SRCS})
+	endif ()
+	
+	ADD_PARAVIEW_PLUGIN(${PROJECT_NAME} ${PROJECT_VERSION}
+		DOCUMENTATION_DIR "${CMAKE_SOURCE_DIR}/doc"
+		SERVER_MANAGER_SOURCES ${CMAKE_SOURCE_DIR}/src/Fespp.cxx
+		SERVER_MANAGER_XML ${CMAKE_SOURCE_DIR}/src/Fespp.xml
+		GUI_INTERFACES ${FESPP_IFACES}
+		GUI_RESOURCES ${FESPP_RESOURCES}
+	)
+	target_sources(${PROJECT_NAME} PRIVATE ${FESPP_QT_SOURCES})
 
-  # create a plugin for this panel
-	IF (WITH_ETP)
-		ADD_PARAVIEW_PLUGIN(${PLUGIN_NAME} ${PLUGIN_VERSION}
-			DOCUMENTATION_DIR "${FESPP_ROOT_DIR}/doc"
-			SERVER_MANAGER_SOURCES  ${FESPP_READER_SOURCES}
-			SERVER_MANAGER_XML ${FESPP_READER_XML}
-        	GUI_INTERFACES ${IFACES} ${IFACES2} ${IFACES3} ${IFACES4}
-			GUI_RESOURCES ${FESPP_RESOURCES}
-        	SOURCES ${FESPP_PQ_SOURCES}		
-					${MOC_SRCS} 
-					${UI_SRCS} 
-					${IFACE_SRCS} 
-					${IFACE2_SRCS} 
-					${IFACE3_SRCS}
-					${IFACE4_SRCS}
-					${FESPP_VTK_SOURCES}
-					${FESPP_VTK_HEADERS}
-					${FESPP_ETP_SOURCES}
-					${FESPP_ETP_HEADERS}
-		)
-	ELSE (WITH_ETP)
-		ADD_PARAVIEW_PLUGIN(${PLUGIN_NAME} ${PLUGIN_VERSION}
-			DOCUMENTATION_DIR "${FESPP_ROOT_DIR}/doc"
-			SERVER_MANAGER_SOURCES  ${FESPP_READER_SOURCES}
-			SERVER_MANAGER_XML ${FESPP_READER_XML}
-        	GUI_INTERFACES ${IFACES} ${IFACES2} ${IFACES3}
-			GUI_RESOURCES ${FESPP_RESOURCES}
-        	SOURCES ${FESPP_PQ_SOURCES}		
-					${MOC_SRCS} 
-					${UI_SRCS} 
-					${IFACE_SRCS} 
-					${IFACE2_SRCS} 
-					${IFACE3_SRCS}
-					${IFACE4_SRCS}
-					${FESPP_VTK_SOURCES}
-					${FESPP_VTK_HEADERS}
-		)	
-	ENDIF (WITH_ETP)
-
-ELSE(PARAVIEW_BUILD_QT_GUI)
+else (PARAVIEW_BUILD_QT_GUI)
 
 	# create a Server plugin
-	IF (WITH_ETP)
-		ADD_PARAVIEW_PLUGIN(${PLUGIN_NAME} ${PLUGIN_VERSION}
-			SERVER_MANAGER_SOURCES	${FESPP_READER_SOURCES}
-			SERVER_MANAGER_XML ${FESPP_READER_XML}
-			REQUIRED_ON_SERVER
-			SOURCES ${FESPP_VTK_SOURCES}
-					${FESPP_VTK_HEADERS}
-					${FESPP_ETP_SOURCES}
-					${FESPP_ETP_HEADERS}
-		)
-	ELSE (WITH_ETP)
-		ADD_PARAVIEW_PLUGIN(${PLUGIN_NAME} ${PLUGIN_VERSION}
-			SERVER_MANAGER_SOURCES	${FESPP_READER_SOURCES}
-			SERVER_MANAGER_XML ${FESPP_READER_XML}
-			REQUIRED_ON_SERVER
-			SOURCES ${FESPP_VTK_SOURCES}
-					${FESPP_VTK_HEADERS}
-		)	
-	ENDIF (WITH_ETP)
-
-ENDIF(PARAVIEW_BUILD_QT_GUI)
-
-# ============================================================================
-# Header files
-# ============================================================================
-
-target_include_directories(${PLUGIN_NAME} PRIVATE ${FESAPI_INCLUDE})
-
-if (WITH_ETP)
-	target_include_directories(${PLUGIN_NAME} PRIVATE ${AVRO_INCLUDE_DIR} ${BOOST_INCLUDE_DIR})
-endif (WITH_ETP)
-
-# ============================================================================
-# Win32 Visual Studio file hierarchy
-# ============================================================================
-
-if (WIN32)
-	source_group ("VTK" FILES ${FESPP_VTK_SOURCES} ${FESPP_VTK_HEADERS})
-	IF (WITH_ETP)
-		source_group ("Resources" FILES ${FESPP_FORMS} ${FESPP_RESOURCES})
-		source_group ("etp" FILES ${FESPP_ETP_SOURCES} ${FESPP_ETP_HEADERS})
-	ELSE(WITH_ETP)
-		source_group ("Resources" FILES ${FESPP_FORMS} ${FESPP_RESOURCES} ${FESPP_FORMSETP})
-	ENDIF (WITH_ETP)
-	
-	add_custom_command(
-		TARGET Fespp 
-		POST_BUILD
-		COMMAND ${CMAKE_COMMAND} -E copy
-			$<$<CONFIG:Debug>:$<TARGET_FILE:Fespp>> $<$<CONFIG:Debug>:$<TARGET_PDB_FILE:Fespp>>
-			$<$<CONFIG:RelWithDebInfo>:$<TARGET_FILE:Fespp>> $<$<CONFIG:RelWithDebInfo>:$<TARGET_PDB_FILE:Fespp>>
-			$<$<CONFIG:Debug>:"C:/pv56/install_x64_vs2017/bin"> $<$<CONFIG:RelWithDebInfo>:"C:/pv56/install_x64_vs2017/bin">
+	ADD_PARAVIEW_PLUGIN(${PROJECT_NAME} ${PROJECT_VERSION}
+		DOCUMENTATION_DIR "${CMAKE_SOURCE_DIR}/doc"
+		SERVER_MANAGER_SOURCES ${CMAKE_SOURCE_DIR}/src/Fespp.cxx
+		SERVER_MANAGER_XML ${CMAKE_SOURCE_DIR}/src/Fespp.xml
+		REQUIRED_ON_SERVER
 	)
-endif (WIN32)
+
+endif (PARAVIEW_BUILD_QT_GUI)
+
+target_sources(${PROJECT_NAME} PRIVATE ${FESPP_NO_QT_SOURCES})
+
+# ============================================================================
+# Compile definitions
+# ============================================================================
+
+# -----------------------------------------------------------------------------
+# Disable deprecation warnings for standard C and STL functions in VS2005 and
+# later (no, we don't need IF(CMAKE_COMPILER_2005) ... )
+# -----------------------------------------------------------------------------
+target_compile_definitions(${PROJECT_NAME} PRIVATE
+	$<$<CXX_COMPILER_ID:MSVC>:_CRT_SECURE_NO_DEPRECATE>
+	$<$<CXX_COMPILER_ID:MSVC>:_CRT_NONSTDC_NO_DEPRECATE>
+	$<$<CXX_COMPILER_ID:MSVC>:_SCL_SECURE_NO_DEPRECATE>
+)
+if (WITH_ETP)
+	target_compile_definitions(${PROJECT_NAME} PRIVATE
+		WITH_ETP
+		BOOST_ALL_NO_LIB
+	)
+endif (WITH_ETP)
 
 # ============================================================================
 # compilation options
 # ============================================================================
 
-target_compile_options(${PLUGIN_NAME} PRIVATE
+target_compile_options(${PROJECT_NAME} PRIVATE
 	$<$<CXX_COMPILER_ID:MSVC>:/MP>
+	$<$<CXX_COMPILER_ID:MSVC>:/W4>
+	$<$<CXX_COMPILER_ID:GNU>:-Wall>
+	$<$<CXX_COMPILER_ID:GNU>:-Wextra>
+	$<$<CXX_COMPILER_ID:GNU>:-pedantic>
+	$<$<CXX_COMPILER_ID:CLANG>:-Weverything>
 )
-target_compile_definitions(${PLUGIN_NAME} PRIVATE BOOST_ALL_NO_LIB)
 
 # ============================================================================
-# Linker
+# External include
+# ============================================================================
+
+target_include_directories(${PROJECT_NAME} PRIVATE ${FESAPI_INCLUDE})
+
+if (WITH_ETP)
+	target_include_directories(${PROJECT_NAME} PRIVATE ${AVRO_INCLUDE_DIR} ${BOOST_INCLUDE_DIR})
+endif (WITH_ETP)
+
+# ============================================================================
+# External libraries
 # ============================================================================
 
 if (WIN32)
@@ -194,11 +164,11 @@ if (WIN32)
 	endif ()
 
 	if (EXISTS ${FESAPI_LIBRARY_RELEASE} AND EXISTS ${FESAPI_LIBRARY_DEBUG}) 
-		target_link_libraries (${PLUGIN_NAME} PRIVATE optimized ${FESAPI_LIBRARY_RELEASE} debug ${FESAPI_LIBRARY_DEBUG})
+		target_link_libraries (${PROJECT_NAME} PRIVATE optimized ${FESAPI_LIBRARY_RELEASE} debug ${FESAPI_LIBRARY_DEBUG})
 	elseif (EXISTS ${FESAPI_LIBRARY_RELEASE})
-		target_link_libraries (${PLUGIN_NAME} PRIVATE ${FESAPI_LIBRARY_RELEASE})
+		target_link_libraries (${PROJECT_NAME} PRIVATE ${FESAPI_LIBRARY_RELEASE})
 	elseif (EXISTS ${FESAPI_LIBRARY_DEBUG})
-		target_link_libraries (${PLUGIN_NAME} PRIVATE ${FESAPI_LIBRARY_DEBUG})
+		target_link_libraries (${PROJECT_NAME} PRIVATE ${FESAPI_LIBRARY_DEBUG})
 	else ()
 		message(ERROR "No FESAPI library has been set.")
 	endif ()
@@ -210,27 +180,50 @@ elseif (UNIX)
     endif()
 	
 	if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-		target_link_libraries(${PLUGIN_NAME} PRIVATE ${FESAPI_LIBRARY_DEBUG})
+		target_link_libraries(${PROJECT_NAME} PRIVATE ${FESAPI_LIBRARY_DEBUG})
 	else ()
-		target_link_libraries(${PLUGIN_NAME} PRIVATE ${FESAPI_LIBRARY_RELEASE})
+		target_link_libraries(${PROJECT_NAME} PRIVATE ${FESAPI_LIBRARY_RELEASE})
 	endif()
 	
-	set_target_properties(${PLUGIN_NAME} PROPERTIES
-		VERSION ${PLUGIN_VERSION}
-		SOVERSION ${PLUGIN_VERSION_MAJOR}.${PLUGIN_VERSION_MINOR}
+	set_target_properties(${PROJECT_NAME} PROPERTIES
+		VERSION ${PROJECT_VERSION}
+		SOVERSION ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
 	)
 	
 endif (WIN32)
 	
 if (EXISTS ${AVRO_LIBRARY_RELEASE})
-	target_link_libraries (${PLUGIN_NAME} PRIVATE ${AVRO_LIBRARY_RELEASE})
+	target_link_libraries (${PROJECT_NAME} PRIVATE ${AVRO_LIBRARY_RELEASE})
 endif()
+
+# ============================================================================
+# Win32 Visual Studio file hierarchy
+# ============================================================================
+
+if (WIN32)
+	source_group ("VTK" FILES ${FESPP_VTK_SOURCES} ${FESPP_VTK_HEADERS})
+	source_group ("QT" FILES ${FESPP_QT_SOURCES})
+	IF (WITH_ETP)
+		source_group ("etp" FILES ${FESPP_ETP_SOURCES} ${FESPP_ETP_HEADERS})
+	ENDIF (WITH_ETP)
+	
+	add_custom_command(
+		TARGET Fespp 
+		POST_BUILD
+		COMMAND ${CMAKE_COMMAND} -E copy
+			$<$<CONFIG:Debug>:$<TARGET_FILE:Fespp>> $<$<CONFIG:Debug>:$<TARGET_PDB_FILE:Fespp>>
+			$<$<CONFIG:RelWithDebInfo>:$<TARGET_FILE:Fespp>> $<$<CONFIG:RelWithDebInfo>:$<TARGET_PDB_FILE:Fespp>>
+			$<$<CONFIG:Debug>:"C:/pv56/install_x64_vs2017/bin"> $<$<CONFIG:RelWithDebInfo>:"C:/pv56/install_x64_vs2017/bin">
+	)
+endif (WIN32)
 
 # ============================================================================
 # Installation
 # ============================================================================
 
 install (
-	TARGETS ${PLUGIN_NAME}
-	DESTINATION lib
+	TARGETS ${PROJECT_NAME}
+	RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+	LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+	ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )

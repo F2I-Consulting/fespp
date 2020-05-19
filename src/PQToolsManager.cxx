@@ -27,7 +27,6 @@ under the License.
 #include "PQEtpPanel.h"
 #include "PQEtpConnectionManager.h"
 #endif
-#include "PQMetaDataPanel.h"
 
 #include "pqActiveObjects.h"
 #include "pqApplicationCore.h"
@@ -117,7 +116,6 @@ PQToolsManager::PQToolsManager(QObject* p)
 	existEtpPipe = false;
 #endif
 	panelSelectionVisible = false;
-	panelMetadataVisible = false;
 
 	QObject::connect(actionDataLoadManager(), SIGNAL(triggered(bool)), this, SLOT(showDataLoadManager()));
 

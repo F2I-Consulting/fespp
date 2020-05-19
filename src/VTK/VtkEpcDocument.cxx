@@ -255,12 +255,12 @@ void VtkEpcDocument::addWellTrajTreeVtk(const std::string & uuid, const std::str
 }
 
 // ----------------------------------------------------------------------------
-void VtkEpcDocument::addWellFrameTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name)
+void VtkEpcDocument::addWellFrameTreeVtk(const std::string & uuid, const std::string & parent, const std::string &)
 {
 	uuidToVtkWellboreTrajectoryRepresentation[parent]->addWellboreFrame(uuid);
 }
 // ----------------------------------------------------------------------------
-void VtkEpcDocument::addWellMarkerTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name)
+void VtkEpcDocument::addWellMarkerTreeVtk(const std::string & uuid, const std::string & parent, const std::string &)
 {
 	uuidToVtkWellboreTrajectoryRepresentation[parent]->addWellboreMarker(uuid);
 }

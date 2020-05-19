@@ -65,22 +65,10 @@ public:
 	void displayError(const std::string&);
 	void displayWarning(const std::string&);
 
-protected:
-	Fespp();
-	~Fespp();
-
-	int RequestInformation(vtkInformation *, vtkInformationVector **, vtkInformationVector *) final;
-	int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) final;
-
-	void RequestDataEpcDocument(vtkInformation *, vtkInformationVector **, vtkInformationVector *);
-#ifdef WITH_ETP
-	void RequestDataEtpDocument(vtkInformation *, vtkInformationVector **, vtkInformationVector *);
-#endif
-
-	void OpenEpcDocument(const std::string &);
-
 private:
+	Fespp();
 	Fespp(const Fespp&);
+	~Fespp() final;
 
 	char* FileName;
 	char* SubFileName;
@@ -107,5 +95,15 @@ private:
 	std::string port;
 	std::string ip;
 #endif
+
+	int RequestInformation(vtkInformation *, vtkInformationVector **, vtkInformationVector *) final;
+	int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) final;
+
+	void RequestDataEpcDocument(vtkInformationVector *);
+#ifdef WITH_ETP
+	void RequestDataEtpDocument(vtkInformationVector *);
+#endif
+
+	void OpenEpcDocument(const std::string &);
 };
 #endif

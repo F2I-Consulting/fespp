@@ -273,7 +273,7 @@ void PQSelectionPanel::subscribeChildren_slot() {
 }
 
 //----------------------------------------------------------------------------
-void PQSelectionPanel::clicSelection(QTreeWidgetItem* item, int column) {
+void PQSelectionPanel::clicSelection(QTreeWidgetItem* item, int) {
 	auto pickedBlocks = itemUuid[item];
 	if (pickedBlocks != "root") {
 		pqPipelineSource * source = findPipelineSource(searchSource(pickedBlocks).c_str());
@@ -288,7 +288,7 @@ void PQSelectionPanel::clicSelection(QTreeWidgetItem* item, int column) {
 }
 
 //----------------------------------------------------------------------------
-void PQSelectionPanel::onItemCheckedUnchecked(QTreeWidgetItem * item, int column)
+void PQSelectionPanel::onItemCheckedUnchecked(QTreeWidgetItem * item, int)
 {
 	std::string uuid = itemUuid[item];
 	if (canLoad) {
