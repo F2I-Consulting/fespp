@@ -18,26 +18,15 @@ under the License.
 -----------------------------------------------------------------------*/
 #include "Fespp.h"
 
-#include <exception>
-#include <iostream>
-#include <utility>
-#include <algorithm>
-
 #include <vtkDataArraySelection.h>
 #include <vtkIndent.h>
 #include <vtkInformation.h>
 #include <vtkInformationVector.h>
 #include <vtkMultiBlockDataSet.h>
 #include <vtkObjectFactory.h>
-#include <vtkOStreamWrapper.h>
-#include <vtkSetGet.h>
-#include <vtkSmartPointer.h>
 
-// Fespp include
-#include "VTK/VtkEpcDocument.h"
+// Fespp includes
 #include "VTK/VtkEpcDocumentSet.h"
-
-#include <ctime>
 
 vtkStandardNewMacro(Fespp);
 
@@ -75,13 +64,11 @@ Fespp::~Fespp()
 
 	if (epcDocumentSet != nullptr) {
 		delete epcDocumentSet;
-		epcDocumentSet = nullptr;
 	}
 
 #ifdef WITH_ETP
 	if (etpDocument != nullptr) {
 		delete etpDocument;
-		etpDocument = nullptr;
 	}
 #endif
 }
@@ -110,7 +97,7 @@ void Fespp::SetSubFileName(const char* name)
 //----------------------------------------------------------------------------
 int Fespp::GetUuidListArrayStatus(const char* uuid)
 {
-	return (UuidList->ArrayIsEnabled(uuid));
+	return UuidList->ArrayIsEnabled(uuid);
 }
 //----------------------------------------------------------------------------
 void Fespp::SetUuidList(const char* uuid, int status)
@@ -118,7 +105,7 @@ void Fespp::SetUuidList(const char* uuid, int status)
 	const std::string uuidStr = std::string(uuid);
 	if (uuidStr == "connect") {
 #ifdef WITH_ETP
-		if(etpDocument == nullptr) {
+		if (etpDocument == nullptr) {
 			loadedFile = true;
 			etpDocument = new VtkEtpDocument(ip, port, VtkEpcCommon::Representation);
 		}
@@ -132,7 +119,7 @@ void Fespp::SetUuidList(const char* uuid, int status)
 		}
 	}
 	else if (status == 0) {
-		if(isEpcDocument) {
+		if (isEpcDocument) {
 			epcDocumentSet->unvisualize(uuidStr);
 		}
 #ifdef WITH_ETP
@@ -177,14 +164,17 @@ const char* Fespp::GetUuidListArrayName(int index)
 //----------------------------------------------------------------------------
 void Fespp::displayError(const std::string & msg)
 {
-
-	vtkErrorMacro(<< msg.c_str());
+	if (!msg.empty()) {
+		vtkErrorMacro(<< msg.c_str());
+	}
 }
 
 //----------------------------------------------------------------------------
 void Fespp::displayWarning(const std::string & msg)
 {
-	vtkWarningMacro(<< msg.c_str());
+	if (!msg.empty()) {
+		vtkWarningMacro(<< msg.c_str());
+	}
 }
 
 //----------------------------------------------------------------------------
@@ -212,10 +202,7 @@ int Fespp::RequestInformation(
 //----------------------------------------------------------------------------
 void Fespp::OpenEpcDocument(const std::string & name)
 {
-	const std::string msg = epcDocumentSet->addEpcDocument(name);
-	if  (!msg.empty()){
-		displayWarning(msg);
-	}
+	displayWarning(epcDocumentSet->addEpcDocument(name));
 }
 
 //----------------------------------------------------------------------------
@@ -237,7 +224,7 @@ int Fespp::RequestData(vtkInformation *,
 void Fespp::RequestDataEpcDocument(vtkInformationVector *outputVector)
 {
 	if (idProc == 0) {
-		cout << "Running with " << nbProc << " processor(s)" << std::endl;
+		vtkOutputWindowDisplayDebugText(("Running with " + std::to_string(nbProc) + " processor(s)").c_str());
 	}
 
 	vtkInformation *outInfo = outputVector->GetInformationObject(0);
@@ -249,7 +236,7 @@ void Fespp::RequestDataEpcDocument(vtkInformationVector *outputVector)
 		}
 		catch (const std::exception & e)
 		{
-			vtkErrorMacro("EXCEPTION in FESAPI library: " << e.what());
+			displayError("EXCEPTION in FESAPI library: " + std::string(e.what()));
 		}
 	}
 }

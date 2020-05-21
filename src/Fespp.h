@@ -38,7 +38,7 @@ class Fespp : public vtkMultiBlockDataSetAlgorithm
 public:
 	static Fespp *New();
 	vtkTypeMacro(Fespp, vtkMultiBlockDataSetAlgorithm);
-	void PrintSelf(ostream& os, vtkIndent indent);
+	void PrintSelf(ostream& os, vtkIndent indent) final;
 	
 	// Description:
 	// Specify file name of the .epc file.

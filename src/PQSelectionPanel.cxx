@@ -140,7 +140,6 @@ void PQSelectionPanel::constructor() {
 	treeWidget->expandToDepth(0);
 	treeWidget->header()->close();
 
-	//	connect(ui.treeWidget, SIGNAL(itemClicked(QTreeWidgetItem*, int)), this, SLOT(clicSelection(QTreeWidgetItem*, int)));
 	treeWidget->setContextMenuPolicy(Qt::CustomContextMenu);
 	connect(ui.treeWidget, &QTreeWidget::customContextMenuRequested,
 		this, &PQSelectionPanel::treeCustomMenu);
@@ -300,8 +299,8 @@ void PQSelectionPanel::onItemCheckedUnchecked(QTreeWidgetItem * item, int)
 				}
 				canLoad = true;
 				toggleUuid(uuid, true);
-			} else if (item->checkState(0) == Qt::Unchecked) {
-
+			}
+			else if (item->checkState(0) == Qt::Unchecked) {
 				// Uncheck all children
 				int childCount = item->childCount();
 				canLoad = false;
@@ -328,13 +327,15 @@ void PQSelectionPanel::onItemCheckedUnchecked(QTreeWidgetItem * item, int)
 				toggleUuid(uuid, false);
 			}
 		}
-	} else { // check/uncheck => parent/children without load or remove representation
+	}
+	else { // check/uncheck => parent/children without load or remove representation
 		if (!uuid.empty()) {
 			if (item->checkState(0) == Qt::Checked) {
-				if (item->parent()) {
+				if (item->parent() != nullptr) {
 					item->parent()->setCheckState(0, Qt::Checked);
 				}
-			} else if (item->checkState(0) == Qt::Unchecked) {
+			}
+			else if (item->checkState(0) == Qt::Unchecked) {
 				int childCount = item->childCount();
 				for (int idx_child = 0; idx_child < childCount; idx_child++) {
 					item->child(idx_child)->setCheckState(0, Qt::Unchecked);

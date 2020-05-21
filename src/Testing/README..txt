@@ -1,0 +1,6 @@
+- Copy the *content* of the "Data" folder in the PARAVIEW_DATA_ROOT (for example into C:\pv56\pvb\ExternalData\Testing\Data)
+- Start paraview.exe
+- Load the Fespp plugin if not already done (menu "Tools" -> submenu "Manage Plugins")
+- Choose menu "Tools" -> submenu "Play Test" to start
+- Select the fesapiExample.xml (located in this folder) and click OK
+- No error at all should raise in "Output Messages" window but the line "Test  "fesapiExample.xml" is finished. Success =  true"

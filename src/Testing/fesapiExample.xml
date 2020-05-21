@@ -1,0 +1,13 @@
+<?xml version="1.0" ?>
+<pqevents>
+  <pqevent object="PQActionHolder/actionDataLoadManager" command="activate" arguments="" />
+  <pqevent object="pqClientMainWindow/PQDataLoadManager/epcFile/FileButton" command="activate" arguments="" />
+  <pqevent object="pqClientMainWindow/PQDataLoadManager/epcFile/pqFileDialog" command="filesSelected" arguments="$PARAVIEW_DATA_ROOT/testingPackageCpp.epc" />
+  <pqevent object="pqClientMainWindow/PQDataLoadManager/buttonBox/1QPushButton0" command="activate" arguments="" />
+  <pqevent object="pqClientMainWindow/PQSelectionPanel/panelSelection/treeWidget" command="expand" arguments="0.0.10.0" />
+  <pqevent object="pqClientMainWindow/PQSelectionPanel/panelSelection/treeWidget" command="expand" arguments="0.0.10.0.2.0" />
+  <pqevent object="pqClientMainWindow/PQSelectionPanel/panelSelection/treeWidget" command="setCurrent" arguments="0.0.10.0.2.0.0.0" />
+  <pqevent object="pqClientMainWindow/PQSelectionPanel/panelSelection/treeWidget" command="setCheckState" arguments="0.0.10.0.2.0.0.0,2" />
+  <pqevent object="pqClientMainWindow/variableToolbar/displayColor/Variables" command="activated" arguments="Two faulted sugar cubes other cellIndex" />
+  <pqcompareview object="pqClientMainWindow/centralwidget/MultiViewWidget/CoreWidget/qt_tabwidget_stackedwidget/MultiViewWidget1/Frame.0/CentralWidgetFrame/Viewport" baseline="$PARAVIEW_DATA_ROOT/Baseline/TwoFaultedSugarCubesCellIndexProp.png" threshold="5" />
+</pqevents>

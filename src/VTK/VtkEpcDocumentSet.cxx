@@ -31,39 +31,25 @@ under the License.
 
 //----------------------------------------------------------------------------
 VtkEpcDocumentSet::VtkEpcDocumentSet(int idProc, int maxProc, VtkEpcCommon::modeVtkEpc mode) :
-procRank(idProc), nbProc(maxProc)
+	vtkOutput(vtkSmartPointer<vtkMultiBlockDataSet>::New()),
+	procRank(idProc), nbProc(maxProc),
+	treeViewMode(mode == VtkEpcCommon::Both || mode == VtkEpcCommon::TreeView),
+	representationMode(mode == VtkEpcCommon::Both || mode == VtkEpcCommon::Representation)
 {
-	treeViewMode = (mode==VtkEpcCommon::Both || mode==VtkEpcCommon::TreeView);
-	representationMode = (mode==VtkEpcCommon::Both || mode==VtkEpcCommon::Representation);
-
-	vtkOutput = vtkSmartPointer<vtkMultiBlockDataSet>::New();
-	treeView = {};
 }
 
 //----------------------------------------------------------------------------
 VtkEpcDocumentSet::~VtkEpcDocumentSet()
 {
-	vtkEpcNameList.clear();
-
-	uuidToVtkEpc.clear();
-
 	for (const auto& vtkEpc : vtkEpcList) {
 		delete vtkEpc;
 	}
-	vtkEpcList.clear();
-
-	treeView.clear(); // Tree
-
-	vtkOutput = NULL;
-
-	procRank = 0;
-	nbProc = 0;
 }
 
 //----------------------------------------------------------------------------
 std::string VtkEpcDocumentSet::visualize(const std::string & uuid)
 {
-	if(representationMode) {
+	if (representationMode) {
 		try {
 			uuidToVtkEpc[uuid]->visualize(uuid);
 		}

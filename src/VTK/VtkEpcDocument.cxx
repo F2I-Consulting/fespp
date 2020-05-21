@@ -1151,7 +1151,6 @@ std::vector<VtkEpcCommon> VtkEpcDocument::getTreeView() const
 // ----------------------------------------------------------------------------
 std::string VtkEpcDocument::getError()
 {
-
 	return epc_error;
 }
 
@@ -1159,7 +1158,7 @@ std::string VtkEpcDocument::getError()
 // PRIVATE
 
 void VtkEpcDocument::searchFaultPolylines(const std::string & fileName) {
-	std::vector<resqml2_0_1::PolylineSetRepresentation*> polylines;
+	std::vector<RESQML2_0_1_NS::PolylineSetRepresentation*> polylines;
 	try	{
 		polylines = repository.getFaultPolylineSetRepSet();
 	}
@@ -1169,21 +1168,24 @@ void VtkEpcDocument::searchFaultPolylines(const std::string & fileName) {
 	for (size_t idx = 0; idx < polylines.size(); ++idx)	{
 		if (polylines[idx]->isPartial()) {
 			auto vtkEpcSrc = epcSet->getVtkEpcDocument(polylines[idx]->getUuid());
-			if (vtkEpcSrc) {
+			if (vtkEpcSrc != nullptr) {
 				auto type_in_epcdoc = epcSet->getTypeInEpcDocument(polylines[idx]->getUuid());
 				if (type_in_epcdoc == VtkEpcCommon::POLYLINE_SET){
 					createTreeVtkPartialRep(polylines[idx]->getUuid(), vtkEpcSrc);
 					uuidIsChildOf[polylines[idx]->getUuid()].setParentType( VtkEpcCommon::POLYLINE_SET);
-				} else {
+				}
+				else {
 					epc_error = epc_error + " Partial UUID (" + polylines[idx]->getUuid() + ") is PolylineSet and is incorrect \n";
 				}
-			} else {
+			}
+			else {
 				epc_error = epc_error + " Partial UUID: (" + polylines[idx]->getUuid() + ") is not loaded \n";
 			}
-		} else {
+		}
+		else {
 			std::string uuidParent= fileName;
 			auto interpretation = polylines[idx]->getInterpretation();
-			if (interpretation) {
+			if (interpretation != nullptr) {
 				uuidParent = interpretation->getUuid();
 				createTreeVtk(uuidParent, fileName, interpretation->getTitle().c_str(), VtkEpcCommon::INTERPRETATION_2D);
 			}
@@ -1200,7 +1202,7 @@ void VtkEpcDocument::searchFaultPolylines(const std::string & fileName) {
 }
 
 void VtkEpcDocument::searchHorizonPolylines(const std::string & fileName) {
-	std::vector<resqml2_0_1::PolylineSetRepresentation*> polylines;
+	std::vector<RESQML2_0_1_NS::PolylineSetRepresentation*> polylines;
 	try	{
 		polylines = repository.getHorizonPolylineSetRepSet();
 	}
@@ -1241,7 +1243,7 @@ void VtkEpcDocument::searchHorizonPolylines(const std::string & fileName) {
 }
 
 void VtkEpcDocument::searchUnstructuredGrid(const std::string & fileName) {
-	std::vector<resqml2_0_1::UnstructuredGridRepresentation*> unstructuredGrid;
+	std::vector<RESQML2_0_1_NS::UnstructuredGridRepresentation*> unstructuredGrid;
 	try	{
 		unstructuredGrid = repository.getUnstructuredGridRepresentationSet();
 	}
@@ -1281,7 +1283,7 @@ void VtkEpcDocument::searchUnstructuredGrid(const std::string & fileName) {
 }
 
 void VtkEpcDocument::searchTriangulated(const std::string & fileName) {
-	std::vector<resqml2_0_1::TriangulatedSetRepresentation*> triangulated;
+	std::vector<RESQML2_0_1_NS::TriangulatedSetRepresentation*> triangulated;
 	try	{
 		triangulated = repository.getAllTriangulatedSetRepSet();
 	} catch  (const std::exception & e)	{
@@ -1319,7 +1321,7 @@ void VtkEpcDocument::searchTriangulated(const std::string & fileName) {
 }
 
 void VtkEpcDocument::searchGrid2d(const std::string & fileName) {
-	std::vector<resqml2_0_1::Grid2dRepresentation*> grid2D;
+	std::vector<RESQML2_0_1_NS::Grid2dRepresentation*> grid2D;
 	try	{
 		grid2D = repository.getHorizonGrid2dRepSet();
 	} catch  (const std::exception & e)	{
@@ -1357,7 +1359,7 @@ void VtkEpcDocument::searchGrid2d(const std::string & fileName) {
 }
 
 void VtkEpcDocument::searchIjkGrid(const std::string & fileName) {
-	std::vector<resqml2_0_1::AbstractIjkGridRepresentation*> ijkGrid;
+	std::vector<RESQML2_0_1_NS::AbstractIjkGridRepresentation*> ijkGrid;
 	try	{
 		ijkGrid = repository.getIjkGridRepresentationSet();
 	}
@@ -1397,7 +1399,7 @@ void VtkEpcDocument::searchIjkGrid(const std::string & fileName) {
 }
 
 void VtkEpcDocument::searchWellboreTrajectory(const std::string & fileName) {
-	std::vector<resqml2_0_1::WellboreTrajectoryRepresentation*> wellboreTrajectory_set;
+	std::vector<RESQML2_0_1_NS::WellboreTrajectoryRepresentation*> wellboreTrajectory_set;
 	try	{
 		wellboreTrajectory_set = repository.getWellboreTrajectoryRepresentationSet();
 	}
@@ -1450,7 +1452,7 @@ void VtkEpcDocument::searchWellboreTrajectory(const std::string & fileName) {
 }
 
 void VtkEpcDocument::searchSubRepresentation(const std::string & fileName) {
-	std::vector<resqml2::SubRepresentation*> subRepresentationSet;
+	std::vector<RESQML2_NS::SubRepresentation*> subRepresentationSet;
 	try		{
 		subRepresentationSet = repository.getSubRepresentationSet();
 	}
