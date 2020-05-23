@@ -79,7 +79,7 @@ public:
 	*
 	* if timeIndex = -1 then no time series link.
 	*/
-	std::vector<VtkEpcCommon> getTreeView() const;
+	const std::vector<VtkEpcCommon>& getAllVtkEpcCommons() const;
 
 	/**
 	* method : attach
@@ -141,9 +141,6 @@ private:
 	*/
 	void createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, VtkEpcCommon::Resqml2Type resqmlType);
 
-
-
-	// EPC DOCUMENT
 	COMMON_NS::DataObjectRepository repository;
 
 	std::unordered_map<std::string, VtkGrid2DRepresentation*> uuidToVtkGrid2DRepresentation;
@@ -160,7 +157,7 @@ private:
 
 	VtkEpcDocumentSet * epcSet;
 
-	std::vector<VtkEpcCommon> treeView; // Tree
+	std::vector<VtkEpcCommon> allVtkEpcCommons; // Tree
 
 	std::string epc_error;
 };

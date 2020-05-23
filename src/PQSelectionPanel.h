@@ -22,6 +22,7 @@ under the License.
 // include system
 #include <string>
 #include <vector>
+#include <unordered_map>
 
 #include <QDockWidget>
 #include <qprogressbar.h>
@@ -137,7 +138,7 @@ private:
 
 	std::string searchSource(const std::string & uuid);
 
-	void populateTreeView(const std::string &  parent, VtkEpcCommon::Resqml2Type parentType, const std::string &  uuid, const std::string &  name, VtkEpcCommon::Resqml2Type type);
+	void populateTreeView(const VtkEpcCommon & vtkEpcCommon);
 	void updateTimeSeries(const std::string & uuid, bool isnew);
 
 	void constructor();
@@ -158,6 +159,11 @@ private:
 	* @param load true if we want to load the UUID, other wise false.
 	*/
 	void toggleUuid(const std::string & uuid, bool load);
+
+	/**
+	* @return all names of the currently opened EPC files in the plugin.
+	*/
+	std::vector<std::string> getAllOpenedEpcFileNames() const;
 	
 	QTreeWidget *treeWidget;
 	QPushButton *button_Time_After;
@@ -168,37 +174,20 @@ private:
 	QSlider *slider_Time_Step;
 	QComboBox *time_series;
 	QTimer *timer;
-	int timerCount;
-
 	bool time_Changed;
 
-	std::vector<std::string> allFileName;
-	QMap<std::string, std::string> uuidToFilename;
-	QMap<std::string, std::string> uuidToPipeName;
-	QMap<std::string, std::vector<std::string> > filenameToUuids;
-	QMap<std::string, std::vector<std::string> > filenameToUuidsPartial;
+	std::unordered_map<std::string, std::string> uuidToFilename;
+	std::unordered_map<std::string, std::string> uuidToPipeName;
 
-	QMap<std::string, QTreeWidgetItem *> uuidItem;
-	QMap<QTreeWidgetItem*,std::string> itemUuid;
-	QMap<std::string, QTreeWidgetItem *> uuidParentItem;
-	
-	// properties
-	QMap< std::string, std::vector<std::string> > mapUuidProperty;
-	
-	QMap<std::string, std::string> mapUuidWithProperty;
+	// About equivalent to a Tree Model
+	// Map getting a present tree widget item from its uuid
+	std::unordered_map<std::string, QTreeWidgetItem *> uuidItem;
+	// Inverse map getting the uuid of a present tree widget item
+	std::unordered_map<QTreeWidgetItem*,std::string> itemUuid;
 
-	// radio-button
-	int radioButtonCount;
-	QMap<int, std::string> radioButton_to_id;
-	QMap<std::string, QRadioButton*> mapUuidParentButtonInvisible;
-	bool canLoad;
+	std::unordered_map<std::string, COMMON_NS::EpcDocument *> pcksave;
 
-	QMap<std::string, COMMON_NS::EpcDocument *> pcksave;
-
-	QMap<std::string, QButtonGroup *> uuidParent_to_groupButton;
-	QMap<QAbstractButton *, std::string> radioButton_to_uuid;
-
-	QMap<std::string, QMap<time_t, std::string>> ts_timestamp_to_uuid;
+	std::unordered_map<std::string, QMap<time_t, std::string>> ts_timestamp_to_uuid;
 
 	QMap<std::string, bool> uuidsWellbore;
 
@@ -207,8 +196,6 @@ private:
 	std::vector<std::string> ts_displayed;
 
 	VtkEpcDocumentSet* vtkEpcDocumentSet;
-
-	bool debug_verif;
 	bool etpCreated;
 
 	// var: subscribe etp

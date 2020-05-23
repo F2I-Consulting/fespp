@@ -140,7 +140,6 @@ std::string VtkEpcDocumentSet::addEpcDocument(const std::string & fileName)
 {
 	if (std::find(vtkEpcNameList.begin(), vtkEpcNameList.end(),fileName)==vtkEpcNameList.end())	{
 		auto vtkEpc = new VtkEpcDocument(fileName, procRank, nbProc, this);
-		auto msg_error = vtkEpc->getError();
 		auto uuidList = vtkEpc->getListUuid();
 		for (auto &uuidListElem : uuidList) {
 			uuidToVtkEpc[uuidListElem] = vtkEpc;
@@ -148,10 +147,7 @@ std::string VtkEpcDocumentSet::addEpcDocument(const std::string & fileName)
 		vtkEpcList.push_back(vtkEpc);
 		vtkEpcNameList.push_back(fileName);
 
-		auto tmpTree = vtkEpc->getTreeView();
-		treeView.insert( treeView.end(), tmpTree.begin(), tmpTree.end() );
-
-		return msg_error;
+		return vtkEpc->getError();
 	}
 	return std::string();
 }
@@ -174,7 +170,15 @@ VtkEpcCommon::Resqml2Type VtkEpcDocumentSet::getTypeInEpcDocument(const std::str
 }
 
 //----------------------------------------------------------------------------
-std::vector<VtkEpcCommon> VtkEpcDocumentSet::getTreeView() const
+std::vector<VtkEpcCommon> VtkEpcDocumentSet::getAllVtkEpcCommons() const
 {
-	return treeView;
+	std::vector<VtkEpcCommon> result;
+
+	// concatenate all VtkEpcCommons of all epc documents (i.e repos).
+	for (const auto& vtkRepo : vtkEpcList) {
+		result.insert(result.end(),
+			vtkRepo->getAllVtkEpcCommons().begin(), vtkRepo->getAllVtkEpcCommons().end());
+	}
+
+	return result;
 }

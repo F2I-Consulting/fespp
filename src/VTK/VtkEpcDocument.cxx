@@ -87,8 +87,8 @@ VtkEpcDocument::VtkEpcDocument(const std::string & fileName, int idProc, int max
 	// TimeSeries
 	searchTimeSeries(fileName);
 
-	for (auto &iter : uuidRep)	{
-		treeView.push_back(uuidIsChildOf[iter]);
+	for (const auto& iter : uuidRep)	{
+		allVtkEpcCommons.push_back(uuidIsChildOf[iter]);
 	}
 }
 
@@ -98,47 +98,34 @@ VtkEpcDocument::~VtkEpcDocument()
 	for(auto i : uuidToVtkGrid2DRepresentation) {
 		delete i.second;
 	}
-	uuidToVtkGrid2DRepresentation.clear();
 
 	for(auto i : uuidToVtkPolylineRepresentation) {
 		delete i.second;
 	}
-	uuidToVtkPolylineRepresentation.clear();
 
 	for(auto i : uuidToVtkTriangulatedRepresentation) {
 		delete i.second;
 	}
-	uuidToVtkTriangulatedRepresentation.clear();
 
 	for(auto i : uuidToVtkSetPatch) {
 		delete i.second;
 	}
-	uuidToVtkSetPatch.clear();
 
 	for(auto i : uuidToVtkWellboreTrajectoryRepresentation) {
 		delete i.second;
 	}
-	uuidToVtkWellboreTrajectoryRepresentation.clear();
 
 	for(auto i : uuidToVtkIjkGridRepresentation) {
 		delete i.second;
 	}
-	uuidToVtkIjkGridRepresentation.clear();
 
 	for(auto i : uuidToVtkUnstructuredGridRepresentation) {
 		delete i.second;
 	}
-	uuidToVtkUnstructuredGridRepresentation.clear();
 
 	for(auto i : uuidToVtkPartialRepresentation) {
 		delete i.second;
 	}
-	uuidToVtkPartialRepresentation.clear();
-
-	uuidPartialRep.clear();
-	uuidRep.clear();
-
-	epcSet = nullptr;
 }
 
 // ----------------------------------------------------------------------------
@@ -661,7 +648,7 @@ void VtkEpcDocument::visualize(const std::string & uuid)
 // ----------------------------------------------------------------------------
 void VtkEpcDocument::visualizeFullWell()
 {
-	for (auto &vtkEpcCommon : treeView) {
+	for (auto &vtkEpcCommon : allVtkEpcCommons) {
 		if (vtkEpcCommon.getType() == VtkEpcCommon::WELL_TRAJ) {
 			uuidToVtkWellboreTrajectoryRepresentation[vtkEpcCommon.getUuid()]->visualize(vtkEpcCommon.getUuid());
 			try
@@ -684,7 +671,7 @@ void VtkEpcDocument::visualizeFullWell()
 // ----------------------------------------------------------------------------
 void VtkEpcDocument::unvisualizeFullWell()
 {
-	for (auto &vtkEpcCommon : treeView) {
+	for (auto &vtkEpcCommon : allVtkEpcCommons) {
 		if (std::find(attachUuids.begin(), attachUuids.end(), vtkEpcCommon.getUuid()) != attachUuids.end()) {
 			if (uuidIsChildOf[vtkEpcCommon.getUuid()].getType() == VtkEpcCommon::WELL_TRAJ) {
 				uuidToVtkWellboreTrajectoryRepresentation[vtkEpcCommon.getUuid()]->remove(vtkEpcCommon.getUuid());
@@ -1143,9 +1130,9 @@ std::vector<std::string> VtkEpcDocument::getListUuid()
 
 
 // ----------------------------------------------------------------------------
-std::vector<VtkEpcCommon> VtkEpcDocument::getTreeView() const
+const std::vector<VtkEpcCommon>& VtkEpcDocument::getAllVtkEpcCommons() const
 {
-	return treeView;
+	return allVtkEpcCommons;
 }
 
 // ----------------------------------------------------------------------------

@@ -18,10 +18,11 @@ under the License.
 -----------------------------------------------------------------------*/
 #include "ui_PQSelectionPanel.h"
 #include "PQSelectionPanel.h"
-#include "PQToolsManager.h"
-#ifdef WITH_ETP
-#include "PQEtpPanel.h"
-#endif
+
+// include system
+#include <algorithm>
+#include <sstream>
+#include <stdexcept>
 
 // include API Resqml2
 #include <fesapi/resqml2/AbstractValuesProperty.h>
@@ -55,7 +56,6 @@ under the License.
 #include <qbuttongroup.h>
 
 // include ParaView
-#include <PQToolsManager.h>
 #include <pqPropertiesPanel.h>
 #include <qobject.h>
 #include <pqView.h>
@@ -65,7 +65,6 @@ under the License.
 #include <pqServer.h>
 #include <pqOutputPort.h>
 #include <pqActiveObjects.h>
-#include <pqOutputPort.h>
 #include <pqCoreUtilities.h>
 
 // include VTK
@@ -76,12 +75,13 @@ under the License.
 #include <vtkSMStringVectorProperty.h>
 #include <vtkInformation.h>
 
-// include system
-#include <algorithm>
-#include <sstream>
-#include <stdexcept>
+#include "PQToolsManager.h"
+#ifdef WITH_ETP
+#include "PQEtpPanel.h"
+#endif
 
 #include "VTK/VtkEpcDocumentSet.h"
+#include "VTK/VtkEpcDocument.h"
 
 namespace {
 #ifdef WITH_ETP
@@ -132,11 +132,7 @@ void PQSelectionPanel::constructor() {
 
 	treeWidget->header()->setStretchLastSection(false);
 	treeWidget->header()->resizeSection(1, 20);
-#if QT_VERSION >= 0x050000
 	treeWidget->header()->setSectionResizeMode(0, QHeaderView::Stretch);
-#else
-	treeWidget->header()->setResizeMode(0, QHeaderView::Stretch);
-#endif
 	treeWidget->expandToDepth(0);
 	treeWidget->header()->close();
 
@@ -197,13 +193,10 @@ void PQSelectionPanel::constructor() {
 
 	//***
 
-	radioButtonCount = 0;
-
 	save_time = 0;
 
 	vtkEpcDocumentSet = new VtkEpcDocumentSet(0, 0, VtkEpcCommon::TreeView);
 	etpCreated = false;
-	canLoad = false;
 }
 
 PQSelectionPanel::~PQSelectionPanel() {
@@ -225,7 +218,8 @@ void PQSelectionPanel::treeCustomMenu(const QPoint & pos)
 			menu->exec(treeWidget->mapToGlobal(pos));
 		}
 		else {
-			for (const auto& file_name : allFileName) {
+			std::vector<std::string> allOpenedEpcFileNames = getAllOpenedEpcFileNames();
+			for (const auto& file_name : allOpenedEpcFileNames) {
 				if (file_name == pickedBlocksEtp) {
 					if (uuidsWellbore.keys(true).size() == uuidsWellbore.size()) {
 						menu->addAction(QString("Unselect all wellbores"), this, [this] { toggleAllWells(false); });
@@ -245,12 +239,11 @@ void PQSelectionPanel::treeCustomMenu(const QPoint & pos)
 void PQSelectionPanel::toggleAllWells(bool select)
 {
 	toggleUuid("allWell-" + pickedBlocksEtp, select);
-	canLoad = false;
+	const QSignalBlocker blocker(treeWidget);
 	for (const auto& uuid : uuidsWellbore.keys()) {
 		uuidItem[uuid]->setCheckState(0, select ? Qt::Checked : Qt::Unchecked);
 		uuidsWellbore[uuid] = select;
 	}
-	canLoad = true;
 }
 
 //----------------------------------------------------------------------------
@@ -286,64 +279,66 @@ void PQSelectionPanel::clicSelection(QTreeWidgetItem* item, int) {
 	}
 }
 
+namespace {
+	void recursiveParentUncheck(QTreeWidgetItem* item)
+	{
+		if (item == nullptr) {
+			return;
+		}
+
+		QTreeWidgetItem* parent = item->parent();
+		if (parent == nullptr) {
+			return;
+		}
+
+		const int siblingTreeWidgetItemCount = parent->childCount();
+		for (int siblingIndex = 0; siblingIndex < siblingTreeWidgetItemCount; siblingIndex++) {
+			if (parent->child(siblingIndex)->checkState(0) == Qt::Checked) {
+				// Do not uncheck the parent since one if its children is still checked
+				return;
+			}
+		}
+
+		// Uncheck the parent and operate the recursive operation
+		parent->setCheckState(0, Qt::Unchecked);
+		recursiveParentUncheck(parent->parent());
+	}
+
+	void recursiveChildrenUncheck(QTreeWidgetItem* item)
+	{
+		if (item == nullptr) {
+			return;
+		}
+
+		int childCount = item->childCount();
+		for (int idx_child = 0; idx_child < childCount; idx_child++) {
+			item->child(idx_child)->setCheckState(0, Qt::Unchecked);
+			recursiveChildrenUncheck(item->child(idx_child));
+		}
+		if (childCount > 0) {
+			item->setData(0, Qt::CheckStateRole, QVariant());
+		}
+	}
+}
+
 //----------------------------------------------------------------------------
 void PQSelectionPanel::onItemCheckedUnchecked(QTreeWidgetItem * item, int)
 {
-	std::string uuid = itemUuid[item];
-	if (canLoad) {
-		if (!uuid.empty()) {
-			if (item->checkState(0) == Qt::Checked) {
-				canLoad = false;
-				if (item->parent()) {
-					item->parent()->setCheckState(0, Qt::Checked);
-				}
-				canLoad = true;
-				toggleUuid(uuid, true);
+	const std::string uuid = itemUuid[item];
+	if (!uuid.empty()) {
+		const QSignalBlocker blocker(treeWidget);
+		if (item->checkState(0) == Qt::Checked) {
+			while (item->parent() != nullptr && item->parent()->checkState(0) == Qt::Unchecked) {
+				item = item->parent();
+				item->setCheckState(0, Qt::Checked);
 			}
-			else if (item->checkState(0) == Qt::Unchecked) {
-				// Uncheck all children
-				int childCount = item->childCount();
-				canLoad = false;
-				for (int idx_child = 0; idx_child < childCount; idx_child++) {
-					item->child(idx_child)->setCheckState(0, Qt::Unchecked);
-				}
-				if (childCount > 0) {
-					item->setData(0, Qt::CheckStateRole, QVariant());
-				}
-
-				// Verify if all children of parent are Unchecked
-				int parentChildren_count = item->parent()->childCount();
-				bool exist_childChecked = false;
-				for (int idx_child = 0; idx_child < parentChildren_count; idx_child++) {
-					if (item->parent()->child(idx_child)->checkState(0) == Qt::Checked) {
-						exist_childChecked = true;
-					}
-				}
-				if (!exist_childChecked) {
-					item->parent()->setCheckState(0, Qt::Unchecked);
-				}
-
-				canLoad = true;
-				toggleUuid(uuid, false);
-			}
+			toggleUuid(uuid, true);
 		}
-	}
-	else { // check/uncheck => parent/children without load or remove representation
-		if (!uuid.empty()) {
-			if (item->checkState(0) == Qt::Checked) {
-				if (item->parent() != nullptr) {
-					item->parent()->setCheckState(0, Qt::Checked);
-				}
-			}
-			else if (item->checkState(0) == Qt::Unchecked) {
-				int childCount = item->childCount();
-				for (int idx_child = 0; idx_child < childCount; idx_child++) {
-					item->child(idx_child)->setCheckState(0, Qt::Unchecked);
-				}
-				if (childCount > 0) {
-					item->setData(0, Qt::CheckStateRole, QVariant());
-				}
-			}
+		else if (item->checkState(0) == Qt::Unchecked) {
+			recursiveChildrenUncheck(item);
+			recursiveParentUncheck(item);
+
+			toggleUuid(uuid, false);
 		}
 	}
 }
@@ -352,16 +347,10 @@ void PQSelectionPanel::onItemCheckedUnchecked(QTreeWidgetItem * item, int)
 void PQSelectionPanel::deleteTreeView() {
 	treeWidget->clear();
 
-	allFileName.clear();
 	uuidToFilename.clear();
-	filenameToUuids.clear();
-	filenameToUuidsPartial.clear();
 
 	uuidItem.clear();
 	itemUuid.clear();
-
-	mapUuidProperty.clear();
-	mapUuidWithProperty.clear();
 
 	pcksave.clear();
 
@@ -428,14 +417,14 @@ void PQSelectionPanel::timeChangedComboBox(int) {
 	if (time != save_time) {
 		// remove old time properties
 		if (save_time != 0) {
-			for (auto &ts : ts_displayed) {
+			for (const auto& ts : ts_displayed) {
 				toggleUuid(ts_timestamp_to_uuid[ts][save_time], false);
 				toggleUuid(ts_timestamp_to_uuid[ts][time], true);
 			}
 		}
 		else {
 			// load time properties
-			for (auto &ts : ts_displayed) {
+			for (const auto& ts : ts_displayed) {
 				toggleUuid(ts_timestamp_to_uuid[ts][time], true);
 			}
 		}
@@ -454,9 +443,8 @@ void PQSelectionPanel::updateTimeSeries(const std::string & uuid, bool newUuid) 
 		ts_displayed.push_back(uuid);
 	}
 	else {
-		auto index_to_delete = std::find(ts_displayed.begin(),
-				ts_displayed.end(), uuid);
-		ts_displayed.erase(index_to_delete);
+		ts_displayed.erase(std::find(ts_displayed.begin(),
+			ts_displayed.end(), uuid));
 	}
 
 	QList<time_t> list;
@@ -469,7 +457,7 @@ void PQSelectionPanel::updateTimeSeries(const std::string & uuid, bool newUuid) 
 
 	qSort(list.begin(), list.end());
 
-	for (auto &it : list) {
+	for (const auto& it : list) {
 		QDateTime dt;
 		dt.setSecsSinceEpoch(it);
 		large_list << dt.toString();
@@ -491,217 +479,214 @@ void PQSelectionPanel::updateTimeSeries(const std::string & uuid, bool newUuid) 
 
 //********************************* TreeView *********************************
 //----------------------------------------------------------------------------
+
+std::vector<std::string> PQSelectionPanel::getAllOpenedEpcFileNames() const
+{
+	std::vector<std::string> result;
+	for (const auto& vtkEpcDoc : vtkEpcDocumentSet->getAllVtkEpcDocuments()) {
+		result.push_back(vtkEpcDoc->getFileName());
+	}
+	return result;
+}
+
 void PQSelectionPanel::addFileName(const std::string & fileName) {
-	if (std::find(allFileName.begin(), allFileName.end(), fileName) == allFileName.end()) {
+	// Block the signal of the tree to prevent some slots to be called during tree creation.
+	// This is only for performance reason
+	const QSignalBlocker blocker(treeWidget);
+
+	const std::vector<std::string> allOpenedEpcFileNames = getAllOpenedEpcFileNames();
+	if (std::find(allOpenedEpcFileNames.begin(), allOpenedEpcFileNames.end(), fileName) == allOpenedEpcFileNames.end()) {
 		vtkEpcDocumentSet->addEpcDocument(fileName);
-		allFileName.push_back(fileName);
 		uuidToFilename[fileName] = fileName;
 
-		QMap<std::string, std::string> name_to_uuid;
-		auto treeView = vtkEpcDocumentSet->getTreeView();
-		for (auto &leaf : treeView) {
-			uuidToPipeName[leaf.getUuid()] = "EpcDocument";
-			if (leaf.getTimeIndex() < 0) {
-				populateTreeView(leaf.getParent(), leaf.getParentType(),
-						leaf.getUuid(), leaf.getName(),
-						leaf.getType());
+		std::unordered_map<std::string, std::string> name_to_uuid;
+		for (const auto& vtkEpcCommon : vtkEpcDocumentSet->getAllVtkEpcCommons()) {
+			uuidToPipeName[vtkEpcCommon.getUuid()] = "EpcDocument";
+			if (vtkEpcCommon.getTimeIndex() < 0) {
+				populateTreeView(vtkEpcCommon);
 			}
 			else {
-				if (name_to_uuid.count(leaf.getName()) <= 0) {
-					populateTreeView(leaf.getParent(),
-							leaf.getParentType(), leaf.getUuid(),
-							leaf.getName(), leaf.getType());
-					name_to_uuid[leaf.getName()] = leaf.getUuid();
+				if (name_to_uuid.find(vtkEpcCommon.getName()) == name_to_uuid.end()) {
+					populateTreeView(vtkEpcCommon);
+					name_to_uuid[vtkEpcCommon.getName()] = vtkEpcCommon.getUuid();
 				}
 
-				ts_timestamp_to_uuid[name_to_uuid[leaf.getName()]][leaf.getTimestamp()] =
-						leaf.getUuid();
+				ts_timestamp_to_uuid[name_to_uuid[vtkEpcCommon.getName()]][vtkEpcCommon.getTimestamp()] =
+						vtkEpcCommon.getUuid();
 			}
 		}
 	}
 }
 
-void PQSelectionPanel::populateTreeView(const std::string & parent,
-		VtkEpcCommon::Resqml2Type parentType, const std::string & uuid,
-		const std::string & name, VtkEpcCommon::Resqml2Type type) {
-	canLoad = false;
-	if (!uuid.empty()) {
-		if (uuidItem[uuid] == nullptr) {
-			if (parentType == VtkEpcCommon::Resqml2Type::PARTIAL
-					&& uuidItem[parent] == nullptr) {
-			} else {
-				if (uuidItem[parent] == nullptr) {
-					QTreeWidgetItem *treeItem = new QTreeWidgetItem(treeWidget);
+void PQSelectionPanel::populateTreeView(const VtkEpcCommon & vtkEpcCommon)
+{
+	const auto uuid = vtkEpcCommon.getUuid();
+	if (!uuid.empty() && uuidItem[uuid] == nullptr) {
+		auto parent = vtkEpcCommon.getParent();
 
-					treeItem->setExpanded(true);
-					treeItem->setText(0, parent.c_str());
-					treeItem->setText(1, "");
-					uuidItem[parent] = treeItem;
-					itemUuid[treeItem] = parent;
-				}
+		QTreeWidgetItem* parentTreeWidgetItem = uuidItem[parent];
 
-				QIcon icon;
-				QTreeWidgetItem *treeItem = new QTreeWidgetItem();
-
-				treeItem->setText(0, name.c_str());
-				treeItem->setFlags(
-						treeItem->flags() | Qt::ItemIsSelectable);
-
-				switch (type) {
-				case VtkEpcCommon::Resqml2Type::PROPERTY: {
-					if (uuidItem[parent]->checkState(0)!=Qt::Checked) {
-						uuidItem[parent]->setData(0, Qt::CheckStateRole, QVariant());
-					}
-					treeItem->setCheckState(0, Qt::Unchecked);
-					break;
-				}
-				case VtkEpcCommon::Resqml2Type::TIME_SERIES: {
-					if (uuidItem[parent]->checkState(0)!=Qt::Checked) {
-						uuidItem[parent]->setData(0, Qt::CheckStateRole, QVariant());
-					}
-					treeItem->setCheckState(0, Qt::Unchecked);
-					break;
-				}
- 				case VtkEpcCommon::Resqml2Type::INTERPRETATION_1D: {
-					icon.addFile(QString::fromUtf8(":Interpretation_1D.png"), QSize(),
-							QIcon::Normal, QIcon::Off);
-					break;
-				}
-				case VtkEpcCommon::Resqml2Type::INTERPRETATION_2D: {
-					icon.addFile(QString::fromUtf8(":Interpretation_2D.png"), QSize(),
-							QIcon::Normal, QIcon::Off);
-					break;
-				}
-				case VtkEpcCommon::Resqml2Type::INTERPRETATION_3D: {
-					icon.addFile(QString::fromUtf8(":Interpretation_3D.png"), QSize(),
-							QIcon::Normal, QIcon::Off);
-					break;
-				}
-				case VtkEpcCommon::Resqml2Type::GRID_2D: {
-					icon.addFile(QString::fromUtf8(":Grid2D.png"), QSize(),
-							QIcon::Normal, QIcon::Off);
-					treeItem->setCheckState(0, Qt::Unchecked);
-					break;
-				}
-				case VtkEpcCommon::Resqml2Type::POLYLINE_SET: {
-					icon.addFile(QString::fromUtf8(":Polyline.png"),
-							QSize(), QIcon::Normal, QIcon::Off);
-					treeItem->setCheckState(0, Qt::Unchecked);
-					break;
-				}
-				case VtkEpcCommon::Resqml2Type::TRIANGULATED_SET: {
-					icon.addFile(QString::fromUtf8(":Triangulated.png"),
-							QSize(), QIcon::Normal, QIcon::Off);
-					treeItem->setCheckState(0, Qt::Unchecked);
-					break;
-				}
-				case VtkEpcCommon::Resqml2Type::WELL_TRAJ: {
-					icon.addFile(QString::fromUtf8(":WellTraj.png"),
-							QSize(), QIcon::Normal, QIcon::Off);
-					treeItem->setCheckState(0, Qt::Unchecked);
-					uuidsWellbore.insert(uuid, false);
-					break;
-				}
-				case VtkEpcCommon::Resqml2Type::WELL_MARKER_FRAME: {
-					icon.addFile(QString::fromUtf8(":WellBoreFrameMarker.png"),
-							QSize(), QIcon::Normal, QIcon::Off);
-					if (uuidItem[parent]->checkState(0)!=Qt::Checked) {
-						uuidItem[parent]->setData(0, Qt::CheckStateRole, QVariant());
-					}
-					treeItem->setCheckState(0, Qt::Unchecked);
-					break;
-				}
-				case VtkEpcCommon::Resqml2Type::WELL_MARKER: {
-					icon.addFile(QString::fromUtf8(":WellBoreMarker.png"),
-							QSize(), QIcon::Normal, QIcon::Off);
-					if (uuidItem[parent]->checkState(0)!=Qt::Checked) {
-						uuidItem[parent]->setData(0, Qt::CheckStateRole, QVariant());
-					}
-					treeItem->setCheckState(0, Qt::Unchecked);
-					break;
-				}
-				case VtkEpcCommon::Resqml2Type::WELL_FRAME: {
-					icon.addFile(QString::fromUtf8(":WellBoreFrame.png"),
-							QSize(), QIcon::Normal, QIcon::Off);
-					if (uuidItem[parent]->checkState(0)!=Qt::Checked) {
-						uuidItem[parent]->setData(0, Qt::CheckStateRole, QVariant());
-					}
-					treeItem->setCheckState(0, Qt::Unchecked);
-					break;
-				}
-				case VtkEpcCommon::Resqml2Type::IJK_GRID: {
-					icon.addFile(QString::fromUtf8(":IjkGrid.png"), QSize(),
-							QIcon::Normal, QIcon::Off);
-					treeItem->setCheckState(0, Qt::Unchecked);
-					break;
-				}
-				case VtkEpcCommon::Resqml2Type::UNSTRUC_GRID: {
-					icon.addFile(QString::fromUtf8(":UnstructuredGrid.png"),
-							QSize(), QIcon::Normal, QIcon::Off);
-					treeItem->setCheckState(0, Qt::Unchecked);
-					break;
-				}
-				case VtkEpcCommon::Resqml2Type::SUB_REP: {
-					icon.addFile(
-							QString::fromUtf8(":SubRepresentation.png"),
-							QSize(), QIcon::Normal, QIcon::Off);
-					treeItem->setCheckState(0, Qt::Unchecked);
-					break;
-				}
-				default:
-					break;
-				}
-
-				treeItem->setIcon(0, icon);
-
-				uuidItem[parent]->addChild(treeItem);
-				uuidItem[uuid] = treeItem;
-				itemUuid[treeItem] = uuid;
-
-				filenameToUuids[uuidToFilename[uuid]].push_back(uuid);
+		// Check if the root tree item must be created
+		if (parentTreeWidgetItem == nullptr) {
+			if (vtkEpcCommon.getParentType() == VtkEpcCommon::Resqml2Type::PARTIAL) {
+				vtkOutputWindowDisplayDebugText(("Impossible to resolve the partial object " + vtkEpcCommon.getParent() + "\n").c_str());
+				return;
 			}
+
+			parentTreeWidgetItem = new QTreeWidgetItem(treeWidget);
+			parentTreeWidgetItem->setExpanded(true);
+			parentTreeWidgetItem->setText(0, parent.c_str());
+
+			// register the root tree widget item into the tree model maps
+			uuidItem[parent] = parentTreeWidgetItem;
+			itemUuid[parentTreeWidgetItem] = parent;
 		}
+
+		// Create the tree item
+		QIcon icon;
+		QTreeWidgetItem* treeItem = new QTreeWidgetItem();
+
+		treeItem->setText(0, vtkEpcCommon.getName().c_str());
+		treeItem->setFlags(treeItem->flags() | Qt::ItemIsSelectable);
+
+		switch (vtkEpcCommon.getType()) {
+		case VtkEpcCommon::Resqml2Type::PROPERTY: {
+			if (parentTreeWidgetItem->checkState(0) != Qt::Checked) {
+				parentTreeWidgetItem->setData(0, Qt::CheckStateRole, QVariant());
+			}
+			treeItem->setCheckState(0, Qt::Unchecked);
+			break;
+		}
+		case VtkEpcCommon::Resqml2Type::TIME_SERIES: {
+			if (parentTreeWidgetItem->checkState(0) != Qt::Checked) {
+				parentTreeWidgetItem->setData(0, Qt::CheckStateRole, QVariant());
+			}
+			treeItem->setCheckState(0, Qt::Unchecked);
+			break;
+		}
+ 		case VtkEpcCommon::Resqml2Type::INTERPRETATION_1D: {
+			icon.addFile(QString::fromUtf8(":Interpretation_1D.png"));
+			break;
+		}
+		case VtkEpcCommon::Resqml2Type::INTERPRETATION_2D: {
+			icon.addFile(QString::fromUtf8(":Interpretation_2D.png"));
+			break;
+		}
+		case VtkEpcCommon::Resqml2Type::INTERPRETATION_3D: {
+			icon.addFile(QString::fromUtf8(":Interpretation_3D.png"));
+			break;
+		}
+		case VtkEpcCommon::Resqml2Type::GRID_2D: {
+			icon.addFile(QString::fromUtf8(":Grid2D.png"));
+			treeItem->setCheckState(0, Qt::Unchecked);
+			break;
+		}
+		case VtkEpcCommon::Resqml2Type::POLYLINE_SET: {
+			icon.addFile(QString::fromUtf8(":Polyline.png"));
+			treeItem->setCheckState(0, Qt::Unchecked);
+			break;
+		}
+		case VtkEpcCommon::Resqml2Type::TRIANGULATED_SET: {
+			icon.addFile(QString::fromUtf8(":Triangulated.png"));
+			treeItem->setCheckState(0, Qt::Unchecked);
+			break;
+		}
+		case VtkEpcCommon::Resqml2Type::WELL_TRAJ: {
+			icon.addFile(QString::fromUtf8(":WellTraj.png"));
+			treeItem->setCheckState(0, Qt::Unchecked);
+			uuidsWellbore.insert(vtkEpcCommon.getUuid(), false);
+			break;
+		}
+		case VtkEpcCommon::Resqml2Type::WELL_MARKER_FRAME: {
+			icon.addFile(QString::fromUtf8(":WellBoreFrameMarker.png"),
+					QSize(), QIcon::Normal, QIcon::Off);
+			if (parentTreeWidgetItem->checkState(0) != Qt::Checked) {
+				parentTreeWidgetItem->setData(0, Qt::CheckStateRole, QVariant());
+			}
+			treeItem->setCheckState(0, Qt::Unchecked);
+			break;
+		}
+		case VtkEpcCommon::Resqml2Type::WELL_MARKER: {
+			icon.addFile(QString::fromUtf8(":WellBoreMarker.png"));
+			if (parentTreeWidgetItem->checkState(0) != Qt::Checked) {
+				parentTreeWidgetItem->setData(0, Qt::CheckStateRole, QVariant());
+			}
+			treeItem->setCheckState(0, Qt::Unchecked);
+			break;
+		}
+		case VtkEpcCommon::Resqml2Type::WELL_FRAME: {
+			icon.addFile(QString::fromUtf8(":WellBoreFrame.png"));
+			if (parentTreeWidgetItem->checkState(0)!=Qt::Checked) {
+				parentTreeWidgetItem->setData(0, Qt::CheckStateRole, QVariant());
+			}
+			treeItem->setCheckState(0, Qt::Unchecked);
+			break;
+		}
+		case VtkEpcCommon::Resqml2Type::IJK_GRID: {
+			icon.addFile(QString::fromUtf8(":IjkGrid.png"));
+			treeItem->setCheckState(0, Qt::Unchecked);
+			break;
+		}
+		case VtkEpcCommon::Resqml2Type::UNSTRUC_GRID: {
+			icon.addFile(QString::fromUtf8(":UnstructuredGrid.png"));
+			treeItem->setCheckState(0, Qt::Unchecked);
+			break;
+		}
+		case VtkEpcCommon::Resqml2Type::SUB_REP: {
+			icon.addFile(QString::fromUtf8(":SubRepresentation.png"));
+			treeItem->setCheckState(0, Qt::Unchecked);
+			break;
+		}
+		default:
+			break;
+		}
+
+		treeItem->setIcon(0, icon);
+		parentTreeWidgetItem->addChild(treeItem);
+
+		// register the root tree widget item into the tree model maps
+		uuidItem[uuid] = treeItem;
+		itemUuid[treeItem] = uuid;
 	}
-	canLoad = true;
 }
 
 //********************************* Interfacing ******************************
 //----------------------------------------------------------------------------
-std::string PQSelectionPanel::searchSource(const std::string & uuid) {
+std::string PQSelectionPanel::searchSource(const std::string & uuid)
+{
 	return uuidToPipeName[uuid];
 }
 
 //----------------------------------------------------------------------------
-void PQSelectionPanel::toggleUuid(const std::string & uuid, bool load) {
-	if (canLoad) {
-		const std::string pipe_name = uuid.find("allWell-") != std::string::npos
-			? "EpcDocument"
-			: searchSource(uuid);
-		pqPipelineSource * source = findPipelineSource(pipe_name.c_str());
-		if (source != nullptr) {
-			pqActiveObjects *activeObjects = &pqActiveObjects::instance();
-			activeObjects->setActiveSource(source);
+void PQSelectionPanel::toggleUuid(const std::string & uuid, bool load)
+{
+	const std::string pipe_name = uuid.find("allWell-") != std::string::npos
+		? "EpcDocument"
+		: searchSource(uuid);
+	pqPipelineSource * source = findPipelineSource(pipe_name.c_str());
+	if (source != nullptr) {
+		pqActiveObjects *activeObjects = &pqActiveObjects::instance();
+		activeObjects->setActiveSource(source);
 
-			auto fesppReader = PQToolsManager::instance()->getFesppReader(pipe_name);
+		auto fesppReader = PQToolsManager::instance()->getFesppReader(pipe_name);
 
-			if (fesppReader != nullptr) {
-				activeObjects->setActiveSource(fesppReader);
+		if (fesppReader != nullptr) {
+			activeObjects->setActiveSource(fesppReader);
 
-				// add uuid to property panel
-				vtkSMProxy* fesppReaderProxy = fesppReader->getProxy();
+			// add uuid to property panel
+			vtkSMProxy* fesppReaderProxy = fesppReader->getProxy();
 
-				vtkSMPropertyHelper(fesppReaderProxy, "UuidList").SetStatus(
-						uuid.c_str(), load ? 1 : 0);
+			vtkSMPropertyHelper(fesppReaderProxy, "UuidList").SetStatus(
+					uuid.c_str(), load ? 1 : 0);
 
-				fesppReaderProxy->UpdatePropertyInformation();
-				fesppReaderProxy->UpdateVTKObjects();
-				getpqPropertiesPanel()->update();
-				getpqPropertiesPanel()->apply();
-			}
+			fesppReaderProxy->UpdatePropertyInformation();
+			fesppReaderProxy->UpdateVTKObjects();
+			getpqPropertiesPanel()->update();
+			getpqPropertiesPanel()->apply();
 		}
-		if (uuidsWellbore.contains(uuid)) {
-			uuidsWellbore[uuid] = load;
-		}
+	}
+	if (uuidsWellbore.contains(uuid)) {
+		uuidsWellbore[uuid] = load;
 	}
 }
 
