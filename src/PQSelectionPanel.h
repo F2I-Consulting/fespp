@@ -154,6 +154,16 @@ private:
     virtual pqServer * getActiveServer();
 
 	/**
+	* Recursively uncheck all parents of an item (i.e. if all sibling items are also unchecked).
+	*/
+	void recursiveParentUncheck(QTreeWidgetItem* item);
+
+	/**
+	* Recursively uncheck all children of an item
+	*/
+	void recursiveChildrenUncheck(QTreeWidgetItem* item);
+
+	/**
 	* Load/Unload representation/property uuid's
 	*
 	* @param load true if we want to load the UUID, other wise false.

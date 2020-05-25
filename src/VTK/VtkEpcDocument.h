@@ -102,7 +102,7 @@ public:
 
 	std::string getError() ;
 
-	COMMON_NS::DataObjectRepository* getEpcDocument();
+	COMMON_NS::DataObjectRepository* getDataObjectRepository();
 
 private:
 	void addGrid2DTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name);

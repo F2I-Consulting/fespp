@@ -158,5 +158,5 @@ VtkEpcCommon VtkPartialRepresentation::getInfoUuid()
 //----------------------------------------------------------------------------
 COMMON_NS::DataObjectRepository * VtkPartialRepresentation::getEpcSource()
 {
-	return vtkEpcDocumentSource->getEpcDocument();
+	return vtkEpcDocumentSource->getDataObjectRepository();
 }

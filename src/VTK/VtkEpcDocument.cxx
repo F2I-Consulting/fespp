@@ -420,6 +420,13 @@ void VtkEpcDocument::createTreeVtkPartialRep(const std::string & uuid, VtkEpcDoc
 // ----------------------------------------------------------------------------
 void VtkEpcDocument::visualize(const std::string & uuid)
 {
+	auto fesapiObject = repository.getDataObjectByUuid(uuid);
+	if (dynamic_cast<RESQML2_NS::AbstractRepresentation*>(fesapiObject) == nullptr &&
+		dynamic_cast<RESQML2_NS::AbstractValuesProperty*>(fesapiObject) == nullptr) {
+		// Cannot visualize anything other then a RESQML property or a RESQML representation.
+		return;
+	}
+
 	auto uuidToAttach = uuidIsChildOf[uuid].getUuid();
 	switch (uuidIsChildOf[uuid].getType())	{
 	case VtkEpcCommon::GRID_2D:	{
@@ -428,8 +435,7 @@ void VtkEpcDocument::visualize(const std::string & uuid)
 	}
 	case VtkEpcCommon::POLYLINE_SET: {
 		auto object = repository.getDataObjectByUuid(uuidIsChildOf[uuid].getUuid());
-		auto typeRepresentation = object->getXmlTag();
-		if (typeRepresentation == "PolylineRepresentation")	{
+		if (object->getXmlTag() == "PolylineRepresentation")	{
 			uuidToVtkPolylineRepresentation[uuidIsChildOf[uuid].getUuid()]->visualize(uuid);
 		}
 		else {
@@ -439,8 +445,7 @@ void VtkEpcDocument::visualize(const std::string & uuid)
 	}
 	case VtkEpcCommon::TRIANGULATED_SET: {
 		auto object = repository.getDataObjectByUuid(uuidIsChildOf[uuid].getUuid());
-		auto typeRepresentation = object->getXmlTag();
-		if (typeRepresentation == "TriangulatedRepresentation") {
+		if (object->getXmlTag() == "TriangulatedRepresentation") {
 			uuidToVtkTriangulatedRepresentation[uuidIsChildOf[uuid].getUuid()]->visualize(uuid);
 		}
 		else {
@@ -505,8 +510,7 @@ void VtkEpcDocument::visualize(const std::string & uuid)
 		}
 		case VtkEpcCommon::POLYLINE_SET: {
 			auto object = repository.getDataObjectByUuid(uuidIsChildOf[uuid].getParent());
-			auto typeRepresentation = object->getXmlTag();
-			if (typeRepresentation == "PolylineRepresentation")	{
+			if (object->getXmlTag() == "PolylineRepresentation")	{
 				uuidToVtkPolylineRepresentation[uuidIsChildOf[uuid].getParent()]->visualize(uuid);
 			}
 			else {
@@ -516,8 +520,7 @@ void VtkEpcDocument::visualize(const std::string & uuid)
 		}
 		case VtkEpcCommon::TRIANGULATED_SET: {
 			auto object = repository.getDataObjectByUuid(uuid);
-			auto typeRepresentation = object->getXmlTag();
-			if (typeRepresentation == "TriangulatedRepresentation") {
+			if (object->getXmlTag() == "TriangulatedRepresentation") {
 				uuidToVtkTriangulatedRepresentation[uuidIsChildOf[uuid].getParent()]->visualize(uuid);
 			}
 			else {
@@ -571,8 +574,7 @@ void VtkEpcDocument::visualize(const std::string & uuid)
 		}
 		case VtkEpcCommon::POLYLINE_SET: {
 			auto object = repository.getDataObjectByUuid(uuidIsChildOf[uuid].getParent());
-			auto typeRepresentation = object->getXmlTag();
-			if (typeRepresentation == "PolylineRepresentation")	{
+			if (object->getXmlTag() == "PolylineRepresentation")	{
 				uuidToVtkPolylineRepresentation[uuidIsChildOf[uuid].getParent()]->visualize(uuid);
 			}
 			else {
@@ -582,8 +584,7 @@ void VtkEpcDocument::visualize(const std::string & uuid)
 		}
 		case VtkEpcCommon::TRIANGULATED_SET: {
 			auto object = repository.getDataObjectByUuid(uuid);
-			auto typeRepresentation = object->getXmlTag();
-			if (typeRepresentation == "TriangulatedRepresentation")	{
+			if (object->getXmlTag() == "TriangulatedRepresentation")	{
 				uuidToVtkTriangulatedRepresentation[uuidIsChildOf[uuid].getParent()]->visualize(uuid);
 			}
 			else {
@@ -1117,7 +1118,7 @@ VtkEpcCommon VtkEpcDocument::getInfoUuid(std::string uuid)
 }
 
 // ----------------------------------------------------------------------------
-COMMON_NS::DataObjectRepository* VtkEpcDocument::getEpcDocument()
+COMMON_NS::DataObjectRepository* VtkEpcDocument::getDataObjectRepository()
 {
 	return &repository;
 }

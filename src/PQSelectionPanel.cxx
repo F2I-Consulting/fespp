@@ -279,45 +279,46 @@ void PQSelectionPanel::clicSelection(QTreeWidgetItem* item, int) {
 	}
 }
 
-namespace {
-	void recursiveParentUncheck(QTreeWidgetItem* item)
-	{
-		if (item == nullptr) {
-			return;
-		}
-
-		QTreeWidgetItem* parent = item->parent();
-		if (parent == nullptr) {
-			return;
-		}
-
-		const int siblingTreeWidgetItemCount = parent->childCount();
-		for (int siblingIndex = 0; siblingIndex < siblingTreeWidgetItemCount; siblingIndex++) {
-			if (parent->child(siblingIndex)->checkState(0) == Qt::Checked) {
-				// Do not uncheck the parent since one if its children is still checked
-				return;
-			}
-		}
-
-		// Uncheck the parent and operate the recursive operation
-		parent->setCheckState(0, Qt::Unchecked);
-		recursiveParentUncheck(parent->parent());
+void PQSelectionPanel::recursiveParentUncheck(QTreeWidgetItem* item)
+{
+	if (item == nullptr) {
+		return;
 	}
 
-	void recursiveChildrenUncheck(QTreeWidgetItem* item)
-	{
-		if (item == nullptr) {
+	QTreeWidgetItem* parent = item->parent();
+	if (parent == nullptr) {
+		return;
+	}
+
+	const int siblingTreeWidgetItemCount = parent->childCount();
+	for (int siblingIndex = 0; siblingIndex < siblingTreeWidgetItemCount; ++siblingIndex) {
+		if (parent->child(siblingIndex)->checkState(0) == Qt::Checked) {
+			// Do not uncheck the parent since one if its children is still checked
 			return;
 		}
+	}
 
-		int childCount = item->childCount();
-		for (int idx_child = 0; idx_child < childCount; idx_child++) {
-			item->child(idx_child)->setCheckState(0, Qt::Unchecked);
-			recursiveChildrenUncheck(item->child(idx_child));
-		}
-		if (childCount > 0) {
-			item->setData(0, Qt::CheckStateRole, QVariant());
-		}
+	// Uncheck the parent and operate the recursive operation
+	parent->setCheckState(0, Qt::Unchecked);
+	toggleUuid(itemUuid[parent], false);
+	recursiveParentUncheck(parent);
+}
+
+void PQSelectionPanel::recursiveChildrenUncheck(QTreeWidgetItem* item)
+{
+	if (item == nullptr) {
+		return;
+	}
+
+	const int childCount = item->childCount();
+	for (int childIndex = 0; childIndex < childCount; ++childIndex) {
+		auto child = item->child(childIndex);
+		child->setCheckState(0, Qt::Unchecked);
+		toggleUuid(itemUuid[child], false);
+		recursiveChildrenUncheck(child);
+	}
+	if (childCount > 0) {
+		item->setData(0, Qt::CheckStateRole, QVariant());
 	}
 }
 
@@ -354,7 +355,7 @@ void PQSelectionPanel::deleteTreeView() {
 
 	pcksave.clear();
 
-	if (vtkEpcDocumentSet!=nullptr) {
+	if (vtkEpcDocumentSet != nullptr) {
 		delete vtkEpcDocumentSet;
 		vtkEpcDocumentSet = new VtkEpcDocumentSet(0, 0, VtkEpcCommon::TreeView);
 	}
@@ -681,8 +682,9 @@ void PQSelectionPanel::toggleUuid(const std::string & uuid, bool load)
 
 			fesppReaderProxy->UpdatePropertyInformation();
 			fesppReaderProxy->UpdateVTKObjects();
-			getpqPropertiesPanel()->update();
-			getpqPropertiesPanel()->apply();
+			auto propertiesPanel = getpqPropertiesPanel();
+			propertiesPanel->update();
+			propertiesPanel->apply();
 		}
 	}
 	if (uuidsWellbore.contains(uuid)) {
