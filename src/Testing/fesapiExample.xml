@@ -4,10 +4,26 @@
   <pqevent object="pqClientMainWindow/PQDataLoadManager/epcFile/FileButton" command="activate" arguments="" />
   <pqevent object="pqClientMainWindow/PQDataLoadManager/epcFile/pqFileDialog" command="filesSelected" arguments="$PARAVIEW_DATA_ROOT/testingPackageCpp.epc" />
   <pqevent object="pqClientMainWindow/PQDataLoadManager/buttonBox/1QPushButton0" command="activate" arguments="" />
-  <pqevent object="pqClientMainWindow/PQSelectionPanel/panelSelection/treeWidget" command="expand" arguments="0.0.10.0" />
-  <pqevent object="pqClientMainWindow/PQSelectionPanel/panelSelection/treeWidget" command="expand" arguments="0.0.10.0.2.0" />
-  <pqevent object="pqClientMainWindow/PQSelectionPanel/panelSelection/treeWidget" command="setCurrent" arguments="0.0.10.0.2.0.0.0" />
+  
+  <!-- IJK grid explicit geometry -->
   <pqevent object="pqClientMainWindow/PQSelectionPanel/panelSelection/treeWidget" command="setCheckState" arguments="0.0.10.0.2.0.0.0,2" />
+  <pqevent object="pqClientMainWindow/representationToolbar/displayRepresentation/comboBox" command="activated" arguments="Surface With Edges" />
   <pqevent object="pqClientMainWindow/variableToolbar/displayColor/Variables" command="activated" arguments="Two faulted sugar cubes other cellIndex" />
-  <pqcompareview object="pqClientMainWindow/centralwidget/MultiViewWidget/CoreWidget/qt_tabwidget_stackedwidget/MultiViewWidget1/Frame.0/CentralWidgetFrame/Viewport" baseline="$PARAVIEW_DATA_ROOT/Baseline/TwoFaultedSugarCubesCellIndexProp.png" threshold="5" />
+  <pqcompareview object="pqClientMainWindow/centralwidget/MultiViewWidget/CoreWidget/qt_tabwidget_stackedwidget/MultiViewWidget1/Frame.0/CentralWidgetFrame/Viewport" baseline="$PARAVIEW_DATA_ROOT/Baseline/TwoFaultedSugarCubesExplicitCellIndexProp.png" threshold="2" />
+  <pqevent object="pqClientMainWindow/variableToolbar/displayColor/Variables" command="activated" arguments="Solid Color" />
+  <pqevent object="pqClientMainWindow/PQSelectionPanel/panelSelection/treeWidget" command="setCheckState" arguments="0.0.10.0.2.0.0.0,0" />
+  
+  <!-- IJK grid parametric geometry -->
+  <pqevent object="pqClientMainWindow/PQSelectionPanel/panelSelection/treeWidget" command="setCheckState" arguments="0.0.10.0.0.0,2" />
+  <pqcompareview object="pqClientMainWindow/centralwidget/MultiViewWidget/CoreWidget/qt_tabwidget_stackedwidget/MultiViewWidget1/Frame.0/CentralWidgetFrame/Viewport" baseline="$PARAVIEW_DATA_ROOT/Baseline/TwoFaultedSugarCubesParam.png" threshold="2" />
+  <pqevent object="pqClientMainWindow/PQSelectionPanel/panelSelection/treeWidget" command="setCheckState" arguments="0.0.10.0.0.0,0" />
+      
+  <!-- Unstructured grid -->
+  <pqevent object="pqClientMainWindow/PQSelectionPanel/panelSelection/treeWidget" command="setCheckState" arguments="0.0.1.0.0.0,2" />
+  <pqevent object="pqClientMainWindow/cameraToolbar/actionPositiveX" command="activate" arguments="" />
+  <pqcompareview object="pqClientMainWindow/centralwidget/MultiViewWidget/CoreWidget/qt_tabwidget_stackedwidget/MultiViewWidget1/Frame.0/CentralWidgetFrame/Viewport" baseline="$PARAVIEW_DATA_ROOT/Baseline/UnstructuredPositiveX.png" threshold="2" />
+  <pqevent object="pqClientMainWindow/cameraToolbar/actionNegativeX" command="activate" arguments="" />
+  <pqcompareview object="pqClientMainWindow/centralwidget/MultiViewWidget/CoreWidget/qt_tabwidget_stackedwidget/MultiViewWidget1/Frame.0/CentralWidgetFrame/Viewport" baseline="$PARAVIEW_DATA_ROOT/Baseline/UnstructuredNegativeX.png" threshold="2" />
+  <pqevent object="pqClientMainWindow/PQSelectionPanel/panelSelection/treeWidget" command="setCheckState" arguments="0.0.1.0.0.0,0" />
+
 </pqevents>

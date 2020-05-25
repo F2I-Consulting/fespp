@@ -218,8 +218,7 @@ void PQSelectionPanel::treeCustomMenu(const QPoint & pos)
 			menu->exec(treeWidget->mapToGlobal(pos));
 		}
 		else {
-			std::vector<std::string> allOpenedEpcFileNames = getAllOpenedEpcFileNames();
-			for (const auto& file_name : allOpenedEpcFileNames) {
+			for (const auto& file_name : getAllOpenedEpcFileNames()) {
 				if (file_name == pickedBlocksEtp) {
 					if (uuidsWellbore.keys(true).size() == uuidsWellbore.size()) {
 						menu->addAction(QString("Unselect all wellbores"), this, [this] { toggleAllWells(false); });

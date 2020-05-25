@@ -3,4 +3,4 @@
 - Load the Fespp plugin if not already done (menu "Tools" -> submenu "Manage Plugins")
 - Choose menu "Tools" -> submenu "Play Test" to start
 - Select the fesapiExample.xml (located in this folder) and click OK
-- No error at all should raise in "Output Messages" window but the line "Test  "fesapiExample.xml" is finished. Success =  true"
+- No error at all should raise in "Output Messages" window but only the line "Test  "fesapiExample.xml" is finished. Success =  true"

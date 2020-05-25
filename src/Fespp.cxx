@@ -223,10 +223,6 @@ int Fespp::RequestData(vtkInformation *,
 //----------------------------------------------------------------------------
 void Fespp::RequestDataEpcDocument(vtkInformationVector *outputVector)
 {
-	if (idProc == 0) {
-		vtkOutputWindowDisplayDebugText(("Running with " + std::to_string(nbProc) + " processor(s)\n").c_str());
-	}
-
 	vtkInformation *outInfo = outputVector->GetInformationObject(0);
 	vtkMultiBlockDataSet *output = vtkMultiBlockDataSet::SafeDownCast(outInfo->Get(vtkMultiBlockDataSet::DATA_OBJECT()));
 
