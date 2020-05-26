@@ -212,7 +212,7 @@ void PQSelectionPanel::treeCustomMenu(const QPoint & pos)
 {
 	if (treeWidget->itemAt(pos) != nullptr) {
 		auto menu = new QMenu;
-		pickedBlocksEtp = static_cast<TreeItem*>(treeWidget->itemAt(pos))->getDataObjectInfo()->getUuid();
+		pickedBlocksEtp = static_cast<TreeItem*>(treeWidget->itemAt(pos))->getUuid();
 		auto it = std::find (list_uri_etp.begin(), list_uri_etp.end(), pickedBlocksEtp);
 		if (it != uri_subscribe.end() && !list_uri_etp.empty()) {  // subscribe
 			menu->addAction(QString("subscribe/unsubscribe"), this, &PQSelectionPanel::subscribe_slot);
@@ -239,7 +239,6 @@ void PQSelectionPanel::treeCustomMenu(const QPoint & pos)
 void PQSelectionPanel::toggleAllWells(bool select)
 {
 	toggleUuid("allWell-" + pickedBlocksEtp, select);
-	const QSignalBlocker blocker(treeWidget);
 	for (const auto& uuid : uuidsWellbore.keys()) {
 		uuidItem[uuid]->setCheckState(0, select ? Qt::Checked : Qt::Unchecked);
 		uuidsWellbore[uuid] = select;
@@ -266,7 +265,7 @@ void PQSelectionPanel::subscribeChildren_slot() {
 
 //----------------------------------------------------------------------------
 void PQSelectionPanel::clicSelection(QTreeWidgetItem* item, int) {
-	auto pickedBlocks = static_cast<TreeItem*>(item)->getDataObjectInfo()->getUuid();
+	auto pickedBlocks = static_cast<TreeItem*>(item)->getUuid();
 	if (pickedBlocks != "root") {
 		pqPipelineSource * source = findPipelineSource(searchSource(pickedBlocks).c_str());
 		if (source != nullptr) {
@@ -304,7 +303,7 @@ void PQSelectionPanel::recursiveParentUncheck(QTreeWidgetItem* item)
 		parent->setData(0, Qt::CheckStateRole, QVariant());
 	}
 	if (parent->getDataObjectInfo() != nullptr) {
-		toggleUuid(parent->getDataObjectInfo()->getUuid(), false);
+		toggleUuid(parent->getUuid(), false);
 	}
 
 	recursiveParentUncheck(parent);
@@ -320,7 +319,7 @@ void PQSelectionPanel::recursiveChildrenUncheck(QTreeWidgetItem* item)
 	for (int childIndex = 0; childIndex < childCount; ++childIndex) {
 		auto child = item->child(childIndex);
 		child->setCheckState(0, Qt::Unchecked);
-		toggleUuid(static_cast<TreeItem*>(child)->getDataObjectInfo()->getUuid(), false);
+		toggleUuid(static_cast<TreeItem*>(child)->getUuid(), false);
 		recursiveChildrenUncheck(child);
 	}
 	if (static_cast<TreeItem*>(item)->getDataObjectInfo() == nullptr ||
@@ -335,15 +334,13 @@ void PQSelectionPanel::recursiveChildrenUncheck(QTreeWidgetItem* item)
 void PQSelectionPanel::onItemCheckedUnchecked(QTreeWidgetItem * item, int)
 {
 	const QSignalBlocker blocker(treeWidget);
-	const std::string uuid = static_cast<TreeItem*>(item)->getDataObjectInfo() != nullptr
-		? static_cast<TreeItem*>(item)->getDataObjectInfo()->getUuid()
-		: std::string();
+	const std::string uuid = static_cast<TreeItem*>(item)->getUuid();
 	if (item->checkState(0) == Qt::Checked) {
 		while (item->parent() != nullptr && item->parent()->checkState(0) == Qt::Unchecked) {
 			item = item->parent();
 			if (static_cast<TreeItem*>(item)->getDataObjectInfo() != nullptr  &&
 				static_cast<TreeItem*>(item)->getDataObjectInfo()->getType() == VtkEpcCommon::WELL_TRAJ) {
-				toggleUuid(static_cast<TreeItem*>(item)->getDataObjectInfo()->getUuid(), true);
+				toggleUuid(static_cast<TreeItem*>(item)->getUuid(), true);
 			}
 			item->setCheckState(0, Qt::Checked);
 		}
@@ -555,96 +552,10 @@ void PQSelectionPanel::populateTreeView(VtkEpcCommon const * vtkEpcCommon)
 		}
 
 		// Create the tree item
-		QIcon icon;
-		TreeItem* treeItem = new TreeItem(vtkEpcCommon);
-
-		switch (vtkEpcCommon->getType()) {
-		case VtkEpcCommon::Resqml2Type::PROPERTY: {
-			if (parentTreeWidgetItem->checkState(0) != Qt::Checked) {
-				parentTreeWidgetItem->setData(0, Qt::CheckStateRole, QVariant());
-			}
-			treeItem->setCheckState(0, Qt::Unchecked);
-			break;
-		}
-		case VtkEpcCommon::Resqml2Type::TIME_SERIES: {
-			if (parentTreeWidgetItem->checkState(0) != Qt::Checked) {
-				parentTreeWidgetItem->setData(0, Qt::CheckStateRole, QVariant());
-			}
-			treeItem->setCheckState(0, Qt::Unchecked);
-			break;
-		}
- 		case VtkEpcCommon::Resqml2Type::INTERPRETATION_1D: {
-			icon.addFile(QString::fromUtf8(":Interpretation_1D.png"));
-			break;
-		}
-		case VtkEpcCommon::Resqml2Type::INTERPRETATION_2D: {
-			icon.addFile(QString::fromUtf8(":Interpretation_2D.png"));
-			break;
-		}
-		case VtkEpcCommon::Resqml2Type::INTERPRETATION_3D: {
-			icon.addFile(QString::fromUtf8(":Interpretation_3D.png"));
-			break;
-		}
-		case VtkEpcCommon::Resqml2Type::GRID_2D: {
-			icon.addFile(QString::fromUtf8(":Grid2D.png"));
-			treeItem->setCheckState(0, Qt::Unchecked);
-			break;
-		}
-		case VtkEpcCommon::Resqml2Type::POLYLINE_SET: {
-			icon.addFile(QString::fromUtf8(":Polyline.png"));
-			treeItem->setCheckState(0, Qt::Unchecked);
-			break;
-		}
-		case VtkEpcCommon::Resqml2Type::TRIANGULATED_SET: {
-			icon.addFile(QString::fromUtf8(":Triangulated.png"));
-			treeItem->setCheckState(0, Qt::Unchecked);
-			break;
-		}
-		case VtkEpcCommon::Resqml2Type::WELL_TRAJ: {
-			icon.addFile(QString::fromUtf8(":WellTraj.png"));
-			treeItem->setCheckState(0, Qt::Unchecked);
+		TreeItem* treeItem = new TreeItem(vtkEpcCommon, parentTreeWidgetItem);
+		if (vtkEpcCommon->getType() == VtkEpcCommon::Resqml2Type::WELL_TRAJ) {
 			uuidsWellbore.insert(uuid, false);
-			break;
 		}
-		case VtkEpcCommon::Resqml2Type::WELL_MARKER_FRAME: {
-			icon.addFile(QString::fromUtf8(":WellBoreFrameMarker.png"));
-			treeItem->setCheckState(0, Qt::Unchecked);
-			break;
-		}
-		case VtkEpcCommon::Resqml2Type::WELL_MARKER: {
-			icon.addFile(QString::fromUtf8(":WellBoreMarker.png"));
-			if (parentTreeWidgetItem->checkState(0) != Qt::Checked) {
-				parentTreeWidgetItem->setData(0, Qt::CheckStateRole, QVariant());
-			}
-			treeItem->setCheckState(0, Qt::Unchecked);
-			break;
-		}
-		case VtkEpcCommon::Resqml2Type::WELL_FRAME: {
-			icon.addFile(QString::fromUtf8(":WellBoreFrame.png"));
-			treeItem->setCheckState(0, Qt::Unchecked);
-			break;
-		}
-		case VtkEpcCommon::Resqml2Type::IJK_GRID: {
-			icon.addFile(QString::fromUtf8(":IjkGrid.png"));
-			treeItem->setCheckState(0, Qt::Unchecked);
-			break;
-		}
-		case VtkEpcCommon::Resqml2Type::UNSTRUC_GRID: {
-			icon.addFile(QString::fromUtf8(":UnstructuredGrid.png"));
-			treeItem->setCheckState(0, Qt::Unchecked);
-			break;
-		}
-		case VtkEpcCommon::Resqml2Type::SUB_REP: {
-			icon.addFile(QString::fromUtf8(":SubRepresentation.png"));
-			treeItem->setCheckState(0, Qt::Unchecked);
-			break;
-		}
-		default:
-			break;
-		}
-
-		treeItem->setIcon(0, icon);
-		parentTreeWidgetItem->addChild(treeItem);
 
 		// register the tree widget item into the tree model maps
 		uuidItem[uuid] = treeItem;
@@ -661,9 +572,6 @@ std::string PQSelectionPanel::searchSource(const std::string & uuid)
 //----------------------------------------------------------------------------
 void PQSelectionPanel::toggleUuid(const std::string & uuid, bool load)
 {
-	if (uuid.empty()) {
-		return;
-	}
 	const std::string pipe_name = uuid.find("allWell-") != std::string::npos
 		? "EpcDocument"
 		: searchSource(uuid);

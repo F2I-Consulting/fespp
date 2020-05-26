@@ -27,16 +27,106 @@ under the License.
 class TreeItem : public QTreeWidgetItem
 {
 public:
-	explicit TreeItem(VtkEpcCommon const * vtkEpcCommon) :
+	explicit TreeItem(VtkEpcCommon const * vtkEpcCommon, TreeItem* parent) :
 		QTreeWidgetItem(UserType), dataObjectInfo(vtkEpcCommon) {
 		setText(0, vtkEpcCommon->getName().c_str());
 		setFlags(flags() | Qt::ItemIsSelectable);
+
+		QIcon icon;
+		switch (vtkEpcCommon->getType()) {
+		case VtkEpcCommon::Resqml2Type::PROPERTY: {
+			if (parent->checkState(0) != Qt::Checked) {
+				parent->setData(0, Qt::CheckStateRole, QVariant());
+			}
+			setCheckState(0, Qt::Unchecked);
+			break;
+		}
+		case VtkEpcCommon::Resqml2Type::TIME_SERIES: {
+			if (parent->checkState(0) != Qt::Checked) {
+				parent->setData(0, Qt::CheckStateRole, QVariant());
+			}
+			setCheckState(0, Qt::Unchecked);
+			break;
+		}
+		case VtkEpcCommon::Resqml2Type::INTERPRETATION_1D: {
+			icon.addFile(QString::fromUtf8(":Interpretation_1D.png"));
+			break;
+		}
+		case VtkEpcCommon::Resqml2Type::INTERPRETATION_2D: {
+			icon.addFile(QString::fromUtf8(":Interpretation_2D.png"));
+			break;
+		}
+		case VtkEpcCommon::Resqml2Type::INTERPRETATION_3D: {
+			icon.addFile(QString::fromUtf8(":Interpretation_3D.png"));
+			break;
+		}
+		case VtkEpcCommon::Resqml2Type::GRID_2D: {
+			icon.addFile(QString::fromUtf8(":Grid2D.png"));
+			setCheckState(0, Qt::Unchecked);
+			break;
+		}
+		case VtkEpcCommon::Resqml2Type::POLYLINE_SET: {
+			icon.addFile(QString::fromUtf8(":Polyline.png"));
+			setCheckState(0, Qt::Unchecked);
+			break;
+		}
+		case VtkEpcCommon::Resqml2Type::TRIANGULATED_SET: {
+			icon.addFile(QString::fromUtf8(":Triangulated.png"));
+			setCheckState(0, Qt::Unchecked);
+			break;
+		}
+		case VtkEpcCommon::Resqml2Type::WELL_TRAJ: {
+			icon.addFile(QString::fromUtf8(":WellTraj.png"));
+			setCheckState(0, Qt::Unchecked);
+			break;
+		}
+		case VtkEpcCommon::Resqml2Type::WELL_MARKER_FRAME: {
+			icon.addFile(QString::fromUtf8(":WellBoreFrameMarker.png"));
+			setCheckState(0, Qt::Unchecked);
+			break;
+		}
+		case VtkEpcCommon::Resqml2Type::WELL_MARKER: {
+			icon.addFile(QString::fromUtf8(":WellBoreMarker.png"));
+			if (parent->checkState(0) != Qt::Checked) {
+				parent->setData(0, Qt::CheckStateRole, QVariant());
+			}
+			setCheckState(0, Qt::Unchecked);
+			break;
+		}
+		case VtkEpcCommon::Resqml2Type::WELL_FRAME: {
+			icon.addFile(QString::fromUtf8(":WellBoreFrame.png"));
+			setCheckState(0, Qt::Unchecked);
+			break;
+		}
+		case VtkEpcCommon::Resqml2Type::IJK_GRID: {
+			icon.addFile(QString::fromUtf8(":IjkGrid.png"));
+			setCheckState(0, Qt::Unchecked);
+			break;
+		}
+		case VtkEpcCommon::Resqml2Type::UNSTRUC_GRID: {
+			icon.addFile(QString::fromUtf8(":UnstructuredGrid.png"));
+			setCheckState(0, Qt::Unchecked);
+			break;
+		}
+		case VtkEpcCommon::Resqml2Type::SUB_REP: {
+			icon.addFile(QString::fromUtf8(":SubRepresentation.png"));
+			setCheckState(0, Qt::Unchecked);
+			break;
+		}
+		default:
+			break;
+		}
+
+		setIcon(0, icon);
+		parent->addChild(this);
 	}
 	explicit TreeItem(QTreeWidget *view) :
 		QTreeWidgetItem(view, UserType), dataObjectInfo(nullptr) {}
 	~TreeItem() {}
 
 	VtkEpcCommon const * getDataObjectInfo() { return dataObjectInfo; }
+
+	std::string getUuid() const { return dataObjectInfo == nullptr ? text(0).toStdString() : dataObjectInfo->getUuid(); }
 
 private:
 	VtkEpcCommon const * dataObjectInfo;
