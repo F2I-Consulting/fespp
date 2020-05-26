@@ -17,6 +17,13 @@
   <pqevent object="pqClientMainWindow/PQSelectionPanel/panelSelection/treeWidget" command="setCheckState" arguments="0.0.10.0.0.0,2" />
   <pqcompareview object="pqClientMainWindow/centralwidget/MultiViewWidget/CoreWidget/qt_tabwidget_stackedwidget/MultiViewWidget1/Frame.0/CentralWidgetFrame/Viewport" baseline="$PARAVIEW_DATA_ROOT/Baseline/TwoFaultedSugarCubesParam.png" threshold="2" />
   <pqevent object="pqClientMainWindow/PQSelectionPanel/panelSelection/treeWidget" command="setCheckState" arguments="0.0.10.0.0.0,0" />
+  
+  <!-- Fault sticks and triangulations -->
+  <pqevent object="pqClientMainWindow/PQSelectionPanel/panelSelection/treeWidget" command="setCheckState" arguments="0.0.0.0.0.0,2" />
+  <pqcompareview object="pqClientMainWindow/centralwidget/MultiViewWidget/CoreWidget/qt_tabwidget_stackedwidget/MultiViewWidget1/Frame.0/CentralWidgetFrame/Viewport" baseline="$PARAVIEW_DATA_ROOT/Baseline/PolylineSetRep.png" threshold="2" />
+  <pqevent object="pqClientMainWindow/PQSelectionPanel/panelSelection/treeWidget" command="setCheckState" arguments="0.0.0.0.1.0,2" />
+  <pqcompareview object="pqClientMainWindow/centralwidget/MultiViewWidget/CoreWidget/qt_tabwidget_stackedwidget/MultiViewWidget1/Frame.0/CentralWidgetFrame/Viewport" baseline="$PARAVIEW_DATA_ROOT/Baseline/TriangulatedSetRep.png" threshold="2" />
+  <pqevent object="pqClientMainWindow/PQSelectionPanel/panelSelection/treeWidget" command="setCheckState" arguments="0.0.0.0,0" />     
       
   <!-- Unstructured grid -->
   <pqevent object="pqClientMainWindow/PQSelectionPanel/panelSelection/treeWidget" command="setCheckState" arguments="0.0.1.0.0.0,2" />
@@ -24,6 +31,15 @@
   <pqcompareview object="pqClientMainWindow/centralwidget/MultiViewWidget/CoreWidget/qt_tabwidget_stackedwidget/MultiViewWidget1/Frame.0/CentralWidgetFrame/Viewport" baseline="$PARAVIEW_DATA_ROOT/Baseline/UnstructuredPositiveX.png" threshold="2" />
   <pqevent object="pqClientMainWindow/cameraToolbar/actionNegativeX" command="activate" arguments="" />
   <pqcompareview object="pqClientMainWindow/centralwidget/MultiViewWidget/CoreWidget/qt_tabwidget_stackedwidget/MultiViewWidget1/Frame.0/CentralWidgetFrame/Viewport" baseline="$PARAVIEW_DATA_ROOT/Baseline/UnstructuredNegativeX.png" threshold="2" />
-  <pqevent object="pqClientMainWindow/PQSelectionPanel/panelSelection/treeWidget" command="setCheckState" arguments="0.0.1.0.0.0,0" />
+  <pqevent object="pqClientMainWindow/PQSelectionPanel/panelSelection/treeWidget" command="setCheckState" arguments="0.0.1.0.0.0,0" /> 
+  
+  <!-- Horizon 2d grid -->
+  <pqevent object="pqClientMainWindow/PQSelectionPanel/panelSelection/treeWidget" command="setCheckState" arguments="0.0.4.0.1.0.0.0,2" />
+  <pqcompareview object="pqClientMainWindow/centralwidget/MultiViewWidget/CoreWidget/qt_tabwidget_stackedwidget/MultiViewWidget1/Frame.0/CentralWidgetFrame/Viewport" baseline="$PARAVIEW_DATA_ROOT/Baseline/Grid2dRep.png" threshold="2" />
+  
+  <!-- Well trajectory -->
+  <pqevent object="pqClientMainWindow/PQSelectionPanel/panelSelection/treeWidget" command="setCheckState" arguments="0.0.16.0.0.0,2" />
+  <pqcompareview object="pqClientMainWindow/centralwidget/MultiViewWidget/CoreWidget/qt_tabwidget_stackedwidget/MultiViewWidget1/Frame.0/CentralWidgetFrame/Viewport" baseline="$PARAVIEW_DATA_ROOT/Baseline/WellTrajRep.png" threshold="2" />
+  <pqevent object="pqClientMainWindow/PQSelectionPanel/panelSelection/treeWidget" command="setCheckState" arguments="0.0,0" />
 
 </pqevents>
