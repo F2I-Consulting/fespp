@@ -300,6 +300,13 @@ void PQSelectionPanel::recursiveParentUncheck(QTreeWidgetItem* item)
 
 	// Uncheck the parent and operate the recursive operation
 	parent->setCheckState(0, Qt::Unchecked);
+	if (siblingTreeWidgetItemCount > 0) {
+		parent->setData(0, Qt::CheckStateRole, QVariant());
+	}
+	if (parent->getDataObjectInfo() != nullptr) {
+		toggleUuid(parent->getDataObjectInfo()->getUuid(), false);
+	}
+
 	recursiveParentUncheck(parent);
 }
 
@@ -313,15 +320,14 @@ void PQSelectionPanel::recursiveChildrenUncheck(QTreeWidgetItem* item)
 	for (int childIndex = 0; childIndex < childCount; ++childIndex) {
 		auto child = item->child(childIndex);
 		child->setCheckState(0, Qt::Unchecked);
+		toggleUuid(static_cast<TreeItem*>(child)->getDataObjectInfo()->getUuid(), false);
 		recursiveChildrenUncheck(child);
 	}
-	if (static_cast<TreeItem*>(item)->getDataObjectInfo()->getType() != VtkEpcCommon::WELL_TRAJ) {
+	if (static_cast<TreeItem*>(item)->getDataObjectInfo() == nullptr ||
+		static_cast<TreeItem*>(item)->getDataObjectInfo()->getType() != VtkEpcCommon::WELL_TRAJ) {
 		if (childCount > 0) {
 			item->setData(0, Qt::CheckStateRole, QVariant());
 		}
-	}
-	else {
-		toggleUuid(static_cast<TreeItem*>(item)->getDataObjectInfo()->getUuid(), false);
 	}
 }
 
