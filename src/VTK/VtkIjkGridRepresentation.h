@@ -37,7 +37,7 @@ public:
 	/**
 	* Constructor
 	*/
-	VtkIjkGridRepresentation(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, COMMON_NS::DataObjectRepository *pckRep, COMMON_NS::DataObjectRepository *pckSubRep, int idProc=0, int maxProc=0);
+	VtkIjkGridRepresentation(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, COMMON_NS::DataObjectRepository const * pckRep, COMMON_NS::DataObjectRepository const * pckSubRep, int idProc=0, int maxProc=0);
 
 	/**
 	* Destructor

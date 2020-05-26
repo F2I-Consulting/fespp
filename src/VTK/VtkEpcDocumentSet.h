@@ -69,7 +69,7 @@ public:
 	* return the vtkMultiBlockDataSet for each epcdocument.
 	*/
 	vtkSmartPointer<vtkMultiBlockDataSet> getVisualization() const;
-	std::vector<VtkEpcCommon> getAllVtkEpcCommons() const;
+	std::vector<VtkEpcCommon const *> getAllVtkEpcCommons() const;
 
 	std::string addEpcDocument(const std::string & fileName);
 

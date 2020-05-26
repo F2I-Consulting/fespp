@@ -53,6 +53,7 @@ namespace COMMON_NS
 class pqPipelineSource;
 class pqServer;
 class VtkEpcDocumentSet;
+class TreeItem;
 
 class PQSelectionPanel : public QDockWidget
 {
@@ -138,7 +139,7 @@ private:
 
 	std::string searchSource(const std::string & uuid);
 
-	void populateTreeView(const VtkEpcCommon & vtkEpcCommon);
+	void populateTreeView(VtkEpcCommon const * vtkEpcCommon);
 	void updateTimeSeries(const std::string & uuid, bool isnew);
 
 	void constructor();
@@ -191,9 +192,9 @@ private:
 
 	// About equivalent to a Tree Model
 	// Map getting a present tree widget item from its uuid
-	std::unordered_map<std::string, QTreeWidgetItem *> uuidItem;
+	std::unordered_map<std::string, TreeItem *> uuidItem;
 	// Inverse map getting the uuid of a present tree widget item
-	std::unordered_map<QTreeWidgetItem*,std::string> itemUuid;
+	std::unordered_map<TreeItem*,std::string> itemUuid;
 
 	std::unordered_map<std::string, COMMON_NS::EpcDocument *> pcksave;
 

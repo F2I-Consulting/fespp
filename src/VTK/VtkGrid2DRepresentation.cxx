@@ -31,7 +31,7 @@ under the License.
 #include "VtkGrid2DRepresentationCells.h"
 
 //----------------------------------------------------------------------------
-VtkGrid2DRepresentation::VtkGrid2DRepresentation(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, COMMON_NS::DataObjectRepository *pckEPCRep, COMMON_NS::DataObjectRepository *pckEPCSubRep) :
+VtkGrid2DRepresentation::VtkGrid2DRepresentation(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, COMMON_NS::DataObjectRepository const * pckEPCRep, COMMON_NS::DataObjectRepository const * pckEPCSubRep) :
 VtkResqml2MultiBlockDataSet(fileName, name, uuid, uuidParent), repositoryRepresentation(pckEPCRep), repositorySubRepresentation(pckEPCSubRep), grid2DPoints(getFileName(), name, uuid+"-Points", uuidParent, repositoryRepresentation, repositorySubRepresentation)
 {
 	//BUG in PARAVIEW

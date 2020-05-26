@@ -44,7 +44,7 @@ under the License.
 #include <vtkUnsignedCharArray.h>
 
 //----------------------------------------------------------------------------
-VtkProperty::VtkProperty(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, COMMON_NS::DataObjectRepository *repo, int idProc, int maxProc) :
+VtkProperty::VtkProperty(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, COMMON_NS::DataObjectRepository const * repo, int idProc, int maxProc) :
 	VtkAbstractObject(fileName, name, uuid, uuidParent, idProc, maxProc), repository(repo)
 {
 	support = typeSupport::CELLS;

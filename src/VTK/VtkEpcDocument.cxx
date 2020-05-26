@@ -86,10 +86,6 @@ VtkEpcDocument::VtkEpcDocument(const std::string & fileName, int idProc, int max
 	searchSubRepresentation(fileName);
 	// TimeSeries
 	searchTimeSeries(fileName);
-
-	for (const auto& iter : uuidRep)	{
-		allVtkEpcCommons.push_back(uuidIsChildOf[iter]);
-	}
 }
 
 // ----------------------------------------------------------------------------
@@ -277,7 +273,7 @@ int VtkEpcDocument::addSubRepTreeVtk(const std::string & uuid, const std::string
 	}
 	else if (uuidIsChildOf[uuid].getParentType() == VtkEpcCommon::PARTIAL)	{
 		auto parentUuidType = uuidIsChildOf[parent].getParentType();
-		auto pckEPCsrc = uuidToVtkPartialRepresentation[parent]->getEpcSource();
+		COMMON_NS::DataObjectRepository const * pckEPCsrc = &(uuidToVtkPartialRepresentation[parent]->getEpcSource());
 
 		switch (parentUuidType)	{
 		case VtkEpcCommon::GRID_2D:	{
@@ -423,7 +419,7 @@ void VtkEpcDocument::visualize(const std::string & uuid)
 	auto fesapiObject = repository.getDataObjectByUuid(uuid);
 	if (dynamic_cast<RESQML2_NS::AbstractRepresentation*>(fesapiObject) == nullptr &&
 		dynamic_cast<RESQML2_NS::AbstractValuesProperty*>(fesapiObject) == nullptr) {
-		// Cannot visualize anything other then a RESQML property or a RESQML representation.
+		// Cannot visualize anything other than a RESQML property or a RESQML representation.
 		return;
 	}
 
@@ -649,21 +645,21 @@ void VtkEpcDocument::visualize(const std::string & uuid)
 // ----------------------------------------------------------------------------
 void VtkEpcDocument::visualizeFullWell()
 {
-	for (auto &vtkEpcCommon : allVtkEpcCommons) {
-		if (vtkEpcCommon.getType() == VtkEpcCommon::WELL_TRAJ) {
-			uuidToVtkWellboreTrajectoryRepresentation[vtkEpcCommon.getUuid()]->visualize(vtkEpcCommon.getUuid());
+	for (auto &vtkEpcCommon : getAllVtkEpcCommons()) {
+		if (vtkEpcCommon->getType() == VtkEpcCommon::WELL_TRAJ) {
+			uuidToVtkWellboreTrajectoryRepresentation[vtkEpcCommon->getUuid()]->visualize(vtkEpcCommon->getUuid());
 			try
 			{
 				// attach representation to EpcDocument VtkMultiBlockDataSet
-				if (std::find(attachUuids.begin(), attachUuids.end(), vtkEpcCommon.getUuid()) == attachUuids.end()) {
+				if (std::find(attachUuids.begin(), attachUuids.end(), vtkEpcCommon->getUuid()) == attachUuids.end()) {
 					detach();
-					attachUuids.push_back(vtkEpcCommon.getUuid());
+					attachUuids.push_back(vtkEpcCommon->getUuid());
 					attach();
 				}
 			}
 			catch (const std::exception&)
 			{
-				cout << "ERROR with uuid attachment: " << vtkEpcCommon.getUuid() ;
+				cout << "ERROR with uuid attachment: " << vtkEpcCommon->getUuid() ;
 			}
 		}
 	}
@@ -672,12 +668,12 @@ void VtkEpcDocument::visualizeFullWell()
 // ----------------------------------------------------------------------------
 void VtkEpcDocument::unvisualizeFullWell()
 {
-	for (auto &vtkEpcCommon : allVtkEpcCommons) {
-		if (std::find(attachUuids.begin(), attachUuids.end(), vtkEpcCommon.getUuid()) != attachUuids.end()) {
-			if (uuidIsChildOf[vtkEpcCommon.getUuid()].getType() == VtkEpcCommon::WELL_TRAJ) {
-				uuidToVtkWellboreTrajectoryRepresentation[vtkEpcCommon.getUuid()]->remove(vtkEpcCommon.getUuid());
+	for (auto &vtkEpcCommon : getAllVtkEpcCommons()) {
+		if (std::find(attachUuids.begin(), attachUuids.end(), vtkEpcCommon->getUuid()) != attachUuids.end()) {
+			if (uuidIsChildOf[vtkEpcCommon->getUuid()].getType() == VtkEpcCommon::WELL_TRAJ) {
+				uuidToVtkWellboreTrajectoryRepresentation[vtkEpcCommon->getUuid()]->remove(vtkEpcCommon->getUuid());
 				detach();
-				attachUuids.erase(std::find(attachUuids.begin(), attachUuids.end(), vtkEpcCommon.getUuid()));
+				attachUuids.erase(std::find(attachUuids.begin(), attachUuids.end(), vtkEpcCommon->getUuid()));
 				attach();
 			}
 		}
@@ -1118,9 +1114,9 @@ VtkEpcCommon VtkEpcDocument::getInfoUuid(std::string uuid)
 }
 
 // ----------------------------------------------------------------------------
-COMMON_NS::DataObjectRepository* VtkEpcDocument::getDataObjectRepository()
+const COMMON_NS::DataObjectRepository& VtkEpcDocument::getDataObjectRepository() const
 {
-	return &repository;
+	return repository;
 }
 
 // ----------------------------------------------------------------------------
@@ -1131,9 +1127,15 @@ std::vector<std::string> VtkEpcDocument::getListUuid()
 
 
 // ----------------------------------------------------------------------------
-const std::vector<VtkEpcCommon>& VtkEpcDocument::getAllVtkEpcCommons() const
+std::vector<VtkEpcCommon const *> VtkEpcDocument::getAllVtkEpcCommons() const
 {
-	return allVtkEpcCommons;
+	std::vector<VtkEpcCommon const *> result;
+
+	for (const std::string& iter : uuidRep) {
+		result.push_back(&uuidIsChildOf.at(iter));
+	}
+
+	return result;
 }
 
 // ----------------------------------------------------------------------------
@@ -1141,7 +1143,6 @@ std::string VtkEpcDocument::getError()
 {
 	return epc_error;
 }
-
 
 // PRIVATE
 

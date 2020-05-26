@@ -44,7 +44,7 @@ public:
 	/**
 	* Constructor
 	*/
-	VtkAbstractRepresentation(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, COMMON_NS::DataObjectRepository *epcPackageRepresentation, COMMON_NS::DataObjectRepository *epcPackageSubRepresentation, int idProc=0, int maxProc=0);
+	VtkAbstractRepresentation(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, COMMON_NS::DataObjectRepository const * epcPackageRepresentation, COMMON_NS::DataObjectRepository const * epcPackageSubRepresentation, int idProc=0, int maxProc=0);
 
 	/**
 	* Destructor
@@ -78,8 +78,8 @@ protected:
 	std::unordered_map<std::string, VtkProperty *> uuidToVtkProperty;
 
 	// EPC DOCUMENT
-	COMMON_NS::DataObjectRepository *epcPackageRepresentation;
-	COMMON_NS::DataObjectRepository *epcPackageSubRepresentation;
+	COMMON_NS::DataObjectRepository const * epcPackageRepresentation;
+	COMMON_NS::DataObjectRepository const * epcPackageSubRepresentation;
 
 	vtkSmartPointer<vtkPoints> points;
 	bool subRepresentation;

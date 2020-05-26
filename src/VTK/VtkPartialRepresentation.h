@@ -71,7 +71,7 @@ public:
 	VtkEpcCommon::Resqml2Type getType();
 	VtkEpcCommon getInfoUuid();
 
-	COMMON_NS::DataObjectRepository * getEpcSource();
+	const COMMON_NS::DataObjectRepository& getEpcSource() const;
 
 	long getAttachmentPropertyCount(const std::string & uuid, VtkEpcCommon::FesppAttachmentProperty propertyUnit);
 

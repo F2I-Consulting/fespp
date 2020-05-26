@@ -80,6 +80,7 @@ under the License.
 #include "PQEtpPanel.h"
 #endif
 
+#include "TreeItem.h"
 #include "VTK/VtkEpcDocumentSet.h"
 #include "VTK/VtkEpcDocument.h"
 
@@ -211,7 +212,7 @@ void PQSelectionPanel::treeCustomMenu(const QPoint & pos)
 {
 	if (treeWidget->itemAt(pos) != nullptr) {
 		auto menu = new QMenu;
-		pickedBlocksEtp = itemUuid[treeWidget->itemAt(pos)];
+		pickedBlocksEtp = itemUuid[static_cast<TreeItem*>(treeWidget->itemAt(pos))];
 		auto it = std::find (list_uri_etp.begin(), list_uri_etp.end(), pickedBlocksEtp);
 		if (it != uri_subscribe.end() && !list_uri_etp.empty()) {  // subscribe
 			menu->addAction(QString("subscribe/unsubscribe"), this, &PQSelectionPanel::subscribe_slot);
@@ -265,7 +266,7 @@ void PQSelectionPanel::subscribeChildren_slot() {
 
 //----------------------------------------------------------------------------
 void PQSelectionPanel::clicSelection(QTreeWidgetItem* item, int) {
-	auto pickedBlocks = itemUuid[item];
+	auto pickedBlocks = itemUuid[static_cast<TreeItem*>(item)];
 	if (pickedBlocks != "root") {
 		pqPipelineSource * source = findPipelineSource(searchSource(pickedBlocks).c_str());
 		if (source != nullptr) {
@@ -284,8 +285,8 @@ void PQSelectionPanel::recursiveParentUncheck(QTreeWidgetItem* item)
 		return;
 	}
 
-	QTreeWidgetItem* parent = item->parent();
-	if (parent == nullptr) {
+	TreeItem* parent = static_cast<TreeItem*>(item->parent());
+	if (parent == nullptr || (parent->getDataObjectInfo() != nullptr && parent->getDataObjectInfo()->getType() == VtkEpcCommon::WELL_TRAJ)) {
 		return;
 	}
 
@@ -299,7 +300,6 @@ void PQSelectionPanel::recursiveParentUncheck(QTreeWidgetItem* item)
 
 	// Uncheck the parent and operate the recursive operation
 	parent->setCheckState(0, Qt::Unchecked);
-	toggleUuid(itemUuid[parent], false);
 	recursiveParentUncheck(parent);
 }
 
@@ -313,23 +313,31 @@ void PQSelectionPanel::recursiveChildrenUncheck(QTreeWidgetItem* item)
 	for (int childIndex = 0; childIndex < childCount; ++childIndex) {
 		auto child = item->child(childIndex);
 		child->setCheckState(0, Qt::Unchecked);
-		toggleUuid(itemUuid[child], false);
 		recursiveChildrenUncheck(child);
 	}
-	if (childCount > 0) {
-		item->setData(0, Qt::CheckStateRole, QVariant());
+	if (static_cast<TreeItem*>(item)->getDataObjectInfo()->getType() != VtkEpcCommon::WELL_TRAJ) {
+		if (childCount > 0) {
+			item->setData(0, Qt::CheckStateRole, QVariant());
+		}
+	}
+	else {
+		toggleUuid(static_cast<TreeItem*>(item)->getDataObjectInfo()->getUuid(), false);
 	}
 }
 
 //----------------------------------------------------------------------------
 void PQSelectionPanel::onItemCheckedUnchecked(QTreeWidgetItem * item, int)
 {
-	const std::string uuid = itemUuid[item];
+	const std::string uuid = itemUuid[static_cast<TreeItem*>(item)];
 	if (!uuid.empty()) {
 		const QSignalBlocker blocker(treeWidget);
 		if (item->checkState(0) == Qt::Checked) {
 			while (item->parent() != nullptr && item->parent()->checkState(0) == Qt::Unchecked) {
 				item = item->parent();
+				if (static_cast<TreeItem*>(item)->getDataObjectInfo() != nullptr  &&
+					static_cast<TreeItem*>(item)->getDataObjectInfo()->getType() == VtkEpcCommon::WELL_TRAJ) {
+					toggleUuid(static_cast<TreeItem*>(item)->getDataObjectInfo()->getUuid(), true);
+				}
 				item->setCheckState(0, Qt::Checked);
 			}
 			toggleUuid(uuid, true);
@@ -501,39 +509,39 @@ void PQSelectionPanel::addFileName(const std::string & fileName) {
 
 		std::unordered_map<std::string, std::string> name_to_uuid;
 		for (const auto& vtkEpcCommon : vtkEpcDocumentSet->getAllVtkEpcCommons()) {
-			uuidToPipeName[vtkEpcCommon.getUuid()] = "EpcDocument";
-			if (vtkEpcCommon.getTimeIndex() < 0) {
+			uuidToPipeName[vtkEpcCommon->getUuid()] = "EpcDocument";
+			if (vtkEpcCommon->getTimeIndex() < 0) {
 				populateTreeView(vtkEpcCommon);
 			}
 			else {
-				if (name_to_uuid.find(vtkEpcCommon.getName()) == name_to_uuid.end()) {
+				if (name_to_uuid.find(vtkEpcCommon->getName()) == name_to_uuid.end()) {
 					populateTreeView(vtkEpcCommon);
-					name_to_uuid[vtkEpcCommon.getName()] = vtkEpcCommon.getUuid();
+					name_to_uuid[vtkEpcCommon->getName()] = vtkEpcCommon->getUuid();
 				}
 
-				ts_timestamp_to_uuid[name_to_uuid[vtkEpcCommon.getName()]][vtkEpcCommon.getTimestamp()] =
-						vtkEpcCommon.getUuid();
+				ts_timestamp_to_uuid[name_to_uuid[vtkEpcCommon->getName()]][vtkEpcCommon->getTimestamp()] =
+						vtkEpcCommon->getUuid();
 			}
 		}
 	}
 }
 
-void PQSelectionPanel::populateTreeView(const VtkEpcCommon & vtkEpcCommon)
+void PQSelectionPanel::populateTreeView(VtkEpcCommon const * vtkEpcCommon)
 {
-	const auto uuid = vtkEpcCommon.getUuid();
+	const auto uuid = vtkEpcCommon->getUuid();
 	if (!uuid.empty() && uuidItem[uuid] == nullptr) {
-		auto parent = vtkEpcCommon.getParent();
+		auto parent = vtkEpcCommon->getParent();
 
-		QTreeWidgetItem* parentTreeWidgetItem = uuidItem[parent];
+		TreeItem* parentTreeWidgetItem = uuidItem[parent];
 
 		// Check if the root tree item must be created
 		if (parentTreeWidgetItem == nullptr) {
-			if (vtkEpcCommon.getParentType() == VtkEpcCommon::Resqml2Type::PARTIAL) {
-				vtkOutputWindowDisplayDebugText(("Impossible to resolve the partial object " + vtkEpcCommon.getParent() + "\n").c_str());
+			if (vtkEpcCommon->getParentType() == VtkEpcCommon::Resqml2Type::PARTIAL) {
+				vtkOutputWindowDisplayDebugText(("Impossible to resolve the partial object " + vtkEpcCommon->getParent() + "\n").c_str());
 				return;
 			}
 
-			parentTreeWidgetItem = new QTreeWidgetItem(treeWidget);
+			parentTreeWidgetItem = new TreeItem(treeWidget);
 			parentTreeWidgetItem->setExpanded(true);
 			parentTreeWidgetItem->setText(0, parent.c_str());
 
@@ -544,12 +552,9 @@ void PQSelectionPanel::populateTreeView(const VtkEpcCommon & vtkEpcCommon)
 
 		// Create the tree item
 		QIcon icon;
-		QTreeWidgetItem* treeItem = new QTreeWidgetItem();
+		TreeItem* treeItem = new TreeItem(vtkEpcCommon);
 
-		treeItem->setText(0, vtkEpcCommon.getName().c_str());
-		treeItem->setFlags(treeItem->flags() | Qt::ItemIsSelectable);
-
-		switch (vtkEpcCommon.getType()) {
+		switch (vtkEpcCommon->getType()) {
 		case VtkEpcCommon::Resqml2Type::PROPERTY: {
 			if (parentTreeWidgetItem->checkState(0) != Qt::Checked) {
 				parentTreeWidgetItem->setData(0, Qt::CheckStateRole, QVariant());
@@ -594,15 +599,11 @@ void PQSelectionPanel::populateTreeView(const VtkEpcCommon & vtkEpcCommon)
 		case VtkEpcCommon::Resqml2Type::WELL_TRAJ: {
 			icon.addFile(QString::fromUtf8(":WellTraj.png"));
 			treeItem->setCheckState(0, Qt::Unchecked);
-			uuidsWellbore.insert(vtkEpcCommon.getUuid(), false);
+			uuidsWellbore.insert(uuid, false);
 			break;
 		}
 		case VtkEpcCommon::Resqml2Type::WELL_MARKER_FRAME: {
-			icon.addFile(QString::fromUtf8(":WellBoreFrameMarker.png"),
-					QSize(), QIcon::Normal, QIcon::Off);
-			if (parentTreeWidgetItem->checkState(0) != Qt::Checked) {
-				parentTreeWidgetItem->setData(0, Qt::CheckStateRole, QVariant());
-			}
+			icon.addFile(QString::fromUtf8(":WellBoreFrameMarker.png"));
 			treeItem->setCheckState(0, Qt::Unchecked);
 			break;
 		}
@@ -616,9 +617,6 @@ void PQSelectionPanel::populateTreeView(const VtkEpcCommon & vtkEpcCommon)
 		}
 		case VtkEpcCommon::Resqml2Type::WELL_FRAME: {
 			icon.addFile(QString::fromUtf8(":WellBoreFrame.png"));
-			if (parentTreeWidgetItem->checkState(0)!=Qt::Checked) {
-				parentTreeWidgetItem->setData(0, Qt::CheckStateRole, QVariant());
-			}
 			treeItem->setCheckState(0, Qt::Unchecked);
 			break;
 		}
@@ -644,7 +642,7 @@ void PQSelectionPanel::populateTreeView(const VtkEpcCommon & vtkEpcCommon)
 		treeItem->setIcon(0, icon);
 		parentTreeWidgetItem->addChild(treeItem);
 
-		// register the root tree widget item into the tree model maps
+		// register the tree widget item into the tree model maps
 		uuidItem[uuid] = treeItem;
 		itemUuid[treeItem] = uuid;
 	}

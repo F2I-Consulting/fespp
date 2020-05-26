@@ -30,7 +30,7 @@ public:
 	/**
 	* Constructor
 	*/
-	VtkGrid2DRepresentation(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, COMMON_NS::DataObjectRepository *pckRep, COMMON_NS::DataObjectRepository *pckSubRep);
+	VtkGrid2DRepresentation(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, COMMON_NS::DataObjectRepository const * pckRep, COMMON_NS::DataObjectRepository const * pckSubRep);
 	
 	/**
 	* Destructor
@@ -79,8 +79,8 @@ protected:
 	
 private:
 	// EPC DOCUMENT
-	COMMON_NS::DataObjectRepository *repositoryRepresentation;
-	COMMON_NS::DataObjectRepository *repositorySubRepresentation;
+	COMMON_NS::DataObjectRepository const * repositoryRepresentation;
+	COMMON_NS::DataObjectRepository const * repositorySubRepresentation;
 
 	VtkGrid2DRepresentationPoints grid2DPoints;
 };

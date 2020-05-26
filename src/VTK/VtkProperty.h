@@ -54,7 +54,7 @@ public:
 	/**
 	* Constructor
 	*/
-	VtkProperty(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, COMMON_NS::DataObjectRepository *repo, int idProc=0, int maxProc=0);
+	VtkProperty(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, COMMON_NS::DataObjectRepository const * repo, int idProc=0, int maxProc=0);
 
 	/**
 	* Destructor
@@ -112,6 +112,6 @@ private:
 	typeSupport support;
 
 	// EPC DOCUMENT
-	COMMON_NS::DataObjectRepository* repository;
+	COMMON_NS::DataObjectRepository const * repository;
 };
 #endif

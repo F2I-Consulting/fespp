@@ -34,7 +34,7 @@ public:
 	/**
 	* Constructor
 	*/
-	VtkWellboreTrajectoryRepresentation(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, COMMON_NS::DataObjectRepository *repoRepresentation, COMMON_NS::DataObjectRepository *repoSubRepresentation);
+	VtkWellboreTrajectoryRepresentation(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, COMMON_NS::DataObjectRepository const * repoRepresentation, COMMON_NS::DataObjectRepository const * repoSubRepresentation);
 	
 	/**
 	* Destructor
@@ -85,8 +85,8 @@ protected:
 	
 private:
 	// EPC DOCUMENT
-	COMMON_NS::DataObjectRepository *repositoryRepresentation;
-	COMMON_NS::DataObjectRepository *repositorySubRepresentation;
+	COMMON_NS::DataObjectRepository const * repositoryRepresentation;
+	COMMON_NS::DataObjectRepository const * repositorySubRepresentation;
 
 	// VTK object
 	VtkWellboreTrajectoryRepresentationPolyLine polyline;

@@ -170,14 +170,15 @@ VtkEpcCommon::Resqml2Type VtkEpcDocumentSet::getTypeInEpcDocument(const std::str
 }
 
 //----------------------------------------------------------------------------
-std::vector<VtkEpcCommon> VtkEpcDocumentSet::getAllVtkEpcCommons() const
+std::vector<VtkEpcCommon const *> VtkEpcDocumentSet::getAllVtkEpcCommons() const
 {
-	std::vector<VtkEpcCommon> result;
+	std::vector<VtkEpcCommon const *> result;
 
 	// concatenate all VtkEpcCommons of all epc documents (i.e repos).
 	for (const auto& vtkRepo : vtkEpcList) {
+		auto repoAllVtkEpcCommons = vtkRepo->getAllVtkEpcCommons();
 		result.insert(result.end(),
-			vtkRepo->getAllVtkEpcCommons().begin(), vtkRepo->getAllVtkEpcCommons().end());
+			repoAllVtkEpcCommons.begin(), repoAllVtkEpcCommons.end());
 	}
 
 	return result;

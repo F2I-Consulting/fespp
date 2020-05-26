@@ -156,7 +156,7 @@ VtkEpcCommon VtkPartialRepresentation::getInfoUuid()
 }
 
 //----------------------------------------------------------------------------
-COMMON_NS::DataObjectRepository * VtkPartialRepresentation::getEpcSource()
+const COMMON_NS::DataObjectRepository& VtkPartialRepresentation::getEpcSource() const
 {
 	return vtkEpcDocumentSource->getDataObjectRepository();
 }
