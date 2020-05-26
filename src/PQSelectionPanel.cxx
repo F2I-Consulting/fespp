@@ -212,7 +212,7 @@ void PQSelectionPanel::treeCustomMenu(const QPoint & pos)
 {
 	if (treeWidget->itemAt(pos) != nullptr) {
 		auto menu = new QMenu;
-		pickedBlocksEtp = itemUuid[static_cast<TreeItem*>(treeWidget->itemAt(pos))];
+		pickedBlocksEtp = static_cast<TreeItem*>(treeWidget->itemAt(pos))->getDataObjectInfo()->getUuid();
 		auto it = std::find (list_uri_etp.begin(), list_uri_etp.end(), pickedBlocksEtp);
 		if (it != uri_subscribe.end() && !list_uri_etp.empty()) {  // subscribe
 			menu->addAction(QString("subscribe/unsubscribe"), this, &PQSelectionPanel::subscribe_slot);
@@ -266,7 +266,7 @@ void PQSelectionPanel::subscribeChildren_slot() {
 
 //----------------------------------------------------------------------------
 void PQSelectionPanel::clicSelection(QTreeWidgetItem* item, int) {
-	auto pickedBlocks = itemUuid[static_cast<TreeItem*>(item)];
+	auto pickedBlocks = static_cast<TreeItem*>(item)->getDataObjectInfo()->getUuid();
 	if (pickedBlocks != "root") {
 		pqPipelineSource * source = findPipelineSource(searchSource(pickedBlocks).c_str());
 		if (source != nullptr) {
@@ -334,26 +334,26 @@ void PQSelectionPanel::recursiveChildrenUncheck(QTreeWidgetItem* item)
 //----------------------------------------------------------------------------
 void PQSelectionPanel::onItemCheckedUnchecked(QTreeWidgetItem * item, int)
 {
-	const std::string uuid = itemUuid[static_cast<TreeItem*>(item)];
-	if (!uuid.empty()) {
-		const QSignalBlocker blocker(treeWidget);
-		if (item->checkState(0) == Qt::Checked) {
-			while (item->parent() != nullptr && item->parent()->checkState(0) == Qt::Unchecked) {
-				item = item->parent();
-				if (static_cast<TreeItem*>(item)->getDataObjectInfo() != nullptr  &&
-					static_cast<TreeItem*>(item)->getDataObjectInfo()->getType() == VtkEpcCommon::WELL_TRAJ) {
-					toggleUuid(static_cast<TreeItem*>(item)->getDataObjectInfo()->getUuid(), true);
-				}
-				item->setCheckState(0, Qt::Checked);
+	const QSignalBlocker blocker(treeWidget);
+	const std::string uuid = static_cast<TreeItem*>(item)->getDataObjectInfo() != nullptr
+		? static_cast<TreeItem*>(item)->getDataObjectInfo()->getUuid()
+		: std::string();
+	if (item->checkState(0) == Qt::Checked) {
+		while (item->parent() != nullptr && item->parent()->checkState(0) == Qt::Unchecked) {
+			item = item->parent();
+			if (static_cast<TreeItem*>(item)->getDataObjectInfo() != nullptr  &&
+				static_cast<TreeItem*>(item)->getDataObjectInfo()->getType() == VtkEpcCommon::WELL_TRAJ) {
+				toggleUuid(static_cast<TreeItem*>(item)->getDataObjectInfo()->getUuid(), true);
 			}
-			toggleUuid(uuid, true);
+			item->setCheckState(0, Qt::Checked);
 		}
-		else if (item->checkState(0) == Qt::Unchecked) {
-			recursiveChildrenUncheck(item);
-			recursiveParentUncheck(item);
+		toggleUuid(uuid, true);
+	}
+	else if (item->checkState(0) == Qt::Unchecked) {
+		recursiveChildrenUncheck(item);
+		recursiveParentUncheck(item);
 
-			toggleUuid(uuid, false);
-		}
+		toggleUuid(uuid, false);
 	}
 }
 
@@ -364,7 +364,6 @@ void PQSelectionPanel::deleteTreeView() {
 	uuidToFilename.clear();
 
 	uuidItem.clear();
-	itemUuid.clear();
 
 	pcksave.clear();
 
@@ -553,7 +552,6 @@ void PQSelectionPanel::populateTreeView(VtkEpcCommon const * vtkEpcCommon)
 
 			// register the root tree widget item into the tree model maps
 			uuidItem[parent] = parentTreeWidgetItem;
-			itemUuid[parentTreeWidgetItem] = parent;
 		}
 
 		// Create the tree item
@@ -650,7 +648,6 @@ void PQSelectionPanel::populateTreeView(VtkEpcCommon const * vtkEpcCommon)
 
 		// register the tree widget item into the tree model maps
 		uuidItem[uuid] = treeItem;
-		itemUuid[treeItem] = uuid;
 	}
 }
 
@@ -664,6 +661,9 @@ std::string PQSelectionPanel::searchSource(const std::string & uuid)
 //----------------------------------------------------------------------------
 void PQSelectionPanel::toggleUuid(const std::string & uuid, bool load)
 {
+	if (uuid.empty()) {
+		return;
+	}
 	const std::string pipe_name = uuid.find("allWell-") != std::string::npos
 		? "EpcDocument"
 		: searchSource(uuid);

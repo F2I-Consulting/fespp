@@ -190,11 +190,8 @@ private:
 	std::unordered_map<std::string, std::string> uuidToFilename;
 	std::unordered_map<std::string, std::string> uuidToPipeName;
 
-	// About equivalent to a Tree Model
 	// Map getting a present tree widget item from its uuid
 	std::unordered_map<std::string, TreeItem *> uuidItem;
-	// Inverse map getting the uuid of a present tree widget item
-	std::unordered_map<TreeItem*,std::string> itemUuid;
 
 	std::unordered_map<std::string, COMMON_NS::EpcDocument *> pcksave;
 
