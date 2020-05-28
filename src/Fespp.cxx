@@ -107,7 +107,7 @@ void Fespp::SetUuidList(const char* uuid, int status)
 #ifdef WITH_ETP
 		if (etpDocument == nullptr) {
 			loadedFile = true;
-			etpDocument = new VtkEtpDocument(ip, port, VtkEpcCommon::Representation);
+			etpDocument = new VtkEtpDocument(ip, port, VtkEpcCommon::modeVtkEpc::Representation);
 		}
 #endif
 	}
@@ -188,7 +188,7 @@ int Fespp::RequestInformation(
 		if (stringFileName == "EpcDocument") {
 			isEpcDocument = true;
 			loadedFile = true;
-			epcDocumentSet = new VtkEpcDocumentSet(idProc, nbProc, VtkEpcCommon::Both);
+			epcDocumentSet = new VtkEpcDocumentSet(idProc, nbProc, VtkEpcCommon::modeVtkEpc::Both);
 		}
 #ifdef WITH_ETP
 		else if(stringFileName == "EtpDocument") {

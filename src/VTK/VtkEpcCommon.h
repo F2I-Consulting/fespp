@@ -26,54 +26,54 @@ class VtkEpcCommon
 {
 public:
 
-	VtkEpcCommon ();
-	~VtkEpcCommon();
+	VtkEpcCommon() : uuid(""), parent(""), name(""), myType(Resqml2Type::UNKNOW), parentType(Resqml2Type::UNKNOW), timeIndex(-1), timestamp(0) {}
+	~VtkEpcCommon() {}
 
-	enum FesppAttachmentProperty { POINTS = 0, CELLS = 1 };
-	enum modeVtkEpc {TreeView=0, Representation=1, Both=2};
-	enum Resqml2Type {
+	enum class FesppAttachmentProperty { POINTS = 0, CELLS = 1 };
+	enum class modeVtkEpc {TreeView=0, Representation=1, Both=2};
+	enum class Resqml2Type {
 		UNKNOW = -1,
 		EPC_DOC = 0,
 		ETP_DOC = 1,
 		INTERPRETATION_1D = 2,
-		INTERPRETATION_2D = 3,
-		INTERPRETATION_3D = 4,
-		POLYLINE_SET = 5,
-		TRIANGULATED_SET = 6,
-		POLYLINE = 7,
-		TRIANGULATED = 8,
-		IJK_GRID = 9,
-		UNSTRUC_GRID = 10,
-		WELL_TRAJ = 11,
-		WELL_MARKER = 12,
-		WELL_MARKER_FRAME = 13,
-		WELL_FRAME = 14,
-		PROPERTY = 15,
-		GRID_2D = 16,
-		PARTIAL = 17,
+		WELL_TRAJ = 3,
+		WELL_MARKER = 4,
+		WELL_MARKER_FRAME = 5,
+		WELL_FRAME = 6,
+		INTERPRETATION_2D = 7,
+		POLYLINE_SET = 8,
+		TRIANGULATED_SET = 9,
+		POLYLINE = 10,
+		TRIANGULATED = 11,
+		GRID_2D = 12,
+		INTERPRETATION_3D = 13,
+		IJK_GRID = 14,
+		UNSTRUC_GRID = 15,
+		PROPERTY = 16,
+		TIME_SERIES = 17,
 		SUB_REP = 18,
-		TIME_SERIES = 19
+		PARTIAL = 19
 	};
 
-	std::string	getUuid() const;
+	const std::string& getUuid() const { return uuid; }
 	void setUuid(const std::string &);
 
-	std::string	getParent() const;
+	const std::string& getParent() const { return parent; }
 	void setParent(const std::string &);
 
-	std::string	getName() const;
+	const std::string& getName() const { return name; }
 	void setName(const std::string &);
 
-	Resqml2Type	getType() const;
+	Resqml2Type	getType() const { return myType; }
 	void setType(Resqml2Type);
 
-	Resqml2Type	getParentType() const;
+	Resqml2Type	getParentType() const { return parentType; }
 	void setParentType(Resqml2Type);
 
-	int	getTimeIndex() const;
+	int	getTimeIndex() const { return timeIndex; }
 	void setTimeIndex(int);
 
-	time_t	getTimestamp() const;
+	time_t	getTimestamp() const { return timestamp; }
 	void setTimestamp(time_t);
 
 private:

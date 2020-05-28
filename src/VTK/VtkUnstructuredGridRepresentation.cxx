@@ -35,7 +35,6 @@ under the License.
 #include <vtkWedge.h>
 
 // FESAPI
-#include <fesapi/common/EpcDocument.h>
 #include <fesapi/resqml2_0_1/UnstructuredGridRepresentation.h>
 
 // FESPP
@@ -396,10 +395,10 @@ long VtkUnstructuredGridRepresentation::getAttachmentPropertyCount(const std::st
 	long result = 0;
 	RESQML2_0_1_NS::UnstructuredGridRepresentation* unstructuredGridRep = epcPackageRepresentation->getDataObjectByUuid<RESQML2_0_1_NS::UnstructuredGridRepresentation>(getUuid());
 	if (unstructuredGridRep != nullptr) {
-		if (propertyUnit == VtkEpcCommon::POINTS) {
+		if (propertyUnit == VtkEpcCommon::FesppAttachmentProperty::POINTS) {
 			result = unstructuredGridRep->getXyzPointCountOfAllPatches();
 		}
-		else if (propertyUnit== VtkEpcCommon::CELLS) {
+		else if (propertyUnit== VtkEpcCommon::FesppAttachmentProperty::CELLS) {
 			result = unstructuredGridRep->getCellCount();
 		}
 	}

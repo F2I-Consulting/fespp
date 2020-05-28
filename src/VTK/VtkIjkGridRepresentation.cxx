@@ -163,7 +163,7 @@ void VtkIjkGridRepresentation::addProperty(const std::string & uuidProperty, vtk
 //----------------------------------------------------------------------------
 long VtkIjkGridRepresentation::getAttachmentPropertyCount(const std::string &, VtkEpcCommon::FesppAttachmentProperty propertyUnit)
 {
-	if (propertyUnit == VtkEpcCommon::CELLS) {
+	if (propertyUnit == VtkEpcCommon::FesppAttachmentProperty::CELLS) {
 		if (subRepresentation) {
 			// SubRep
 			return isHyperslabed

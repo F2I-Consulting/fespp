@@ -48,7 +48,7 @@ VtkAbstractRepresentation::~VtkAbstractRepresentation()
 //----------------------------------------------------------------------------
 void VtkAbstractRepresentation::createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, VtkEpcCommon::Resqml2Type resqmlType)
 {
-	if (resqmlType == VtkEpcCommon::PROPERTY &&
+	if (resqmlType == VtkEpcCommon::Resqml2Type::PROPERTY &&
 		uuidToVtkProperty.find(uuid) == uuidToVtkProperty.end()) {
 		uuidToVtkProperty[uuid] = new VtkProperty(getFileName(), name, uuid, parent, subRepresentation ? epcPackageSubRepresentation : epcPackageRepresentation);
 	}

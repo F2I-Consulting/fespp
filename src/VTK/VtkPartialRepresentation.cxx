@@ -109,8 +109,8 @@ void VtkPartialRepresentation::visualize(const std::string & uuid)
 				}
 			}
 
-			auto cellCount = vtkEpcDocumentSource->getAttachmentPropertyCount(vtkPartialReprUuid, VtkEpcCommon::CELLS);
-			auto pointCount = vtkEpcDocumentSource->getAttachmentPropertyCount(vtkPartialReprUuid, VtkEpcCommon::POINTS);
+			auto cellCount = vtkEpcDocumentSource->getAttachmentPropertyCount(vtkPartialReprUuid, VtkEpcCommon::FesppAttachmentProperty::CELLS);
+			auto pointCount = vtkEpcDocumentSource->getAttachmentPropertyCount(vtkPartialReprUuid, VtkEpcCommon::FesppAttachmentProperty::POINTS);
 			auto iCellCount = vtkEpcDocumentSource->getICellCount(vtkPartialReprUuid);
 			auto jCellCount = vtkEpcDocumentSource->getJCellCount(vtkPartialReprUuid);
 			auto kCellCount = vtkEpcDocumentSource->getKCellCount(vtkPartialReprUuid);
@@ -127,7 +127,7 @@ void VtkPartialRepresentation::visualize(const std::string & uuid)
 //----------------------------------------------------------------------------
 void VtkPartialRepresentation::createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, VtkEpcCommon::Resqml2Type resqmlType)
 {
-	if (resqmlType == VtkEpcCommon::PROPERTY ) {
+	if (resqmlType == VtkEpcCommon::Resqml2Type::PROPERTY ) {
 		uuidToVtkProperty[uuid] = new VtkProperty(fileName, name, uuid, parent, repository);
 	}
 }

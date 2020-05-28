@@ -33,8 +33,8 @@ under the License.
 VtkEpcDocumentSet::VtkEpcDocumentSet(int idProc, int maxProc, VtkEpcCommon::modeVtkEpc mode) :
 	vtkOutput(vtkSmartPointer<vtkMultiBlockDataSet>::New()),
 	procRank(idProc), nbProc(maxProc),
-	treeViewMode(mode == VtkEpcCommon::Both || mode == VtkEpcCommon::TreeView),
-	representationMode(mode == VtkEpcCommon::Both || mode == VtkEpcCommon::Representation)
+	treeViewMode(mode == VtkEpcCommon::modeVtkEpc::Both || mode == VtkEpcCommon::modeVtkEpc::TreeView),
+	representationMode(mode == VtkEpcCommon::modeVtkEpc::Both || mode == VtkEpcCommon::modeVtkEpc::Representation)
 {
 }
 
@@ -161,12 +161,11 @@ VtkEpcDocument* VtkEpcDocumentSet::getVtkEpcDocument(const std::string & uuid)
 //----------------------------------------------------------------------------
 VtkEpcCommon::Resqml2Type VtkEpcDocumentSet::getTypeInEpcDocument(const std::string & uuid)
 {
-
 	auto epcDoc = uuidToVtkEpc.find(uuid) != uuidToVtkEpc.end() ? uuidToVtkEpc[uuid] : nullptr;
 	if (epcDoc!=nullptr) {
 		return epcDoc->getType(uuid);
 	}
-	return VtkEpcCommon::UNKNOW;
+	return VtkEpcCommon::Resqml2Type::UNKNOW;
 }
 
 //----------------------------------------------------------------------------

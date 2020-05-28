@@ -37,7 +37,7 @@ public:
 	/**
 	* Constructor
 	*/
-	VtkEpcDocumentSet (int idProc=0, int maxProc=0, VtkEpcCommon::modeVtkEpc mode=VtkEpcCommon::Both);
+	VtkEpcDocumentSet (int idProc=0, int maxProc=0, VtkEpcCommon::modeVtkEpc mode = VtkEpcCommon::modeVtkEpc::Both);
 	/**
 	* Destructor
 	*/

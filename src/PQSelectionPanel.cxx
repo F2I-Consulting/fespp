@@ -196,7 +196,7 @@ void PQSelectionPanel::constructor() {
 
 	save_time = 0;
 
-	vtkEpcDocumentSet = new VtkEpcDocumentSet(0, 0, VtkEpcCommon::TreeView);
+	vtkEpcDocumentSet = new VtkEpcDocumentSet(0, 0, VtkEpcCommon::modeVtkEpc::TreeView);
 	etpCreated = false;
 }
 
@@ -285,7 +285,7 @@ void PQSelectionPanel::recursiveParentUncheck(QTreeWidgetItem* item)
 	}
 
 	TreeItem* parent = static_cast<TreeItem*>(item->parent());
-	if (parent == nullptr || (parent->getDataObjectInfo() != nullptr && parent->getDataObjectInfo()->getType() == VtkEpcCommon::WELL_TRAJ)) {
+	if (parent == nullptr || (parent->getDataObjectInfo() != nullptr && parent->getDataObjectInfo()->getType() == VtkEpcCommon::Resqml2Type::WELL_TRAJ)) {
 		return;
 	}
 
@@ -323,7 +323,7 @@ void PQSelectionPanel::recursiveChildrenUncheck(QTreeWidgetItem* item)
 		recursiveChildrenUncheck(child);
 	}
 	if (static_cast<TreeItem*>(item)->getDataObjectInfo() == nullptr ||
-		static_cast<TreeItem*>(item)->getDataObjectInfo()->getType() != VtkEpcCommon::WELL_TRAJ) {
+		static_cast<TreeItem*>(item)->getDataObjectInfo()->getType() != VtkEpcCommon::Resqml2Type::WELL_TRAJ) {
 		if (childCount > 0) {
 			item->setData(0, Qt::CheckStateRole, QVariant());
 		}
@@ -339,7 +339,7 @@ void PQSelectionPanel::onItemCheckedUnchecked(QTreeWidgetItem * item, int)
 		while (item->parent() != nullptr && item->parent()->checkState(0) == Qt::Unchecked) {
 			item = item->parent();
 			if (static_cast<TreeItem*>(item)->getDataObjectInfo() != nullptr  &&
-				static_cast<TreeItem*>(item)->getDataObjectInfo()->getType() == VtkEpcCommon::WELL_TRAJ) {
+				static_cast<TreeItem*>(item)->getDataObjectInfo()->getType() == VtkEpcCommon::Resqml2Type::WELL_TRAJ) {
 				toggleUuid(static_cast<TreeItem*>(item)->getUuid(), true);
 			}
 			item->setCheckState(0, Qt::Checked);
@@ -366,7 +366,7 @@ void PQSelectionPanel::deleteTreeView() {
 
 	if (vtkEpcDocumentSet != nullptr) {
 		delete vtkEpcDocumentSet;
-		vtkEpcDocumentSet = new VtkEpcDocumentSet(0, 0, VtkEpcCommon::TreeView);
+		vtkEpcDocumentSet = new VtkEpcDocumentSet(0, 0, VtkEpcCommon::modeVtkEpc::TreeView);
 	}
 }
 
@@ -525,6 +525,7 @@ void PQSelectionPanel::addFileName(const std::string & fileName) {
 						vtkEpcCommon->getUuid();
 			}
 		}
+		treeWidget->sortItems(0, Qt::SortOrder::AscendingOrder);
 	}
 }
 

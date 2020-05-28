@@ -19,60 +19,6 @@ under the License.
 #include "VtkEpcCommon.h"
 
 //----------------------------------------------------------------------------
-VtkEpcCommon::VtkEpcCommon() :
-uuid(""),parent(""),name(""),myType(VtkEpcCommon::UNKNOW),parentType(VtkEpcCommon::UNKNOW),timeIndex(-1),timestamp(0)
-{
-}
-
-//----------------------------------------------------------------------------
-VtkEpcCommon::~VtkEpcCommon()
-{
-
-}
-
-//----------------------------------------------------------------------------
-std::string VtkEpcCommon::getUuid() const
-{
-	return uuid;
-}
-
-//----------------------------------------------------------------------------
-std::string VtkEpcCommon::getParent() const
-{
-	return parent;
-}
-
-//----------------------------------------------------------------------------
-std::string VtkEpcCommon::getName() const
-{
-	return name;
-}
-
-//----------------------------------------------------------------------------
-VtkEpcCommon::Resqml2Type VtkEpcCommon::getType() const
-{
-	return myType;
-}
-
-//----------------------------------------------------------------------------
-VtkEpcCommon::Resqml2Type VtkEpcCommon::getParentType() const
-{
-	return parentType;
-}
-
-//----------------------------------------------------------------------------
-int VtkEpcCommon::getTimeIndex() const
-{
-	return timeIndex;
-}
-
-//----------------------------------------------------------------------------
-time_t VtkEpcCommon::getTimestamp() const
-{
-	return timestamp;
-}
-
-//----------------------------------------------------------------------------
 void VtkEpcCommon::setUuid(const std::string & value)
 {
 	uuid = value;

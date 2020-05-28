@@ -124,12 +124,29 @@ public:
 		QTreeWidgetItem(view, UserType), dataObjectInfo(nullptr) {}
 	~TreeItem() {}
 
-	VtkEpcCommon const * getDataObjectInfo() { return dataObjectInfo; }
+	VtkEpcCommon const * getDataObjectInfo() const { return dataObjectInfo; }
 
 	std::string getUuid() const { return dataObjectInfo == nullptr ? text(0).toStdString() : dataObjectInfo->getUuid(); }
 
 private:
 	VtkEpcCommon const * dataObjectInfo;
+
+	/**
+	* operator to allow tree item sorting
+	*/
+	bool operator<(const QTreeWidgetItem &other) const {
+		int column = treeWidget()->sortColumn();
+
+		auto castOther = static_cast<TreeItem const *>(&other);
+		VtkEpcCommon const * metadata = getDataObjectInfo();
+		VtkEpcCommon const * otherMetadata = castOther->getDataObjectInfo();
+		if (metadata != nullptr && otherMetadata != nullptr &&
+			metadata->getType() != otherMetadata->getType()) {
+			return metadata->getType() < otherMetadata->getType();
+		}
+
+		return text(column).toLower() < other.text(column).toLower();
+	}
 };
 
 #endif // TREEITEM_H
