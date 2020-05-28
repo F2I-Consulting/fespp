@@ -1,9 +1,7 @@
 <?xml version="1.0" ?>
 <pqevents>
   <pqevent object="PQActionHolder/actionDataLoadManager" command="activate" arguments="" />
-  <pqevent object="pqClientMainWindow/PQDataLoadManager/epcFile/FileButton" command="activate" arguments="" />
-  <pqevent object="pqClientMainWindow/PQDataLoadManager/epcFile/pqFileDialog" command="filesSelected" arguments="$PARAVIEW_DATA_ROOT/testingPackageCpp.epc" />
-  <pqevent object="pqClientMainWindow/PQDataLoadManager/buttonBox/1QPushButton0" command="activate" arguments="" />
+  <pqevent object="pqClientMainWindow/pqFileDialog" command="filesSelected" arguments="$PARAVIEW_DATA_ROOT/testingPackageCpp.epc" />
   
   <!-- IJK grid explicit geometry -->
   <pqevent object="pqClientMainWindow/PQSelectionPanel/panelSelection/treeWidget" command="setCheckState" arguments="0.0.9.0.2.0.3.0,2" />

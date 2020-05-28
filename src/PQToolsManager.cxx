@@ -21,7 +21,6 @@ under the License.
 #include <QMainWindow>
 #include <QPointer>
 
-#include "PQDataLoadManager.h"
 #include "PQSelectionPanel.h"
 #ifdef WITH_ETP
 #include "PQEtpPanel.h"
@@ -30,6 +29,7 @@ under the License.
 
 #include "pqActiveObjects.h"
 #include "pqApplicationCore.h"
+#include <pqFileDialog.h>
 #include "pqServerManagerModel.h"
 #include "pqServer.h"
 #include "pqRenderView.h"
@@ -117,20 +117,17 @@ PQToolsManager::PQToolsManager(QObject* p)
 #endif
 	panelSelectionVisible = false;
 
-	QObject::connect(actionDataLoadManager(), SIGNAL(triggered(bool)), this, SLOT(showDataLoadManager()));
+	QObject::connect(actionDataLoadManager(), &QAction::triggered, this, &PQToolsManager::showDataLoadManager);
 
 #ifdef WITH_ETP
-	QObject::connect(actionEtpCommand(), SIGNAL(triggered(bool)), this, SLOT(showEtpConnectionManager()));
+	QObject::connect(actionEtpCommand(), &QAction::triggered, this, &PQToolsManager::showEtpConnectionManager);
 #endif
 
-	pqServerManagerModel* smModel = pqApplicationCore::instance()->getServerManagerModel();
-	connect(smModel, SIGNAL(sourceRemoved(pqPipelineSource*)), this,
-			SLOT(deletePipelineSource(pqPipelineSource*)));
+	connect(pqApplicationCore::instance()->getServerManagerModel(), &pqServerManagerModel::sourceRemoved,
+		this, &PQToolsManager::deletePipelineSource);
 
-	pqApplicationCore* core = pqApplicationCore::instance();
-	pqObjectBuilder* builder = core->getObjectBuilder();
-	connect(builder, SIGNAL(readerCreated(pqPipelineSource*, const QStringList &)), this,
-			SLOT(newPipelineSource(pqPipelineSource*, const QStringList &)));
+	connect(pqApplicationCore::instance()->getObjectBuilder(), QOverload<pqPipelineSource*, const QStringList &>::of(&pqObjectBuilder::readerCreated),
+		this, &PQToolsManager::newPipelineSource);
 }
 
 PQToolsManager::~PQToolsManager()
@@ -156,10 +153,26 @@ QAction* PQToolsManager::actionEtpCommand()
 //-----------------------------------------------------------------------------
 void PQToolsManager::showDataLoadManager()
 {
-	PQDataLoadManager* dialog = new PQDataLoadManager(getMainWindow());
-	dialog->setAttribute(Qt::WA_DeleteOnClose, true);
+	pqFileDialog dialog(PQToolsManager::instance()->getActiveServer(), getMainWindow(),
+		tr("Open EPC document"), "", tr("EPC Documents (*.epc)"));
+	dialog.setFileMode(pqFileDialog::ExistingFile);
+	if (QDialog::Accepted == dialog.exec())
+	{
+		//each string list holds a list of files that represent a file-series
+		QList<QStringList> files = dialog.getAllSelectedFiles();
 
-	dialog->show();
+		pqPipelineSource* fesppReader = getOrCreatePipelineSource();
+
+		pqActiveObjects *activeObjects = &pqActiveObjects::instance();
+		activeObjects->setActiveSource(fesppReader);
+
+		vtkSMProxy* fesppReaderProxy = fesppReader->getProxy();
+		vtkSMPropertyHelper(fesppReaderProxy, "SubFileName").Set(dialog.getSelectedFiles()[0].toStdString().c_str());
+
+		fesppReaderProxy->UpdateSelfAndAllInputs();
+
+		PQToolsManager::instance()->newFile(dialog.getSelectedFiles()[0].toStdString().c_str());
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -209,10 +222,7 @@ pqServer* PQToolsManager::getActiveServer()
 //-----------------------------------------------------------------------------
 pqPipelineSource* PQToolsManager::findPipelineSource(const char* SMName)
 {
-	pqApplicationCore* core = pqApplicationCore::instance();
-	pqServerManagerModel* smModel = core->getServerManagerModel();
-
-	QList<pqPipelineSource*> sources = smModel->findItems<pqPipelineSource*>(getActiveServer());
+	QList<pqPipelineSource*> sources = pqApplicationCore::instance()->getServerManagerModel()->findItems<pqPipelineSource*>(getActiveServer());
 	foreach (pqPipelineSource* s, sources) {
 		if (strcmp(s->getSMName().toStdString().c_str(), SMName) == 0) {
 			return s;
@@ -275,31 +285,16 @@ void PQToolsManager::deletePipelineSource(pqPipelineSource* pipe)
 void PQToolsManager::newPipelineSource(pqPipelineSource* pipe, const QStringList &filenames)
 {
 	std::vector<std::string> epcfiles;
-	if (!filenames.isEmpty()) {
-		for (int i = 0; i < filenames.length(); ++i){
-			const size_t lengthFileName = filenames[i].toStdString().length();
-			const std::string extension = filenames[i].toStdString().substr(lengthFileName - 3, lengthFileName);
-			if(extension == "epc") {
-				epcfiles.push_back(filenames[i].toStdString());
-			}
+	for (int i = 0; i < filenames.length(); ++i) {
+		const size_t lengthFileName = filenames[i].toStdString().length();
+		const std::string extension = filenames[i].toStdString().substr(lengthFileName - 3, lengthFileName);
+		if(extension == "epc") {
+			epcfiles.push_back(filenames[i].toStdString());
 		}
 	}
-	if (epcfiles.size() > 0){
-		pqApplicationCore* core = pqApplicationCore::instance();
-		pqObjectBuilder* builder = core->getObjectBuilder();
 
-		// get or create reader pipe
-		pqPipelineSource* fesppReader;
-		if (existPipe()) {
-			fesppReader = getFesppReader("EpcDocument");
-		}
-		else {
-			fesppReader = builder->createReader("sources", "Fespp", QStringList("EpcDocument"), getActiveServer());
-			existPipe(true);
-		}
-
-		// rename file pipe & add file to EpcDocument pipe
-		vtkSMProxy* fesppReaderProxy = fesppReader->getProxy();
+	if (!epcfiles.empty()) {
+		vtkSMProxy* fesppReaderProxy = getOrCreatePipelineSource()->getProxy();
 		std::string newName = "To delete (Artefact create by File-Open EPC)";
 		for (int i = 0; i < epcfiles.size(); ++i){
 			pipe->rename(QString(newName.c_str()));
@@ -312,9 +307,19 @@ void PQToolsManager::newPipelineSource(pqPipelineSource* pipe, const QStringList
 	}
 }
 
+pqPipelineSource* PQToolsManager::getOrCreatePipelineSource()
+{
+	if (existPipe()) {
+		return getFesppReader("EpcDocument");
+	}
+	else {
+		existPipe(true);
+		return pqApplicationCore::instance()->getObjectBuilder()->createReader("sources", "Fespp", QStringList("EpcDocument"), getActiveServer());
+	}
+}
+
 //----------------------------------------------------------------------------
 void PQToolsManager::newFile(const std::string & fileName)
 {
 	getPQSelectionPanel()->addFileName(fileName);
 }
-

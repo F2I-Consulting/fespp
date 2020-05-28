@@ -25,7 +25,7 @@
     <string>Data Load Manager</string>
    </property>
    <property name="toolTip">
-    <string>Dialog to Manage Loaded Data</string>
+    <string>Dialog to open an EPC document</string>
    </property>
   </action>
 

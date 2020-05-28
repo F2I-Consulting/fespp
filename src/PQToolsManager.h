@@ -63,7 +63,7 @@ public slots:
 #endif
 
 protected:
-	virtual pqPipelineSource* findPipelineSource(const char* SMName);
+	pqPipelineSource* findPipelineSource(const char* SMName);
 	void setVisibilityPanelSelection(bool visible);
 
 protected slots:
@@ -76,6 +76,8 @@ protected slots:
 private:
 	PQToolsManager(QObject* p);
 
+	pqPipelineSource* getOrCreatePipelineSource();
+
 	class pqInternal;
 	pqInternal* Internal;
 
@@ -84,7 +86,7 @@ private:
 	bool existEtpPipe;
 #endif
 	bool panelSelectionVisible;
-	Q_DISABLE_COPY(PQToolsManager);
+	Q_DISABLE_COPY(PQToolsManager)
 };
 
 #endif
