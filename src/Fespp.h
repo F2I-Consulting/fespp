@@ -37,7 +37,7 @@ class Fespp : public vtkMultiBlockDataSetAlgorithm
 {
 public:
 	static Fespp *New();
-	vtkTypeMacro(Fespp, vtkMultiBlockDataSetAlgorithm);
+	vtkTypeMacro(Fespp, vtkMultiBlockDataSetAlgorithm)
 	void PrintSelf(ostream& os, vtkIndent indent) final;
 	
 	// Description:

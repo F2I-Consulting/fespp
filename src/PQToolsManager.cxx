@@ -45,19 +45,6 @@ under the License.
 
 namespace
 {
-pqPropertiesPanel* getpqPropertiesPanel()
-{
-	pqPropertiesPanel *panel = nullptr;
-	foreach(QWidget *widget, qApp->topLevelWidgets())
-	{
-		panel = widget->findChild<pqPropertiesPanel *>();
-
-		if (panel != nullptr) {
-			break;
-		}
-	}
-	return panel;
-}
 
 PQSelectionPanel* getPQSelectionPanel()
 {
@@ -296,7 +283,7 @@ void PQToolsManager::newPipelineSource(pqPipelineSource* pipe, const QStringList
 	if (!epcfiles.empty()) {
 		vtkSMProxy* fesppReaderProxy = getOrCreatePipelineSource()->getProxy();
 		std::string newName = "To delete (Artefact create by File-Open EPC)";
-		for (int i = 0; i < epcfiles.size(); ++i){
+		for (size_t i = 0; i < epcfiles.size(); ++i){
 			pipe->rename(QString(newName.c_str()));
 			// add file to EpcDocument pipe
 			vtkSMPropertyHelper(fesppReaderProxy, "SubFileName").Set(epcfiles[i].c_str());

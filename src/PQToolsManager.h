@@ -29,7 +29,7 @@ class pqView;
 
 class PQToolsManager : public QObject
 {
-	Q_OBJECT;
+	Q_OBJECT
 
 public:
 	static PQToolsManager* instance();

@@ -24,7 +24,7 @@ under the License.
 
 class PQToolsActionGroup : public QActionGroup
 {
-	Q_OBJECT;
+	Q_OBJECT
 
 public:
 	PQToolsActionGroup(QObject* p);

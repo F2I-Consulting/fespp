@@ -18,6 +18,8 @@ under the License.
 -----------------------------------------------------------------------*/
 #include "Fespp.h"
 
+#include <algorithm>
+
 #include <vtkDataArraySelection.h>
 #include <vtkIndent.h>
 #include <vtkInformation.h>
@@ -28,7 +30,7 @@ under the License.
 // Fespp includes
 #include "VTK/VtkEpcDocumentSet.h"
 
-vtkStandardNewMacro(Fespp);
+vtkStandardNewMacro(Fespp)
 
 //----------------------------------------------------------------------------
 Fespp::Fespp() :

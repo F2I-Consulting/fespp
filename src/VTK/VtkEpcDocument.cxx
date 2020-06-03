@@ -416,7 +416,8 @@ void VtkEpcDocument::visualize(const std::string & uuid)
 {
 	auto fesapiObject = repository.getDataObjectByUuid(uuid);
 	if (dynamic_cast<RESQML2_NS::AbstractRepresentation*>(fesapiObject) == nullptr &&
-		dynamic_cast<RESQML2_NS::AbstractValuesProperty*>(fesapiObject) == nullptr) {
+		dynamic_cast<RESQML2_NS::AbstractValuesProperty*>(fesapiObject) == nullptr &&
+		dynamic_cast<RESQML2_0_1_NS::WellboreMarker*>(fesapiObject) == nullptr) {
 		// Cannot visualize anything other than a RESQML property or a RESQML representation.
 		return;
 	}
@@ -449,6 +450,11 @@ void VtkEpcDocument::visualize(const std::string & uuid)
 	}
 	case VtkEpcCommon::Resqml2Type::WELL_TRAJ: {
 		uuidToVtkWellboreTrajectoryRepresentation[uuidIsChildOf[uuid].getUuid()]->visualize(uuid);
+		break;
+	}
+	case VtkEpcCommon::Resqml2Type::WELL_MARKER: {
+		uuidToVtkWellboreTrajectoryRepresentation[uuidIsChildOf[uuidIsChildOf[uuid].getParent()].getParent()]->visualize(uuid);
+		uuidToAttach = uuidIsChildOf[uuidIsChildOf[uuid].getParent()].getParent();
 		break;
 	}
 	case VtkEpcCommon::Resqml2Type::IJK_GRID: {
@@ -1432,13 +1438,13 @@ void VtkEpcDocument::searchWellboreTrajectory(const std::string & fileName) {
 		//wellboreFrame
 		auto wellboreFrame_set = wellboreTrajectory->getWellboreFrameRepresentationSet();
 		for(const auto& wellboreFrame: wellboreFrame_set) {
-			if (wellboreFrame->getXmlTag() == "WellboreFrameRepresentation") { // WellboreFrame
+			/* if (wellboreFrame->getXmlTag() == "WellboreFrameRepresentation") { // WellboreFrame
 				createTreeVtk(wellboreFrame->getUuid(), wellboreTrajectory->getUuid(), wellboreFrame->getTitle().c_str(), VtkEpcCommon::Resqml2Type::WELL_FRAME);
 				auto valuesPropertySet = wellboreFrame->getValuesPropertySet();
 				for (const auto& property: valuesPropertySet)		{
 					createTreeVtk(property->getUuid(), wellboreFrame->getUuid(), property->getTitle().c_str(), VtkEpcCommon::Resqml2Type::PROPERTY);
 				}
-			} else if (wellboreFrame->getXmlTag() == "WellboreMarkerFrameRepresentation") { // WellboreMarker
+			} else */ if (wellboreFrame->getXmlTag() == "WellboreMarkerFrameRepresentation") { // WellboreMarker
 				createTreeVtk(wellboreFrame->getUuid(), wellboreTrajectory->getUuid(), wellboreFrame->getTitle().c_str(), VtkEpcCommon::Resqml2Type::WELL_MARKER_FRAME);
 				auto wellboreMarkerFrame = static_cast<resqml2_0_1::WellboreMarkerFrameRepresentation*>(wellboreFrame);
 				auto wellboreMarker_set = wellboreMarkerFrame->getWellboreMarkerSet();
