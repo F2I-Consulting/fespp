@@ -43,7 +43,7 @@ VtkWellboreMarker::~VtkWellboreMarker()
 //----------------------------------------------------------------------------
 void VtkWellboreMarker::createOutput(const std::string & uuid)
 {
-	if (uuid == getUuid()) {
+	if (uuid == this->getUuid()) {
 
 		vtkSmartPointer<vtkDiskSource> diskSource =
 				vtkSmartPointer<vtkDiskSource>::New();
@@ -51,7 +51,7 @@ void VtkWellboreMarker::createOutput(const std::string & uuid)
 		diskSource->SetOuterRadius(10);
 		diskSource->Update();
 
-		vtkSmartPointer<vtkTransform> translation =
+/*		vtkSmartPointer<vtkTransform> translation =
 				vtkSmartPointer<vtkTransform>::New();
 		translation->Translate(100.0, 200.0, 300.0);
 
@@ -59,9 +59,33 @@ void VtkWellboreMarker::createOutput(const std::string & uuid)
 				vtkSmartPointer<vtkTransformPolyDataFilter>::New();
 		transformFilter->SetInputConnection(diskSource->GetOutputPort());
 		transformFilter->SetTransform(translation);
-		transformFilter->Update();
+		transformFilter->Update();*/
 
-		vtkOutput = transformFilter->GetOutput();
+		RESQML2_0_1_NS::WellboreMarkerFrameRepresentation *frame = static_cast<RESQML2_0_1_NS::WellboreMarkerFrameRepresentation *>(epcPackageRepresentation->getDataObjectByUuid(this->getParent()));
+		std::vector<RESQML2_0_1_NS::WellboreMarker *> markerSet = frame->getWellboreMarkerSet();
+		double* doublePositions = new double[frame->getMdValuesCount()*3];
+		frame->getXyzPointsOfPatch(0,doublePositions);
+		for (size_t mIndex = 0; mIndex < markerSet.size(); ++mIndex) {
+			if (markerSet[mIndex]->getUuid() == uuid ){
+				const double zIndice = frame->getLocalCrs(0)->isDepthOriented() ? -1 : 1;
+
+				vtkSmartPointer<vtkTransform> translation =
+						vtkSmartPointer<vtkTransform>::New();
+				translation->Translate(doublePositions[3*mIndex], doublePositions[3*mIndex+1], zIndice*doublePositions[3*mIndex+2]);
+
+				vtkSmartPointer<vtkTransformPolyDataFilter> transformFilter =
+						vtkSmartPointer<vtkTransformPolyDataFilter>::New();
+				transformFilter->SetInputConnection(diskSource->GetOutputPort());
+				transformFilter->SetTransform(translation);
+				transformFilter->Update();
+
+				vtkOutput = transformFilter->GetOutput();
+				break;
+			}
+		}
+		delete[] doublePositions;
+
+
 	}
 }
 

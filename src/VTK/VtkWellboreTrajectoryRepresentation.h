@@ -21,7 +21,10 @@ under the License.
 
 #include "VtkResqml2MultiBlockDataSet.h"
 
+#include <unordered_map>
+
 #include "VtkWellboreTrajectoryRepresentationPolyLine.h"
+#include "VtkWellboreFrame.h"
 
 namespace COMMON_NS
 {
@@ -64,9 +67,6 @@ public:
 
 	void addProperty(const std::string & uuidProperty, vtkDataArray* dataProperty);
 
-	void addWellboreFrame(const std::string & uuid);
-	void addWellboreMarker(const std::string & uuid);
-
 	long getAttachmentPropertyCount(const std::string & uuid, VtkEpcCommon::FesppAttachmentProperty propertyUnit);
 protected:
 	/**
@@ -91,7 +91,7 @@ private:
 	// VTK object
 	VtkWellboreTrajectoryRepresentationPolyLine polyline;
 
-	std::vector<std::string> uuid_wellboreFrame_set;
-	std::vector<std::string> uuid_wellboreMarker_set;
+	std::unordered_map<std::string, VtkWellboreFrame *> uuid_to_VtkWellboreFrame;
+	std::unordered_map<std::string, VtkEpcCommon> uuid_Informations;
 };
 #endif

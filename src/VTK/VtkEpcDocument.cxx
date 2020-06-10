@@ -171,12 +171,13 @@ void VtkEpcDocument::createTreeVtk(const std::string & uuid, const std::string &
 			addWellTrajTreeVtk(uuid, parent, name);
 			break;
 		}
-		case VtkEpcCommon::Resqml2Type::WELL_FRAME: {
-			addWellTrajTreeVtk(uuid, parent, name);
+		case VtkEpcCommon::Resqml2Type::WELL_FRAME:
+		case VtkEpcCommon::Resqml2Type::WELL_MARKER_FRAME: {
+			addWellFrameTreeVtk(uuid, parent, name);
 			break;
 		}
 		case VtkEpcCommon::Resqml2Type::WELL_MARKER: {
-			addWellTrajTreeVtk(uuid, parent, name);
+			addWellMarkerTreeVtk(uuid, parent, name);
 			break;
 		}
 		case VtkEpcCommon::Resqml2Type::IJK_GRID: {
@@ -238,14 +239,14 @@ void VtkEpcDocument::addWellTrajTreeVtk(const std::string & uuid, const std::str
 }
 
 // ----------------------------------------------------------------------------
-void VtkEpcDocument::addWellFrameTreeVtk(const std::string & uuid, const std::string & parent, const std::string &)
+void VtkEpcDocument::addWellFrameTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name)
 {
-	uuidToVtkWellboreTrajectoryRepresentation[parent]->addWellboreFrame(uuid);
+	uuidToVtkWellboreTrajectoryRepresentation[parent]->createTreeVtk(uuid,parent,name,VtkEpcCommon::Resqml2Type::WELL_FRAME);
 }
 // ----------------------------------------------------------------------------
-void VtkEpcDocument::addWellMarkerTreeVtk(const std::string & uuid, const std::string & parent, const std::string &)
+void VtkEpcDocument::addWellMarkerTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name)
 {
-	uuidToVtkWellboreTrajectoryRepresentation[parent]->addWellboreMarker(uuid);
+	uuidToVtkWellboreTrajectoryRepresentation[uuidIsChildOf[parent].getParent()]->createTreeVtk(uuid,parent,name,VtkEpcCommon::Resqml2Type::WELL_MARKER);
 }
 
 // ----------------------------------------------------------------------------

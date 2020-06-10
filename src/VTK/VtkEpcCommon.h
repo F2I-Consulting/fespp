@@ -26,9 +26,6 @@ class VtkEpcCommon
 {
 public:
 
-	VtkEpcCommon() : uuid(""), parent(""), name(""), myType(Resqml2Type::UNKNOW), parentType(Resqml2Type::UNKNOW), timeIndex(-1), timestamp(0) {}
-	~VtkEpcCommon() {}
-
 	enum class FesppAttachmentProperty { POINTS = 0, CELLS = 1 };
 	enum class modeVtkEpc {TreeView=0, Representation=1, Both=2};
 	enum class Resqml2Type {
@@ -54,6 +51,12 @@ public:
 		SUB_REP = 18,
 		PARTIAL = 19
 	};
+
+	VtkEpcCommon() : uuid(""), parent(""), name(""), myType(Resqml2Type::UNKNOW), parentType(Resqml2Type::UNKNOW), timeIndex(-1), timestamp(0) {}
+	VtkEpcCommon (const std::string & uuid, const std::string & parent, const std::string & name, const Resqml2Type & type) :
+		uuid(uuid),parent(parent),name(name),myType(type),parentType(Resqml2Type::UNKNOW),timeIndex(-1),timestamp(0) {}
+	~VtkEpcCommon() {}
+
 
 	const std::string& getUuid() const { return uuid; }
 	void setUuid(const std::string &);

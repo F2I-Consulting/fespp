@@ -338,7 +338,7 @@ void PQSelectionPanel::onItemCheckedUnchecked(QTreeWidgetItem * item, int)
 	if (item->checkState(0) == Qt::Checked) {
 		while (item->parent() != nullptr && item->parent()->checkState(0) == Qt::Unchecked) {
 			item = item->parent();
-			if (static_cast<TreeItem*>(item)->getDataObjectInfo() != nullptr  &&
+			if (static_cast<TreeItem*>(item)->getDataObjectInfo() != nullptr &&
 				static_cast<TreeItem*>(item)->getDataObjectInfo()->getType() == VtkEpcCommon::Resqml2Type::WELL_TRAJ) {
 				toggleUuid(static_cast<TreeItem*>(item)->getUuid(), true);
 			}
