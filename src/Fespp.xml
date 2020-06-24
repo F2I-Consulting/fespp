@@ -57,8 +57,26 @@
 				<Documentation>List uuid to display</Documentation>
 			</StringVectorProperty>
 			
-			<Property name="Refresh" command="Modified" panelwidget="command_button"/>
+<!-- 			<Property name="Refresh" command="Modified" panelwidget="command_button"/> -->
+
+			<IntVectorProperty name="MarkerOrientation"
+            	command="setMarkerOrientation"
+                number_of_elements="1"
+                default_values="1">
+    			<BooleanDomain name="bool"/>
+			</IntVectorProperty>
+
+			<IntVectorProperty name="MarkerSize"
+            	command="setMarkerSize"
+                number_of_elements="1"
+                default_values="10">
+			</IntVectorProperty>
 			
+			<PropertyGroup label="Wellbore marker" panel_visibility="panel_widget">
+   				<Property name="MarkerOrientation" />
+   				<Property name="MarkerSize" />
+			</PropertyGroup>
+
 
 			<!-- End EPCReader -->
 		</SourceProxy>

@@ -49,6 +49,8 @@ public:
 
 	void visualize(const std::string & uuid) final;
 
+	void toggleMarkerOrientation(const bool & orientation);
+
 	/**
 	* method : createOutput
 	* variable : std::string uuid

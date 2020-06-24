@@ -34,17 +34,20 @@ vtkStandardNewMacro(Fespp)
 
 //----------------------------------------------------------------------------
 Fespp::Fespp() :
-				FileName(nullptr), SubFileName(nullptr),
-				UuidList(vtkDataArraySelection::New()), Controller(nullptr),
-				loadedFile(false), fileNameSet(std::vector<std::string>()),
-				epcDocumentSet(nullptr), isEpcDocument(false)
+FileName(nullptr), SubFileName(nullptr),
+UuidList(vtkDataArraySelection::New()), Controller(nullptr),
+loadedFile(false), fileNameSet(std::vector<std::string>()),
+epcDocumentSet(nullptr), isEpcDocument(false)
 #ifdef WITH_ETP
-				, etpDocument(nullptr), isEtpDocument(false),
-				port(""), ip("")
+, etpDocument(nullptr), isEtpDocument(false),
+port(""), ip("")
 #endif
 {
 	SetNumberOfInputPorts(0);
 	SetNumberOfOutputPorts(1);
+
+	MarkerOrientation = 1;
+	MarkerSize = 10;
 
 	vtkMultiProcessController* controller = vtkMultiProcessController::GetGlobalController();
 	if (controller != nullptr) {
@@ -149,6 +152,58 @@ void Fespp::SetUuidList(const char* uuid, int status)
 	UpdateDataObject();
 	UpdateInformation();
 	UpdateWholeExtent();
+}
+
+//----------------------------------------------------------------------------
+void Fespp::setMarkerOrientation(const bool orientation) {
+	cout << orientation << endl;
+
+	if (MarkerOrientation != orientation) {
+		MarkerOrientation = orientation;
+#ifdef WITH_ETP
+		if (etpDocument == nullptr) {
+			/******* TODO
+			 * enable/disable marker orientation for ETP document
+			 */
+		}
+#endif
+		if(isEpcDocument) {
+			epcDocumentSet->toggleMarkerOrientation(MarkerOrientation);
+		}
+
+		Modified();
+		Update();
+		UpdateDataObject();
+		UpdateInformation();
+		UpdateWholeExtent();
+	}
+}
+
+//----------------------------------------------------------------------------
+void Fespp::setMarkerSize(const int size) {
+	cout << size << endl;
+
+
+#ifdef WITH_ETP
+	if (etpDocument == nullptr) {
+		/******* TODO
+		 * modify marker size for ETP document
+		 */
+	}
+#endif
+	if(isEpcDocument) {
+		/******* TODO
+		 * modifiy marker size for EPC document
+		 */
+	}
+
+	if (MarkerSize != size) {
+		Modified();
+		Update();
+		UpdateDataObject();
+		UpdateInformation();
+		UpdateWholeExtent();
+	}
 }
 
 //----------------------------------------------------------------------------

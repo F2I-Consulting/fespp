@@ -61,7 +61,7 @@ under the License.
 
 // ----------------------------------------------------------------------------
 VtkEpcDocument::VtkEpcDocument(const std::string & fileName, int idProc, int maxProc, VtkEpcDocumentSet* epcDocSet) :
-	VtkResqml2MultiBlockDataSet(fileName, fileName, fileName, "", idProc, maxProc), epcSet(epcDocSet)
+VtkResqml2MultiBlockDataSet(fileName, fileName, fileName, "", idProc, maxProc), epcSet(epcDocSet)
 {
 	COMMON_NS::EpcDocument pck(fileName);
 	std::string resqmlResult = pck.deserializeInto(repository);
@@ -137,16 +137,16 @@ void VtkEpcDocument::createTreeVtk(const std::string & uuid, const std::string &
 
 	if(uuidIsChildOf[parent].getUuid().empty()) {
 		if (type == VtkEpcCommon::Resqml2Type::GRID_2D ||
-			type == VtkEpcCommon::Resqml2Type::POLYLINE_SET ||
-			type == VtkEpcCommon::Resqml2Type::TRIANGULATED_SET) {
+				type == VtkEpcCommon::Resqml2Type::POLYLINE_SET ||
+				type == VtkEpcCommon::Resqml2Type::TRIANGULATED_SET) {
 			uuidIsChildOf[uuid].setParentType( VtkEpcCommon::Resqml2Type::INTERPRETATION_2D);
 		}
 		else if (type == VtkEpcCommon::Resqml2Type::WELL_TRAJ) {
 			uuidIsChildOf[uuid].setParentType( VtkEpcCommon::Resqml2Type::INTERPRETATION_1D);
 		}
 		else if (type == VtkEpcCommon::Resqml2Type::IJK_GRID ||
-			type == VtkEpcCommon::Resqml2Type::UNSTRUC_GRID ||
-			type == VtkEpcCommon::Resqml2Type::SUB_REP) {
+				type == VtkEpcCommon::Resqml2Type::UNSTRUC_GRID ||
+				type == VtkEpcCommon::Resqml2Type::SUB_REP) {
 			uuidIsChildOf[uuid].setParentType( VtkEpcCommon::Resqml2Type::INTERPRETATION_3D);
 		}
 	}
@@ -155,48 +155,48 @@ void VtkEpcDocument::createTreeVtk(const std::string & uuid, const std::string &
 	}
 
 	switch (type) {
-		case VtkEpcCommon::Resqml2Type::GRID_2D: {
-			addGrid2DTreeVtk(uuid, parent, name);
-			break;
-		}
-		case VtkEpcCommon::Resqml2Type::POLYLINE_SET: {
-			addPolylineSetTreeVtk(uuid, parent, name);
-			break;
-		}
-		case VtkEpcCommon::Resqml2Type::TRIANGULATED_SET: {
-			addTriangulatedSetTreeVtk(uuid, parent, name);
-			break;
-		}
-		case VtkEpcCommon::Resqml2Type::WELL_TRAJ: {
-			addWellTrajTreeVtk(uuid, parent, name);
-			break;
-		}
-		case VtkEpcCommon::Resqml2Type::WELL_FRAME:
-		case VtkEpcCommon::Resqml2Type::WELL_MARKER_FRAME: {
-			addWellFrameTreeVtk(uuid, parent, name);
-			break;
-		}
-		case VtkEpcCommon::Resqml2Type::WELL_MARKER: {
-			addWellMarkerTreeVtk(uuid, parent, name);
-			break;
-		}
-		case VtkEpcCommon::Resqml2Type::IJK_GRID: {
-			addIjkGridTreeVtk(uuid, parent, name);
-			break;
-		}
-		case VtkEpcCommon::Resqml2Type::UNSTRUC_GRID: {
-			addUnstrucGridTreeVtk(uuid, parent, name);
-			break;
-		}
-		case VtkEpcCommon::Resqml2Type::SUB_REP: {
-			return_code = addSubRepTreeVtk(uuid, parent, name);
-			break;
-		}
-		case VtkEpcCommon::Resqml2Type::PROPERTY: {
-			return_code = addPropertyTreeVtk(uuid, parent, name);
-		}
-		default:
-			break;
+	case VtkEpcCommon::Resqml2Type::GRID_2D: {
+		addGrid2DTreeVtk(uuid, parent, name);
+		break;
+	}
+	case VtkEpcCommon::Resqml2Type::POLYLINE_SET: {
+		addPolylineSetTreeVtk(uuid, parent, name);
+		break;
+	}
+	case VtkEpcCommon::Resqml2Type::TRIANGULATED_SET: {
+		addTriangulatedSetTreeVtk(uuid, parent, name);
+		break;
+	}
+	case VtkEpcCommon::Resqml2Type::WELL_TRAJ: {
+		addWellTrajTreeVtk(uuid, parent, name);
+		break;
+	}
+	case VtkEpcCommon::Resqml2Type::WELL_FRAME:
+	case VtkEpcCommon::Resqml2Type::WELL_MARKER_FRAME: {
+		addWellFrameTreeVtk(uuid, parent, name);
+		break;
+	}
+	case VtkEpcCommon::Resqml2Type::WELL_MARKER: {
+		addWellMarkerTreeVtk(uuid, parent, name);
+		break;
+	}
+	case VtkEpcCommon::Resqml2Type::IJK_GRID: {
+		addIjkGridTreeVtk(uuid, parent, name);
+		break;
+	}
+	case VtkEpcCommon::Resqml2Type::UNSTRUC_GRID: {
+		addUnstrucGridTreeVtk(uuid, parent, name);
+		break;
+	}
+	case VtkEpcCommon::Resqml2Type::SUB_REP: {
+		return_code = addSubRepTreeVtk(uuid, parent, name);
+		break;
+	}
+	case VtkEpcCommon::Resqml2Type::PROPERTY: {
+		return_code = addPropertyTreeVtk(uuid, parent, name);
+	}
+	default:
+		break;
 	}
 
 	if (return_code != 0){
@@ -417,8 +417,8 @@ void VtkEpcDocument::visualize(const std::string & uuid)
 {
 	auto fesapiObject = repository.getDataObjectByUuid(uuid);
 	if (dynamic_cast<RESQML2_NS::AbstractRepresentation*>(fesapiObject) == nullptr &&
-		dynamic_cast<RESQML2_NS::AbstractValuesProperty*>(fesapiObject) == nullptr &&
-		dynamic_cast<RESQML2_0_1_NS::WellboreMarker*>(fesapiObject) == nullptr) {
+			dynamic_cast<RESQML2_NS::AbstractValuesProperty*>(fesapiObject) == nullptr &&
+			dynamic_cast<RESQML2_0_1_NS::WellboreMarker*>(fesapiObject) == nullptr) {
 		// Cannot visualize anything other than a RESQML property or a RESQML representation.
 		return;
 	}
@@ -684,6 +684,16 @@ void VtkEpcDocument::unvisualizeFullWell()
 		}
 	}
 }
+
+// ----------------------------------------------------------------------------
+void VtkEpcDocument::toggleMarkerOrientation(const bool orientation) {
+	for (auto &uuid : uuidRep) {
+		if (uuidIsChildOf[uuid].getType() == VtkEpcCommon::Resqml2Type::WELL_MARKER) {
+			uuidToVtkWellboreTrajectoryRepresentation[uuidIsChildOf[uuidIsChildOf[uuid].getParent()].getParent()]->toggleMarkerOrientation(orientation);
+		}
+	}
+}
+
 
 // ----------------------------------------------------------------------------
 void VtkEpcDocument::remove(const std::string & uuid)

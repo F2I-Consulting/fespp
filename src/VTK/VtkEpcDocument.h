@@ -65,6 +65,7 @@ public:
 	void visualizeFullWell();
 	void unvisualizeFullWell();
 	
+	void toggleMarkerOrientation(const bool orientation);
 
 	/**
 	* method : remove

@@ -28,6 +28,8 @@ under the License.
 #include "VtkAbstractRepresentation.h"
 #include "VtkResqml2PolyData.h"
 
+class vtkAlgorithmOutput;
+
 class VtkWellboreMarker : public VtkResqml2PolyData
 {
 
@@ -49,6 +51,8 @@ public:
 	*/
 	void createOutput(const std::string & uuid) final;
 
+	void toggleMarkerOrientation(const bool & orientation);
+
 	long getAttachmentPropertyCount(const std::string &, VtkEpcCommon::FesppAttachmentProperty) final { return 0; }
 
 	/**
@@ -57,6 +61,15 @@ public:
 	* delete the vtkPolyData.
 	*/
 	void remove(const std::string & uuid) final;
+
+private:
+
+	void applyOrientation();
+	void createDisk();
+	void createSphere();
+
+	bool orientation;
+	int size;
 
 };
 #endif /* SRC_VTK_VTKWELLBOREMARKER_H_ */

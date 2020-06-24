@@ -58,6 +58,8 @@ public:
 	*/
 	void visualize(const std::string & uuid);
 	
+	void toggleMarkerOrientation(const bool & orientation);
+
 	/**
 	* method : remove
 	* variable : std::string uuid (Wellbore trajectory representation UUID)

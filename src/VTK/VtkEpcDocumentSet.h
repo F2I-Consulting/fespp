@@ -63,6 +63,8 @@ public:
 	VtkEpcCommon::Resqml2Type getType(std::string uuid);
 	VtkEpcCommon getInfoUuid(std::string);
 
+	void toggleMarkerOrientation(const bool orientation);
+
 	/**
 	* method : getOutput
 	* variable : --

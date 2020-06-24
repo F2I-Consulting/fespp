@@ -108,6 +108,16 @@ void VtkEpcDocumentSet::unvisualizeFullWell(std::string fileName)
 }
 
 //----------------------------------------------------------------------------
+void VtkEpcDocumentSet::toggleMarkerOrientation(const bool orientation) {
+
+	if (representationMode) {
+		for (VtkEpcDocument* epcDoc : vtkEpcList) {
+		    epcDoc->toggleMarkerOrientation(orientation);
+		}
+	}
+}
+
+//----------------------------------------------------------------------------
 VtkEpcCommon::Resqml2Type VtkEpcDocumentSet::getType(std::string uuid)
 {
 	return uuidToVtkEpc[uuid]->getType(uuid);
