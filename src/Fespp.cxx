@@ -37,7 +37,7 @@ Fespp::Fespp() :
 FileName(nullptr), SubFileName(nullptr),
 UuidList(vtkDataArraySelection::New()), Controller(nullptr),
 loadedFile(false), fileNameSet(std::vector<std::string>()),
-epcDocumentSet(nullptr), isEpcDocument(false)
+epcDocumentSet(nullptr)
 #ifdef WITH_ETP
 , etpDocument(nullptr), isEtpDocument(false),
 port(""), ip("")
@@ -82,6 +82,12 @@ Fespp::~Fespp()
 void Fespp::SetSubFileName(const char* name)
 {
 	const std::string nameStr = std::string(name);
+
+	std::string extension="";
+	if (nameStr.length() > 3) {
+		extension = nameStr.substr (nameStr.length()-3,3);
+	}
+
 #ifdef WITH_ETP
 	if (isEtpDocument) {
 		const auto it = nameStr.find(":");
@@ -91,7 +97,8 @@ void Fespp::SetSubFileName(const char* name)
 		}
 	}
 #endif
-	if (isEpcDocument) {
+	if (extension == "epc" ) {
+		FileName = "EpcDocument";
 		if (std::find(fileNameSet.begin(), fileNameSet.end(), nameStr) == fileNameSet.end())	{
 			fileNameSet.push_back(nameStr);
 			OpenEpcDocument(nameStr);
@@ -108,6 +115,8 @@ int Fespp::GetUuidListArrayStatus(const char* uuid)
 void Fespp::SetUuidList(const char* uuid, int status)
 {
 	const std::string uuidStr = std::string(uuid);
+	UuidList->AddArray(uuid, status);
+	loadedFile = true;
 	if (uuidStr == "connect") {
 #ifdef WITH_ETP
 		if (etpDocument == nullptr) {
@@ -124,7 +133,7 @@ void Fespp::SetUuidList(const char* uuid, int status)
 		}
 	}
 	else if (status == 0) {
-		if (isEpcDocument) {
+		if(strcmp(FileName,"EpcDocument") == 0)  {
 			epcDocumentSet->unvisualize(uuidStr);
 		}
 #ifdef WITH_ETP
@@ -134,7 +143,7 @@ void Fespp::SetUuidList(const char* uuid, int status)
 #endif
 	}
 	else {
-		if(isEpcDocument) {
+		if(strcmp(FileName,"EpcDocument") == 0)  {
 			auto msg = epcDocumentSet->visualize(uuidStr);
 			if  (!msg.empty()){
 				displayError(msg);
@@ -167,7 +176,7 @@ void Fespp::setMarkerOrientation(const bool orientation) {
 			 */
 		}
 #endif
-		if(isEpcDocument) {
+		if(strcmp(FileName,"EpcDocument") == 0)  {
 			epcDocumentSet->toggleMarkerOrientation(MarkerOrientation);
 		}
 
@@ -191,7 +200,7 @@ void Fespp::setMarkerSize(const int size) {
 		 */
 	}
 #endif
-	if(isEpcDocument) {
+	if(strcmp(FileName,"EpcDocument") == 0)  {
 		/******* TODO
 		 * modifiy marker size for EPC document
 		 */
@@ -240,10 +249,10 @@ int Fespp::RequestInformation(
 		vtkInformationVector **,
 		vtkInformationVector *)
 {
+	/*
 	if ( !loadedFile ) {
 		const std::string stringFileName = std::string(FileName);
 		if (stringFileName == "EpcDocument") {
-			isEpcDocument = true;
 			loadedFile = true;
 			epcDocumentSet = new VtkEpcDocumentSet(idProc, nbProc, VtkEpcCommon::modeVtkEpc::Both);
 		}
@@ -253,12 +262,16 @@ int Fespp::RequestInformation(
 		}
 #endif
 	}
+	*/
 	return 1;
 }
 
 //----------------------------------------------------------------------------
 void Fespp::OpenEpcDocument(const std::string & name)
 {
+	if (epcDocumentSet == nullptr) {
+		epcDocumentSet = new VtkEpcDocumentSet(idProc, nbProc, VtkEpcCommon::modeVtkEpc::Both);
+	}
 	displayWarning(epcDocumentSet->addEpcDocument(name));
 }
 
@@ -272,7 +285,7 @@ int Fespp::RequestData(vtkInformation *,
 		RequestDataEtpDocument(outputVector);
 	}
 #endif
-	if (isEpcDocument)	{
+	if(strcmp(FileName,"EpcDocument") == 0) 	{
 		RequestDataEpcDocument(outputVector);
 	}
 	return 1;
@@ -286,6 +299,8 @@ void Fespp::RequestDataEpcDocument(vtkInformationVector *outputVector)
 	if (loadedFile) {
 		try {
 			output->DeepCopy(epcDocumentSet->getVisualization());
+			cout << "output nombre de block : " << output->GetNumberOfBlocks() << endl;
+			cout << "epcDocumentSet nombre de block : " << epcDocumentSet->getVisualization()->GetNumberOfBlocks() << endl;
 		}
 		catch (const std::exception & e)
 		{

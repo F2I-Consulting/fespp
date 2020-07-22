@@ -8,33 +8,41 @@
 				long_help="Read a .epc file."
 				short_help="Read a .epc file.">
 			</Documentation>
+			<Hints>
+				<ReaderFactory extensions="epc" file_description="EPC files" />
+    			<PipelineIcon name="CINEMA_MARK"/>
+  			</Hints>
 
-<!--  -->
+<!--  Pipe Name -->
+<!-- 			
 			<StringVectorProperty
 				name="FileName"
 				animateable="0"
 				command="SetFileName"
 				number_of_elements="1"
-				panel_visibility="never">
-				<FileListDomain name="files"/>
+				panel_visibility="advanced">
+ 				<FileListDomain name="files"/> 
 				<Documentation>
 					This property specifies the file name for the EPC reader.
 				</Documentation>
 			</StringVectorProperty>
-			<Hints>
-				<ReaderFactory extensions="epc" file_description="EPC files" />
-			</Hints>
+			-->
 
-<!--  -->
+<!--  File add to pipe -->
+
 			<StringVectorProperty
 				name="SubFileName"
 				animateable="0"
 				command="SetSubFileName"
 				number_of_elements="1"
-				panel_visibility="never">
+				panel_visibility="advanced">
+				<FileListDomain name="files"/>
+				<Hints>
+    				<FileChooser extensions="epc" file_description="EPC files" />
+  				</Hints>
 			</StringVectorProperty>
 			
-<!--  -->
+<!-- Uuid List of work: -->
 
 			<StringVectorProperty
 			        name="uuidInfo"
@@ -42,9 +50,8 @@
 			        default = "1">
 			        <ArraySelectionInformationHelper attribute_name="UuidList"/>
 			</StringVectorProperty>
-
 			<StringVectorProperty name="UuidList"
-				command="SetUuidList" number_of_elements="0" repeat_command="1"
+				command="SetUuidList" repeat_command="1"
 				number_of_elements_per_command="2" element_types="2 0"
 				information_property="uuidInfo" label="uuid to display"
 				panel_visibility="advanced">
@@ -56,16 +63,17 @@
 				</ArraySelectionDomain>
 				<Documentation>List uuid to display</Documentation>
 			</StringVectorProperty>
-			
-<!-- 			<Property name="Refresh" command="Modified" panelwidget="command_button"/> -->
+							
+<!-- Wellbore marker properties: -->
 
+	<!-- enable/disable Marker orientation -->
 			<IntVectorProperty name="MarkerOrientation"
             	command="setMarkerOrientation"
                 number_of_elements="1"
                 default_values="1">
     			<BooleanDomain name="bool"/>
 			</IntVectorProperty>
-
+	<!-- marker size -->
 			<IntVectorProperty name="MarkerSize"
             	command="setMarkerSize"
                 number_of_elements="1"

@@ -96,7 +96,6 @@ private:
 	std::vector<std::string> fileNameSet;
 
 	VtkEpcDocumentSet* epcDocumentSet;
-	bool isEpcDocument;
 
 #ifdef WITH_ETP
 	VtkEtpDocument* etpDocument;
