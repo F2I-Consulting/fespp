@@ -75,6 +75,8 @@ public:
 	*/
 	void addFileName(const std::string & fileName);
 
+	void checkUuid(const std::string & uuid);
+
 	void uuidKO(const std::string & uuid);
 
 	/**

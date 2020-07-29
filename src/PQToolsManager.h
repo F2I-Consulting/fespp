@@ -23,6 +23,8 @@ under the License.
 
 class QAction;
 
+class vtkSMProxyLocator;
+class vtkPVXMLElement;
 class pqPipelineSource;
 class pqServer;
 class pqView;
@@ -71,6 +73,7 @@ protected slots:
 	 * When a pipeline source is deleted
 	 */
 	void deletePipelineSource(pqPipelineSource*);
+	void loadEpcState(vtkPVXMLElement *root, vtkSMProxyLocator *locator);
 	void newPipelineSource(pqPipelineSource*, const QStringList &);
 
 private:

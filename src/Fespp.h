@@ -46,7 +46,7 @@ public:
 	vtkGetStringMacro(FileName);
 
 	void SetSubFileName(const char* name);
-	vtkGetStringMacro(SubFileName);
+	vtkGetStringMacro(EpcFileName);
 
 	// Description:
 	// Get/set the multi process controller to use for coordinated reads.
@@ -78,7 +78,7 @@ private:
 	~Fespp() final;
 
 	char* FileName;
-	char* SubFileName;
+	char* EpcFileName;
 
 	vtkDataArraySelection* UuidList;
 	bool MarkerOrientation;

@@ -31,7 +31,7 @@
 <!--  File add to pipe -->
 
 			<StringVectorProperty
-				name="SubFileName"
+				name="EpcFileName"
 				animateable="0"
 				command="SetSubFileName"
 				number_of_elements="1"
@@ -54,7 +54,7 @@
 				command="SetUuidList" repeat_command="1"
 				number_of_elements_per_command="2" element_types="2 0"
 				information_property="uuidInfo" label="uuid to display"
-				panel_visibility="advanced">
+				panel_visibility="never">
 				<ArraySelectionDomain name="array_list">
 					<RequiredProperties>
 						<Property name="uuidInfo"

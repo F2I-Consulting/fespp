@@ -34,7 +34,7 @@ vtkStandardNewMacro(Fespp)
 
 //----------------------------------------------------------------------------
 Fespp::Fespp() :
-FileName(nullptr), SubFileName(nullptr),
+FileName(nullptr), EpcFileName(nullptr),
 UuidList(vtkDataArraySelection::New()), Controller(nullptr),
 loadedFile(false), fileNameSet(std::vector<std::string>()),
 epcDocumentSet(nullptr)
@@ -135,6 +135,7 @@ void Fespp::SetUuidList(const char* uuid, int status)
 	else if (status == 0) {
 		if(strcmp(FileName,"EpcDocument") == 0)  {
 			epcDocumentSet->unvisualize(uuidStr);
+			UuidList->RemoveArrayByName(uuid);
 		}
 #ifdef WITH_ETP
 		if(isEtpDocument && etpDocument!=nullptr) {
@@ -165,8 +166,6 @@ void Fespp::SetUuidList(const char* uuid, int status)
 
 //----------------------------------------------------------------------------
 void Fespp::setMarkerOrientation(const bool orientation) {
-	cout << orientation << endl;
-
 	if (MarkerOrientation != orientation) {
 		MarkerOrientation = orientation;
 #ifdef WITH_ETP
@@ -190,9 +189,6 @@ void Fespp::setMarkerOrientation(const bool orientation) {
 
 //----------------------------------------------------------------------------
 void Fespp::setMarkerSize(const int size) {
-	cout << size << endl;
-
-
 #ifdef WITH_ETP
 	if (etpDocument == nullptr) {
 		/******* TODO
@@ -299,8 +295,6 @@ void Fespp::RequestDataEpcDocument(vtkInformationVector *outputVector)
 	if (loadedFile) {
 		try {
 			output->DeepCopy(epcDocumentSet->getVisualization());
-			cout << "output nombre de block : " << output->GetNumberOfBlocks() << endl;
-			cout << "epcDocumentSet nombre de block : " << epcDocumentSet->getVisualization()->GetNumberOfBlocks() << endl;
 		}
 		catch (const std::exception & e)
 		{

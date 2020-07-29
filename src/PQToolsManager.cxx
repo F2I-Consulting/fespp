@@ -17,9 +17,11 @@ specific language governing permissions and limitations
 under the License.
 -----------------------------------------------------------------------*/
 #include "PQToolsManager.h"
+#include <typeinfo>
 
 #include <QMainWindow>
 #include <QPointer>
+#include <QMessageBox>
 
 #include "PQSelectionPanel.h"
 #ifdef WITH_ETP
@@ -27,9 +29,11 @@ under the License.
 #include "PQEtpConnectionManager.h"
 #endif
 
+#include "vtkSMProxyLocator.h"
+#include "vtkPVXMLElement.h"
 #include "pqActiveObjects.h"
 #include "pqApplicationCore.h"
-#include <pqFileDialog.h>
+#include "pqFileDialog.h"
 #include "pqServerManagerModel.h"
 #include "pqServer.h"
 #include "pqRenderView.h"
@@ -38,8 +42,10 @@ under the License.
 #include "pqPipelineBrowserWidget.h"
 #include "pqObjectBuilder.h"
 #include "vtkSMPropertyHelper.h"
-
+#include "vtkDataArraySelection.h"
+#include "vtkSMArraySelectionDomain.h"
 #include "VTK/VtkEpcCommon.h"
+#include "vtkSMProperty.h"
 
 #include "ui_PQActionHolder.h"
 
@@ -111,10 +117,12 @@ PQToolsManager::PQToolsManager(QObject* p)
 #endif
 
 	connect(pqApplicationCore::instance()->getServerManagerModel(), &pqServerManagerModel::sourceRemoved,
-		this, &PQToolsManager::deletePipelineSource);
-
+			this, &PQToolsManager::deletePipelineSource);
+	connect(pqApplicationCore::instance(), &pqApplicationCore::stateLoaded,
+			this, &PQToolsManager::loadEpcState);
 	connect(pqApplicationCore::instance()->getObjectBuilder(), QOverload<pqPipelineSource*, const QStringList &>::of(&pqObjectBuilder::readerCreated),
-		this, &PQToolsManager::newPipelineSource);
+			this, &PQToolsManager::newPipelineSource);
+
 }
 
 PQToolsManager::~PQToolsManager()
@@ -141,7 +149,7 @@ QAction* PQToolsManager::actionEtpCommand()
 void PQToolsManager::showDataLoadManager()
 {
 	pqFileDialog dialog(PQToolsManager::instance()->getActiveServer(), getMainWindow(),
-		tr("Open EPC document"), "", tr("EPC Documents (*.epc)"));
+			tr("Open EPC document"), "", tr("EPC Documents (*.epc)"));
 	dialog.setFileMode(pqFileDialog::ExistingFile);
 	if (QDialog::Accepted == dialog.exec())
 	{
@@ -154,7 +162,7 @@ void PQToolsManager::showDataLoadManager()
 		activeObjects->setActiveSource(fesppReader);
 
 		vtkSMProxy* fesppReaderProxy = fesppReader->getProxy();
-		vtkSMPropertyHelper(fesppReaderProxy, "SubFileName").Set(dialog.getSelectedFiles()[0].toStdString().c_str());
+		vtkSMPropertyHelper(fesppReaderProxy, "EpcFileName").Set(dialog.getSelectedFiles()[0].toStdString().c_str());
 
 		fesppReaderProxy->UpdateSelfAndAllInputs();
 
@@ -269,24 +277,44 @@ void PQToolsManager::deletePipelineSource(pqPipelineSource* pipe)
 }
 
 //----------------------------------------------------------------------------
+void PQToolsManager::loadEpcState(vtkPVXMLElement *root, vtkSMProxyLocator *locator)
+{
+	pqActiveObjects *activeObjects = &pqActiveObjects::instance();
+	auto fesppReader = PQToolsManager::instance()->getFesppReader("EpcDocument");
+	activeObjects->setActiveSource(fesppReader);
+	vtkSMProxy* fesppReaderProxy = fesppReader->getProxy();
+	std::string epcFileName = vtkSMPropertyHelper(fesppReaderProxy, "EpcFileName").GetAsString();
+
+	getPQSelectionPanel()->addFileName(epcFileName);
+
+	auto UuidList = fesppReaderProxy->GetProperty("UuidList");
+	if (UuidList){
+		auto ald = UuidList->FindDomain<vtkSMArraySelectionDomain>();
+	      for (int i=0; i < ald->GetNumberOfStrings() ; ++i) {
+	    	  getPQSelectionPanel()->checkUuid(ald->GetString(i));
+	      }
+	}
+
+}
+
+//----------------------------------------------------------------------------
 void PQToolsManager::newPipelineSource(pqPipelineSource* pipe, const QStringList &filenames)
 {
 	std::vector<std::string> epcfiles;
 	for (int i = 0; i < filenames.length(); ++i) {
-		const size_t lengthFileName = filenames[i].toStdString().length();
-		const std::string extension = filenames[i].toStdString().substr(lengthFileName - 3, lengthFileName);
-		if(extension == "epc") {
+		if (filenames[i].endsWith(".epc")) {
 			epcfiles.push_back(filenames[i].toStdString());
 		}
 	}
 
 	if (!epcfiles.empty()) {
+		/*		QMessageBox::information(NULL, "epc reader", "please! open this files with epc button"); */
 		vtkSMProxy* fesppReaderProxy = getOrCreatePipelineSource()->getProxy();
 		std::string newName = "To delete (Artefact create by File-Open EPC)";
 		for (size_t i = 0; i < epcfiles.size(); ++i){
 			pipe->rename(QString(newName.c_str()));
 			// add file to EpcDocument pipe
-			vtkSMPropertyHelper(fesppReaderProxy, "SubFileName").Set(epcfiles[i].c_str());
+			vtkSMPropertyHelper(fesppReaderProxy, "EpcFileName").Set(epcfiles[i].c_str());
 			fesppReaderProxy->UpdateSelfAndAllInputs();
 			// add file to Selection Panel
 			newFile(epcfiles[i].c_str());
