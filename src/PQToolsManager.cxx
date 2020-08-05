@@ -277,22 +277,25 @@ void PQToolsManager::deletePipelineSource(pqPipelineSource* pipe)
 }
 
 //----------------------------------------------------------------------------
-void PQToolsManager::loadEpcState(vtkPVXMLElement *root, vtkSMProxyLocator *locator)
+void PQToolsManager::loadEpcState(vtkPVXMLElement *, vtkSMProxyLocator *)
 {
 	pqActiveObjects *activeObjects = &pqActiveObjects::instance();
 	auto fesppReader = PQToolsManager::instance()->getFesppReader("EpcDocument");
-	activeObjects->setActiveSource(fesppReader);
-	vtkSMProxy* fesppReaderProxy = fesppReader->getProxy();
-	std::string epcFileName = vtkSMPropertyHelper(fesppReaderProxy, "EpcFileName").GetAsString();
+	if (fesppReader) {
+		existPipe(true);
+		activeObjects->setActiveSource(fesppReader);
+		vtkSMProxy* fesppReaderProxy = fesppReader->getProxy();
+		std::string epcFileName = vtkSMPropertyHelper(fesppReaderProxy, "EpcFileName").GetAsString();
 
-	getPQSelectionPanel()->addFileName(epcFileName);
+		getPQSelectionPanel()->addFileName(epcFileName);
 
-	auto UuidList = fesppReaderProxy->GetProperty("UuidList");
-	if (UuidList){
-		auto ald = UuidList->FindDomain<vtkSMArraySelectionDomain>();
-	      for (int i=0; i < ald->GetNumberOfStrings() ; ++i) {
-	    	  getPQSelectionPanel()->checkUuid(ald->GetString(i));
-	      }
+		auto UuidList = fesppReaderProxy->GetProperty("UuidList");
+		if (UuidList){
+			auto ald = UuidList->FindDomain<vtkSMArraySelectionDomain>();
+			for (unsigned int i=0; i < ald->GetNumberOfStrings() ; ++i) {
+				getPQSelectionPanel()->checkUuid(ald->GetString(i));
+			}
+		}
 	}
 
 }
