@@ -62,18 +62,18 @@ protected:
 
 private:
 	// if all cells are VTK_TETRA
-	vtkSmartPointer<vtkCellArray> createOutputVtkTetra(const RESQML2_0_1_NS::UnstructuredGridRepresentation*);
+	vtkSmartPointer<vtkCellArray> createOutputVtkTetra(const RESQML2_NS::UnstructuredGridRepresentation*);
 
 	// verify and add cell if is VTK_TETRA
-	bool cellVtkTetra(const RESQML2_0_1_NS::UnstructuredGridRepresentation*, ULONG64 cellIndex);
+	bool cellVtkTetra(const RESQML2_NS::UnstructuredGridRepresentation*, ULONG64 cellIndex);
 	// verify and add cell if is  VTK_WEDGE or VTK_PYRAMID
-	bool cellVtkWedgeOrPyramid(const RESQML2_0_1_NS::UnstructuredGridRepresentation*, ULONG64 cellIndex);
+	bool cellVtkWedgeOrPyramid(const RESQML2_NS::UnstructuredGridRepresentation*, ULONG64 cellIndex);
 	// verify and add cell if is  VTK_HEXAHEDRON
-	bool cellVtkHexahedron(const RESQML2_0_1_NS::UnstructuredGridRepresentation*, ULONG64 cellIndex);
+	bool cellVtkHexahedron(const RESQML2_NS::UnstructuredGridRepresentation*, ULONG64 cellIndex);
 	// verify and add cell if is  VTK_PENTAGONAL_PRISM
-	bool cellVtkPentagonalPrism(const RESQML2_0_1_NS::UnstructuredGridRepresentation*, ULONG64 cellIndex);
+	bool cellVtkPentagonalPrism(const RESQML2_NS::UnstructuredGridRepresentation*, ULONG64 cellIndex);
 	// verify and add cell if is  VTK_HEXAGONAL_PRISM
-	bool cellVtkHexagonalPrism(const RESQML2_0_1_NS::UnstructuredGridRepresentation*, ULONG64 cellIndex);
+	bool cellVtkHexagonalPrism(const RESQML2_NS::UnstructuredGridRepresentation*, ULONG64 cellIndex);
 
 	// PROPERTY
 	std::string lastProperty;

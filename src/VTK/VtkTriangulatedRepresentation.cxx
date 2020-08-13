@@ -25,7 +25,7 @@ under the License.
 #include <vtkTriangle.h>
 
 // include F2i-consulting Energistics Standards API
-#include <fesapi/resqml2_0_1/TriangulatedSetRepresentation.h>
+#include <fesapi/resqml2/TriangulatedSetRepresentation.h>
 
 // include F2i-consulting Energistics Standards ParaView Plugin
 #include "VtkProperty.h"
@@ -47,7 +47,7 @@ VtkTriangulatedRepresentation::~VtkTriangulatedRepresentation()
 void VtkTriangulatedRepresentation::createOutput(const std::string &uuid)
 {
 	if (!subRepresentation)	{
-		RESQML2_0_1_NS::TriangulatedSetRepresentation* triangulatedSetRepresentation = epcPackageRepresentation->getDataObjectByUuid<RESQML2_0_1_NS::TriangulatedSetRepresentation>(getUuid());
+		RESQML2_NS::TriangulatedSetRepresentation* triangulatedSetRepresentation = epcPackageRepresentation->getDataObjectByUuid<RESQML2_NS::TriangulatedSetRepresentation>(getUuid());
 
 		if (vtkOutput == nullptr && triangulatedSetRepresentation != nullptr) {
 			vtkOutput = vtkSmartPointer<vtkPolyData>::New();
@@ -93,6 +93,6 @@ void VtkTriangulatedRepresentation::addProperty(const std::string & uuidProperty
 
 long VtkTriangulatedRepresentation::getAttachmentPropertyCount(const std::string &, VtkEpcCommon::FesppAttachmentProperty)
 {
-	RESQML2_0_1_NS::TriangulatedSetRepresentation* triangulatedSetRepresentation = epcPackageRepresentation->getDataObjectByUuid<RESQML2_0_1_NS::TriangulatedSetRepresentation>(getUuid());
+	RESQML2_NS::TriangulatedSetRepresentation* triangulatedSetRepresentation = epcPackageRepresentation->getDataObjectByUuid<RESQML2_NS::TriangulatedSetRepresentation>(getUuid());
 	return triangulatedSetRepresentation != nullptr ? triangulatedSetRepresentation->getXyzPointCountOfAllPatches() : 0;
 }

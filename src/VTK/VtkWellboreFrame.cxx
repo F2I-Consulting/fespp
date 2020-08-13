@@ -19,10 +19,8 @@ under the License.
 #include "VtkWellboreFrame.h"
 
 // FESAPI
-#include <fesapi/common/EpcDocument.h>
-#include <fesapi/resqml2_0_1/WellboreTrajectoryRepresentation.h>
-#include <fesapi/resqml2_0_1/WellboreMarker.h>
-#include <fesapi/resqml2_0_1/WellboreMarkerFrameRepresentation.h>
+#include <fesapi/resqml2/WellboreMarker.h>
+#include <fesapi/resqml2/WellboreMarkerFrameRepresentation.h>
 
 #include <vtkInformation.h>
 #include "VtkWellboreMarker.h"
@@ -61,9 +59,9 @@ void VtkWellboreFrame::visualize(const std::string & uuid)
 	} else {
 		uuid_to_VtkWellboreMarker[uuid]->createOutput(uuid);
 		/*
-		RESQML2_0_1_NS::WellboreMarkerFrameRepresentation* markerFrame = static_cast<RESQML2_0_1_NS::WellboreMarkerFrameRepresentation*>(repositoryRepresentation->getDataObjectByUuid(getUuid()));
+		RESQML2_NS::::WellboreMarkerFrameRepresentation* markerFrame = static_cast<RESQML2_NS::::WellboreMarkerFrameRepresentation*>(repositoryRepresentation->getDataObjectByUuid(getUuid()));
 
-		std::vector<RESQML2_0_1_NS::WellboreMarker *> markerSet = markerFrame->getWellboreMarkerSet();
+		std::vector<RESQML2_NS::::WellboreMarker *> markerSet = markerFrame->getWellboreMarkerSet();
 		double* doubleMds = new double[markerFrame->getMdValuesCount()];
 		markerFrame->getMdAsDoubleValues(doubleMds);
 		for (size_t mIndex = 0; mIndex < markerSet.size(); ++mIndex) {

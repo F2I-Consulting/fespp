@@ -24,56 +24,24 @@ under the License.
 #include <sstream>
 #include <stdexcept>
 
-// include API Resqml2
-#include <fesapi/resqml2/AbstractValuesProperty.h>
-#include <fesapi/resqml2/TimeSeries.h>
-#include <fesapi/resqml2_0_1/AbstractIjkGridRepresentation.h>
-#include <fesapi/resqml2_0_1/FaultInterpretation.h>
-#include <fesapi/resqml2_0_1/Grid2dRepresentation.h>
-#include <fesapi/resqml2_0_1/Horizon.h>
-#include <fesapi/resqml2_0_1/HorizonInterpretation.h>
-#include <fesapi/resqml2_0_1/PointSetRepresentation.h>
-#include <fesapi/resqml2_0_1/PolylineSetRepresentation.h>
-#include <fesapi/resqml2_0_1/SubRepresentation.h>
-#include <fesapi/resqml2_0_1/TectonicBoundaryFeature.h>
-#include <fesapi/resqml2_0_1/TriangulatedSetRepresentation.h>
-#include <fesapi/resqml2_0_1/UnstructuredGridRepresentation.h>
-#include <fesapi/resqml2_0_1/WellboreTrajectoryRepresentation.h>
-#include <fesapi/resqml2_0_1/PropertyKindMapper.h>
-
 // include Qt
-#include <QtGui>
-#include <QFileInfo>
+#include <QDateTime>
 #include <QIcon>
-#include <qtreewidget.h>
 #include <QHeaderView>
 #include <QMenu>
-#include <QProgressDialog>
 #include <QList>
-#include <qmessagebox.h>
-#include <qprogressbar.h>
-#include <qlayout.h>
-#include <qbuttongroup.h>
 
 // include ParaView
 #include <pqPropertiesPanel.h>
-#include <qobject.h>
-#include <pqView.h>
 #include <pqPipelineSource.h>
 #include <pqApplicationCore.h>
 #include <pqServerManagerModel.h>
 #include <pqServer.h>
-#include <pqOutputPort.h>
 #include <pqActiveObjects.h>
-#include <pqCoreUtilities.h>
 
 // include VTK
 #include <vtkSMProxy.h>
-#include <vtkSMIntVectorProperty.h>
-#include <vtkSMSessionProxyManager.h>
 #include <vtkSMPropertyHelper.h>
-#include <vtkSMStringVectorProperty.h>
-#include <vtkInformation.h>
 
 #include "PQToolsManager.h"
 #ifdef WITH_ETP
@@ -510,7 +478,7 @@ void PQSelectionPanel::addFileName(const std::string & fileName) {
 		uuidToFilename[fileName] = fileName;
 
 		std::unordered_map<std::string, std::string> name_to_uuid;
-		for (const auto& vtkEpcCommon : vtkEpcDocumentSet->getAllVtkEpcCommons()) {
+		for (auto vtkEpcCommon : vtkEpcDocumentSet->getAllVtkEpcCommons()) {
 			uuidToPipeName[vtkEpcCommon->getUuid()] = "EpcDocument";
 			if (vtkEpcCommon->getTimeIndex() < 0) {
 				populateTreeView(vtkEpcCommon);

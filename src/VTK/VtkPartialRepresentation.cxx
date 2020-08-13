@@ -26,14 +26,14 @@ under the License.
 #include <vtkDataArray.h>
 
 // FESAPI
-#include <fesapi/resqml2_0_1/PolylineSetRepresentation.h>
-#include <fesapi/resqml2_0_1/Grid2dRepresentation.h>
-#include <fesapi/resqml2_0_1/TriangulatedSetRepresentation.h>
-#include <fesapi/resqml2_0_1/UnstructuredGridRepresentation.h>
-#include <fesapi/resqml2_0_1/WellboreTrajectoryRepresentation.h>
-#include <fesapi/resqml2_0_1/AbstractIjkGridRepresentation.h>
-#include <fesapi/resqml2_0_1/SubRepresentation.h>
 #include <fesapi/common/AbstractObject.h>
+#include <fesapi/resqml2/PolylineSetRepresentation.h>
+#include <fesapi/resqml2/Grid2dRepresentation.h>
+#include <fesapi/resqml2/TriangulatedSetRepresentation.h>
+#include <fesapi/resqml2/UnstructuredGridRepresentation.h>
+#include <fesapi/resqml2/WellboreTrajectoryRepresentation.h>
+#include <fesapi/resqml2/AbstractIjkGridRepresentation.h>
+#include <fesapi/resqml2/SubRepresentation.h>
 
 //----------------------------------------------------------------------------
 VtkPartialRepresentation::VtkPartialRepresentation(const std::string & fileName, const std::string & uuid, VtkEpcDocument *vtkEpcDowumentWithCompleteRep, COMMON_NS::DataObjectRepository *repo) :
@@ -69,37 +69,37 @@ void VtkPartialRepresentation::visualize(const std::string & uuid)
 			std::vector<resqml2::AbstractValuesProperty*> valuesPropertySet;
 
 			if (obj->getXmlTag() == "PolylineSetRepresentation") {
-				auto polylineSetRepresentation = static_cast<resqml2_0_1::PolylineSetRepresentation*>(obj);
+				auto polylineSetRepresentation = static_cast<RESQML2_NS::PolylineSetRepresentation*>(obj);
 				valuesPropertySet = polylineSetRepresentation->getValuesPropertySet();
 			}
 			else {
 				if (obj->getXmlTag() == "IjkGridRepresentation" || obj->getXmlTag() == "TruncatedIjkGridRepresentation") {
-					auto ijkGridRepresentation = static_cast<resqml2_0_1::AbstractIjkGridRepresentation*>(obj);
+					auto ijkGridRepresentation = static_cast<RESQML2_NS::AbstractIjkGridRepresentation*>(obj);
 					valuesPropertySet = ijkGridRepresentation->getValuesPropertySet();
 				}			
 				else {
 					if (obj->getXmlTag() == "TriangulatedSetRepresentation") {
-						auto triangulatedSetRepresentation = static_cast<resqml2_0_1::TriangulatedSetRepresentation*>(obj);
+						auto triangulatedSetRepresentation = static_cast<RESQML2_NS::TriangulatedSetRepresentation*>(obj);
 						valuesPropertySet = triangulatedSetRepresentation->getValuesPropertySet();
 					}
 					else {
 						if (obj->getXmlTag() == "UnstructuredGridRepresentation") {
-							auto unstructuredGridRep = static_cast<resqml2_0_1::UnstructuredGridRepresentation*>(obj);
+							auto unstructuredGridRep = static_cast<RESQML2_NS::UnstructuredGridRepresentation*>(obj);
 							valuesPropertySet = unstructuredGridRep->getValuesPropertySet();
 						}
 						else {
 							if (obj->getXmlTag() == "Grid2dRepresentation") {
-								auto grid2dRepresentation = static_cast<resqml2_0_1::Grid2dRepresentation*>(obj);
+								auto grid2dRepresentation = static_cast<RESQML2_NS::Grid2dRepresentation*>(obj);
 								valuesPropertySet = grid2dRepresentation->getValuesPropertySet();
 							}
 							else {
 								if (obj->getXmlTag() == "WellboreTrajectoryRepresentation") {
-									auto wellboreTrajectoryRepresentation = static_cast<resqml2_0_1::WellboreTrajectoryRepresentation*>(obj);
+									auto wellboreTrajectoryRepresentation = static_cast<RESQML2_NS::WellboreTrajectoryRepresentation*>(obj);
 									valuesPropertySet = wellboreTrajectoryRepresentation->getValuesPropertySet();
 								}
 								else {
 									if (obj->getXmlTag() == "SubRepresentation") {
-										auto subRepresentation = static_cast<resqml2_0_1::SubRepresentation*>(obj);
+										auto subRepresentation = static_cast<RESQML2_NS::SubRepresentation*>(obj);
 										valuesPropertySet = subRepresentation->getValuesPropertySet();
 									}
 								}

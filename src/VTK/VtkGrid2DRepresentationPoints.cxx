@@ -24,7 +24,7 @@ under the License.
 #include <vtkCellArray.h>
 
 // FESAPI
-#include <fesapi/resqml2_0_1/Grid2dRepresentation.h>
+#include <fesapi/resqml2/Grid2dRepresentation.h>
 
 // FESPP
 #include "VtkProperty.h"
@@ -44,7 +44,7 @@ void VtkGrid2DRepresentationPoints::createOutput(const std::string & uuid)
 {
 	if (!subRepresentation)	{
 
-		RESQML2_0_1_NS::Grid2dRepresentation const * grid2dRepresentation = epcPackageRepresentation->getDataObjectByUuid<RESQML2_0_1_NS::Grid2dRepresentation>(getUuid().substr(0, 36));
+		RESQML2_NS::Grid2dRepresentation const * grid2dRepresentation = epcPackageRepresentation->getDataObjectByUuid<RESQML2_NS::Grid2dRepresentation>(getUuid().substr(0, 36));
 
 		if (vtkOutput == nullptr) {
 			vtkOutput = vtkSmartPointer<vtkPolyData>::New();
@@ -95,7 +95,7 @@ void VtkGrid2DRepresentationPoints::addProperty(const std::string & uuidProperty
 //----------------------------------------------------------------------------
 long VtkGrid2DRepresentationPoints::getAttachmentPropertyCount(const std::string &, VtkEpcCommon::FesppAttachmentProperty)
 {
-	RESQML2_0_1_NS::Grid2dRepresentation const * grid2dRepresentation = epcPackageRepresentation->getDataObjectByUuid<RESQML2_0_1_NS::Grid2dRepresentation>(getUuid().substr(0, 36));
+	RESQML2_NS::Grid2dRepresentation const * grid2dRepresentation = epcPackageRepresentation->getDataObjectByUuid<RESQML2_NS::Grid2dRepresentation>(getUuid().substr(0, 36));
 
 	return grid2dRepresentation != nullptr
 		? grid2dRepresentation->getNodeCountAlongIAxis() * grid2dRepresentation->getNodeCountAlongJAxis()

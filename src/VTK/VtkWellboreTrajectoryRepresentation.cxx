@@ -24,17 +24,13 @@ under the License.
 // VTK
 #include <vtkInformation.h>
 
-// FESAPI
-#include <fesapi/common/EpcDocument.h>
-#include <fesapi/resqml2_0_1/WellboreTrajectoryRepresentation.h>
-
 // FESPP
 #include "VtkWellboreTrajectoryRepresentationPolyLine.h"
 
 //----------------------------------------------------------------------------
 VtkWellboreTrajectoryRepresentation::VtkWellboreTrajectoryRepresentation(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, COMMON_NS::DataObjectRepository const * repoRepresentation, COMMON_NS::DataObjectRepository const * repoSubRepresentation) :
-VtkResqml2MultiBlockDataSet(fileName, name, uuid, uuidParent), repositoryRepresentation(repoRepresentation), repositorySubRepresentation(repoSubRepresentation),
-polyline(getFileName(), name, uuid+"-Polyline", uuidParent, repoRepresentation, repoSubRepresentation)
+	VtkResqml2MultiBlockDataSet(fileName, name, uuid, uuidParent), repositoryRepresentation(repoRepresentation), repositorySubRepresentation(repoSubRepresentation),
+	polyline(getFileName(), name, uuid+"-Polyline", uuidParent, repoRepresentation, repoSubRepresentation)
 {
 }
 
@@ -58,7 +54,8 @@ void VtkWellboreTrajectoryRepresentation::createTreeVtk(const std::string & uuid
 	uuid_Informations[uuid] = informations;
 	if (type == VtkEpcCommon::Resqml2Type::WELL_FRAME || type == VtkEpcCommon::Resqml2Type::WELL_MARKER_FRAME )	{
 		uuid_to_VtkWellboreFrame[uuid] = new VtkWellboreFrame(getFileName(), name, uuid, uuidParent, repositoryRepresentation, repositorySubRepresentation);
-	} else if (type == VtkEpcCommon::Resqml2Type::WELL_MARKER) {
+	}
+	else if (type == VtkEpcCommon::Resqml2Type::WELL_MARKER) {
 		uuid_to_VtkWellboreFrame[uuidParent]->createTreeVtk(uuid, uuidParent, name, type);
 	}
 }
@@ -87,7 +84,8 @@ void VtkWellboreTrajectoryRepresentation::visualize(const std::string & uuid)
 	if (uuid_Informations[uuid].getType() == VtkEpcCommon::Resqml2Type::WELL_MARKER_FRAME ||
 			uuid_Informations[uuid].getType() == VtkEpcCommon::Resqml2Type::WELL_FRAME) {
 		uuid_to_VtkWellboreFrame[uuid]->visualize(uuid);
-	} else if (uuid_Informations[uuid].getType() == VtkEpcCommon::Resqml2Type::WELL_MARKER) {
+	}
+	else if (uuid_Informations[uuid].getType() == VtkEpcCommon::Resqml2Type::WELL_MARKER) {
 		uuid_to_VtkWellboreFrame[uuid_Informations[uuid].getParent()]->visualize(uuid);
 		uuid_to_attach = uuid_Informations[uuid].getParent();
 	}
@@ -115,12 +113,14 @@ void VtkWellboreTrajectoryRepresentation::remove(const std::string & uuid)
 {
 	if (uuid == getUuid()) {
 		vtkOutput = nullptr;
-	} else if (uuid_Informations[uuid].getType() == VtkEpcCommon::Resqml2Type::WELL_MARKER_FRAME ||
+	}
+	else if (uuid_Informations[uuid].getType() == VtkEpcCommon::Resqml2Type::WELL_MARKER_FRAME ||
 			uuid_Informations[uuid].getType() == VtkEpcCommon::Resqml2Type::WELL_FRAME) {
 		detach();
 		attachUuids.erase(std::find(attachUuids.begin(), attachUuids.end(), uuid));
 		attach();
-	} else if (uuid_Informations[uuid].getType() == VtkEpcCommon::Resqml2Type::WELL_MARKER) {
+	}
+	else if (uuid_Informations[uuid].getType() == VtkEpcCommon::Resqml2Type::WELL_MARKER) {
 		detach();
 		attachUuids.erase(std::find(attachUuids.begin(), attachUuids.end(), uuid));
 		attach();
@@ -139,7 +139,8 @@ void VtkWellboreTrajectoryRepresentation::attach()
 		if (uuid == getUuid())	{
 			vtkOutput->SetBlock(newBlockIndex, polyline.getOutput());
 			vtkOutput->GetMetaData(newBlockIndex)->Set(vtkCompositeDataSet::NAME(), polyline.getName().c_str());
-		} else {
+		}
+		else {
 			vtkOutput->SetBlock(newBlockIndex, uuid_to_VtkWellboreFrame[uuid]->getOutput());
 			vtkOutput->GetMetaData(newBlockIndex)->Set(vtkCompositeDataSet::NAME(), uuid_to_VtkWellboreFrame[uuid]->getName().c_str());
 		}

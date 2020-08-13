@@ -26,9 +26,9 @@ under the License.
 #include <vtkInformation.h>
 
 // FESAPI
-#include <fesapi/resqml2_0_1/SubRepresentation.h>
-#include <fesapi/resqml2_0_1/PolylineSetRepresentation.h>
-#include <fesapi/resqml2_0_1/TriangulatedSetRepresentation.h>
+#include <fesapi/resqml2//SubRepresentation.h>
+#include <fesapi/resqml2//PolylineSetRepresentation.h>
+#include <fesapi/resqml2//TriangulatedSetRepresentation.h>
 
 // FESPP
 #include "VtkPolylineRepresentation.h"
@@ -40,15 +40,16 @@ VtkSetPatch::VtkSetPatch(const std::string & fileName, const std::string & name,
 	VtkResqml2MultiBlockDataSet(fileName, name, uuid, uuidParent, idProc, maxProc), epcPackage(pck)
 {
 	//	uuidIsChildOf[uuid] = new VtkEpcCommon();
-	resqml2_0_1::PolylineSetRepresentation* polylineSetRep = nullptr;
-	resqml2_0_1::TriangulatedSetRepresentation * triangulatedSetRep = nullptr;
-	common::AbstractObject *object = epcPackage->getDataObjectByUuid(uuid);
+	RESQML2_NS::PolylineSetRepresentation* polylineSetRep = nullptr;
+	RESQML2_NS::TriangulatedSetRepresentation * triangulatedSetRep = nullptr;
+	COMMON_NS::AbstractObject *object = epcPackage->getDataObjectByUuid(uuid);
 	std::string xmlTag = object->getXmlTag();
 	if (xmlTag == "PolylineSetRepresentation") {
-		polylineSetRep = static_cast<resqml2_0_1::PolylineSetRepresentation*>(object);
-		if (polylineSetRep == nullptr)
+		polylineSetRep = static_cast<RESQML2_NS::PolylineSetRepresentation*>(object);
+		if (polylineSetRep == nullptr) {
 			cout << "Not found an PolylineSetRepresentation with the right uuid." << endl;
-		for (unsigned int patchIndex = 0; patchIndex < polylineSetRep->getPatchCount(); ++ patchIndex) {
+		}
+		for (unsigned int patchIndex = 0; patchIndex < polylineSetRep->getPatchCount(); ++patchIndex) {
 			std::stringstream sstm;
 			sstm << "Patch " << patchIndex;
 			uuidToVtkPolylineRepresentation[uuid].push_back(new VtkPolylineRepresentation(fileName, sstm.str(), uuid, uuidParent, patchIndex, epcPackage, nullptr));
@@ -57,9 +58,10 @@ VtkSetPatch::VtkSetPatch(const std::string & fileName, const std::string & name,
 		uuidIsChildOf[uuid].setUuid( uuid);
 	}
 	else if (xmlTag == "TriangulatedSetRepresentation") {
-		triangulatedSetRep = static_cast<resqml2_0_1::TriangulatedSetRepresentation*>(object);
-		if (triangulatedSetRep == nullptr)
+		triangulatedSetRep = static_cast<RESQML2_NS::TriangulatedSetRepresentation*>(object);
+		if (triangulatedSetRep == nullptr) {
 			cout << "Not found an ijk grid with the right uuid." << endl;
+		}
 		for (unsigned int patchIndex = 0; patchIndex < triangulatedSetRep->getPatchCount(); ++ patchIndex) {
 			std::stringstream sstm;
 			sstm << "Patch " << patchIndex;
@@ -100,16 +102,16 @@ void VtkSetPatch::createTreeVtk(const std::string & uuid, const std::string & pa
 	uuidIsChildOf[uuid].setType( type);
 	uuidIsChildOf[uuid].setUuid( uuid);
 
-	resqml2_0_1::PolylineSetRepresentation* polylineSetRep = nullptr;
-	resqml2_0_1::TriangulatedSetRepresentation * triangulatedSetRep = nullptr;
-	common::AbstractObject* obj = epcPackage->getDataObjectByUuid(getUuid());
+	RESQML2_NS::PolylineSetRepresentation* polylineSetRep = nullptr;
+	RESQML2_NS::TriangulatedSetRepresentation * triangulatedSetRep = nullptr;
+	COMMON_NS::AbstractObject* obj = epcPackage->getDataObjectByUuid(getUuid());
 
 	// PROPERTY
 	uuidIsChildOf[uuid].setType( uuidIsChildOf[parent].getType());
 	uuidIsChildOf[uuid].setUuid( uuidIsChildOf[parent].getUuid());
 	if (uuidIsChildOf[parent].getType() == VtkEpcCommon::Resqml2Type::POLYLINE_SET) {
 		if ((obj != nullptr && obj->getXmlTag() == "PolylineRepresentation") || (obj != nullptr && obj->getXmlTag() == "PolylineSetRepresentation")) {
-			polylineSetRep = static_cast<resqml2_0_1::PolylineSetRepresentation*>(obj);
+			polylineSetRep = static_cast<RESQML2_NS::PolylineSetRepresentation*>(obj);
 		}
 
 		for (unsigned int patchIndex = 0; patchIndex < polylineSetRep->getPatchCount(); ++ patchIndex) {
@@ -118,7 +120,7 @@ void VtkSetPatch::createTreeVtk(const std::string & uuid, const std::string & pa
 	}
 	if (uuidIsChildOf[parent].getType() == VtkEpcCommon::Resqml2Type::TRIANGULATED_SET) {
 		if (obj != nullptr && obj->getXmlTag() ==  "TriangulatedSetRepresentation") {
-			triangulatedSetRep = static_cast<resqml2_0_1::TriangulatedSetRepresentation*>(obj);
+			triangulatedSetRep = static_cast<RESQML2_NS::TriangulatedSetRepresentation*>(obj);
 		}
 
 		for (unsigned int patchIndex = 0; patchIndex < triangulatedSetRep->getPatchCount(); ++ patchIndex) {

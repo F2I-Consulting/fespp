@@ -21,15 +21,15 @@ under the License.
 
 // FESAPI
 #include <fesapi/resqml2/AbstractValuesProperty.h>
-#include <fesapi/resqml2_0_1/CategoricalProperty.h>
-#include <fesapi/resqml2_0_1/ContinuousProperty.h>
-#include <fesapi/resqml2_0_1/DiscreteProperty.h>
-#include <fesapi/resqml2_0_1/AbstractIjkGridRepresentation.h>
-#include <fesapi/resqml2_0_1/PolylineSetRepresentation.h>
-#include <fesapi/resqml2_0_1/TriangulatedSetRepresentation.h>
-#include <fesapi/resqml2_0_1/Grid2dRepresentation.h>
-#include <fesapi/resqml2_0_1/UnstructuredGridRepresentation.h>
-#include <fesapi/resqml2_0_1/WellboreTrajectoryRepresentation.h>
+#include <fesapi/resqml2/CategoricalProperty.h>
+#include <fesapi/resqml2/ContinuousProperty.h>
+#include <fesapi/resqml2/DiscreteProperty.h>
+#include <fesapi/resqml2/AbstractIjkGridRepresentation.h>
+#include <fesapi/resqml2/PolylineSetRepresentation.h>
+#include <fesapi/resqml2/TriangulatedSetRepresentation.h>
+#include <fesapi/resqml2/Grid2dRepresentation.h>
+#include <fesapi/resqml2/UnstructuredGridRepresentation.h>
+#include <fesapi/resqml2/WellboreTrajectoryRepresentation.h>
 
 // VTK
 #include <vtkDoubleArray.h>
@@ -83,43 +83,43 @@ unsigned int VtkProperty::getSupport()
 }
 
 //----------------------------------------------------------------------------
-vtkDataArray* VtkProperty::visualize(const std::string &, resqml2_0_1::PolylineSetRepresentation const * polylineSetRepresentation)
+vtkDataArray* VtkProperty::visualize(const std::string &, RESQML2_NS::PolylineSetRepresentation const * polylineSetRepresentation)
 {
-	std::vector<resqml2::AbstractValuesProperty*> valuesPropertySet = polylineSetRepresentation->getValuesPropertySet();
+	std::vector<RESQML2_NS::AbstractValuesProperty*> valuesPropertySet = polylineSetRepresentation->getValuesPropertySet();
 
 	long pointCount = polylineSetRepresentation->getXyzPointCountOfPatch(0);
 	return loadValuesPropertySet(valuesPropertySet, 0, pointCount);
 }
 
 //----------------------------------------------------------------------------
-vtkDataArray* VtkProperty::visualize(const std::string &, resqml2_0_1::TriangulatedSetRepresentation const * triangulatedSetRepresentation)
+vtkDataArray* VtkProperty::visualize(const std::string &, RESQML2_NS::TriangulatedSetRepresentation const * triangulatedSetRepresentation)
 {
-	std::vector<resqml2::AbstractValuesProperty*> valuesPropertySet = triangulatedSetRepresentation->getValuesPropertySet();
+	std::vector<RESQML2_NS::AbstractValuesProperty*> valuesPropertySet = triangulatedSetRepresentation->getValuesPropertySet();
 	long pointCount = triangulatedSetRepresentation->getXyzPointCountOfAllPatches();
 	return loadValuesPropertySet(valuesPropertySet, 0, pointCount);
 }
 
 //----------------------------------------------------------------------------
-vtkDataArray* VtkProperty::visualize(const std::string &, resqml2_0_1::Grid2dRepresentation const * grid2dRepresentation)
+vtkDataArray* VtkProperty::visualize(const std::string &, RESQML2_NS::Grid2dRepresentation const * grid2dRepresentation)
 {
-	std::vector<resqml2::AbstractValuesProperty*> valuesPropertySet = grid2dRepresentation->getValuesPropertySet();
+	std::vector<RESQML2_NS::AbstractValuesProperty*> valuesPropertySet = grid2dRepresentation->getValuesPropertySet();
 	long pointCount = grid2dRepresentation->getNodeCountAlongIAxis() * grid2dRepresentation->getNodeCountAlongJAxis();
 	return loadValuesPropertySet(valuesPropertySet, 0, pointCount);
 }
 
 //----------------------------------------------------------------------------
-vtkDataArray* VtkProperty::visualize(const std::string &, resqml2_0_1::AbstractIjkGridRepresentation const * ijkGridRepresentation )
+vtkDataArray* VtkProperty::visualize(const std::string &, RESQML2_NS::AbstractIjkGridRepresentation const * ijkGridRepresentation )
 {
-	std::vector<resqml2::AbstractValuesProperty*> valuesPropertySet = ijkGridRepresentation->getValuesPropertySet();
+	std::vector<RESQML2_NS::AbstractValuesProperty*> valuesPropertySet = ijkGridRepresentation->getValuesPropertySet();
 
 	long cellCount = ijkGridRepresentation->getCellCount();
 	return loadValuesPropertySet(valuesPropertySet,cellCount, 0);
 }
 
 //----------------------------------------------------------------------------
-vtkDataArray* VtkProperty::visualize(const std::string &, resqml2_0_1::UnstructuredGridRepresentation const * unstructuredGridRepresentation)
+vtkDataArray* VtkProperty::visualize(const std::string &, RESQML2_NS::UnstructuredGridRepresentation const * unstructuredGridRepresentation)
 {
-	std::vector<resqml2::AbstractValuesProperty*> valuesPropertySet = unstructuredGridRepresentation->getValuesPropertySet();
+	std::vector<RESQML2_NS::AbstractValuesProperty*> valuesPropertySet = unstructuredGridRepresentation->getValuesPropertySet();
 
 	const ULONG64 cellCount = unstructuredGridRepresentation->getCellCount();
 	const ULONG64 pointCount = unstructuredGridRepresentation->getXyzPointCountOfAllPatches();
@@ -127,9 +127,9 @@ vtkDataArray* VtkProperty::visualize(const std::string &, resqml2_0_1::Unstructu
 }
 
 //----------------------------------------------------------------------------
-vtkDataArray* VtkProperty::visualize(const std::string &, resqml2_0_1::WellboreTrajectoryRepresentation const * wellboreTrajectoryRepresentation)
+vtkDataArray* VtkProperty::visualize(const std::string &, RESQML2_NS::WellboreTrajectoryRepresentation const * wellboreTrajectoryRepresentation)
 {
-	std::vector<resqml2::AbstractValuesProperty*> valuesPropertySet = wellboreTrajectoryRepresentation->getValuesPropertySet();
+	std::vector<RESQML2_NS::AbstractValuesProperty*> valuesPropertySet = wellboreTrajectoryRepresentation->getValuesPropertySet();
 	long pointCount = wellboreTrajectoryRepresentation->getXyzPointCountOfAllPatches();
 	return loadValuesPropertySet(valuesPropertySet, 0, pointCount);
 }
@@ -142,12 +142,12 @@ vtkSmartPointer<vtkDataArray> VtkProperty::loadValuesPropertySet(const std::vect
 			RESQML2_NS::AbstractValuesProperty* valuesProperty = valuesPropertySet[i];
 
 			int nbElement = 0;
-			gsoap_resqml2_0_1::resqml20__IndexableElements element = valuesProperty->getAttachmentKind();
-			if (element == gsoap_resqml2_0_1::resqml20__IndexableElements__cells ) {
+			gsoap_eml2_3::resqml22__IndexableElement element = valuesProperty->getAttachmentKind();
+			if (element == gsoap_eml2_3::resqml22__IndexableElement__cells ) {
 				nbElement = cellCount;
 				support = typeSupport::CELLS;
 			}
-			else if (element == gsoap_resqml2_0_1::resqml20__IndexableElements__nodes ) {
+			else if (element == gsoap_eml2_3::resqml22__IndexableElement__nodes ) {
 				support = typeSupport::POINTS ;
 				nbElement = pointCount;
 			}
@@ -163,18 +163,19 @@ vtkSmartPointer<vtkDataArray> VtkProperty::loadValuesPropertySet(const std::vect
 			}
 
 			const std::string name = valuesProperty->getTitle();
-			if (valuesProperty->getXmlTag() == RESQML2_0_1_NS::ContinuousProperty::XML_TAG) {
+			if (valuesProperty->getXmlTag() == RESQML2_NS::ContinuousProperty::XML_TAG) {
 				double* valuesDoubleSet = new double[nbElement * elementCountPerValue]; // deleted by VTK cellData vtkSmartPointer
-				static_cast<RESQML2_0_1_NS::ContinuousProperty*>(valuesProperty)->getDoubleValuesOfPatch(0, valuesDoubleSet);
+				static_cast<RESQML2_NS::ContinuousProperty*>(valuesProperty)->getDoubleValuesOfPatch(0, valuesDoubleSet);
 
 				vtkSmartPointer<vtkDoubleArray> cellDataDouble = vtkSmartPointer<vtkDoubleArray>::New();
 				cellDataDouble->SetName(name.c_str());
 				cellDataDouble->SetArray(valuesDoubleSet, nbElement * elementCountPerValue, 0, vtkAbstractArray::VTK_DATA_ARRAY_DELETE);
 				cellData = cellDataDouble;
 			}
-			else if (valuesProperty->getXmlTag() == RESQML2_0_1_NS::DiscreteProperty::XML_TAG || valuesProperty->getXmlTag() == RESQML2_0_1_NS::CategoricalProperty::XML_TAG)	{
+			else if (valuesProperty->getXmlTag() == RESQML2_NS::DiscreteProperty::XML_TAG || 
+				(valuesProperty->getXmlTag() == RESQML2_NS::CategoricalProperty::XML_TAG && static_cast<RESQML2_NS::CategoricalProperty*>(valuesProperty)->getStringLookup() != nullptr))	{
 				int* values = new int[nbElement * elementCountPerValue]; // deleted by VTK cellData vtkSmartPointer
-				static_cast<RESQML2_NS::AbstractDiscreteOrCategoricalProperty*>(valuesProperty)->getIntValuesOfPatch(0, values);
+				valuesProperty->getIntValuesOfPatch(0, values);
 
 				vtkSmartPointer<vtkIntArray> cellDataInt = vtkSmartPointer<vtkIntArray>::New();
 				cellDataInt->SetName(name.c_str());
@@ -198,12 +199,12 @@ vtkSmartPointer<vtkDataArray> VtkProperty::loadValuesPropertySet(const std::vect
 			RESQML2_NS::AbstractValuesProperty* valuesProperty = valuesPropertySet[i];
 
 			int nbElement = 0;
-			gsoap_resqml2_0_1::resqml20__IndexableElements element = valuesPropertySet[i]->getAttachmentKind();
-			if (element == gsoap_resqml2_0_1::resqml20__IndexableElements__cells) {
+			gsoap_eml2_3::resqml22__IndexableElement element = valuesPropertySet[i]->getAttachmentKind();
+			if (element == gsoap_eml2_3::resqml22__IndexableElement__cells) {
 				nbElement = cellCount;
 				support = typeSupport::CELLS;
 			}
-			else if (element == gsoap_resqml2_0_1::resqml20__IndexableElements__nodes) {
+			else if (element == gsoap_eml2_3::resqml22__IndexableElement__nodes) {
 				support = typeSupport::POINTS ;
 				nbElement = pointCount;
 			}
@@ -220,8 +221,8 @@ vtkSmartPointer<vtkDataArray> VtkProperty::loadValuesPropertySet(const std::vect
 			const std::string name = valuesPropertySet[i]->getTitle();
 			if (typeProperty == "ContinuousProperty") {
 				vtkSmartPointer<vtkFloatArray> cellDataFloat = vtkSmartPointer<vtkFloatArray>::New();
-				float* valuesFloatSet = new float[nbElement];
-				resqml2_0_1::ContinuousProperty *propertyValue = static_cast<resqml2_0_1::ContinuousProperty*>(valuesPropertySet[i]);
+				float* valuesFloatSet = new float[nbElement]; // deleted by VTK cellData vtkSmartPointer
+				RESQML2_NS::ContinuousProperty *propertyValue = static_cast<RESQML2_NS::ContinuousProperty*>(valuesPropertySet[i]);
 				if (propertyValue->getElementCountPerValue() == 1) {
 					if (propertyValue->getDimensionsCountOfPatch(0) == 3) {
 						propertyValue->getFloatValuesOf3dPatch(0, valuesFloatSet,iCellCount, jCellCount, kCellCount, 0, 0, initKIndex);
@@ -239,8 +240,8 @@ vtkSmartPointer<vtkDataArray> VtkProperty::loadValuesPropertySet(const std::vect
 			}
 			else if(typeProperty == "DiscreteProperty") {
 				vtkSmartPointer<vtkIntArray> cellDataInt = vtkSmartPointer<vtkIntArray>::New();
-				int* valuesIntSet = new int[nbElement];
-				resqml2_0_1::DiscreteProperty *propertyValue = static_cast<resqml2_0_1::DiscreteProperty*>(valuesPropertySet[i]);
+				int* valuesIntSet = new int[nbElement]; // deleted by VTK cellData vtkSmartPointer
+				RESQML2_NS::DiscreteProperty *propertyValue = static_cast<RESQML2_NS::DiscreteProperty*>(valuesPropertySet[i]);
 				if (propertyValue->getElementCountPerValue() == 1) {
 					if (propertyValue->getDimensionsCountOfPatch(0) == 3) {
 						propertyValue->getIntValuesOf3dPatch(0, valuesIntSet,iCellCount, jCellCount, kCellCount, 0, 0, initKIndex);
@@ -258,8 +259,8 @@ vtkSmartPointer<vtkDataArray> VtkProperty::loadValuesPropertySet(const std::vect
 			}
 			else if (typeProperty == "CategoricalProperty") {
 				vtkSmartPointer<vtkIntArray> cellDataInt = vtkSmartPointer<vtkIntArray>::New();
-				int* valuesIntSet = new int[nbElement];
-				resqml2_0_1::CategoricalProperty *propertyValue = static_cast<resqml2_0_1::CategoricalProperty*>(valuesPropertySet[i]);
+				int* valuesIntSet = new int[nbElement]; // deleted by VTK cellData vtkSmartPointer
+				RESQML2_NS::CategoricalProperty *propertyValue = static_cast<RESQML2_NS::CategoricalProperty*>(valuesPropertySet[i]);
 				if (propertyValue->getElementCountPerValue() == 1) {
 					if (propertyValue->getDimensionsCountOfPatch(0) == 3) {
 						propertyValue->getIntValuesOf3dPatch(0, valuesIntSet,iCellCount, jCellCount, kCellCount, 0, 0, initKIndex);

@@ -26,7 +26,7 @@ namespace COMMON_NS
 	class AbstractObject;
 }
 
-namespace RESQML2_0_1_NS
+namespace RESQML2_NS
 {
 	class AbstractIjkGridRepresentation;
 }
@@ -110,9 +110,9 @@ private:
 	/**
 	* method : checkHyperslabingCapacity
 	* variable : ijkGridRepresentation
-	* calc if ijkgrid isHyperslabed
+	* check if an ijkgrid is Hyperslabed
 	*/	
-	void checkHyperslabingCapacity(RESQML2_0_1_NS::AbstractIjkGridRepresentation* ijkGridRepresentation);
+	void checkHyperslabingCapacity(RESQML2_NS::AbstractIjkGridRepresentation* ijkGridRepresentation);
 
 	std::string lastProperty;
 

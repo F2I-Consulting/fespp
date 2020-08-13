@@ -4,12 +4,12 @@
   <pqevent object="pqClientMainWindow/pqFileDialog" command="filesSelected" arguments="$PARAVIEW_DATA_ROOT/testingPackageCpp.epc" />
   
   <!-- IJK grid explicit geometry -->
-  <pqevent object="pqClientMainWindow/PQSelectionPanel/panelSelection/treeWidget" command="setCheckState" arguments="0.0.9.0.2.0.3.0,2" />
+  <pqevent object="pqClientMainWindow/PQSelectionPanel/panelSelection/treeWidget" command="setCheckState" arguments="0.0.9.0.2.0.2.0,2" />
   <pqevent object="pqClientMainWindow/representationToolbar/displayRepresentation/comboBox" command="activated" arguments="Surface With Edges" />
   <pqevent object="pqClientMainWindow/variableToolbar/displayColor/Variables" command="activated" arguments="Two faulted sugar cubes other cellIndex" />
   <pqcompareview object="pqClientMainWindow/centralwidget/MultiViewWidget/CoreWidget/qt_tabwidget_stackedwidget/MultiViewWidget1/Frame.0/CentralWidgetFrame/Viewport" baseline="$PARAVIEW_DATA_ROOT/Baseline/TwoFaultedSugarCubesExplicitCellIndexProp.png" threshold="2" />
   <pqevent object="pqClientMainWindow/variableToolbar/displayColor/Variables" command="activated" arguments="Solid Color" />
-  <pqevent object="pqClientMainWindow/PQSelectionPanel/panelSelection/treeWidget" command="setCheckState" arguments="0.0.9.0.2.0.3.0,0" />
+  <pqevent object="pqClientMainWindow/PQSelectionPanel/panelSelection/treeWidget" command="setCheckState" arguments="0.0.9.0.2.0.2.0,0" />
   
   <!-- IJK grid parametric geometry -->
   <pqevent object="pqClientMainWindow/PQSelectionPanel/panelSelection/treeWidget" command="setCheckState" arguments="0.0.9.0.0.0,2" />

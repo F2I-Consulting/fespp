@@ -34,10 +34,6 @@ namespace COMMON_NS
 namespace RESQML2_NS
 {
 	class AbstractValuesProperty;
-}
-
-namespace RESQML2_0_1_NS
-{
 	class PolylineSetRepresentation;
 	class TriangulatedSetRepresentation;
 	class Grid2dRepresentation;
@@ -88,16 +84,16 @@ public:
 	void remove(const std::string & uuid);
 
 	/**
-	* method : visualize (surcharge)
+	* method : visualize
 	* variable : std::string uuid , FESAPI representation
 	* create the vtkDataArray.
 	*/
-	vtkDataArray* visualize(const std::string & uuid, RESQML2_0_1_NS::PolylineSetRepresentation const * polylineSetRepresentation);
-	vtkDataArray* visualize(const std::string & uuid, RESQML2_0_1_NS::TriangulatedSetRepresentation const * triangulatedSetRepresentation);
-	vtkDataArray* visualize(const std::string & uuid, RESQML2_0_1_NS::Grid2dRepresentation const * grid2dRepresentation);
-	vtkDataArray* visualize(const std::string & uuid, RESQML2_0_1_NS::AbstractIjkGridRepresentation const * ijkGridRepresentation);
-	vtkDataArray* visualize(const std::string & uuid, RESQML2_0_1_NS::UnstructuredGridRepresentation const * unstructuredGridRepresentation);
-	vtkDataArray* visualize(const std::string & uuid, RESQML2_0_1_NS::WellboreTrajectoryRepresentation const * wellboreTrajectoryRepresentation);
+	vtkDataArray* visualize(const std::string & uuid, RESQML2_NS::PolylineSetRepresentation const * polylineSetRepresentation);
+	vtkDataArray* visualize(const std::string & uuid, RESQML2_NS::TriangulatedSetRepresentation const * triangulatedSetRepresentation);
+	vtkDataArray* visualize(const std::string & uuid, RESQML2_NS::Grid2dRepresentation const * grid2dRepresentation);
+	vtkDataArray* visualize(const std::string & uuid, RESQML2_NS::AbstractIjkGridRepresentation const * ijkGridRepresentation);
+	vtkDataArray* visualize(const std::string & uuid, RESQML2_NS::UnstructuredGridRepresentation const * unstructuredGridRepresentation);
+	vtkDataArray* visualize(const std::string & uuid, RESQML2_NS::WellboreTrajectoryRepresentation const * wellboreTrajectoryRepresentation);
 
 	unsigned int getSupport();
 	vtkSmartPointer<vtkDataArray> loadValuesPropertySet(const std::vector<RESQML2_NS::AbstractValuesProperty*>& valuesPropertySet, long cellCount, long pointCount);

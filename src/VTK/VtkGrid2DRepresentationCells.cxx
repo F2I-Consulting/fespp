@@ -25,7 +25,7 @@ under the License.
 
 // include F2i-consulting Energistics Standards API
 #include <fesapi/common/EpcDocument.h>
-#include <fesapi/resqml2_0_1/Grid2dRepresentation.h>
+#include <fesapi/resqml2/Grid2dRepresentation.h>
 
 //----------------------------------------------------------------------------
 VtkGrid2DRepresentationCells::VtkGrid2DRepresentationCells(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, COMMON_NS::DataObjectRepository *pckEPCRep, COMMON_NS::DataObjectRepository *pckEPCSubRep) :
@@ -43,30 +43,30 @@ void VtkGrid2DRepresentationCells::createOutput(const std::string & uuid)
 {
 	if (!subRepresentation)	{
 
-		resqml2_0_1::Grid2dRepresentation* grid2dRepresentation = nullptr;
+		RESQML2_NS::Grid2dRepresentation* grid2dRepresentation = nullptr;
 		common::AbstractObject* obj = epcPackageRepresentation->getDataObjectByUuid(uuid);
 		if (obj != nullptr && obj->getXmlTag() == "Grid2dRepresentation") {
-			grid2dRepresentation = static_cast<resqml2_0_1::Grid2dRepresentation*>(obj);
+			grid2dRepresentation = static_cast<RESQML2_NS::Grid2dRepresentation*>(obj);
 		}
 
 		if (!vtkOutput) {
 			vtkOutput = vtkSmartPointer<vtkStructuredGrid>::New();
 
-			resqml2_0_1::Grid2dRepresentation *supportingGrid = grid2dRepresentation->getSupportingRepresentation();
-			resqml2_0_1::Grid2dRepresentation *featureGrid = grid2dRepresentation;
-			unsigned int nbNodeI = supportingGrid->getNodeCountAlongIAxis();
-			unsigned int nbNodeJ = supportingGrid->getNodeCountAlongJAxis();
-			double originX, originY;
-			originX = supportingGrid->getXOriginInGlobalCrs();
-			originY = supportingGrid->getYOriginInGlobalCrs();
-			double *z = new double[nbNodeI * nbNodeJ];
-			featureGrid->getZValuesInGlobalCrs(z);
+			RESQML2_NS::Grid2dRepresentation *supportingGrid = grid2dRepresentation->getSupportingRepresentation();
+
+			const unsigned int nbNodeI = supportingGrid->getNodeCountAlongIAxis();
+			const unsigned int nbNodeJ = supportingGrid->getNodeCountAlongJAxis();
+			const double originX = supportingGrid->getXOriginInGlobalCrs();
+			const double originY = supportingGrid->getYOriginInGlobalCrs();
+			const double XIOffset = supportingGrid->getXIOffsetInGlobalCrs();
+			const double XJOffset = supportingGrid->getXJOffsetInGlobalCrs();
+			const double YIOffset = supportingGrid->getYIOffsetInGlobalCrs();
+			const double YJOffset = supportingGrid->getYJOffsetInGlobalCrs();
+
 			vtkSmartPointer<vtkPoints> points = vtkSmartPointer<vtkPoints>::New();
-			vtkSmartPointer<vtkCellArray> vertices = vtkSmartPointer<vtkCellArray>::New();
-			double XIOffset = supportingGrid->getXIOffsetInGlobalCrs();
-			double XJOffset = supportingGrid->getXJOffsetInGlobalCrs();
-			double YIOffset = supportingGrid->getYIOffsetInGlobalCrs();
-			double YJOffset = supportingGrid->getYJOffsetInGlobalCrs();
+			std::unique_ptr<double[]> z(new double[nbNodeI * nbNodeJ]);
+			grid2dRepresentation->getZValuesInGlobalCrs(z.get());
+
 			std::vector<unsigned int> ptBlank;
 			for (unsigned int j = 0; j < nbNodeJ; ++j) {
 				for (unsigned int i = 0; i < nbNodeI; ++i) {
@@ -85,12 +85,12 @@ void VtkGrid2DRepresentationCells::createOutput(const std::string & uuid)
 				}
 			}
 
-			delete[] z;
 			vtkOutput->SetDimensions(nbNodeI, nbNodeJ, 1);
 			vtkOutput->SetPoints(points);
 
-			for (size_t i = 0; i < ptBlank.size(); ++i)
+			for (size_t i = 0; i < ptBlank.size(); ++i) {
 				vtkOutput->BlankPoint(ptBlank[i]);
+			}
 
 			vtkOutput->Modified();
 		}

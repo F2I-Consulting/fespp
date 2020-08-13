@@ -26,24 +26,23 @@ under the License.
 #include <vtkInformation.h>
 
 // FESAPI
-#include <fesapi/common/EpcDocument.h>
-#include <fesapi/resqml2_0_1/PolylineSetRepresentation.h>
-#include <fesapi/resqml2_0_1/TriangulatedSetRepresentation.h>
-#include <fesapi/resqml2_0_1/Horizon.h>
-#include <fesapi/resqml2_0_1/TectonicBoundaryFeature.h>
-#include <fesapi/resqml2_0_1/HorizonInterpretation.h>
-#include <fesapi/resqml2_0_1/FaultInterpretation.h>
-#include <fesapi/resqml2_0_1/PointSetRepresentation.h>
-#include <fesapi/resqml2_0_1/Grid2dRepresentation.h>
 #include <fesapi/common/AbstractObject.h>
-#include <fesapi/resqml2_0_1/SubRepresentation.h>
-#include <fesapi/resqml2_0_1/AbstractIjkGridRepresentation.h>
+#include <fesapi/common/EpcDocument.h>
+#include <fesapi/eml2/TimeSeries.h>
 #include <fesapi/resqml2/AbstractValuesProperty.h>
-#include <fesapi/resqml2_0_1/UnstructuredGridRepresentation.h>
-#include <fesapi/resqml2_0_1/WellboreTrajectoryRepresentation.h>
-#include <fesapi/resqml2_0_1/PropertyKindMapper.h>
-#include <fesapi/resqml2_0_1/SubRepresentation.h>
-#include <fesapi/resqml2_0_1/TimeSeries.h>
+#include <fesapi/resqml2/PolylineSetRepresentation.h>
+#include <fesapi/resqml2/TriangulatedSetRepresentation.h>
+#include <fesapi/resqml2/HorizonInterpretation.h>
+#include <fesapi/resqml2/FaultInterpretation.h>
+#include <fesapi/resqml2/PointSetRepresentation.h>
+#include <fesapi/resqml2/Grid2dRepresentation.h>
+#include <fesapi/resqml2/SubRepresentation.h>
+#include <fesapi/resqml2/AbstractIjkGridRepresentation.h>
+#include <fesapi/resqml2/UnstructuredGridRepresentation.h>
+#include <fesapi/resqml2/SubRepresentation.h>
+#include <fesapi/resqml2/WellboreMarker.h>
+#include <fesapi/resqml2/WellboreMarkerFrameRepresentation.h>
+#include <fesapi/resqml2/WellboreTrajectoryRepresentation.h>
 
 // FESPP
 #include "VtkEpcDocumentSet.h"
@@ -418,7 +417,7 @@ void VtkEpcDocument::visualize(const std::string & uuid)
 	auto fesapiObject = repository.getDataObjectByUuid(uuid);
 	if (dynamic_cast<RESQML2_NS::AbstractRepresentation*>(fesapiObject) == nullptr &&
 			dynamic_cast<RESQML2_NS::AbstractValuesProperty*>(fesapiObject) == nullptr &&
-			dynamic_cast<RESQML2_0_1_NS::WellboreMarker*>(fesapiObject) == nullptr) {
+			dynamic_cast<RESQML2_NS::WellboreMarker*>(fesapiObject) == nullptr) {
 		// Cannot visualize anything other than a RESQML property or a RESQML representation.
 		return;
 	}
@@ -1162,7 +1161,7 @@ std::string VtkEpcDocument::getError()
 // PRIVATE
 
 void VtkEpcDocument::searchFaultPolylines(const std::string & fileName) {
-	std::vector<RESQML2_0_1_NS::PolylineSetRepresentation*> polylines;
+	std::vector<RESQML2_NS::PolylineSetRepresentation*> polylines;
 	try	{
 		polylines = repository.getFaultPolylineSetRepSet();
 	}
@@ -1206,7 +1205,7 @@ void VtkEpcDocument::searchFaultPolylines(const std::string & fileName) {
 }
 
 void VtkEpcDocument::searchHorizonPolylines(const std::string & fileName) {
-	std::vector<RESQML2_0_1_NS::PolylineSetRepresentation*> polylines;
+	std::vector<RESQML2_NS::PolylineSetRepresentation*> polylines;
 	try	{
 		polylines = repository.getHorizonPolylineSetRepSet();
 	}
@@ -1249,7 +1248,7 @@ void VtkEpcDocument::searchHorizonPolylines(const std::string & fileName) {
 }
 
 void VtkEpcDocument::searchUnstructuredGrid(const std::string & fileName) {
-	for (RESQML2_0_1_NS::UnstructuredGridRepresentation* unstructuredGrid : repository.getUnstructuredGridRepresentationSet()) {
+	for (RESQML2_NS::UnstructuredGridRepresentation* unstructuredGrid : repository.getUnstructuredGridRepresentationSet()) {
 		if (unstructuredGrid->isPartial())	{
 			auto vtkEpcSrc = epcSet->getVtkEpcDocument(unstructuredGrid->getUuid());
 			if (vtkEpcSrc){
@@ -1286,7 +1285,7 @@ void VtkEpcDocument::searchUnstructuredGrid(const std::string & fileName) {
 }
 
 void VtkEpcDocument::searchTriangulated(const std::string & fileName) {
-	std::vector<RESQML2_0_1_NS::TriangulatedSetRepresentation*> triangulated;
+	std::vector<RESQML2_NS::TriangulatedSetRepresentation*> triangulated;
 	try	{
 		triangulated = repository.getAllTriangulatedSetRepSet();
 	} catch  (const std::exception & e)	{
@@ -1327,7 +1326,7 @@ void VtkEpcDocument::searchTriangulated(const std::string & fileName) {
 }
 
 void VtkEpcDocument::searchGrid2d(const std::string & fileName) {
-	std::vector<RESQML2_0_1_NS::Grid2dRepresentation*> grid2D;
+	std::vector<RESQML2_NS::Grid2dRepresentation*> grid2D;
 	try	{
 		grid2D = repository.getHorizonGrid2dRepSet();
 	} catch  (const std::exception & e)	{
@@ -1368,7 +1367,7 @@ void VtkEpcDocument::searchGrid2d(const std::string & fileName) {
 }
 
 void VtkEpcDocument::searchIjkGrid(const std::string & fileName) {
-	std::vector<RESQML2_0_1_NS::AbstractIjkGridRepresentation*> ijkGrid;
+	std::vector<RESQML2_NS::AbstractIjkGridRepresentation*> ijkGrid;
 	try	{
 		ijkGrid = repository.getIjkGridRepresentationSet();
 	}
@@ -1411,7 +1410,7 @@ void VtkEpcDocument::searchIjkGrid(const std::string & fileName) {
 }
 
 void VtkEpcDocument::searchWellboreTrajectory(const std::string & fileName) {
-	std::vector<RESQML2_0_1_NS::WellboreTrajectoryRepresentation*> wellboreTrajectory_set;
+	std::vector<RESQML2_NS::WellboreTrajectoryRepresentation*> wellboreTrajectory_set;
 	try	{
 		wellboreTrajectory_set = repository.getWellboreTrajectoryRepresentationSet();
 	}
@@ -1457,7 +1456,7 @@ void VtkEpcDocument::searchWellboreTrajectory(const std::string & fileName) {
 				}
 			} else */ if (wellboreFrame->getXmlTag() == "WellboreMarkerFrameRepresentation") { // WellboreMarker
 				createTreeVtk(wellboreFrame->getUuid(), wellboreTrajectory->getUuid(), wellboreFrame->getTitle().c_str(), VtkEpcCommon::Resqml2Type::WELL_MARKER_FRAME);
-				auto wellboreMarkerFrame = static_cast<resqml2_0_1::WellboreMarkerFrameRepresentation*>(wellboreFrame);
+				auto wellboreMarkerFrame = static_cast<RESQML2_NS::WellboreMarkerFrameRepresentation*>(wellboreFrame);
 				auto wellboreMarker_set = wellboreMarkerFrame->getWellboreMarkerSet();
 				for(const auto& wellboreMarker: wellboreMarker_set) {
 					createTreeVtk(wellboreMarker->getUuid(), wellboreMarkerFrame->getUuid(), wellboreMarker->getTitle().c_str(), VtkEpcCommon::Resqml2Type::WELL_MARKER);
@@ -1488,7 +1487,7 @@ void VtkEpcDocument::searchSubRepresentation(const std::string & fileName) {
 			}
 		}
 		else {
-			auto uuidParent = subRepresentation->getSupportingRepresentationUuid(0);
+			auto uuidParent = subRepresentation->getSupportingRepresentationDor(0).getUuid();
 			createTreeVtk(subRepresentation->getUuid(), uuidParent, subRepresentation->getTitle().c_str(), VtkEpcCommon::Resqml2Type::SUB_REP);
 		}
 
@@ -1500,7 +1499,7 @@ void VtkEpcDocument::searchSubRepresentation(const std::string & fileName) {
 }
 
 void VtkEpcDocument::searchTimeSeries(const std::string & fileName) {
-	std::vector<resqml2::TimeSeries*> timeSeries;
+	std::vector<EML2_NS::TimeSeries*> timeSeries;
 	try	{
 		timeSeries = repository.getTimeSeriesSet();
 	}
@@ -1508,18 +1507,22 @@ void VtkEpcDocument::searchTimeSeries(const std::string & fileName) {
 		cout << "EXCEPTION in fesapi when call getTimeSeriesSet with file: " << fileName << " : " << e.what();
 	}
 
-	for (auto& timeSerie : timeSeries) {
+	for (auto timeSerie : timeSeries) {
 		auto propSeries = timeSerie->getPropertySet();
-		for (auto& propertie : propSeries) {
-			if (propertie->getXmlTag() != "ContinuousPropertySeries") {
-				auto prop_uuid = propertie->getUuid();
+		for (auto prop : propSeries) {
+			if (prop->getXmlTag() != "ContinuousPropertySeries") {
+				auto prop_uuid = prop->getUuid();
 				if (uuidIsChildOf.find(prop_uuid) == uuidIsChildOf.end()) {
 					std::cout << "The property " << prop_uuid << " is not supported and consequently cannot be associated to its time series." << std::endl;
 					continue;
 				}
+				if (prop->getTimeIndicesCount() > 1) {
+					std::cout << "The property " << prop_uuid << " correspond ot more than one time index. It is not supported yet." << std::endl;
+					continue;
+				}
 				uuidIsChildOf[prop_uuid].setType(VtkEpcCommon::Resqml2Type::TIME_SERIES);
-				uuidIsChildOf[prop_uuid].setTimeIndex(propertie->getTimeIndex());
-				uuidIsChildOf[prop_uuid].setTimestamp(propertie->getTimestamp());
+				uuidIsChildOf[prop_uuid].setTimeIndex(prop->getTimeIndexStart());
+				uuidIsChildOf[prop_uuid].setTimestamp(prop->getTimeSeries()->getTimestamp(prop->getTimeIndexStart()));
 				/*
 			if (propSeries[i]->isAssociatedToOneStandardEnergisticsPropertyKind())
 			{

@@ -25,7 +25,7 @@ under the License.
 #include <vtkSmartPointer.h>
 
 // include F2i-consulting Energistics Standards API
-#include <fesapi/resqml2_0_1/PolylineSetRepresentation.h>
+#include <fesapi/resqml2/PolylineSetRepresentation.h>
 #include <fesapi/common/EpcDocument.h>
 
 // include F2i-consulting Energistics Standards ParaView Plugin
@@ -48,10 +48,10 @@ VtkPolylineRepresentation::~VtkPolylineRepresentation()
 void VtkPolylineRepresentation::createOutput(const std::string & uuid)
 {
 	if (!subRepresentation)	{
-		resqml2_0_1::PolylineSetRepresentation* polylineSetRepresentation = nullptr;
+		RESQML2_NS::PolylineSetRepresentation* polylineSetRepresentation = nullptr;
 		common::AbstractObject* obj = epcPackageRepresentation->getDataObjectByUuid(getUuid());
 		if (obj != nullptr && obj->getXmlTag() == "PolylineSetRepresentation") {
-			polylineSetRepresentation = static_cast<resqml2_0_1::PolylineSetRepresentation*>(obj);
+			polylineSetRepresentation = static_cast<RESQML2_NS::PolylineSetRepresentation*>(obj);
 		}
 
 		if (!vtkOutput) {
@@ -60,21 +60,19 @@ void VtkPolylineRepresentation::createOutput(const std::string & uuid)
 			// POINT
 			unsigned int nodeCount = polylineSetRepresentation->getXyzPointCountOfPatch(patchIndex);
 
-			double * allPoint = new double[nodeCount * 3];
-			polylineSetRepresentation->getXyzPointsOfPatch(patchIndex, allPoint);
+			std::unique_ptr<double[]> allPoints(new double[nodeCount * 3]);
+			polylineSetRepresentation->getXyzPointsOfPatch(patchIndex, allPoints.get());
 
-			createVtkPoints(nodeCount, allPoint, polylineSetRepresentation->getLocalCrs(0));
+			createVtkPoints(nodeCount, allPoints.get(), polylineSetRepresentation->getLocalCrs(0));
 			vtkOutput->SetPoints(points);
-
-			delete[] allPoint;
 
 			// POLYLINE
 			vtkSmartPointer<vtkCellArray> setPolylineRepresentationLines = vtkSmartPointer<vtkCellArray>::New();
 
 			unsigned int countPolyline = polylineSetRepresentation->getPolylineCountOfPatch(patchIndex);
 
-			unsigned int* countNodePolylineInPatch = new unsigned int[countPolyline];
-			polylineSetRepresentation->getNodeCountPerPolylineInPatch(patchIndex, countNodePolylineInPatch);
+			std::unique_ptr<unsigned int[]> countNodePolylineInPatch(new unsigned int[countPolyline]);
+			polylineSetRepresentation->getNodeCountPerPolylineInPatch(patchIndex, countNodePolylineInPatch.get());
 
 			unsigned int idPoint = 0;
 			for (unsigned int polylineIndex = 0; polylineIndex < countPolyline; ++polylineIndex) {
@@ -89,7 +87,6 @@ void VtkPolylineRepresentation::createOutput(const std::string & uuid)
 				vtkOutput->SetLines(setPolylineRepresentationLines);
 			}
 			points = nullptr;
-			delete[] countNodePolylineInPatch;
 		}
 		if (uuid != getUuid()) {
 			vtkDataArray* arrayProperty = uuidToVtkProperty[uuid]->visualize(uuid, polylineSetRepresentation);
@@ -110,10 +107,10 @@ void VtkPolylineRepresentation::addProperty(const std::string & uuidProperty, vt
 long VtkPolylineRepresentation::getAttachmentPropertyCount(const std::string &, VtkEpcCommon::FesppAttachmentProperty)
 {
 	long result = 0;
-	resqml2_0_1::PolylineSetRepresentation* polylineSetRepresentation = nullptr;
-	common::AbstractObject* obj = epcPackageRepresentation->getDataObjectByUuid(getUuid());
+	RESQML2_NS::PolylineSetRepresentation* polylineSetRepresentation = nullptr;
+	COMMON_NS::AbstractObject* obj = epcPackageRepresentation->getDataObjectByUuid(getUuid());
 	if (obj != nullptr && obj->getXmlTag() == "PolylineSetRepresentation") {
-		polylineSetRepresentation = static_cast<resqml2_0_1::PolylineSetRepresentation*>(obj);
+		polylineSetRepresentation = static_cast<RESQML2_NS::PolylineSetRepresentation*>(obj);
 		result = polylineSetRepresentation->getXyzPointCountOfPatch(0);
 	}
 	return result;

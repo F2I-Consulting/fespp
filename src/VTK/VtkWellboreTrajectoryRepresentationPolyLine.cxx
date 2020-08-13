@@ -26,8 +26,7 @@ under the License.
 #include <vtkDataArray.h>
 
 // FESAPI
-#include <fesapi/common/EpcDocument.h>
-#include <fesapi/resqml2_0_1/WellboreTrajectoryRepresentation.h>
+#include <fesapi/resqml2/WellboreTrajectoryRepresentation.h>
 
 // FESPP
 #include "VtkProperty.h"
@@ -43,10 +42,10 @@ void VtkWellboreTrajectoryRepresentationPolyLine::createOutput(const std::string
 {
 	if (!subRepresentation)	{
 
-		resqml2_0_1::WellboreTrajectoryRepresentation* wellboreSetRepresentation = nullptr;
+		RESQML2_NS::WellboreTrajectoryRepresentation* wellboreSetRepresentation = nullptr;
 		common::AbstractObject* obj = epcPackageRepresentation->getDataObjectByUuid(getUuid().substr(0, 36));
 		if (obj != nullptr && obj->getXmlTag() == "WellboreTrajectoryRepresentation") {
-			wellboreSetRepresentation = static_cast<resqml2_0_1::WellboreTrajectoryRepresentation*>(obj);
+			wellboreSetRepresentation = static_cast<RESQML2_NS::WellboreTrajectoryRepresentation*>(obj);
 		}
 
 		if (!vtkOutput) {
@@ -54,18 +53,15 @@ void VtkWellboreTrajectoryRepresentationPolyLine::createOutput(const std::string
 
 			// POINT
 			unsigned int pointCount = wellboreSetRepresentation->getXyzPointCountOfPatch(0);
-			double * allXyzPoints = new double[pointCount * 3];
-			wellboreSetRepresentation->getXyzPointsOfAllPatchesInGlobalCrs(allXyzPoints);
-			createVtkPoints(pointCount, allXyzPoints, wellboreSetRepresentation->getLocalCrs(0));
+			std::unique_ptr<double[]> allXyzPoints(new double[pointCount * 3]);
+			wellboreSetRepresentation->getXyzPointsOfAllPatchesInGlobalCrs(allXyzPoints.get());
+			createVtkPoints(pointCount, allXyzPoints.get(), wellboreSetRepresentation->getLocalCrs(0));
 			vtkOutput->SetPoints(points);
-
-			delete[] allXyzPoints;
 
 			// POLYLINE
 			vtkSmartPointer<vtkPolyLine> polylineRepresentation = vtkSmartPointer<vtkPolyLine>::New();
 			polylineRepresentation->GetPointIds()->SetNumberOfIds(pointCount);
-			for (unsigned int nodeIndex = 0; nodeIndex < pointCount; ++nodeIndex)
-			{
+			for (unsigned int nodeIndex = 0; nodeIndex < pointCount; ++nodeIndex) {
 				polylineRepresentation->GetPointIds()->SetId(nodeIndex, nodeIndex);
 			}
 
@@ -100,6 +96,6 @@ void VtkWellboreTrajectoryRepresentationPolyLine::addProperty(const std::string 
 
 long VtkWellboreTrajectoryRepresentationPolyLine::getAttachmentPropertyCount(const std::string &, VtkEpcCommon::FesppAttachmentProperty)
 {
-	RESQML2_0_1_NS::WellboreTrajectoryRepresentation* obj = epcPackageRepresentation->getDataObjectByUuid<RESQML2_0_1_NS::WellboreTrajectoryRepresentation>(getUuid().substr(0, 36));
+	RESQML2_NS::WellboreTrajectoryRepresentation* obj = epcPackageRepresentation->getDataObjectByUuid<RESQML2_NS::WellboreTrajectoryRepresentation>(getUuid().substr(0, 36));
 	return obj != nullptr ? obj->getXyzPointCountOfAllPatches() : 0;
 }
