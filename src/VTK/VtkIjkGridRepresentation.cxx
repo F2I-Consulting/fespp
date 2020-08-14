@@ -18,6 +18,8 @@ under the License.
 -----------------------------------------------------------------------*/
 #include "VtkIjkGridRepresentation.h"
 
+#include <array>
+
 // include VTK library
 #include <vtkHexahedron.h>
 #include <vtkCellData.h>
@@ -70,20 +72,16 @@ vtkSmartPointer<vtkPoints> VtkIjkGridRepresentation::createpoint()
 			std::unique_ptr<double[]> allXyzPoints(new double[kInterfaceNodeCount * 3]);
 
 			for (auto kInterface = initKIndex; kInterface <= maxKIndex; ++kInterface) {
-
 				ijkGridRepresentation->getXyzPointsOfKInterface(kInterface, allXyzPoints.get());
 				const double zIndice = ijkGridRepresentation->getLocalCrs(0)->isDepthOriented() ? -1 : 1;
 
 				for (ULONG64 nodeIndex = 0; nodeIndex < kInterfaceNodeCount * 3; nodeIndex += 3) {
 					points->InsertNextPoint(allXyzPoints[nodeIndex], allXyzPoints[nodeIndex + 1], allXyzPoints[nodeIndex + 2] * zIndice);
 				}
-
-
 			}
 
-			std::string s = "ijkGrid idProc-maxProc : " + std::to_string(getIdProc()) + "-" + std::to_string(getMaxProc()) + " Points " + std::to_string(kInterfaceNodeCount*(maxKIndex-initKIndex)) +"\n";
-			char const * pchar = s.c_str();
-			vtkOutputWindowDisplayDebugText(pchar);
+			const std::string s = "ijkGrid idProc-maxProc : " + std::to_string(getIdProc()) + "-" + std::to_string(getMaxProc()) + " Points " + std::to_string(kInterfaceNodeCount*(maxKIndex-initKIndex)) + "\n";
+			vtkOutputWindowDisplayDebugText(s.c_str());
 
 		}
 		else {
@@ -105,14 +103,11 @@ void VtkIjkGridRepresentation::createOutput(const std::string & uuid)
 {
 	createpoint(); // => POINTS
 	if (!vtkOutput) {	// => REPRESENTATION
-		if (subRepresentation){
-			// SubRep
-			createWithPoints(points, epcPackageSubRepresentation->getDataObjectByUuid(getUuid()));
-		}
-		else {
-			// Ijk Grid
-			createWithPoints(points, epcPackageRepresentation->getDataObjectByUuid(getUuid()));
-		}
+		auto dataObj = subRepresentation
+			? epcPackageSubRepresentation->getDataObjectByUuid(getUuid())
+			: epcPackageRepresentation->getDataObjectByUuid(getUuid());
+		createWithPoints(points, dataObj);
+
 	}
 
 	if (uuid != getUuid()) { // => PROPERTY UUID
@@ -210,18 +205,36 @@ int VtkIjkGridRepresentation::getInitKIndex(const std::string &) const
 }
 
 //----------------------------------------------------------------------------
-void VtkIjkGridRepresentation::createWithPoints(const vtkSmartPointer<vtkPoints> & pointsRepresentation, COMMON_NS::AbstractObject* obj)
+void VtkIjkGridRepresentation::createWithPoints(vtkSmartPointer<vtkPoints> pointsRepresentation, COMMON_NS::AbstractObject* obj)
 {
+	// Check if we are rendering an entire RESQML IJK grid or a RESQML subrepresentation of a RESQML IJK grid.
+	RESQML2_NS::SubRepresentation const * subRepresentation = dynamic_cast<RESQML2_NS::SubRepresentation*>(obj);
+	RESQML2_NS::AbstractIjkGridRepresentation* ijkGridRepresentation = subRepresentation != nullptr
+		? epcPackageRepresentation->getDataObjectByUuid<RESQML2_NS::AbstractIjkGridRepresentation>(subRepresentation->getSupportingRepresentationDor(0).getUuid())
+		: dynamic_cast<RESQML2_NS::AbstractIjkGridRepresentation*>(obj);
+
+	if (ijkGridRepresentation == nullptr) {
+		vtkOutputWindowDisplayDebugText("The input data is neither a subrepresentation of an IJK grid nor an entire IJK grid.\n");
+		return;
+	}
+
+	// Create and set the list of points of the vtkUnstructuredGrid
 	vtkOutput = vtkSmartPointer<vtkUnstructuredGrid>::New();
 	vtkOutput->SetPoints(pointsRepresentation);
 
-	if (obj != nullptr && (obj->getXmlTag() == "SubRepresentation")) {
-		resqml2::SubRepresentation* subRepresentation1 = static_cast<RESQML2_NS::SubRepresentation*>(obj);
-		RESQML2_NS::AbstractIjkGridRepresentation* ijkGridRepresentation = epcPackageRepresentation->getDataObjectByUuid<RESQML2_NS::AbstractIjkGridRepresentation>(subRepresentation1->getSupportingRepresentationDor(0).getUuid());
+	// Define hexahedron node ordering according to Paraview convention : https://lorensen.github.io/VTKExamples/site/VTKBook/05Chapter5/#Figure%205-3
+	std::array<unsigned int, 8> correspondingResqmlCornerId = { 0, 1, 2, 3, 4, 5, 6, 7 };
+	if (ijkGridRepresentation->getLocalCrs(0)->isDepthOriented() == ijkGridRepresentation->isRightHanded()) {
+		correspondingResqmlCornerId = { 4, 5, 6, 7, 0, 1, 2, 3 };
+	}
 
-		auto elementCountOfPatch = subRepresentation1->getElementCountOfPatch(0);
+	// Create and set the list of hexahedra of the vtkUnstructuredGrid based on the list of points already set
+	ijkGridRepresentation->loadSplitInformation();
+	unsigned int cellIndex = 0;
+	if (subRepresentation != nullptr) {
+		auto elementCountOfPatch = subRepresentation->getElementCountOfPatch(0);
 		std::unique_ptr<ULONG64[]> elementIndices(new ULONG64[elementCountOfPatch]);
-		subRepresentation1->getElementIndicesOfPatch(0, 0, elementIndices.get());
+		subRepresentation->getElementIndicesOfPatch(0, 0, elementIndices.get());
 
 		iCellCount = ijkGridRepresentation->getICellCount();
 		jCellCount = ijkGridRepresentation->getJCellCount();
@@ -230,14 +243,9 @@ void VtkIjkGridRepresentation::createWithPoints(const vtkSmartPointer<vtkPoints>
 		initKIndex = 0;
 		maxKIndex = kCellCount;
 
-		std::string s = "ijkGrid- SubRep idProc-maxProc : " + std::to_string(getIdProc()) + "-" + std::to_string(getMaxProc()) + " Kcell " + std::to_string(initKIndex) + " to " + std::to_string(maxKIndex) +"\n";
-		char const * pchar = s.c_str();
-		vtkOutputWindowDisplayDebugText(pchar);
+		vtkOutputWindowDisplayDebugText(("ijkGrid- SubRep idProc-maxProc : " + std::to_string(getIdProc()) + "-" + std::to_string(getMaxProc()) + " Kcell " + std::to_string(initKIndex) + " to " + std::to_string(maxKIndex) + "\n").c_str());
 
-		ijkGridRepresentation->loadSplitInformation();
-
-		auto indice = 0;
-		unsigned int cellIndex = 0;
+		size_t indice = 0;
 
 		for (auto vtkKCellIndex = initKIndex; vtkKCellIndex < maxKIndex; ++vtkKCellIndex) {
 			for (auto vtkJCellIndex = 0; vtkJCellIndex < jCellCount; ++vtkJCellIndex) {
@@ -245,8 +253,9 @@ void VtkIjkGridRepresentation::createWithPoints(const vtkSmartPointer<vtkPoints>
 					if (elementIndices[indice] == cellIndex) {
 						vtkSmartPointer<vtkHexahedron> hex = vtkSmartPointer<vtkHexahedron>::New();
 
-						for (unsigned int id=0; id < 8; ++id) {
-							hex->GetPointIds()->SetId(id, ijkGridRepresentation->getXyzPointIndexFromCellCorner(vtkICellIndex, vtkJCellIndex, vtkKCellIndex, id));
+						for (unsigned int cornerId = 0; cornerId < 8; ++cornerId) {
+							hex->GetPointIds()->SetId(cornerId,
+								ijkGridRepresentation->getXyzPointIndexFromCellCorner(vtkICellIndex, vtkJCellIndex, vtkKCellIndex, correspondingResqmlCornerId[cornerId]));
 						}
 						vtkOutput->InsertNextCell(hex->GetCellType(), hex->GetPointIds());
 						indice++;
@@ -255,54 +264,43 @@ void VtkIjkGridRepresentation::createWithPoints(const vtkSmartPointer<vtkPoints>
 				}
 			}
 		}
-		ijkGridRepresentation->unloadSplitInformation();
 	}
 	else {
-		if (obj != nullptr && (obj->getXmlTag() == RESQML2_NS::AbstractIjkGridRepresentation::XML_TAG || obj->getXmlTag() == RESQML2_NS::AbstractIjkGridRepresentation::XML_TAG_TRUNCATED)){
-			RESQML2_NS::AbstractIjkGridRepresentation* ijkGridRepresentation = static_cast<RESQML2_NS::AbstractIjkGridRepresentation*>(obj);
+		vtkOutputWindowDisplayDebugText(("ijkGrid idProc-maxProc : " + std::to_string(getIdProc()) + "-" + std::to_string(getMaxProc()) + " Kcell " + std::to_string(initKIndex) + " to " + std::to_string(maxKIndex) + "\n").c_str());
 
-			std::string s = "ijkGrid idProc-maxProc : " + std::to_string(getIdProc()) + "-" + std::to_string(getMaxProc()) + " Kcell " + std::to_string(initKIndex) + " to " + std::to_string(maxKIndex) +"\n";
-			char const * pchar = s.c_str();
-			vtkOutputWindowDisplayDebugText(pchar);
+		const ULONG64 cellCount = ijkGridRepresentation->getCellCount();
+		std::unique_ptr<bool[]> enabledCells(new bool[cellCount]);
+		if (ijkGridRepresentation->hasEnabledCellInformation())	{
+			ijkGridRepresentation->getEnabledCells(enabledCells.get());
+		}
+		else {
+			std::fill_n(enabledCells.get(), cellCount, true);
+		}
 
-			ijkGridRepresentation->loadSplitInformation();
+		const ULONG64 translatePoint = ijkGridRepresentation->getXyzPointCountOfKInterface() * initKIndex;
 
-			const ULONG64 cellCount = ijkGridRepresentation->getCellCount();
-			std::unique_ptr<bool[]> enabledCells(new bool[cellCount]);
-			if (ijkGridRepresentation->hasEnabledCellInformation())	{
-				ijkGridRepresentation->getEnabledCells(enabledCells.get());
-			}
-			else {
-				for (ULONG64 j = 0; j < cellCount; ++j)	{
-					enabledCells[j] = true;
-				}
-			}
+		vtkOutput->Allocate(iCellCount*jCellCount*maxKIndex);
+		for (auto vtkKCellIndex = initKIndex; vtkKCellIndex < maxKIndex; ++vtkKCellIndex){
+			for (auto vtkJCellIndex = 0; vtkJCellIndex < jCellCount; ++vtkJCellIndex){
+				for (auto vtkICellIndex = 0; vtkICellIndex < iCellCount; ++vtkICellIndex){
+					if (enabledCells[cellIndex]){
+						vtkSmartPointer<vtkHexahedron> hex = vtkSmartPointer<vtkHexahedron>::New();
 
-			unsigned int cellIndex = 0;
-
-			const ULONG64 translatePoint = ijkGridRepresentation->getXyzPointCountOfKInterface() * initKIndex;
-
-			for (auto vtkKCellIndex = initKIndex; vtkKCellIndex < maxKIndex; ++vtkKCellIndex){
-				for (auto vtkJCellIndex = 0; vtkJCellIndex < jCellCount; ++vtkJCellIndex){
-					for (auto vtkICellIndex = 0; vtkICellIndex < iCellCount; ++vtkICellIndex){
-						if (enabledCells[cellIndex]){
-							vtkSmartPointer<vtkHexahedron> hex = vtkSmartPointer<vtkHexahedron>::New();
-
-							for (unsigned int id=0; id < 8; ++id) {
-								hex->GetPointIds()->SetId(id, ijkGridRepresentation->getXyzPointIndexFromCellCorner(vtkICellIndex, vtkJCellIndex, vtkKCellIndex, id) - translatePoint);
-							}
-
-							vtkOutput->InsertNextCell(hex->GetCellType(), hex->GetPointIds());
+						for (unsigned int cornerId = 0; cornerId < 8; ++cornerId) {
+							hex->GetPointIds()->SetId(cornerId,
+								ijkGridRepresentation->getXyzPointIndexFromCellCorner(vtkICellIndex, vtkJCellIndex, vtkKCellIndex, correspondingResqmlCornerId[cornerId]) - translatePoint);
 						}
-						else{
-							vtkSmartPointer<vtkEmptyCell> emptyCell = vtkSmartPointer<vtkEmptyCell>::New();
-							vtkOutput->InsertNextCell(emptyCell->GetCellType(), emptyCell->GetPointIds());
-						}
-						++cellIndex;
+
+						vtkOutput->InsertNextCell(hex->GetCellType(), hex->GetPointIds());
 					}
+					else {
+						vtkSmartPointer<vtkEmptyCell> emptyCell = vtkSmartPointer<vtkEmptyCell>::New();
+						vtkOutput->InsertNextCell(emptyCell->GetCellType(), emptyCell->GetPointIds());
+					}
+					++cellIndex;
 				}
 			}
-			ijkGridRepresentation->unloadSplitInformation();
 		}
 	}
+	ijkGridRepresentation->unloadSplitInformation();
 }

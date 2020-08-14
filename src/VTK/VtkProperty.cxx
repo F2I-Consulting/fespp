@@ -168,6 +168,7 @@ vtkSmartPointer<vtkDataArray> VtkProperty::loadValuesPropertySet(const std::vect
 				static_cast<RESQML2_NS::ContinuousProperty*>(valuesProperty)->getDoubleValuesOfPatch(0, valuesDoubleSet);
 
 				vtkSmartPointer<vtkDoubleArray> cellDataDouble = vtkSmartPointer<vtkDoubleArray>::New();
+				cellDataDouble->Allocate(nbElement * elementCountPerValue);
 				cellDataDouble->SetName(name.c_str());
 				cellDataDouble->SetArray(valuesDoubleSet, nbElement * elementCountPerValue, 0, vtkAbstractArray::VTK_DATA_ARRAY_DELETE);
 				cellData = cellDataDouble;
@@ -178,6 +179,7 @@ vtkSmartPointer<vtkDataArray> VtkProperty::loadValuesPropertySet(const std::vect
 				valuesProperty->getIntValuesOfPatch(0, values);
 
 				vtkSmartPointer<vtkIntArray> cellDataInt = vtkSmartPointer<vtkIntArray>::New();
+				cellDataInt->Allocate(nbElement * elementCountPerValue);
 				cellDataInt->SetName(name.c_str());
 				cellDataInt->SetArray(values, nbElement * elementCountPerValue, 0, vtkAbstractArray::VTK_DATA_ARRAY_DELETE);
 				cellData = cellDataInt;
@@ -221,6 +223,7 @@ vtkSmartPointer<vtkDataArray> VtkProperty::loadValuesPropertySet(const std::vect
 			const std::string name = valuesPropertySet[i]->getTitle();
 			if (typeProperty == "ContinuousProperty") {
 				vtkSmartPointer<vtkFloatArray> cellDataFloat = vtkSmartPointer<vtkFloatArray>::New();
+				cellDataFloat->Allocate(nbElement);
 				float* valuesFloatSet = new float[nbElement]; // deleted by VTK cellData vtkSmartPointer
 				RESQML2_NS::ContinuousProperty *propertyValue = static_cast<RESQML2_NS::ContinuousProperty*>(valuesPropertySet[i]);
 				if (propertyValue->getElementCountPerValue() == 1) {
@@ -240,6 +243,7 @@ vtkSmartPointer<vtkDataArray> VtkProperty::loadValuesPropertySet(const std::vect
 			}
 			else if(typeProperty == "DiscreteProperty") {
 				vtkSmartPointer<vtkIntArray> cellDataInt = vtkSmartPointer<vtkIntArray>::New();
+				cellDataInt->Allocate(nbElement);
 				int* valuesIntSet = new int[nbElement]; // deleted by VTK cellData vtkSmartPointer
 				RESQML2_NS::DiscreteProperty *propertyValue = static_cast<RESQML2_NS::DiscreteProperty*>(valuesPropertySet[i]);
 				if (propertyValue->getElementCountPerValue() == 1) {
@@ -259,6 +263,7 @@ vtkSmartPointer<vtkDataArray> VtkProperty::loadValuesPropertySet(const std::vect
 			}
 			else if (typeProperty == "CategoricalProperty") {
 				vtkSmartPointer<vtkIntArray> cellDataInt = vtkSmartPointer<vtkIntArray>::New();
+				cellDataInt->Allocate(nbElement);
 				int* valuesIntSet = new int[nbElement]; // deleted by VTK cellData vtkSmartPointer
 				RESQML2_NS::CategoricalProperty *propertyValue = static_cast<RESQML2_NS::CategoricalProperty*>(valuesPropertySet[i]);
 				if (propertyValue->getElementCountPerValue() == 1) {

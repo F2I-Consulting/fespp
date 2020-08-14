@@ -87,11 +87,11 @@ public:
 	void setMaxKIndex(int value) { maxKIndex = value; }
 	/**
 	* method : createWithPoints
-	* variable : points de l'ijkGrid,  ijkGrid or sub-rep
+	* variable : ijkGrid points,  ijkGrid or sub-rep
 	* description :
 	* create the vtk objects with points
 	*/	
-	void createWithPoints(const vtkSmartPointer<vtkPoints> & pointsRepresentation, COMMON_NS::AbstractObject* obj2);
+	void createWithPoints(vtkSmartPointer<vtkPoints> pointsRepresentation, COMMON_NS::AbstractObject* obj2);
 
 	/**
 	* method : createpoint

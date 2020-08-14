@@ -63,12 +63,20 @@ void VtkAbstractRepresentation::visualize(const std::string & uuid)
 vtkSmartPointer<vtkPoints> VtkAbstractRepresentation::createVtkPoints(ULONG64 pointCount, const double * allXyzPoints, const RESQML2_NS::AbstractLocal3dCrs * localCRS)
 {
 	points = vtkSmartPointer<vtkPoints>::New();
+	points->Allocate(pointCount);
 
-	const double zIndice = localCRS->isDepthOriented() ? -1 : 1;
-
-	for (ULONG64 nodeIndex = 0; nodeIndex < pointCount * 3; nodeIndex += 3) {
-		points->InsertNextPoint(allXyzPoints[nodeIndex], allXyzPoints[nodeIndex + 1], allXyzPoints[nodeIndex + 2] * zIndice);
+	const size_t coordCount = pointCount * 3;
+	if (localCRS->isDepthOriented()) {
+		for (size_t xCoordIndex = 0; xCoordIndex < coordCount; xCoordIndex += 3) {
+			points->InsertNextPoint(allXyzPoints[xCoordIndex], allXyzPoints[xCoordIndex + 1], -allXyzPoints[xCoordIndex + 2]);
+		}
 	}
+	else {
+		for (size_t xCoordIndex = 0; xCoordIndex < coordCount; xCoordIndex += 3) {
+			points->InsertNextPoint(allXyzPoints[xCoordIndex], allXyzPoints[xCoordIndex + 1], allXyzPoints[xCoordIndex + 2]);
+		}
+	}
+
 	return points;
 }
 
