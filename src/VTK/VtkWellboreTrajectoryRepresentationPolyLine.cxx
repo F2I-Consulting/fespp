@@ -42,10 +42,10 @@ void VtkWellboreTrajectoryRepresentationPolyLine::createOutput(const std::string
 {
 	if (!subRepresentation)	{
 
-		RESQML2_NS::WellboreTrajectoryRepresentation* wellboreSetRepresentation = nullptr;
-		common::AbstractObject* obj = epcPackageRepresentation->getDataObjectByUuid(getUuid().substr(0, 36));
-		if (obj != nullptr && obj->getXmlTag() == "WellboreTrajectoryRepresentation") {
-			wellboreSetRepresentation = static_cast<RESQML2_NS::WellboreTrajectoryRepresentation*>(obj);
+		RESQML2_NS::WellboreTrajectoryRepresentation* wellboreSetRepresentation = epcPackageRepresentation->getDataObjectByUuid<RESQML2_NS::WellboreTrajectoryRepresentation>(getUuid().substr(0, 36));
+		if (wellboreSetRepresentation == nullptr) {
+			vtkOutputWindowDisplayDebugText(("The UUID " + getUuid().substr(0, 36) + " is not a RESQML2 WellboreTrajectoryRepresentation\n").c_str());
+			return;
 		}
 
 		if (!vtkOutput) {
@@ -53,9 +53,9 @@ void VtkWellboreTrajectoryRepresentationPolyLine::createOutput(const std::string
 
 			// POINT
 			unsigned int pointCount = wellboreSetRepresentation->getXyzPointCountOfPatch(0);
-			std::unique_ptr<double[]> allXyzPoints(new double[pointCount * 3]);
-			wellboreSetRepresentation->getXyzPointsOfAllPatchesInGlobalCrs(allXyzPoints.get());
-			createVtkPoints(pointCount, allXyzPoints.get(), wellboreSetRepresentation->getLocalCrs(0));
+			double* allXyzPoints = new double[pointCount * 3]; // Will be deleted by VTK
+			wellboreSetRepresentation->getXyzPointsOfAllPatchesInGlobalCrs(allXyzPoints);
+			createVtkPoints(pointCount, allXyzPoints, wellboreSetRepresentation->getLocalCrs(0));
 			vtkOutput->SetPoints(points);
 
 			// POLYLINE

@@ -66,9 +66,17 @@ public:
 	*/
 	virtual void createOutput(const std::string & uuid) = 0;
 	
-	vtkSmartPointer<vtkPoints> createVtkPoints(ULONG64 pointCount, const double * allXyzPoints, const RESQML2_NS::AbstractLocal3dCrs * localCRS);
-
-	void addProperty(const std::string & uuidProperty, vtkDataArray* dataProperty);
+	/**
+	* Create a vtkPoints from a C double array representing XYZ triplets. Invert Z coordinates in case the XYZ triplets are depth oriented.
+	* This method takes ownership of the C double array meaning that it will delete it (using delete[]). Don't delete the C array somewhere else in the code.
+	*
+	* @param pointCount		The count of points in allXyzPoints. allXyzPoints must be 3*pointCount size.
+	* @param allXyzPoints	The XYZ triplets of the VTK points to be created. They must lie in the localCRS.
+    *						Their ownership will be transfered to VTK in this method. Do not delete them.
+	* @param localCRS		The CRS where the XYZ triplets are given.
+	*
+	*/
+	vtkSmartPointer<vtkPoints> createVtkPoints(ULONG64 pointCount, double * allXyzPoints, const RESQML2_NS::AbstractLocal3dCrs * localCRS);
 
 	vtkSmartPointer<vtkPoints> getVtkPoints();
 

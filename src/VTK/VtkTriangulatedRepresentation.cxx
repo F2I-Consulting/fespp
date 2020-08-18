@@ -56,9 +56,9 @@ void VtkTriangulatedRepresentation::createOutput(const std::string &uuid)
 			vtkSmartPointer<vtkPoints> triangulatedRepresentationPoints = vtkSmartPointer<vtkPoints>::New();
 
 			const unsigned int nodeCount = triangulatedSetRepresentation->getXyzPointCountOfAllPatches();
-			std::unique_ptr<double[]> allXyzPoints(new double[nodeCount * 3]);
-			triangulatedSetRepresentation->getXyzPointsOfAllPatchesInGlobalCrs(allXyzPoints.get());
-			createVtkPoints(nodeCount, allXyzPoints.get(), triangulatedSetRepresentation->getLocalCrs(0));
+			double* allXyzPoints = new double[nodeCount * 3]; // Will be deleted by VTK
+			triangulatedSetRepresentation->getXyzPointsOfAllPatchesInGlobalCrs(allXyzPoints);
+			createVtkPoints(nodeCount, allXyzPoints, triangulatedSetRepresentation->getLocalCrs(0));
 			vtkOutput->SetPoints(points);
 
 			// CELLS

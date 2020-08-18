@@ -18,7 +18,7 @@ under the License.
 -----------------------------------------------------------------------*/
 #include "VtkAbstractRepresentation.h"
 
-#include <vtkDataArray.h>
+#include <vtkDoubleArray.h>
 
 #include "VtkProperty.h"
 
@@ -60,22 +60,21 @@ void VtkAbstractRepresentation::visualize(const std::string & uuid)
 	createOutput(uuid);
 }
 
-vtkSmartPointer<vtkPoints> VtkAbstractRepresentation::createVtkPoints(ULONG64 pointCount, const double * allXyzPoints, const RESQML2_NS::AbstractLocal3dCrs * localCRS)
+vtkSmartPointer<vtkPoints> VtkAbstractRepresentation::createVtkPoints(ULONG64 pointCount,  double * allXyzPoints, const RESQML2_NS::AbstractLocal3dCrs * localCRS)
 {
 	points = vtkSmartPointer<vtkPoints>::New();
-	points->Allocate(pointCount);
-
 	const size_t coordCount = pointCount * 3;
 	if (localCRS->isDepthOriented()) {
-		for (size_t xCoordIndex = 0; xCoordIndex < coordCount; xCoordIndex += 3) {
-			points->InsertNextPoint(allXyzPoints[xCoordIndex], allXyzPoints[xCoordIndex + 1], -allXyzPoints[xCoordIndex + 2]);
+		for (size_t zCoordIndex = 2; zCoordIndex < coordCount; zCoordIndex += 3) {
+			allXyzPoints[zCoordIndex] *= -1;
 		}
 	}
-	else {
-		for (size_t xCoordIndex = 0; xCoordIndex < coordCount; xCoordIndex += 3) {
-			points->InsertNextPoint(allXyzPoints[xCoordIndex], allXyzPoints[xCoordIndex + 1], allXyzPoints[xCoordIndex + 2]);
-		}
-	}
+
+	vtkSmartPointer<vtkDoubleArray> vtkUnderlyingArray = vtkSmartPointer<vtkDoubleArray>::New();
+	vtkUnderlyingArray->SetNumberOfComponents(3);
+	// Take ownership of the underlying C array
+	vtkUnderlyingArray->SetArray(allXyzPoints, coordCount, vtkAbstractArray::VTK_DATA_ARRAY_DELETE);
+	points->SetData(vtkUnderlyingArray);
 
 	return points;
 }

@@ -60,10 +60,10 @@ void VtkPolylineRepresentation::createOutput(const std::string & uuid)
 			// POINT
 			unsigned int nodeCount = polylineSetRepresentation->getXyzPointCountOfPatch(patchIndex);
 
-			std::unique_ptr<double[]> allPoints(new double[nodeCount * 3]);
-			polylineSetRepresentation->getXyzPointsOfPatch(patchIndex, allPoints.get());
+			double* allPoints = new double[nodeCount * 3]; // Will be deleted by VTK
+			polylineSetRepresentation->getXyzPointsOfPatch(patchIndex, allPoints);
 
-			createVtkPoints(nodeCount, allPoints.get(), polylineSetRepresentation->getLocalCrs(0));
+			createVtkPoints(nodeCount, allPoints, polylineSetRepresentation->getLocalCrs(0));
 			vtkOutput->SetPoints(points);
 
 			// POLYLINE

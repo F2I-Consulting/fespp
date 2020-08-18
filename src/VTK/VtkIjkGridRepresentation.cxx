@@ -21,10 +21,10 @@ under the License.
 #include <array>
 
 // include VTK library
-#include <vtkHexahedron.h>
 #include <vtkCellData.h>
-#include <vtkEmptyCell.h>
 #include <vtkDataArray.h>
+#include <vtkEmptyCell.h>
+#include <vtkHexahedron.h>
 
 // include F2i-consulting Energistics Standards API
 #include <fesapi/resqml2/AbstractIjkGridRepresentation.h>
@@ -90,9 +90,9 @@ vtkSmartPointer<vtkPoints> VtkIjkGridRepresentation::createpoint()
 
 			// POINT
 			const auto nodeCount = ijkGridRepresentation->getXyzPointCountOfAllPatches();
-			std::unique_ptr<double[]> allXyzPoints(new double[nodeCount * 3]);
-			ijkGridRepresentation->getXyzPointsOfAllPatchesInGlobalCrs(allXyzPoints.get());
-			createVtkPoints(nodeCount, allXyzPoints.get(), ijkGridRepresentation->getLocalCrs(0));
+			double* allXyzPoints = new double[nodeCount * 3]; // Will be deleted by VTK
+			ijkGridRepresentation->getXyzPointsOfAllPatchesInGlobalCrs(allXyzPoints);
+			createVtkPoints(nodeCount, allXyzPoints, ijkGridRepresentation->getLocalCrs(0));
 		}
 	}
 	return points;
