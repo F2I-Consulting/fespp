@@ -40,7 +40,7 @@ VtkGrid2DRepresentationPoints::~VtkGrid2DRepresentationPoints()
 	lastProperty = "";
 }
 //----------------------------------------------------------------------------
-void VtkGrid2DRepresentationPoints::createOutput(const std::string & uuid)
+void VtkGrid2DRepresentationPoints::visualize(const std::string & uuid)
 {
 	if (!subRepresentation)	{
 

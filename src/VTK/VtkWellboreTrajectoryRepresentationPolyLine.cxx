@@ -38,7 +38,7 @@ VtkResqml2PolyData(fileName, name, uuid, uuidParent, repoRepresentation, repoSub
 }
 
 //----------------------------------------------------------------------------
-void VtkWellboreTrajectoryRepresentationPolyLine::createOutput(const std::string & uuid)
+void VtkWellboreTrajectoryRepresentationPolyLine::visualize(const std::string & uuid)
 {
 	if (!subRepresentation)	{
 

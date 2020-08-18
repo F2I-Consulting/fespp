@@ -34,7 +34,6 @@ VtkWellboreTrajectoryRepresentation::VtkWellboreTrajectoryRepresentation(const s
 {
 }
 
-
 //----------------------------------------------------------------------------
 VtkWellboreTrajectoryRepresentation::~VtkWellboreTrajectoryRepresentation()
 {
@@ -63,7 +62,7 @@ void VtkWellboreTrajectoryRepresentation::createTreeVtk(const std::string & uuid
 //----------------------------------------------------------------------------
 int VtkWellboreTrajectoryRepresentation::createOutput(const std::string & uuid)
 {
-	polyline.createOutput(uuid);
+	polyline.visualize(uuid);
 	return 1;
 }
 //----------------------------------------------------------------------------
@@ -156,5 +155,5 @@ void VtkWellboreTrajectoryRepresentation::addProperty(const std::string & uuidPr
 //----------------------------------------------------------------------------
 long VtkWellboreTrajectoryRepresentation::getAttachmentPropertyCount(const std::string & uuid, VtkEpcCommon::FesppAttachmentProperty propertyUnit)
 {
-	return 	 polyline.getAttachmentPropertyCount(uuid, propertyUnit);
+	return polyline.getAttachmentPropertyCount(uuid, propertyUnit);
 }

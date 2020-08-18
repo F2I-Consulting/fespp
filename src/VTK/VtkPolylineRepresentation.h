@@ -35,11 +35,11 @@ public:
 	~VtkPolylineRepresentation();
 
 	/**
-	* method : createOutput
+	* method : visualize
 	* variable : std::string uuid (Polyline representation UUID)
 	* create the vtk objects for represent Polyline.
 	*/
-	void createOutput(const std::string & uuid);
+	void visualize(const std::string & uuid);
 
 	void addProperty(const std::string & uuidProperty, vtkDataArray* dataProperty);
 	

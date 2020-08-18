@@ -47,7 +47,7 @@ void VtkResqml2StructuredGrid::remove(const std::string & uuid)
 	if (uuid == getUuid()) {
 		vtkOutput = nullptr;
 	}
-	else if(uuidToVtkProperty[uuid]) {
+	else if (uuidToVtkProperty[uuid]) {
 		const unsigned int propertyAttachmentKind = uuidToVtkProperty[uuid]->getSupport();
 		if (propertyAttachmentKind == VtkProperty::typeSupport::CELLS) {
 			vtkOutput->GetCellData()->RemoveArray(uuidToVtkProperty[uuid]->getName().c_str());

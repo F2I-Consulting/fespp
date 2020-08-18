@@ -53,11 +53,11 @@ void VtkWellboreFrame::visualize(const std::string & uuid)
 		attachUuids.clear();
 		// Traversing an unordered map
 		for (auto marker : uuid_to_VtkWellboreMarker) {
-			marker.second->createOutput(uuid);
+			marker.second->visualize(uuid);
 			attachUuids.push_back(marker.first);
 		}
 	} else {
-		uuid_to_VtkWellboreMarker[uuid]->createOutput(uuid);
+		uuid_to_VtkWellboreMarker[uuid]->visualize(uuid);
 		/*
 		RESQML2_NS::::WellboreMarkerFrameRepresentation* markerFrame = static_cast<RESQML2_NS::::WellboreMarkerFrameRepresentation*>(repositoryRepresentation->getDataObjectByUuid(getUuid()));
 

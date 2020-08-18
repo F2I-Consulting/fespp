@@ -45,18 +45,18 @@ public:
 	~VtkWellboreMarker();
 
 	/**
-	* method : createOutput
+	* method : visualize
 	* variable : std::string uuid
 	* create the vtk objects for represent Marker.
 	*/
-	void createOutput(const std::string & uuid) final;
+	void visualize(const std::string & uuid) final;
 
 	void toggleMarkerOrientation(const bool & orientation);
 
 	long getAttachmentPropertyCount(const std::string &, VtkEpcCommon::FesppAttachmentProperty) final { return 0; }
 
 	/**
-	* method : createOutput
+	* method : visualize
 	* variable : std::string uuid
 	* delete the vtkPolyData.
 	*/

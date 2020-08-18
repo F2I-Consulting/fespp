@@ -54,10 +54,10 @@ public:
 	void remove(const std::string & uuid);
 
 	/**
-	* method : createOutput (Virtual)
+	* method : visualize (Virtual)
 	* variable : std::string uuid 
 	*/
-	virtual void createOutput(const std::string & uuid) = 0;
+	virtual void visualize(const std::string & uuid) = 0;
 
 protected:
 	vtkSmartPointer<vtkStructuredGrid> vtkOutput;

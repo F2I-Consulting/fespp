@@ -45,7 +45,7 @@ VtkPolylineRepresentation::~VtkPolylineRepresentation()
 }
 
 //----------------------------------------------------------------------------
-void VtkPolylineRepresentation::createOutput(const std::string & uuid)
+void VtkPolylineRepresentation::visualize(const std::string & uuid)
 {
 	if (!subRepresentation)	{
 		RESQML2_NS::PolylineSetRepresentation* polylineSetRepresentation = nullptr;

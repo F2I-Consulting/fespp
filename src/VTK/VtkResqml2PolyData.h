@@ -41,14 +41,14 @@ public:
 	virtual ~VtkResqml2PolyData();
 
 	/**
-	* method : createOutput
+	* method : visualize
 	* variable : --
 	* return the vtkPolyData.
 	*/
 	vtkSmartPointer<vtkPolyData> getOutput() const;
 
 	/**
-	* method : createOutput
+	* method : visualize
 	* variable : std::string uuid
 	* delete the vtkPolyData.
 	*/

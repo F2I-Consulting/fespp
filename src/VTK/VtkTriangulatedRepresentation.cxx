@@ -44,7 +44,7 @@ VtkTriangulatedRepresentation::~VtkTriangulatedRepresentation()
 }
 
 //----------------------------------------------------------------------------
-void VtkTriangulatedRepresentation::createOutput(const std::string &uuid)
+void VtkTriangulatedRepresentation::visualize(const std::string &uuid)
 {
 	if (!subRepresentation)	{
 		RESQML2_NS::TriangulatedSetRepresentation* triangulatedSetRepresentation = epcPackageRepresentation->getDataObjectByUuid<RESQML2_NS::TriangulatedSetRepresentation>(getUuid());

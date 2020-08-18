@@ -41,7 +41,7 @@ VtkIjkGridRepresentation::VtkIjkGridRepresentation(const std::string & fileName,
 }
 
 //----------------------------------------------------------------------------
-vtkSmartPointer<vtkPoints> VtkIjkGridRepresentation::createpoint()
+vtkSmartPointer<vtkPoints> VtkIjkGridRepresentation::createPoints()
 {
 	if (points == nullptr) {
 		points = vtkSmartPointer<vtkPoints>::New();
@@ -80,8 +80,7 @@ vtkSmartPointer<vtkPoints> VtkIjkGridRepresentation::createpoint()
 				}
 			}
 
-			const std::string s = "ijkGrid idProc-maxProc : " + std::to_string(getIdProc()) + "-" + std::to_string(getMaxProc()) + " Points " + std::to_string(kInterfaceNodeCount*(maxKIndex-initKIndex)) + "\n";
-			vtkOutputWindowDisplayDebugText(s.c_str());
+			vtkOutputWindowDisplayDebugText(("ijkGrid idProc-maxProc : " + std::to_string(getIdProc()) + "-" + std::to_string(getMaxProc()) + " Points " + std::to_string(kInterfaceNodeCount*(maxKIndex - initKIndex)) + "\n").c_str());
 
 		}
 		else {
@@ -99,19 +98,18 @@ vtkSmartPointer<vtkPoints> VtkIjkGridRepresentation::createpoint()
 }
 
 //----------------------------------------------------------------------------
-void VtkIjkGridRepresentation::createOutput(const std::string & uuid)
+void VtkIjkGridRepresentation::visualize(const std::string & uuid)
 {
-	createpoint(); // => POINTS
-	if (!vtkOutput) {	// => REPRESENTATION
-		auto dataObj = subRepresentation
-			? epcPackageSubRepresentation->getDataObjectByUuid(getUuid())
-			: epcPackageRepresentation->getDataObjectByUuid(getUuid());
-		createWithPoints(points, dataObj);
+	if (vtkOutput == nullptr) {	// => REPRESENTATION
+		RESQML2_NS::AbstractRepresentation* dataObj = subRepresentation
+			? epcPackageSubRepresentation->getDataObjectByUuid<RESQML2_NS::AbstractRepresentation>(getUuid())
+			: epcPackageRepresentation->getDataObjectByUuid<RESQML2_NS::AbstractRepresentation>(getUuid());
+		createVtkUnstructuredGrid(dataObj);
 
 	}
 
 	if (uuid != getUuid()) { // => PROPERTY UUID
-		if (subRepresentation){
+		if (subRepresentation) {
 			RESQML2_NS::SubRepresentation* subRep = epcPackageSubRepresentation->getDataObjectByUuid<RESQML2_NS::SubRepresentation>(getUuid());
 			if (isHyperslabed) {
 				addProperty(uuid, uuidToVtkProperty[uuid]->loadValuesPropertySet(subRep->getValuesPropertySet(), iCellCount*jCellCount*(maxKIndex - initKIndex), 0, iCellCount, jCellCount, maxKIndex - initKIndex, initKIndex));
@@ -205,13 +203,15 @@ int VtkIjkGridRepresentation::getInitKIndex(const std::string &) const
 }
 
 //----------------------------------------------------------------------------
-void VtkIjkGridRepresentation::createWithPoints(vtkSmartPointer<vtkPoints> pointsRepresentation, COMMON_NS::AbstractObject* obj)
+void VtkIjkGridRepresentation::createVtkUnstructuredGrid(RESQML2_NS::AbstractRepresentation* ijkOrSubrep)
 {
+	createPoints();
+
 	// Check if we are rendering an entire RESQML IJK grid or a RESQML subrepresentation of a RESQML IJK grid.
-	RESQML2_NS::SubRepresentation const * subRepresentation = dynamic_cast<RESQML2_NS::SubRepresentation*>(obj);
+	RESQML2_NS::SubRepresentation const * subRepresentation = dynamic_cast<RESQML2_NS::SubRepresentation*>(ijkOrSubrep);
 	RESQML2_NS::AbstractIjkGridRepresentation* ijkGridRepresentation = subRepresentation != nullptr
 		? epcPackageRepresentation->getDataObjectByUuid<RESQML2_NS::AbstractIjkGridRepresentation>(subRepresentation->getSupportingRepresentationDor(0).getUuid())
-		: dynamic_cast<RESQML2_NS::AbstractIjkGridRepresentation*>(obj);
+		: dynamic_cast<RESQML2_NS::AbstractIjkGridRepresentation*>(ijkOrSubrep);
 
 	if (ijkGridRepresentation == nullptr) {
 		vtkOutputWindowDisplayDebugText("The input data is neither a subrepresentation of an IJK grid nor an entire IJK grid.\n");
@@ -220,7 +220,7 @@ void VtkIjkGridRepresentation::createWithPoints(vtkSmartPointer<vtkPoints> point
 
 	// Create and set the list of points of the vtkUnstructuredGrid
 	vtkOutput = vtkSmartPointer<vtkUnstructuredGrid>::New();
-	vtkOutput->SetPoints(pointsRepresentation);
+	vtkOutput->SetPoints(points);
 
 	// Define hexahedron node ordering according to Paraview convention : https://lorensen.github.io/VTKExamples/site/VTKBook/05Chapter5/#Figure%205-3
 	std::array<unsigned int, 8> correspondingResqmlCornerId = { 0, 1, 2, 3, 4, 5, 6, 7 };

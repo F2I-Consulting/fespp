@@ -71,13 +71,13 @@ void VtkGrid2DRepresentation::createTreeVtk(const std::string & uuid, const std:
 //----------------------------------------------------------------------------
 int VtkGrid2DRepresentation::createOutput(const std::string & uuid)
 {
-	grid2DPoints.createOutput(uuid);
-	//	grid2DCells->createOutput(uuid);
+	grid2DPoints.visualize(uuid);
+	//	grid2DCells->visualize(uuid);
 
 	return 1;
 }
+
 //----------------------------------------------------------------------------
-// load toutes les sub Representation
 void VtkGrid2DRepresentation::visualize(const std::string & uuid)
 {
 	createOutput(uuid);
@@ -90,8 +90,6 @@ void VtkGrid2DRepresentation::remove(const std::string & uuid)
 {
 	if (uuid == getUuid()) {
 		detach();
-		std::stringstream grid2DPointsUuid;
-		grid2DPointsUuid << uuid << "-Points";
 
 		grid2DPoints.remove(uuid);
 

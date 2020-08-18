@@ -32,7 +32,6 @@ under the License.
 
 #include "VtkAbstractObject.h"
 
-class VtkProperty;
 namespace COMMON_NS
 {
 	class DataObjectRepository;
@@ -52,38 +51,25 @@ public:
 	virtual ~VtkAbstractRepresentation();
 
 	/**
-	* load & display representation uuid's
-	*/
-	void visualize(const std::string & uuid);
-
-	/**
 	* create property
 	*/
 	void createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, VtkEpcCommon::Resqml2Type resqmlType);
-	
-	/**
-	* createOutput the h5 data with vtk structure
-	*/
-	virtual void createOutput(const std::string & uuid) = 0;
-	
+
+protected:
+
 	/**
 	* Create a vtkPoints from a C double array representing XYZ triplets. Invert Z coordinates in case the XYZ triplets are depth oriented.
 	* This method takes ownership of the C double array meaning that it will delete it (using delete[]). Don't delete the C array somewhere else in the code.
 	*
 	* @param pointCount		The count of points in allXyzPoints. allXyzPoints must be 3*pointCount size.
 	* @param allXyzPoints	The XYZ triplets of the VTK points to be created. They must lie in the localCRS.
-    *						Their ownership will be transfered to VTK in this method. Do not delete them.
+	*						Their ownership will be transfered to VTK in this method. Do not delete them.
 	* @param localCRS		The CRS where the XYZ triplets are given.
 	*
 	*/
 	vtkSmartPointer<vtkPoints> createVtkPoints(ULONG64 pointCount, double * allXyzPoints, const RESQML2_NS::AbstractLocal3dCrs * localCRS);
 
-	vtkSmartPointer<vtkPoints> getVtkPoints();
-
-	void setSubRepresentation() { subRepresentation = true; }
-
-protected:
-	std::unordered_map<std::string, VtkProperty *> uuidToVtkProperty;
+	std::unordered_map<std::string, class VtkProperty *> uuidToVtkProperty;
 
 	// EPC DOCUMENT
 	COMMON_NS::DataObjectRepository const * epcPackageRepresentation;

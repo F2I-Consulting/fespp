@@ -45,13 +45,13 @@ public:
 	~VtkIjkGridRepresentation() {}
 	
 	/**
-	* method : createOutput
+	* method : visualize
 	* variable : uuid (ijk Grid representation or property) 
 	* description : 
 	*    - if ijk uuid : create the vtk objects for represent ijk Grid 
 	*    - if property uuid : add property to ijk Grid 
 	*/
-	void createOutput(const std::string & uuid);
+	void visualize(const std::string & uuid);
 	
 	/**
 	* method : addProperty
@@ -85,27 +85,20 @@ public:
 	void setInitKIndex(int value) { initKIndex = value; }
 
 	void setMaxKIndex(int value) { maxKIndex = value; }
-	/**
-	* method : createWithPoints
-	* variable : ijkGrid points,  ijkGrid or sub-rep
-	* description :
-	* create the vtk objects with points
-	*/	
-	void createWithPoints(vtkSmartPointer<vtkPoints> pointsRepresentation, COMMON_NS::AbstractObject* obj2);
-
-	/**
-	* method : createpoint
-	* variable : 
-	* return : vtk points of ijkGrid Representation
-	* 	int iCellCount;
-	*   int jCellCount;
-	*   int kCellCount;
-	*   int initKIndex;
-	*   int maxKIndex;
-	*/	
-	vtkSmartPointer<vtkPoints> createpoint();
 
 private:
+
+	/**
+	* Create the VTK points from the RESQML points of the RESQML IJK grid representation.
+	*/
+	vtkSmartPointer<vtkPoints> createPoints();
+
+	/**
+	* Create the VTK unstructured grid.
+	*
+	* @param ijkOrSubrep			The corresponding RESQML2 representation which can be eith an ijk grid or a subrepresenation
+	*/
+	void createVtkUnstructuredGrid(RESQML2_NS::AbstractRepresentation* ijkOrSubrep);
 
 	/**
 	* method : checkHyperslabingCapacity

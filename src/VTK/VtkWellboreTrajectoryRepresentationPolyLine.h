@@ -35,11 +35,11 @@ public:
 	~VtkWellboreTrajectoryRepresentationPolyLine();
 
 	/**
-	* method : createOutput
+	* method : visualize
 	* variable : std::string uuid (Wellbore trajectory representation UUID)
 	* create the vtk object for represent Wellbore trajectory Polyline.
 	*/
-	void createOutput(const std::string & uuid);
+	void visualize(const std::string & uuid);
 	
 	void addProperty(const std::string & uuidProperty, vtkDataArray* dataProperty);
 	

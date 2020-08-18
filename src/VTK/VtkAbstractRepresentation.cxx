@@ -22,7 +22,6 @@ under the License.
 
 #include "VtkProperty.h"
 
-//----------------------------------------------------------------------------
 VtkAbstractRepresentation::VtkAbstractRepresentation(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, COMMON_NS::DataObjectRepository const * pckEPCRep, COMMON_NS::DataObjectRepository const * pckEPCSubRep, int idProc, int maxProc) :
 	VtkAbstractObject(fileName, name, uuid, uuidParent, idProc, maxProc), epcPackageRepresentation(pckEPCRep), epcPackageSubRepresentation(pckEPCSubRep),
 	subRepresentation(pckEPCSubRep != nullptr)
@@ -30,34 +29,17 @@ VtkAbstractRepresentation::VtkAbstractRepresentation(const std::string & fileNam
 
 VtkAbstractRepresentation::~VtkAbstractRepresentation()
 {
-	if (epcPackageRepresentation != nullptr) {
-		epcPackageRepresentation = nullptr;
-	}
-
-	if (epcPackageSubRepresentation != nullptr) {
-		epcPackageSubRepresentation = nullptr;
-	}
-
 	for (auto i : uuidToVtkProperty) {
 		delete i.second;
 	}
-	uuidToVtkProperty.clear();
-
-	points = nullptr;
 }
-//----------------------------------------------------------------------------
+
 void VtkAbstractRepresentation::createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, VtkEpcCommon::Resqml2Type resqmlType)
 {
 	if (resqmlType == VtkEpcCommon::Resqml2Type::PROPERTY &&
 		uuidToVtkProperty.find(uuid) == uuidToVtkProperty.end()) {
 		uuidToVtkProperty[uuid] = new VtkProperty(getFileName(), name, uuid, parent, subRepresentation ? epcPackageSubRepresentation : epcPackageRepresentation);
 	}
-}
-
-//----------------------------------------------------------------------------
-void VtkAbstractRepresentation::visualize(const std::string & uuid)
-{
-	createOutput(uuid);
 }
 
 vtkSmartPointer<vtkPoints> VtkAbstractRepresentation::createVtkPoints(ULONG64 pointCount,  double * allXyzPoints, const RESQML2_NS::AbstractLocal3dCrs * localCRS)
@@ -76,10 +58,5 @@ vtkSmartPointer<vtkPoints> VtkAbstractRepresentation::createVtkPoints(ULONG64 po
 	vtkUnderlyingArray->SetArray(allXyzPoints, coordCount, vtkAbstractArray::VTK_DATA_ARRAY_DELETE);
 	points->SetData(vtkUnderlyingArray);
 
-	return points;
-}
-
-vtkSmartPointer<vtkPoints> VtkAbstractRepresentation::getVtkPoints()
-{
 	return points;
 }

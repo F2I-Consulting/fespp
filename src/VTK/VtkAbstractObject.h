@@ -32,7 +32,7 @@ public:
 	/**
 	* Destructor
 	*/
-	virtual ~VtkAbstractObject();
+	virtual ~VtkAbstractObject() = default;
 
 	const std::string& getFileName() const { return fileName; }
 	const std::string& getName() const { return name; }
@@ -51,11 +51,6 @@ public:
 	* load & display representation uuid's
 	*/
 	virtual void visualize(const std::string & uuid) = 0;
-	
-	/**
-	* create vtk resqml2 element
-	*/
-	virtual void createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, VtkEpcCommon::Resqml2Type resqmlType) = 0;
 
 	/**
 	* remove representation uuid's

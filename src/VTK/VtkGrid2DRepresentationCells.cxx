@@ -39,7 +39,7 @@ VtkGrid2DRepresentationCells::~VtkGrid2DRepresentationCells()
 	lastProperty = "";
 }
 //----------------------------------------------------------------------------
-void VtkGrid2DRepresentationCells::createOutput(const std::string & uuid)
+void VtkGrid2DRepresentationCells::visualize(const std::string & uuid)
 {
 	if (!subRepresentation)	{
 

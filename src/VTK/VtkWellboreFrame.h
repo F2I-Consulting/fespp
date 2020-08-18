@@ -38,21 +38,21 @@ public:
 	/**
 	* Destructor
 	*/
-	~VtkWellboreFrame() {}
+	~VtkWellboreFrame() = default;
 
 	/**
 	* method : createTreeVtk
 	* variable : std::string uuid (Wellbore trajectory representation UUID)
 	* create the vtk objects for represent Wellbore trajectory (polyline + datum + text).
 	*/
-	void createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, VtkEpcCommon::Resqml2Type resqmlType) final;
+	void createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, VtkEpcCommon::Resqml2Type resqmlType);
 
 	void visualize(const std::string & uuid) final;
 
 	void toggleMarkerOrientation(const bool & orientation);
 
 	/**
-	* method : createOutput
+	* method : visualize
 	* variable : std::string uuid
 	* delete the vtkPolyData.
 	*/

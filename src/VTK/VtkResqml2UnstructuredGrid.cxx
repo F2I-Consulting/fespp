@@ -44,11 +44,11 @@ void VtkResqml2UnstructuredGrid::remove(const std::string & uuid)
 	if (uuid == getUuid()) {
 		vtkOutput = nullptr;
 	}
-	else if(uuidToVtkProperty[uuid] != nullptr) {
+	else if (uuidToVtkProperty[uuid] != nullptr) {
 		switch (uuidToVtkProperty[uuid]->getSupport()) {
-		case VtkProperty::typeSupport::CELLS: vtkOutput->GetCellData()->RemoveArray(uuidToVtkProperty[uuid]->getName().c_str()); break;
-		case VtkProperty::typeSupport::POINTS: vtkOutput->GetPointData()->RemoveArray(uuidToVtkProperty[uuid]->getName().c_str()); break;
-		default: throw std::invalid_argument("The property is attached on a non supported topological element i.e. not cell, not point.");
+			case VtkProperty::typeSupport::CELLS: vtkOutput->GetCellData()->RemoveArray(uuidToVtkProperty[uuid]->getName().c_str()); break;
+			case VtkProperty::typeSupport::POINTS: vtkOutput->GetPointData()->RemoveArray(uuidToVtkProperty[uuid]->getName().c_str()); break;
+			default: throw std::invalid_argument("The property is attached on a non supported topological element i.e. not cell, not point.");
 		}
 	}
 }

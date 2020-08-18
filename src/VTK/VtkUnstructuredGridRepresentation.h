@@ -28,7 +28,7 @@ namespace COMMON_NS
 	class DataObjectRepository;
 }
 
-namespace RESQML2_0_1_NS
+namespace RESQML2_NS
 {
 	class UnstructuredGridRepresentation;
 }
@@ -45,24 +45,22 @@ public:
 	/**
 	* Destructor
 	*/
-	~VtkUnstructuredGridRepresentation() {}
+	~VtkUnstructuredGridRepresentation() = default;
 
 	/**
-	* method : createOutput
+	* method : visualize
 	* variable : std::string uuid (Unstructured Grid UUID)
 	* create the vtk objects for represent Unstructured grid.
 	*/
-	void createOutput(const std::string & uuid);
+	void visualize(const std::string & uuid);
 
 	void addProperty(const std::string & uuidProperty, vtkDataArray* dataProperty);
 
 	long getAttachmentPropertyCount(const std::string & uuid, VtkEpcCommon::FesppAttachmentProperty propertyUnit);
 
-protected:
-
 private:
 	// if all cells are VTK_TETRA
-	vtkSmartPointer<vtkCellArray> createOutputVtkTetra(const RESQML2_NS::UnstructuredGridRepresentation*);
+	vtkSmartPointer<vtkCellArray> visualizeVtkTetra(const RESQML2_NS::UnstructuredGridRepresentation*);
 
 	// verify and add cell if is VTK_TETRA
 	bool cellVtkTetra(const RESQML2_NS::UnstructuredGridRepresentation*, ULONG64 cellIndex);

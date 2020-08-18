@@ -43,7 +43,7 @@ VtkWellboreMarker::~VtkWellboreMarker()
 }
 
 //----------------------------------------------------------------------------
-void VtkWellboreMarker::createOutput(const std::string & uuid)
+void VtkWellboreMarker::visualize(const std::string & uuid)
 {
 	if (uuid == getUuid()) {
 		if (orientation) {
@@ -63,7 +63,7 @@ void VtkWellboreMarker::toggleMarkerOrientation(const bool & orient) {
 	orientation = orient;
 
 	if (vtkOutput != nullptr) {
-		createOutput(getUuid());
+		visualize(getUuid());
 		/******* TODO
 		 * Call enable/disable marker orientation
 		 * use : vtkTransform

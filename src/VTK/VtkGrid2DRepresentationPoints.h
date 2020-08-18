@@ -36,11 +36,11 @@ public:
 	~VtkGrid2DRepresentationPoints();
 
 	/**
-	* method : createOutput
+	* method : visualize
 	* variable : std::string uuid (grid 2D representation UUID)
 	* create the vtk objects for represent grid 2D.
 	*/
-	void createOutput(const std::string & uuid);
+	void visualize(const std::string & uuid);
 
 	void addProperty(const std::string & uuidProperty, vtkDataArray* dataProperty);
 

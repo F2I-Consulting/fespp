@@ -48,7 +48,7 @@ VtkUnstructuredGridRepresentation::VtkUnstructuredGridRepresentation(const std::
 }
 
 //----------------------------------------------------------------------------
-void VtkUnstructuredGridRepresentation::createOutput(const std::string & uuid)
+void VtkUnstructuredGridRepresentation::visualize(const std::string & uuid)
 {
 	if (!subRepresentation)	{
 		RESQML2_NS::UnstructuredGridRepresentation* unstructuredGridRep = epcPackageRepresentation->getDataObjectByUuid<RESQML2_NS::UnstructuredGridRepresentation>(getUuid());
@@ -66,7 +66,7 @@ void VtkUnstructuredGridRepresentation::createOutput(const std::string & uuid)
 			unstructuredGridRep->loadGeometry();
 			if (unstructuredGridRep->isFaceCountOfCellsConstant() && unstructuredGridRep->isNodeCountOfFacesConstant() &&
 				unstructuredGridRep->getConstantFaceCountOfCells() == 4 && unstructuredGridRep->getConstantNodeCountOfFaces() == 3) {
-				vtkOutput->SetCells(VTK_TETRA, createOutputVtkTetra(unstructuredGridRep));
+				vtkOutput->SetCells(VTK_TETRA, visualizeVtkTetra(unstructuredGridRep));
 			}
 			else {
 				// CELLS
@@ -130,7 +130,7 @@ void VtkUnstructuredGridRepresentation::createOutput(const std::string & uuid)
 }
 
 //----------------------------------------------------------------------------
-vtkSmartPointer<vtkCellArray> VtkUnstructuredGridRepresentation::createOutputVtkTetra(const RESQML2_NS::UnstructuredGridRepresentation* unstructuredGridRep)
+vtkSmartPointer<vtkCellArray> VtkUnstructuredGridRepresentation::visualizeVtkTetra(const RESQML2_NS::UnstructuredGridRepresentation* unstructuredGridRep)
 {
 	vtkSmartPointer<vtkCellArray> cellArray = vtkSmartPointer<vtkCellArray>::New();
 
