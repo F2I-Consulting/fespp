@@ -52,6 +52,7 @@ public:
 	void visualize(const std::string & uuid) final;
 
 	void toggleMarkerOrientation(const bool & orientation);
+	void setMarkerSize(int newSize);
 
 	long getAttachmentPropertyCount(const std::string &, VtkEpcCommon::FesppAttachmentProperty) final { return 0; }
 
@@ -63,10 +64,9 @@ public:
 	void remove(const std::string & uuid) final;
 
 private:
-
-	void applyOrientation();
-	void createDisk();
-	void createSphere();
+	void createDisk(const size_t & markerIndex);
+	void createSphere(const size_t & markerIndex);
+	size_t searchMarkerIndex();
 
 	bool orientation;
 	int size;

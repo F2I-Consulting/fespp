@@ -46,34 +46,69 @@ VtkWellboreMarker::~VtkWellboreMarker()
 void VtkWellboreMarker::visualize(const std::string & uuid)
 {
 	if (uuid == getUuid()) {
+
+		RESQML2_NS::WellboreMarkerFrameRepresentation *markerFrame = static_cast<RESQML2_NS::WellboreMarkerFrameRepresentation *>(epcPackageRepresentation->getDataObjectByUuid(getParent()));
+		std::vector<RESQML2_NS::WellboreMarker *> markerSet = markerFrame->getWellboreMarkerSet();
+		std::unique_ptr<double[]> doublePositions(new double[markerFrame->getMdValuesCount()*3]);
+		markerFrame->getXyzPointsOfPatch(0, doublePositions.get());
+
+		size_t marker_index = searchMarkerIndex();
+cout << markerSet[marker_index]->getDipDirectionUom() << endl;
 		if (orientation) {
-			createDisk();
+			if (doublePositions[3*marker_index] == doublePositions[3*marker_index] &&
+					doublePositions[3*marker_index+1] == doublePositions[3*marker_index+1] &&
+					doublePositions[3*marker_index+2] == doublePositions[3*marker_index+2]) { // no NaN Value
+				if(	markerSet[marker_index]->hasDipAngle() &&
+						markerSet[marker_index]->hasDipDirection()) { // dips & direction exist in degre
+					createDisk(marker_index);
+				} else {
+					createSphere(marker_index);
+				}
+			} else {
+				return;
+			}
+		} else {
+			createSphere(marker_index);
 
 		}
-		else {
-			createSphere();
 
-		}
+
 	}
 }
 
 //----------------------------------------------------------------------------
 void VtkWellboreMarker::toggleMarkerOrientation(const bool & orient) {
-
 	orientation = orient;
-
-	if (vtkOutput != nullptr) {
-		visualize(getUuid());
-		/******* TODO
-		 * Call enable/disable marker orientation
-		 * use : vtkTransform
-		 */
-	}
+	visualize(getUuid());
 }
 
 //----------------------------------------------------------------------------
-void VtkWellboreMarker::createDisk() {
-	// create: Disk
+void VtkWellboreMarker::setMarkerSize(int new_size) {
+	this->size = new_size;
+	visualize(getUuid());
+}
+
+//----------------------------------------------------------------------------
+size_t VtkWellboreMarker::searchMarkerIndex(){
+	// search Marker
+	RESQML2_NS::WellboreMarkerFrameRepresentation *frame = static_cast<RESQML2_NS::WellboreMarkerFrameRepresentation *>(epcPackageRepresentation->getDataObjectByUuid(getParent()));
+	std::vector<RESQML2_NS::WellboreMarker *> markerSet = frame->getWellboreMarkerSet();
+	for (size_t mIndex = 0; mIndex < markerSet.size(); ++mIndex) {
+		if (markerSet[mIndex]->getUuid() == getUuid() ){
+			return mIndex;
+		}
+	}
+	return -1;
+}
+
+//----------------------------------------------------------------------------
+void VtkWellboreMarker::createDisk(const size_t & markerIndex) {
+	RESQML2_NS::WellboreMarkerFrameRepresentation *markerFrame = static_cast<RESQML2_NS::WellboreMarkerFrameRepresentation *>(epcPackageRepresentation->getDataObjectByUuid(getParent()));
+
+	std::unique_ptr<double[]> doublePositions(new double[markerFrame->getMdValuesCount()*3]);
+	markerFrame->getXyzPointsOfPatch(0, doublePositions.get());
+
+	//initialize a  disk
 	vtkSmartPointer<vtkDiskSource> diskSource = vtkSmartPointer<vtkDiskSource>::New();
 	diskSource->SetInnerRadius(0);
 	diskSource->SetOuterRadius(size);
@@ -81,82 +116,14 @@ void VtkWellboreMarker::createDisk() {
 
 	vtkOutput = diskSource->GetOutput();
 
-	// apply dips/azimuth (rotation)
-	if (orientation) {
-		applyOrientation();
-
-		/******* TODO
-		 * if NaN Value => call createSphere + return;
-		 */
-	}
-
-	// apply coordonate (translation)
+	// get markerSet
 	RESQML2_NS::WellboreMarkerFrameRepresentation *frame = static_cast<RESQML2_NS::WellboreMarkerFrameRepresentation *>(epcPackageRepresentation->getDataObjectByUuid(getParent()));
 	std::vector<RESQML2_NS::WellboreMarker *> markerSet = frame->getWellboreMarkerSet();
-	std::unique_ptr<double[]> doublePositions(new double[frame->getMdValuesCount()*3]);
-	frame->getXyzPointsOfPatch(0, doublePositions.get());
-	for (size_t mIndex = 0; mIndex < markerSet.size(); ++mIndex) {
-		if (markerSet[mIndex]->getUuid() == getUuid() ){
-			const double zIndice = frame->getLocalCrs(0)->isDepthOriented() ? -1 : 1;
 
-			vtkSmartPointer<vtkTransform> translation = vtkSmartPointer<vtkTransform>::New();
-			translation->Translate(doublePositions[3*mIndex], doublePositions[3*mIndex+1], zIndice*doublePositions[3*mIndex+2]);
-
-			vtkSmartPointer<vtkTransformPolyDataFilter> transformFilter = vtkSmartPointer<vtkTransformPolyDataFilter>::New();
-			transformFilter->SetInputData(vtkOutput);
-			transformFilter->SetTransform(translation);
-			transformFilter->Update();
-
-			vtkOutput = transformFilter->GetOutput();
-			break;
-		}
-	}
-}
-
-//----------------------------------------------------------------------------
-void VtkWellboreMarker::createSphere() {
-	vtkSmartPointer<vtkSphereSource> sphereSource = vtkSmartPointer<vtkSphereSource>::New();
-	sphereSource->SetCenter(0.0, 0.0, 0.0);
-	sphereSource->SetRadius(size);
-	sphereSource->Update();
-
-	vtkOutput = sphereSource->GetOutput();
-
-	RESQML2_NS::WellboreMarkerFrameRepresentation *frame = static_cast<RESQML2_NS::WellboreMarkerFrameRepresentation *>(epcPackageRepresentation->getDataObjectByUuid(this->getParent()));
-	std::vector<RESQML2_NS::WellboreMarker *> markerSet = frame->getWellboreMarkerSet();
-	std::unique_ptr<double[]> doublePositions(new double[frame->getMdValuesCount() * 3]);
-	frame->getXyzPointsOfPatch(0, doublePositions.get());
-	for (size_t mIndex = 0; mIndex < markerSet.size(); ++mIndex) {
-		if (markerSet[mIndex]->getUuid() == getUuid() ){
-			const double zIndice = frame->getLocalCrs(0)->isDepthOriented() ? -1 : 1;
-
-			vtkSmartPointer<vtkTransform> translation = vtkSmartPointer<vtkTransform>::New();
-			translation->Translate(doublePositions[3*mIndex], doublePositions[3*mIndex+1], zIndice*doublePositions[3*mIndex+2]);
-
-			vtkSmartPointer<vtkTransformPolyDataFilter> transformFilter = vtkSmartPointer<vtkTransformPolyDataFilter>::New();
-			transformFilter->SetInputData(vtkOutput);
-			transformFilter->SetTransform(translation);
-			transformFilter->Update();
-
-			vtkOutput = transformFilter->GetOutput();
-			break;
-		}
-	}
-}
-
-//----------------------------------------------------------------------------
-void VtkWellboreMarker::applyOrientation() {
-
-	/******* TODO
-	 * calculate rotation Dips/Azimuth
-	 * use : vtkTransform
-	 */
-
-	// for test only
+	// disk orientation with dipAngle & dip Direction
 	vtkSmartPointer<vtkTransform> rotation = vtkSmartPointer<vtkTransform>::New();
-	rotation->RotateX(30);
-	rotation->RotateY(30);
-	rotation->RotateZ(30);
+	rotation->RotateY(markerSet[markerIndex]->getDipDirectionValue());
+	rotation->RotateZ(markerSet[markerIndex]->getDipAngleValue());
 
 	vtkSmartPointer<vtkTransformPolyDataFilter> transformFilter = vtkSmartPointer<vtkTransformPolyDataFilter>::New();
 	transformFilter->SetInputData(vtkOutput);
@@ -164,6 +131,39 @@ void VtkWellboreMarker::applyOrientation() {
 	transformFilter->Update();
 
 	vtkOutput = transformFilter->GetOutput();
+
+	// disk translation with marker position
+	const double zIndice = frame->getLocalCrs(0)->isDepthOriented() ? -1 : 1;
+	vtkSmartPointer<vtkTransform> translation = vtkSmartPointer<vtkTransform>::New();
+	translation->Translate(doublePositions[3*markerIndex], doublePositions[3*markerIndex+1], zIndice*doublePositions[3*markerIndex+2]);
+
+	transformFilter = vtkSmartPointer<vtkTransformPolyDataFilter>::New();
+	transformFilter->SetInputData(vtkOutput);
+	transformFilter->SetTransform(translation);
+	transformFilter->Update();
+
+	vtkOutput = transformFilter->GetOutput();
+}
+
+//----------------------------------------------------------------------------
+void VtkWellboreMarker::createSphere(const size_t & markerIndex) {
+	RESQML2_NS::WellboreMarkerFrameRepresentation *markerFrame = static_cast<RESQML2_NS::WellboreMarkerFrameRepresentation *>(epcPackageRepresentation->getDataObjectByUuid(getParent()));
+
+	std::unique_ptr<double[]> doublePositions(new double[markerFrame->getMdValuesCount()*3]);
+	markerFrame->getXyzPointsOfPatch(0, doublePositions.get());
+
+	// get markerSet
+	RESQML2_NS::WellboreMarkerFrameRepresentation *frame = static_cast<RESQML2_NS::WellboreMarkerFrameRepresentation *>(epcPackageRepresentation->getDataObjectByUuid(getParent()));
+	std::vector<RESQML2_NS::WellboreMarker *> markerSet = frame->getWellboreMarkerSet();
+	const double zIndice = frame->getLocalCrs(0)->isDepthOriented() ? -1 : 1;
+
+	//create  sphere
+	vtkSmartPointer<vtkSphereSource> sphereSource = vtkSmartPointer<vtkSphereSource>::New();
+	sphereSource->SetCenter(doublePositions[3*markerIndex], doublePositions[3*markerIndex+1], zIndice*doublePositions[3*markerIndex+2]);
+	sphereSource->SetRadius(size);
+	sphereSource->Update();
+
+	vtkOutput = sphereSource->GetOutput();
 }
 
 //----------------------------------------------------------------------------
