@@ -25,10 +25,7 @@ under the License.
 #include <vtkSmartPointer.h>
 
 // include Fespp
-#include "VtkAbstractRepresentation.h"
 #include "VtkResqml2PolyData.h"
-
-class vtkAlgorithmOutput;
 
 class VtkWellboreMarker : public VtkResqml2PolyData
 {
@@ -42,16 +39,16 @@ public:
 	/**
 	* Destructor
 	*/
-	~VtkWellboreMarker();
+	~VtkWellboreMarker() = default;
 
 	/**
 	* method : visualize
 	* variable : std::string uuid
-	* create the vtk objects for represent Marker.
+	* Create the VTK object for representing the RESQML Marker.
 	*/
 	void visualize(const std::string & uuid) final;
 
-	void toggleMarkerOrientation(const bool & orientation);
+	void toggleMarkerOrientation(bool orientation);
 	void setMarkerSize(int newSize);
 
 	long getAttachmentPropertyCount(const std::string &, VtkEpcCommon::FesppAttachmentProperty) final { return 0; }
@@ -64,8 +61,8 @@ public:
 	void remove(const std::string & uuid) final;
 
 private:
-	void createDisk(const size_t & markerIndex);
-	void createSphere(const size_t & markerIndex);
+	void createDisk(size_t markerIndex);
+	void createSphere(size_t markerIndex);
 	size_t searchMarkerIndex();
 
 	bool orientation;

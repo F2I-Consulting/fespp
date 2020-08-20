@@ -30,54 +30,41 @@ under the License.
 
 //----------------------------------------------------------------------------
 VtkWellboreMarker::VtkWellboreMarker(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, const COMMON_NS::DataObjectRepository *repoRepresentation, const COMMON_NS::DataObjectRepository *repoSubRepresentation) :
-VtkResqml2PolyData(fileName, name, uuid, uuidParent, repoRepresentation, repoSubRepresentation)
-{
-	orientation = true;
-	size = 10;
-}
-
-//----------------------------------------------------------------------------
-VtkWellboreMarker::~VtkWellboreMarker()
-{
-	vtkOutput = nullptr;
-}
+VtkResqml2PolyData(fileName, name, uuid, uuidParent, repoRepresentation, repoSubRepresentation), orientation (true), size(10)
+{}
 
 //----------------------------------------------------------------------------
 void VtkWellboreMarker::visualize(const std::string & uuid)
 {
 	if (uuid == getUuid()) {
-
 		RESQML2_NS::WellboreMarkerFrameRepresentation *markerFrame = static_cast<RESQML2_NS::WellboreMarkerFrameRepresentation *>(epcPackageRepresentation->getDataObjectByUuid(getParent()));
 		std::vector<RESQML2_NS::WellboreMarker *> markerSet = markerFrame->getWellboreMarkerSet();
 		std::unique_ptr<double[]> doublePositions(new double[markerFrame->getMdValuesCount()*3]);
 		markerFrame->getXyzPointsOfPatch(0, doublePositions.get());
 
 		size_t marker_index = searchMarkerIndex();
-cout << markerSet[marker_index]->getDipDirectionUom() << endl;
 		if (orientation) {
-			if (doublePositions[3*marker_index] == doublePositions[3*marker_index] &&
-					doublePositions[3*marker_index+1] == doublePositions[3*marker_index+1] &&
-					doublePositions[3*marker_index+2] == doublePositions[3*marker_index+2]) { // no NaN Value
-				if(	markerSet[marker_index]->hasDipAngle() &&
-						markerSet[marker_index]->hasDipDirection()) { // dips & direction exist in degre
+			if (!std::isnan(doublePositions[3*marker_index]) &&
+				!std::isnan(doublePositions[3*marker_index+1]) &&
+				!std::isnan(doublePositions[3*marker_index+2])) { // no NaN Value
+				if (markerSet[marker_index]->hasDipAngle() &&
+					markerSet[marker_index]->hasDipDirection()) { // dips & direction exist
+					cout << markerSet[marker_index]->getDipDirectionUom() << endl;
 					createDisk(marker_index);
-				} else {
+				}
+				else {
 					createSphere(marker_index);
 				}
-			} else {
-				return;
 			}
-		} else {
-			createSphere(marker_index);
-
 		}
-
-
+		else {
+			createSphere(marker_index);
+		}
 	}
 }
 
 //----------------------------------------------------------------------------
-void VtkWellboreMarker::toggleMarkerOrientation(const bool & orient) {
+void VtkWellboreMarker::toggleMarkerOrientation(bool orient) {
 	orientation = orient;
 	visualize(getUuid());
 }
@@ -98,17 +85,42 @@ size_t VtkWellboreMarker::searchMarkerIndex(){
 			return mIndex;
 		}
 	}
-	return -1;
+	return (std::numeric_limits<size_t>::max)();
+}
+
+namespace {
+	constexpr auto M_PI = 3.14159265358979323846;
+	double convertToDegree(double value, gsoap_eml2_1::eml21__PlaneAngleUom uom) {
+		switch (uom) {
+		case gsoap_eml2_1::eml21__PlaneAngleUom__0_x002e001_x0020seca:
+		case gsoap_eml2_1::eml21__PlaneAngleUom__ccgr:
+		case gsoap_eml2_1::eml21__PlaneAngleUom__cgr: break;
+		case gsoap_eml2_1::eml21__PlaneAngleUom__dega: return value;
+		case gsoap_eml2_1::eml21__PlaneAngleUom__gon: return value * 0.9;
+		case gsoap_eml2_1::eml21__PlaneAngleUom__krad: return value * 1e3 * 180 / M_PI;
+		case gsoap_eml2_1::eml21__PlaneAngleUom__mila: return value * 0.0573;
+		case gsoap_eml2_1::eml21__PlaneAngleUom__mina: return value * 0.01666667;
+		case gsoap_eml2_1::eml21__PlaneAngleUom__Mrad: return value * 1e6 * 180 / M_PI;
+		case gsoap_eml2_1::eml21__PlaneAngleUom__mrad: return value * 1e-3 * 180 / M_PI;
+		case gsoap_eml2_1::eml21__PlaneAngleUom__rad: return value * 180 / M_PI;
+		case gsoap_eml2_1::eml21__PlaneAngleUom__rev: return value * 360;
+		case gsoap_eml2_1::eml21__PlaneAngleUom__seca: return value * 0.0002777778;
+		case gsoap_eml2_1::eml21__PlaneAngleUom__urad: return value * 1e-6 * 180 / M_PI;
+		}
+
+		vtkOutputWindowDisplayErrorText("The uom of the dip of the marker is not recognized.");
+		return std::numeric_limits<double>::quiet_NaN();
+	}
 }
 
 //----------------------------------------------------------------------------
-void VtkWellboreMarker::createDisk(const size_t & markerIndex) {
+void VtkWellboreMarker::createDisk(size_t markerIndex) {
 	RESQML2_NS::WellboreMarkerFrameRepresentation *markerFrame = static_cast<RESQML2_NS::WellboreMarkerFrameRepresentation *>(epcPackageRepresentation->getDataObjectByUuid(getParent()));
 
 	std::unique_ptr<double[]> doublePositions(new double[markerFrame->getMdValuesCount()*3]);
 	markerFrame->getXyzPointsOfPatch(0, doublePositions.get());
 
-	//initialize a  disk
+	//initialize a disk
 	vtkSmartPointer<vtkDiskSource> diskSource = vtkSmartPointer<vtkDiskSource>::New();
 	diskSource->SetInnerRadius(0);
 	diskSource->SetOuterRadius(size);
@@ -122,8 +134,8 @@ void VtkWellboreMarker::createDisk(const size_t & markerIndex) {
 
 	// disk orientation with dipAngle & dip Direction
 	vtkSmartPointer<vtkTransform> rotation = vtkSmartPointer<vtkTransform>::New();
-	rotation->RotateY(markerSet[markerIndex]->getDipDirectionValue());
-	rotation->RotateZ(markerSet[markerIndex]->getDipAngleValue());
+	rotation->RotateY(convertToDegree(markerSet[markerIndex]->getDipAngleValue(), markerSet[markerIndex]->getDipAngleUom()));
+	rotation->RotateZ(90 - convertToDegree(markerSet[markerIndex]->getDipDirectionValue(), markerSet[markerIndex]->getDipDirectionUom())); // The strike direction is perpendicular to the dip direction
 
 	vtkSmartPointer<vtkTransformPolyDataFilter> transformFilter = vtkSmartPointer<vtkTransformPolyDataFilter>::New();
 	transformFilter->SetInputData(vtkOutput);
@@ -146,7 +158,7 @@ void VtkWellboreMarker::createDisk(const size_t & markerIndex) {
 }
 
 //----------------------------------------------------------------------------
-void VtkWellboreMarker::createSphere(const size_t & markerIndex) {
+void VtkWellboreMarker::createSphere(size_t markerIndex) {
 	RESQML2_NS::WellboreMarkerFrameRepresentation *markerFrame = static_cast<RESQML2_NS::WellboreMarkerFrameRepresentation *>(epcPackageRepresentation->getDataObjectByUuid(getParent()));
 
 	std::unique_ptr<double[]> doublePositions(new double[markerFrame->getMdValuesCount()*3]);
