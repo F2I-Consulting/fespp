@@ -81,12 +81,10 @@ Fespp::~Fespp()
 //----------------------------------------------------------------------------
 void Fespp::SetSubFileName(const char* name)
 {
-	const std::string nameStr = std::string(name);
-
-	std::string extension="";
-	if (nameStr.length() > 3) {
-		extension = nameStr.substr (nameStr.length()-3,3);
-	}
+	const std::string nameStr(name);
+	const std::string extension = nameStr.length() > 3
+		? nameStr.substr(nameStr.length() - 3, 3)
+		: "";
 
 #ifdef WITH_ETP
 	if (isEtpDocument) {
@@ -114,7 +112,7 @@ int Fespp::GetUuidListArrayStatus(const char* uuid)
 //----------------------------------------------------------------------------
 void Fespp::SetUuidList(const char* uuid, int status)
 {
-	const std::string uuidStr = std::string(uuid);
+	const std::string uuidStr(uuid);
 	UuidList->AddArray(uuid, status);
 	loadedFile = true;
 	if (uuidStr == "connect") {
@@ -133,7 +131,7 @@ void Fespp::SetUuidList(const char* uuid, int status)
 		}
 	}
 	else if (status == 0) {
-		if(strcmp(FileName,"EpcDocument") == 0)  {
+		if (FileName != nullptr && strcmp(FileName,"EpcDocument") == 0)  {
 			epcDocumentSet->unvisualize(uuidStr);
 			UuidList->RemoveArrayByName(uuid);
 		}
@@ -144,7 +142,7 @@ void Fespp::SetUuidList(const char* uuid, int status)
 #endif
 	}
 	else {
-		if(strcmp(FileName,"EpcDocument") == 0)  {
+		if (FileName != nullptr && strcmp(FileName,"EpcDocument") == 0)  {
 			auto msg = epcDocumentSet->visualize(uuidStr);
 			if  (!msg.empty()){
 				displayError(msg);
@@ -175,7 +173,7 @@ void Fespp::setMarkerOrientation(const bool orientation) {
 			 */
 		}
 #endif
-		if(strcmp(FileName,"EpcDocument") == 0)  {
+		if (FileName != nullptr && strcmp(FileName,"EpcDocument") == 0)  {
 			epcDocumentSet->toggleMarkerOrientation(MarkerOrientation);
 		}
 
@@ -196,7 +194,7 @@ void Fespp::setMarkerSize(const int size) {
 		 */
 	}
 #endif
-	if(strcmp(FileName,"EpcDocument") == 0)  {
+	if (FileName != nullptr && strcmp(FileName,"EpcDocument") == 0)  {
 		/******* TODO
 		 * modifiy marker size for EPC document
 		 */
@@ -281,7 +279,7 @@ int Fespp::RequestData(vtkInformation *,
 		RequestDataEtpDocument(outputVector);
 	}
 #endif
-	if(strcmp(FileName,"EpcDocument") == 0) 	{
+	if (FileName != nullptr && strcmp(FileName,"EpcDocument") == 0) 	{
 		RequestDataEpcDocument(outputVector);
 	}
 	return 1;
