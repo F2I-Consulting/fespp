@@ -332,7 +332,7 @@ pqPipelineSource* PQToolsManager::getOrCreatePipelineSource()
 	}
 	else {
 		existPipe(true);
-		return pqApplicationCore::instance()->getObjectBuilder()->createReader("sources", "Fespp", QStringList("EpcDocument"), getActiveServer());
+		return pqApplicationCore::instance()->getObjectBuilder()->createReader("sources", "EPCReader", QStringList("EpcDocument"), getActiveServer());
 	}
 }
 
