@@ -7,51 +7,38 @@ project(Fespp
 	VERSION 2.3.0
 	DESCRIPTION "Paraview plugin for importing EPC documents"
 	HOMEPAGE_URL "https://github.com/F2I-Consulting/fespp"
-	LANGUAGES CXX
+	LANGUAGES C CXX
 )
 
-set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
-set(CMAKE_POSITION_INDEPENDENT_CODE TRUE)
+# These five lines are required in order to set up installation directories
+# (which also control build directory locations) and enable shared builds
+# (CMake's default is for a static build).
+include(GNUInstallDirs)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}")
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}")
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}")
+set(BUILD_SHARED_LIBS ON)
 
-if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-	set (CMAKE_INSTALL_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/install CACHE PATH "Fespp install prefix" FORCE)
-endif (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+# Find ParaView. This will bring in ParaView's CMake API and imported targets.
+find_package(ParaView REQUIRED)
 
-# -----------------------------------------------------------------------------
-# DEPENDENCIES
-# -----------------------------------------------------------------------------
+# Scan the plugin file in order to set up internal data structures for building plugins
+set("_paraview_plugin_default_${CMAKE_PROJECT_NAME}" ON)
+paraview_plugin_scan(
+  PLUGIN_FILES      "${CMAKE_CURRENT_SOURCE_DIR}/Plugin/paraview.plugin"
+  PROVIDES_PLUGINS  plugins
+  REQUIRES_MODULES  required_modules)
 
-set (FESAPI_INCLUDE FESAPI_INCLUDE-NOTFOUND CACHE PATH "Path to the directory which contains the FESAPI header files")
-set (FESAPI_LIBRARY_RELEASE FESAPI_LIBRARY_RELEASE-NOTFOUND CACHE FILEPATH "Path to the FESAPI release library")
-set (FESAPI_LIBRARY_DEBUG FESAPI_LIBRARY_DEBUG-NOTFOUND CACHE FILEPATH "Path to the FESAPI debug library")
+foreach (module IN LISTS required_modules)
+  if (NOT TARGET "${module}")
+    message("Missing required module: ${module}")
+    return ()
+  endif ()
+endforeach ()
 
-set (WITH_ETP OFF CACHE BOOL "Only if FESAPI build with ETP support... for building Fespp with ETP support.")
-if (WITH_ETP)
-
-	message ("WARNING: ETP support only if FESAPI build with ETP support")
-
-	# -- Boost DEPENDENCY --
-	set (BOOST_INCLUDE_DIR BOOST_INCLUDE_DIR-NOTFOUND CACHE PATH "Path to the directory which contains the BOOST header files")
-	if (NOT IS_DIRECTORY ${BOOST_INCLUDE_DIR})
-		message(WARNING "The BOOST include dir (BOOST_INCLUDE_DIR variable) does not look to be a valid directory. Please modify it.")
-	endif ()
-	set (BOOST_SYSTEM_LIBRARY BOOST_SYSTEM_LIBRARY-NOTFOUND CACHE FILEPATH "Path to the file which contains the Boost system static library release")
-	if (NOT EXISTS ${BOOST_SYSTEM_LIBRARY})
-		message(WARNING "The BOOST library (BOOST_SYSTEM_LIBRARY variable) does not look to be a valid file. Please modify it.")
-	endif ()	
-	
-	# -- avro DEPENDENCY --
-	set (AVRO_INCLUDE_DIR AVRO_INCLUDE_DIR-NOTFOUND CACHE PATH "Path to the directory which contains the avro header files")
-	if (NOT IS_DIRECTORY ${AVRO_INCLUDE_DIR})
-		message(WARNING "The Avro include dir (AVRO_INCLUDE_DIR variable) does not look to be a valid directory. Please modify it.")
-	endif ()
-	set (AVRO_LIBRARY_RELEASE AVRO_LIBRARY_RELEASE-NOTFOUND CACHE FILEPATH "Path to the file which contains the avro library release")
-	if (NOT EXISTS ${AVRO_LIBRARY_RELEASE})
-		message(WARNING "The avro library (AVRO_LIBRARY_RELEASE variable) does not look to be a valid file. Please modify it.")
-	endif ()
-	
-endif (WITH_ETP)
-
-add_subdirectory(Plugin)
+# Build the plugins discovered during the scan.
+paraview_plugin_build(
+  RUNTIME_DESTINATION "${CMAKE_INSTALL_BINDIR}"
+  LIBRARY_DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+  LIBRARY_SUBDIRECTORY "${PARAVIEW_PLUGIN_SUBDIR}"
+  PLUGINS ${plugins})

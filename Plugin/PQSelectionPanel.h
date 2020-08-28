@@ -41,8 +41,6 @@ under the License.
 #include <qprogressdialog.h>
 #include <qfuturewatcher.h>
 
-#include <fesapi/nsDefinitions.h>
-
 #include "VTK/VtkEpcCommon.h"
 
 namespace COMMON_NS
@@ -88,21 +86,11 @@ public:
 	void connectPQEtpPanel();
 #endif
 
-signals:
-	/**
-	* Signal emit when a item is selected
-	*/
-	void selectionName(const std::string &, const std::string &, COMMON_NS::EpcDocument*);
-
 protected slots:
 
 #ifdef WITH_ETP
 	void setEtpTreeView(std::vector<VtkEpcCommon>);
 #endif
-	/**
-	* When a line is selected.
-	*/
-	void clicSelection(QTreeWidgetItem* item,int column);
 
 	/**
 	* When a row is checked.
@@ -194,8 +182,6 @@ private:
 
 	// Map getting a present tree widget item from its uuid
 	std::unordered_map<std::string, TreeItem *> uuidItem;
-
-	std::unordered_map<std::string, COMMON_NS::EpcDocument *> pcksave;
 
 	std::unordered_map<std::string, QMap<time_t, std::string>> ts_timestamp_to_uuid;
 

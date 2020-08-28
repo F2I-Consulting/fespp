@@ -29,6 +29,8 @@ class pqPipelineSource;
 class pqServer;
 class pqView;
 
+/// This singleton class manages the state associated with the packaged
+/// visualizations provided by the Fespp tools.
 class PQToolsManager : public QObject
 {
 	Q_OBJECT
@@ -38,15 +40,20 @@ public:
 
 	~PQToolsManager();
 
-	QAction* actionDataLoadManager();
+	/// Get the action for the respective operation.
+	QAction* actionEtpFileSelection();
 #ifdef WITH_ETP
 	QAction* actionEtpCommand();
 #endif
 
-	pqPipelineSource* getFesppReader(const std::string & pipe_name);
-
-	QWidget* getMainWindow();
+	/// Convenience function for getting the current server.
 	pqServer* getActiveServer();
+
+	/// Convenience function for getting the main window.
+	QWidget* getMainWindow();
+
+	/// Get the reader objects.  Returns NULL if that reader was never created.
+	pqPipelineSource* getFesppReader(const std::string & pipe_name);
 
 	bool existPipe();
 	void existPipe(bool value);
@@ -59,7 +66,7 @@ public:
 	void newFile(const std::string & fileName);
 
 public slots:
-	void showDataLoadManager();
+	void showEpcImportFileDialog();
 #ifdef WITH_ETP
 	void showEtpConnectionManager();
 #endif

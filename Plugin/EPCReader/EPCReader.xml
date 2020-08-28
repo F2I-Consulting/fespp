@@ -51,6 +51,7 @@
 			        default = "1">
 			        <ArraySelectionInformationHelper attribute_name="UuidList"/>
 			</StringVectorProperty>
+			
 			<StringVectorProperty name="UuidList"
 				command="SetUuidList" repeat_command="1"
 				number_of_elements_per_command="2" element_types="2 0"

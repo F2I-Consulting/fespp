@@ -1,0 +1,14 @@
+NAME
+  EPCReader
+LIBRARY_NAME
+  EPCReader
+DEPENDS
+  VTK::CommonCore
+  VTK::CommonDataModel
+  VTK::CommonExecutionModel
+  VTK::CommonTransforms
+  VTK::FiltersGeneral
+  VTK::FiltersSources
+  VTK::ParallelCore
+PRIVATE_DEPENDS
+  VTK::vtksys

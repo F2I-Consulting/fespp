@@ -231,21 +231,6 @@ void PQSelectionPanel::subscribeChildren_slot() {
 	uuidItem[pickedBlocksEtp]->setIcon(1, QIcon(QString::fromUtf8(":pqEyeball16.png")));
 }
 
-//----------------------------------------------------------------------------
-void PQSelectionPanel::clicSelection(QTreeWidgetItem* item, int) {
-	auto pickedBlocks = static_cast<TreeItem*>(item)->getUuid();
-	if (pickedBlocks != "root") {
-		pqPipelineSource * source = findPipelineSource(searchSource(pickedBlocks).c_str());
-		if (source != nullptr) {
-			pqActiveObjects::instance().setActiveSource(source);
-		}
-		if (uuidToFilename[pickedBlocks] != pickedBlocks) {
-			emit selectionName(uuidToFilename[pickedBlocks], pickedBlocks,
-					pcksave[uuidToFilename[pickedBlocks]]);
-		}
-	}
-}
-
 void PQSelectionPanel::recursiveParentUncheck(QTreeWidgetItem* item)
 {
 	if (item == nullptr) {
@@ -329,8 +314,6 @@ void PQSelectionPanel::deleteTreeView() {
 	uuidToFilename.clear();
 
 	uuidItem.clear();
-
-	pcksave.clear();
 
 	if (vtkEpcDocumentSet != nullptr) {
 		delete vtkEpcDocumentSet;
@@ -461,7 +444,7 @@ void PQSelectionPanel::updateTimeSeries(const std::string & uuid, bool newUuid) 
 std::vector<std::string> PQSelectionPanel::getAllOpenedEpcFileNames() const
 {
 	std::vector<std::string> result;
-	for (const auto& vtkEpcDoc : vtkEpcDocumentSet->getAllVtkEpcDocuments()) {
+	for (VtkEpcDocument* vtkEpcDoc : vtkEpcDocumentSet->getAllVtkEpcDocuments()) {
 		result.push_back(vtkEpcDoc->getFileName());
 	}
 	return result;

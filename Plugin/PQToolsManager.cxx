@@ -51,20 +51,19 @@ under the License.
 
 namespace
 {
-
-PQSelectionPanel* getPQSelectionPanel()
-{
-	PQSelectionPanel *panel = nullptr;
-	foreach(QWidget *widget, qApp->topLevelWidgets())
+	PQSelectionPanel* getPQSelectionPanel()
 	{
-		panel = widget->findChild<PQSelectionPanel *>();
+		PQSelectionPanel *panel = nullptr;
+		foreach(QWidget *widget, qApp->topLevelWidgets())
+		{
+			panel = widget->findChild<PQSelectionPanel *>();
 
-		if (panel != nullptr) {
-			break;
+			if (panel != nullptr) {
+				break;
+			}
 		}
+		return panel;
 	}
-	return panel;
-}
 }
 
 //=============================================================================
@@ -82,7 +81,7 @@ PQToolsManager* PQToolsManager::instance()
 {
 	if (PQToolsManagerInstance == nullptr) {
 		pqApplicationCore* core = pqApplicationCore::instance();
-		if (!core) {
+		if (core == nullptr) {
 			qFatal("Cannot use the Tools without an application core instance.");
 			return nullptr;
 		}
@@ -110,10 +109,10 @@ PQToolsManager::PQToolsManager(QObject* p)
 #endif
 	panelSelectionVisible = false;
 
-	QObject::connect(actionDataLoadManager(), &QAction::triggered, this, &PQToolsManager::showDataLoadManager);
+	connect(actionEtpFileSelection(), &QAction::triggered, this, &PQToolsManager::showEpcImportFileDialog);
 
 #ifdef WITH_ETP
-	QObject::connect(actionEtpCommand(), &QAction::triggered, this, &PQToolsManager::showEtpConnectionManager);
+	connect(actionEtpCommand(), &QAction::triggered, this, &PQToolsManager::showEtpConnectionManager);
 #endif
 
 	connect(pqApplicationCore::instance()->getServerManagerModel(), &pqServerManagerModel::sourceRemoved,
@@ -132,9 +131,9 @@ PQToolsManager::~PQToolsManager()
 }
 
 //-----------------------------------------------------------------------------
-QAction* PQToolsManager::actionDataLoadManager()
+QAction* PQToolsManager::actionEtpFileSelection()
 {
-	return Internal->Actions.actionDataLoadManager;
+	return Internal->Actions.actionEtpFileSelection;
 }
 
 //-----------------------------------------------------------------------------
@@ -146,16 +145,45 @@ QAction* PQToolsManager::actionEtpCommand()
 #endif
 
 //-----------------------------------------------------------------------------
-void PQToolsManager::showDataLoadManager()
+pqServer* PQToolsManager::getActiveServer()
+{
+	pqApplicationCore* app = pqApplicationCore::instance();
+	pqServerManagerModel* smModel = app->getServerManagerModel();
+	pqServer* server = smModel->getItemAtIndex<pqServer*>(0);
+	return server;
+}
+
+//-----------------------------------------------------------------------------
+QWidget* PQToolsManager::getMainWindow()
+{
+	foreach(QWidget* topWidget, QApplication::topLevelWidgets()) {
+		if (qobject_cast<QMainWindow*>(topWidget))
+			return topWidget;
+	}
+
+	return nullptr;
+}
+
+//-----------------------------------------------------------------------------
+pqPipelineSource* PQToolsManager::findPipelineSource(const char* SMName)
+{
+	QList<pqPipelineSource*> sources = pqApplicationCore::instance()->getServerManagerModel()->findItems<pqPipelineSource*>(getActiveServer());
+	foreach(pqPipelineSource* s, sources) {
+		if (strcmp(s->getSMName().toStdString().c_str(), SMName) == 0) {
+			return s;
+		}
+	}
+	return nullptr;
+}
+
+//-----------------------------------------------------------------------------
+void PQToolsManager::showEpcImportFileDialog()
 {
 	pqFileDialog dialog(PQToolsManager::instance()->getActiveServer(), getMainWindow(),
 			tr("Open EPC document"), "", tr("EPC Documents (*.epc)"));
 	dialog.setFileMode(pqFileDialog::ExistingFile);
 	if (QDialog::Accepted == dialog.exec())
 	{
-		//each string list holds a list of files that represent a file-series
-		QList<QStringList> files = dialog.getAllSelectedFiles();
-
 		pqPipelineSource* fesppReader = getOrCreatePipelineSource();
 
 		pqActiveObjects *activeObjects = &pqActiveObjects::instance();
@@ -192,38 +220,6 @@ void PQToolsManager::setVisibilityPanelSelection(bool visible)
 pqPipelineSource* PQToolsManager::getFesppReader(const std::string & pipe_name)
 {
 	return findPipelineSource(pipe_name.c_str());
-}
-
-//-----------------------------------------------------------------------------
-QWidget* PQToolsManager::getMainWindow()
-{
-	foreach (QWidget* topWidget, QApplication::topLevelWidgets()) {
-		if (qobject_cast<QMainWindow*>(topWidget))
-			return topWidget;
-	}
-
-	return nullptr;
-}
-
-//-----------------------------------------------------------------------------
-pqServer* PQToolsManager::getActiveServer()
-{
-	pqApplicationCore* app = pqApplicationCore::instance();
-	pqServerManagerModel* smModel = app->getServerManagerModel();
-	pqServer* server = smModel->getItemAtIndex<pqServer*>(0);
-	return server;
-}
-
-//-----------------------------------------------------------------------------
-pqPipelineSource* PQToolsManager::findPipelineSource(const char* SMName)
-{
-	QList<pqPipelineSource*> sources = pqApplicationCore::instance()->getServerManagerModel()->findItems<pqPipelineSource*>(getActiveServer());
-	foreach (pqPipelineSource* s, sources) {
-		if (strcmp(s->getSMName().toStdString().c_str(), SMName) == 0) {
-			return s;
-		}
-	}
-	return nullptr;
 }
 
 //-----------------------------------------------------------------------------
@@ -332,7 +328,11 @@ pqPipelineSource* PQToolsManager::getOrCreatePipelineSource()
 	}
 	else {
 		existPipe(true);
-		return pqApplicationCore::instance()->getObjectBuilder()->createReader("sources", "EPCReader", QStringList("EpcDocument"), getActiveServer());
+		pqApplicationCore* core = pqApplicationCore::instance();
+		pqObjectBuilder* builder = core->getObjectBuilder();
+		pqServer* server = getActiveServer();
+		pqPipelineSource* epcReader = builder->createReader("sources", "EPCReader", QStringList("EpcDocument"), server);
+		return epcReader;
 	}
 }
 

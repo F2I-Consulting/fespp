@@ -27,7 +27,7 @@ under the License.
 #include <vtkMultiBlockDataSet.h>
 #include <vtkObjectFactory.h>
 
-// Fespp includes
+// vtkEPCReader includes
 #include "VTK/VtkEpcDocumentSet.h"
 
 vtkStandardNewMacro(vtkEPCReader)
@@ -95,6 +95,7 @@ void vtkEPCReader::SetSubFileName(const char* name)
 		}
 	}
 #endif
+
 	if (extension == "epc" ) {
 		FileName = "EpcDocument";
 		if (std::find(fileNameSet.begin(), fileNameSet.end(), nameStr) == fileNameSet.end())	{
@@ -136,7 +137,7 @@ void vtkEPCReader::SetUuidList(const char* uuid, int status)
 			UuidList->RemoveArrayByName(uuid);
 		}
 #ifdef WITH_ETP
-		if(isEtpDocument && etpDocument!=nullptr) {
+		if (isEtpDocument && etpDocument!=nullptr) {
 			etpDocument->unvisualize(uuidStr);
 		}
 #endif
@@ -149,7 +150,7 @@ void vtkEPCReader::SetUuidList(const char* uuid, int status)
 			}
 		}
 #ifdef WITH_ETP
-		if(isEtpDocument && etpDocument!=nullptr) {
+		if (isEtpDocument && etpDocument!=nullptr) {
 			etpDocument->visualize(uuidStr);
 		}
 #endif

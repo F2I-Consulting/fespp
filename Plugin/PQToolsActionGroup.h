@@ -20,8 +20,8 @@ under the License.
 #define _PQToolsACTIONGROUP_H
 
 #include <QActionGroup>
-#include <qstandarditemmodel.h>
 
+/// Adds actions that are helpful for setting up visualization of Fespp
 class PQToolsActionGroup : public QActionGroup
 {
 	Q_OBJECT

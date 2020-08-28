@@ -19,9 +19,10 @@ under the License.
 #ifndef __VtkEpcDocumentSet_h
 #define __VtkEpcDocumentSet_h
 
-#include "VtkEpcCommon.h"
+#include "EPCReaderModule.h"
 
 // include system
+#include <string>
 #include <unordered_map>
 #include <vector>
 
@@ -29,9 +30,11 @@ under the License.
 #include <vtkSmartPointer.h>
 #include <vtkMultiBlockDataSet.h>
 
+#include "VtkEpcCommon.h"
+
 class VtkEpcDocument;
 
-class VtkEpcDocumentSet
+class EPCREADER_EXPORT VtkEpcDocumentSet
 {
 public:
 	/**

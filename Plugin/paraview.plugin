@@ -1,0 +1,14 @@
+NAME
+  Fespp
+DESCRIPTION
+  F2i-consulting Energistics Standard Paraview Plugin Reader
+REQUIRES_MODULES
+  ParaView::ClientServerCoreCore
+  ParaView::pqComponents
+  ParaView::pqCore
+  ParaView::ServerManagerCore
+  Qt5::Core
+  Qt5::Gui
+  Qt5::Widgets
+  VTK::CommonCore
+  

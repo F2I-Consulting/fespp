@@ -59,25 +59,25 @@ public:
 
 
 	const std::string& getUuid() const { return uuid; }
-	void setUuid(const std::string &);
+	void setUuid(const std::string & value) { uuid = value; }
 
 	const std::string& getParent() const { return parent; }
-	void setParent(const std::string &);
+	void setParent(const std::string & value) { parent = value; }
 
 	const std::string& getName() const { return name; }
-	void setName(const std::string &);
+	void setName(const std::string & value) { name = value; }
 
 	Resqml2Type	getType() const { return myType; }
-	void setType(Resqml2Type);
+	void setType(Resqml2Type value) { myType = value; }
 
 	Resqml2Type	getParentType() const { return parentType; }
-	void setParentType(Resqml2Type);
+	void setParentType(Resqml2Type value) { parentType = value; }
 
 	int	getTimeIndex() const { return timeIndex; }
-	void setTimeIndex(int);
+	void setTimeIndex(int value) { timeIndex = value; }
 
 	time_t	getTimestamp() const { return timestamp; }
-	void setTimestamp(time_t);
+	void setTimestamp(time_t value) { timestamp = value; }
 
 private:
 	std::string	uuid;
