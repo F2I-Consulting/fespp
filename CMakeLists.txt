@@ -54,4 +54,4 @@ if (WITH_ETP)
 	
 endif (WITH_ETP)
 
-add_subdirectory(src)
+add_subdirectory(Plugin)
