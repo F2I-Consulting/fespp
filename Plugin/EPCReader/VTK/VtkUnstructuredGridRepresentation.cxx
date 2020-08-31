@@ -106,7 +106,7 @@ void VtkUnstructuredGridRepresentation::visualize(const std::string & uuid)
 						for (ULONG64 localFaceIndex = 0; localFaceIndex < localFaceCount; ++localFaceIndex) {
 							const unsigned int localNodeCount = unstructuredGridRep->getNodeCountOfFaceOfCell(cellIndex, localFaceIndex);
 							std::unique_ptr<vtkIdType[]> nodes(new vtkIdType[localNodeCount]);
-							ULONG64* nodeIndices = unstructuredGridRep->getNodeIndicesOfFaceOfCell(cellIndex, localFaceIndex);
+							ULONG64 const* nodeIndices = unstructuredGridRep->getNodeIndicesOfFaceOfCell(cellIndex, localFaceIndex);
 							for (unsigned int i = 0; i < localNodeCount; ++i) {
 								nodes[i] = nodeIndices[i];
 							}
@@ -147,7 +147,7 @@ vtkSmartPointer<vtkCellArray> VtkUnstructuredGridRepresentation::visualizeVtkTet
 		vtkSmartPointer<vtkTetra> tetra = vtkSmartPointer<vtkTetra>::New();
 
 		// Face 1
-		ULONG64* nodeIndices = unstructuredGridRep->getNodeIndicesOfFaceOfCell(cellIndex, 0);
+		ULONG64 const* nodeIndices = unstructuredGridRep->getNodeIndicesOfFaceOfCell(cellIndex, 0);
 		nodes[0] = nodeIndices[0];
 		nodes[1] = nodeIndices[1];
 		nodes[2] = nodeIndices[2];
@@ -183,7 +183,7 @@ bool VtkUnstructuredGridRepresentation::cellVtkTetra(const RESQML2_NS::Unstructu
 	for (ULONG64 localFaceIndex = 0; localFaceIndex < 4; ++localFaceIndex) {
 		const unsigned int localNodeCount = unstructuredGridRep->getNodeCountOfFaceOfCell(cellIndex, localFaceIndex);
 		if (localNodeCount == 3) {
-			ULONG64* nodeIndices = unstructuredGridRep->getNodeIndicesOfFaceOfCell(cellIndex, localFaceIndex);
+			ULONG64 const* nodeIndices = unstructuredGridRep->getNodeIndicesOfFaceOfCell(cellIndex, localFaceIndex);
 			for (unsigned int i = 0; i < localNodeCount; ++i) {
 				bool alreadyNode = false;
 				for (unsigned int j = 0; j < nodeIndex; ++j) {
@@ -227,7 +227,7 @@ bool VtkUnstructuredGridRepresentation::cellVtkWedgeOrPyramid(const RESQML2_NS::
 		for (ULONG64 localFaceIndex = 0; localFaceIndex < 5; ++localFaceIndex) {
 			const unsigned int localNodeCount = unstructuredGridRep->getNodeCountOfFaceOfCell(cellIndex, localFaceIndex);
 			if (localNodeCount == 3) {
-				ULONG64* nodeIndices = unstructuredGridRep->getNodeIndicesOfFaceOfCell(cellIndex, localFaceIndex);
+				ULONG64 const* nodeIndices = unstructuredGridRep->getNodeIndicesOfFaceOfCell(cellIndex, localFaceIndex);
 				for (unsigned int i = 0; i < localNodeCount; ++i) {
 					nodes[faceTo3Nodes*3+i] = nodeIndices[i];
 				}
@@ -249,7 +249,7 @@ bool VtkUnstructuredGridRepresentation::cellVtkWedgeOrPyramid(const RESQML2_NS::
 		for (ULONG64 localFaceIndex = 0; localFaceIndex < 5; ++localFaceIndex) {
 			const unsigned int localNodeCount = unstructuredGridRep->getNodeCountOfFaceOfCell(cellIndex, localFaceIndex);
 			if (localNodeCount == 3) {
-				ULONG64* nodeIndices = unstructuredGridRep->getNodeIndicesOfFaceOfCell(cellIndex, localFaceIndex);
+				ULONG64 const* nodeIndices = unstructuredGridRep->getNodeIndicesOfFaceOfCell(cellIndex, localFaceIndex);
 				for (unsigned int i = 0; i < localNodeCount; ++i) {
 					bool alreadyNode = false;
 					for (unsigned int j = 0; j < nodeIndex; ++j) {
@@ -288,7 +288,7 @@ bool VtkUnstructuredGridRepresentation::cellVtkHexahedron(const RESQML2_NS::Unst
 	for (ULONG64 localFaceIndex = 0; localFaceIndex < 6; ++localFaceIndex) {
 		const unsigned int localNodeCount = unstructuredGridRep->getNodeCountOfFaceOfCell(cellIndex, localFaceIndex);
 		if (localNodeCount == 4) {
-			ULONG64* nodeIndices = unstructuredGridRep->getNodeIndicesOfFaceOfCell(cellIndex, localFaceIndex);
+			ULONG64 const* nodeIndices = unstructuredGridRep->getNodeIndicesOfFaceOfCell(cellIndex, localFaceIndex);
 			for (unsigned int i = 0; i < localNodeCount; ++i) {
 				bool alreadyNode = false;
 				for (unsigned int j = 0; j < nodeIndex; ++j) {
@@ -325,7 +325,7 @@ bool VtkUnstructuredGridRepresentation::cellVtkPentagonalPrism(const RESQML2_NS:
 	for (ULONG64 localFaceIndex = 0; localFaceIndex < 7; ++localFaceIndex) {
 		const unsigned int localNodeCount = unstructuredGridRep->getNodeCountOfFaceOfCell(cellIndex, localFaceIndex);
 		if (localNodeCount == 5) {
-			ULONG64* nodeIndices = unstructuredGridRep->getNodeIndicesOfFaceOfCell(cellIndex, localFaceIndex);
+			ULONG64 const* nodeIndices = unstructuredGridRep->getNodeIndicesOfFaceOfCell(cellIndex, localFaceIndex);
 			for (unsigned int i = 0; i < localNodeCount; ++i) {
 				nodes[faceTo5Nodes*5+i] = nodeIndices[i];
 			}
@@ -351,7 +351,7 @@ bool VtkUnstructuredGridRepresentation::cellVtkHexagonalPrism(const RESQML2_NS::
 	for (ULONG64 localFaceIndex = 0; localFaceIndex < 8; ++localFaceIndex) {
 		const unsigned int localNodeCount = unstructuredGridRep->getNodeCountOfFaceOfCell(cellIndex, localFaceIndex);
 		if (localNodeCount == 6) {
-			ULONG64* nodeIndices = unstructuredGridRep->getNodeIndicesOfFaceOfCell(cellIndex, localFaceIndex);
+			ULONG64 const* nodeIndices = unstructuredGridRep->getNodeIndicesOfFaceOfCell(cellIndex, localFaceIndex);
 			for (unsigned int i = 0; i < localNodeCount; ++i) {
 				nodes[faceTo6Nodes*6+i] = nodeIndices[i];
 			}
