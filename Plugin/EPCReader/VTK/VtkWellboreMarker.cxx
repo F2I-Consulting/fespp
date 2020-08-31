@@ -20,6 +20,7 @@ under the License.
 
 #include <iostream>
 
+#include <vtkMath.h>
 #include <vtkTransform.h>
 #include <vtkTransformPolyDataFilter.h>
 #include <vtkDiskSource.h>
@@ -89,7 +90,6 @@ size_t VtkWellboreMarker::searchMarkerIndex(){
 }
 
 namespace {
-	constexpr auto M_PI = 3.14159265358979323846;
 	double convertToDegree(double value, gsoap_eml2_1::eml21__PlaneAngleUom uom) {
 		switch (uom) {
 		case gsoap_eml2_1::eml21__PlaneAngleUom__0_x002e001_x0020seca:
@@ -97,15 +97,15 @@ namespace {
 		case gsoap_eml2_1::eml21__PlaneAngleUom__cgr: break;
 		case gsoap_eml2_1::eml21__PlaneAngleUom__dega: return value;
 		case gsoap_eml2_1::eml21__PlaneAngleUom__gon: return value * 0.9;
-		case gsoap_eml2_1::eml21__PlaneAngleUom__krad: return value * 1e3 * 180 / M_PI;
+		case gsoap_eml2_1::eml21__PlaneAngleUom__krad: return value * 1e3 * 180 / vtkMath::Pi();
 		case gsoap_eml2_1::eml21__PlaneAngleUom__mila: return value * 0.0573;
 		case gsoap_eml2_1::eml21__PlaneAngleUom__mina: return value * 0.01666667;
-		case gsoap_eml2_1::eml21__PlaneAngleUom__Mrad: return value * 1e6 * 180 / M_PI;
-		case gsoap_eml2_1::eml21__PlaneAngleUom__mrad: return value * 1e-3 * 180 / M_PI;
-		case gsoap_eml2_1::eml21__PlaneAngleUom__rad: return value * 180 / M_PI;
+		case gsoap_eml2_1::eml21__PlaneAngleUom__Mrad: return value * 1e6 * 180 / vtkMath::Pi();
+		case gsoap_eml2_1::eml21__PlaneAngleUom__mrad: return value * 1e-3 * 180 / vtkMath::Pi();
+		case gsoap_eml2_1::eml21__PlaneAngleUom__rad: return value * 180 / vtkMath::Pi();
 		case gsoap_eml2_1::eml21__PlaneAngleUom__rev: return value * 360;
 		case gsoap_eml2_1::eml21__PlaneAngleUom__seca: return value * 0.0002777778;
-		case gsoap_eml2_1::eml21__PlaneAngleUom__urad: return value * 1e-6 * 180 / M_PI;
+		case gsoap_eml2_1::eml21__PlaneAngleUom__urad: return value * 1e-6 * 180 / vtkMath::Pi();
 		}
 
 		vtkOutputWindowDisplayErrorText("The uom of the dip of the marker is not recognized.");
