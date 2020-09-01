@@ -53,34 +53,29 @@ under the License.
 #include "VTK/VtkEpcDocument.h"
 
 namespace {
-#ifdef WITH_ETP
-PQEtpPanel* getPQEtpPanel() {
-	PQEtpPanel *panel = nullptr;
-	foreach(QWidget *widget, qApp->topLevelWidgets())
-	{
-		panel = widget->findChild<PQEtpPanel *>();
-
-		if (panel!=nullptr) {
-			break;
+	#ifdef WITH_ETP
+	PQEtpPanel* getPQEtpPanel() {
+		foreach(QWidget *widget, qApp->topLevelWidgets())
+		{
+			PQEtpPanel* panel = widget->findChild<PQEtpPanel *>();
+			if (panel != nullptr) {
+				return panel;
+			}
 		}
+		return nullptr;
 	}
-	return panel;
-}
-#endif
+	#endif
 
-pqPropertiesPanel* getpqPropertiesPanel() {
-	pqPropertiesPanel *panel = nullptr;
-	foreach(QWidget *widget, qApp->topLevelWidgets())
-	{
-		panel = widget->findChild<pqPropertiesPanel *>();
-
-		if (panel!=nullptr) {
-			break;
+	pqPropertiesPanel* getpqPropertiesPanel() {
+		foreach(QWidget *widget, qApp->topLevelWidgets())
+		{
+			pqPropertiesPanel* panel = widget->findChild<pqPropertiesPanel *>();
+			if (panel != nullptr) {
+				return panel;
+			}
 		}
+		return nullptr;
 	}
-	return panel;
-}
-
 }
 
 //----------------------------------------------------------------------------
@@ -554,7 +549,7 @@ void PQSelectionPanel::toggleUuid(const std::string & uuid, bool load)
 		pqActiveObjects *activeObjects = &pqActiveObjects::instance();
 		activeObjects->setActiveSource(source);
 
-		auto fesppReader = PQToolsManager::instance()->getFesppReader(pipe_name);
+		pqPipelineSource* fesppReader = PQToolsManager::instance()->getFesppReader(pipe_name);
 
 		if (fesppReader != nullptr) {
 			activeObjects->setActiveSource(fesppReader);
@@ -563,11 +558,11 @@ void PQSelectionPanel::toggleUuid(const std::string & uuid, bool load)
 			vtkSMProxy* fesppReaderProxy = fesppReader->getProxy();
 
 			vtkSMPropertyHelper(fesppReaderProxy, "UuidList").SetStatus(
-					uuid.c_str(), load ? 1 : 0);
+				uuid.c_str(), load ? 1 : 0);
 
 			fesppReaderProxy->UpdatePropertyInformation();
 			fesppReaderProxy->UpdateVTKObjects();
-			auto propertiesPanel = getpqPropertiesPanel();
+			pqPropertiesPanel* propertiesPanel = getpqPropertiesPanel();
 			propertiesPanel->update();
 			propertiesPanel->apply();
 		}

@@ -52,28 +52,57 @@ public:
 	* variable : std::string uuid (Unstructured Grid UUID)
 	* create the vtk objects for represent Unstructured grid.
 	*/
-	void visualize(const std::string & uuid);
+	void visualize(const std::string & uuid) final;
 
 	void addProperty(const std::string & uuidProperty, vtkDataArray* dataProperty);
 
-	long getAttachmentPropertyCount(const std::string & uuid, VtkEpcCommon::FesppAttachmentProperty propertyUnit);
+	long getAttachmentPropertyCount(const std::string & uuid, VtkEpcCommon::FesppAttachmentProperty propertyUnit) final;
 
 private:
-	// if all cells are VTK_TETRA
-	vtkSmartPointer<vtkCellArray> visualizeVtkTetra(const RESQML2_NS::UnstructuredGridRepresentation*);
+	/**
+	* Insert a new VTK tetrahedron corresponding to a particular RESQML cell
+	*
+	* @param unstructuredGridRep				The RESQML UnstructuredGridRepresentation which contains the cell to map and to insert in the VTK UnstructuredGrid
+	* @param cumulativeFaceCountPerCell			The cumulative count of faces for each cell of the RESQML UnstructuredGridRepresentation.
+	* @param cellFaceNormalOutwardlyDirected	Indicates for each cell face of the RESQML UnstructuredGridRepresentation if its normal using the right hand rule is outwardly directed.
+	* @param cellIndex							The index of the RESQML cell in the RESQML UnstructuredGridRepresentation to be mapped and inserted in the VTK UnstructuredGrid.
+	*/
+	void cellVtkTetra(const RESQML2_NS::UnstructuredGridRepresentation* unstructuredGridRep,
+		ULONG64 const * cumulativeFaceCountPerCell,
+		unsigned char const * cellFaceNormalOutwardlyDirected,
+		ULONG64 cellIndex);
 
-	// verify and add cell if is VTK_TETRA
-	bool cellVtkTetra(const RESQML2_NS::UnstructuredGridRepresentation*, ULONG64 cellIndex);
-	// verify and add cell if is  VTK_WEDGE or VTK_PYRAMID
-	bool cellVtkWedgeOrPyramid(const RESQML2_NS::UnstructuredGridRepresentation*, ULONG64 cellIndex);
-	// verify and add cell if is  VTK_HEXAHEDRON
-	bool cellVtkHexahedron(const RESQML2_NS::UnstructuredGridRepresentation*, ULONG64 cellIndex);
+	/**
+	* Insert a new VTK wedge or pyramid corresponding to a particular RESQML cell
+	*
+	* @param unstructuredGridRep				The RESQML UnstructuredGridRepresentation which contains the cell to map and to insert in the VTK UnstructuredGrid
+	* @param cumulativeFaceCountPerCell			The cumulative count of faces for each cell of the RESQML UnstructuredGridRepresentation.
+	* @param cellFaceNormalOutwardlyDirected	Indicates for each cell face of the RESQML UnstructuredGridRepresentation if its normal using the right hand rule is outwardly directed.
+	* @param cellIndex							The index of the RESQML cell in the RESQML UnstructuredGridRepresentation to be mapped and inserted in the VTK UnstructuredGrid.
+	*/
+	void cellVtkWedgeOrPyramid(const RESQML2_NS::UnstructuredGridRepresentation* unstructuredGridRep,
+		ULONG64 const * cumulativeFaceCountPerCell,
+		unsigned char const * cellFaceNormalOutwardlyDirected,
+		ULONG64 cellIndex);
+
+	/**
+	* Insert a new VTK hexahedron corresponding to a particular RESQML cell only if the RESQML cell is Quadrilaterally-faced hexahedron.
+	*
+	* @param unstructuredGridRep				The RESQML UnstructuredGridRepresentation which contains the cell to map and to insert in the VTK UnstructuredGrid
+	* @param cumulativeFaceCountPerCell			The cumulative count of faces for each cell of the RESQML UnstructuredGridRepresentation.
+	* @param cellFaceNormalOutwardlyDirected	Indicates for each cell face of the RESQML UnstructuredGridRepresentation if its normal using the right hand rule is outwardly directed.
+	* @param cellIndex							The index of the RESQML cell in the RESQML UnstructuredGridRepresentation to be mapped and inserted in the VTK UnstructuredGrid.
+	*
+	* @return true if the hexahedron is a Quadrilaterally-faced one, false otherwise
+	*/
+	bool cellVtkHexahedron(const RESQML2_NS::UnstructuredGridRepresentation* unstructuredGridRep,
+		ULONG64 const * cumulativeFaceCountPerCell,
+		unsigned char const * cellFaceNormalOutwardlyDirected,
+		ULONG64 cellIndex);
+
 	// verify and add cell if is  VTK_PENTAGONAL_PRISM
 	bool cellVtkPentagonalPrism(const RESQML2_NS::UnstructuredGridRepresentation*, ULONG64 cellIndex);
 	// verify and add cell if is  VTK_HEXAGONAL_PRISM
 	bool cellVtkHexagonalPrism(const RESQML2_NS::UnstructuredGridRepresentation*, ULONG64 cellIndex);
-
-	// PROPERTY
-	std::string lastProperty;
 };
 #endif
