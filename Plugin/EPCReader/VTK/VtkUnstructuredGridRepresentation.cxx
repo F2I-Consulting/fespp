@@ -205,19 +205,20 @@ void VtkUnstructuredGridRepresentation::cellVtkWedgeOrPyramid(const RESQML2_NS::
 		ULONG64 nodes[5];
 
 		ULONG64 const* nodeIndices = unstructuredGridRep->getNodeIndicesOfFaceOfCell(cellIndex, localFaceIndexWith4Nodes[0]);
-		nodes[0] = nodeIndices[0];
 		size_t cellFaceIndex = (unstructuredGridRep->isFaceCountOfCellsConstant() || cellIndex == 0
 			? cellIndex * 5
 			: cumulativeFaceCountPerCell[cellIndex - 1]) + localFaceIndexWith4Nodes[0];
 		if (cellFaceNormalOutwardlyDirected[cellFaceIndex] == 0) { // The RESQML orientation of the face honors the VTK orientation of face 0 i.e. the face 1 normal defined using a right hand rule is inwardly directed.
+			nodes[0] = nodeIndices[0];
 			nodes[1] = nodeIndices[1];
 			nodes[2] = nodeIndices[2];
 			nodes[3] = nodeIndices[3];
 		}
 		else { // The RESQML orientation of the face does not honor the VTK orientation of face 0
-			nodes[1] = nodeIndices[3];
-			nodes[2] = nodeIndices[2];
-			nodes[3] = nodeIndices[1];
+			nodes[0] = nodeIndices[3];
+			nodes[1] = nodeIndices[2];
+			nodes[2] = nodeIndices[1];
+			nodes[3] = nodeIndices[0];
 		}
 
 		// Face with 3 points
@@ -255,38 +256,44 @@ bool VtkUnstructuredGridRepresentation::cellVtkHexahedron(const RESQML2_NS::Unst
 	ULONG64 nodes[8];
 
 	ULONG64 const* nodeIndices = unstructuredGridRep->getNodeIndicesOfFaceOfCell(cellIndex, 0);
-	nodes[0] = nodeIndices[0];
 	const size_t cellFaceIndex = unstructuredGridRep->isFaceCountOfCellsConstant() || cellIndex == 0
 		? cellIndex * 6
 		: cumulativeFaceCountPerCell[cellIndex - 1];
 	if (cellFaceNormalOutwardlyDirected[cellFaceIndex] == 0) { // The RESQML orientation of the face honors the VTK orientation of face 1 i.e. the face 0 normal defined using a right hand rule is inwardly directed.
+		nodes[0] = nodeIndices[0];
 		nodes[1] = nodeIndices[1];
 		nodes[2] = nodeIndices[2];
 		nodes[3] = nodeIndices[3];
 	}
 	else { // The RESQML orientation of the face does not honor the VTK orientation of face 0
-		nodes[1] = nodeIndices[3];
-		nodes[2] = nodeIndices[2];
-		nodes[3] = nodeIndices[1];
+		nodes[0] = nodeIndices[3];
+		nodes[1] = nodeIndices[2];
+		nodes[2] = nodeIndices[1];
+		nodes[3] = nodeIndices[0];
 	}
 
 	// Find the opposite neighbors of the nodes already got
 	bool alreadyTreated[4] = { false, false, false, false };
-	for (unsigned int localFaceIndex = 1; localFaceIndex < 6 && std::find(alreadyTreated, alreadyTreated+4, false) != alreadyTreated + 4; ++localFaceIndex) {
+	for (unsigned int localFaceIndex = 1; localFaceIndex < 6; ++localFaceIndex) {
 		nodeIndices = unstructuredGridRep->getNodeIndicesOfFaceOfCell(cellIndex, localFaceIndex);
-		size_t index = 0;
-		ULONG64* itr = std::find(nodes, nodes + 4, nodeIndices[index]);
-		while (index < 3 && (itr == nodes + 4 || alreadyTreated[std::distance(nodes, itr)])) {
-			itr = std::find(nodes, nodes + 4, nodeIndices[++index]);
+		for (size_t index = 0; index < 4; ++index) { // Loop on face nodes
+			ULONG64* itr = std::find(nodes, nodes + 4, nodeIndices[index]); // Locate a node on face 0
+			if (itr != nodes + 4) {
+				// A top neighbor node can be found
+				const size_t topNeigborIdx = std::distance(nodes, itr);
+				if (!alreadyTreated[topNeigborIdx]) {
+					const size_t previousIndex = index == 0 ? 3 : index - 1;
+					nodes[topNeigborIdx + 4] = std::find(nodes, nodes + 4, nodeIndices[previousIndex]) != nodes + 4 // If previous index is also in face 0
+						? nodeIndices[index == 3 ? 0 : index + 1] // Put next index
+						: nodeIndices[previousIndex]; // Put previous index
+					alreadyTreated[topNeigborIdx] = true;
+				}
+			}
 		}
-		if (itr != nodes + 4) {
-			// A top neigbor node has been found
-			const size_t topNeigborIdx = std::distance(nodes, itr);
-			const size_t previousIndex = index == 0 ? 3 : index - 1;
-			nodes[topNeigborIdx + 4] = std::find(nodes, nodes + 4, nodeIndices[previousIndex]) != nodes + 4 // If previous index is also in face 0
-				? nodeIndices[index == 3 ? 0 : index + 1] // Put next index
-				: nodeIndices[previousIndex]; // Put previous index
-			alreadyTreated[topNeigborIdx] = true;
+		if (localFaceIndex > 2 && std::find(alreadyTreated, alreadyTreated + 4, false) == alreadyTreated + 4) {
+			// All top neighbor nodes have been found. No need to continue
+			// A minimum of four faces is necessary in order to find all top neighbor nodes.
+			break;
 		}
 	}
 
