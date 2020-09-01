@@ -51,13 +51,7 @@ public:
 	* variable : std::string uuid
 	* delete the vtkUnstructuredGrid
 	*/
-	void remove(const std::string & uuid);
-
-	/**
-	* method : visualize (Virtual)
-	* variable : std::string uuid
-	*/
-	virtual void visualize(const std::string & uuid) = 0;
+	void remove(const std::string & uuid) final;
 
 protected:
 	vtkSmartPointer<vtkUnstructuredGrid> vtkOutput;
