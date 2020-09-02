@@ -44,7 +44,6 @@ void VtkWellboreFrame::createTreeVtk(const std::string & uuid, const std::string
 //----------------------------------------------------------------------------
 void VtkWellboreFrame::visualize(const std::string & uuid)
 {
-
 	// detach all representation to multiblock
 	detach();
 
@@ -58,28 +57,7 @@ void VtkWellboreFrame::visualize(const std::string & uuid)
 		}
 	} else {
 		uuid_to_VtkWellboreMarker[uuid]->visualize(uuid);
-		/*
-		RESQML2_NS::::WellboreMarkerFrameRepresentation* markerFrame = static_cast<RESQML2_NS::::WellboreMarkerFrameRepresentation*>(repositoryRepresentation->getDataObjectByUuid(getUuid()));
-
-		std::vector<RESQML2_NS::::WellboreMarker *> markerSet = markerFrame->getWellboreMarkerSet();
-		double* doubleMds = new double[markerFrame->getMdValuesCount()];
-		markerFrame->getMdAsDoubleValues(doubleMds);
-		for (size_t mIndex = 0; mIndex < markerSet.size(); ++mIndex) {
-			if (markerSet[mIndex]->getUuid() == uuid) {
-				// uuid_to_VtkWellboreMarker[uuid]->translate(doubleMds[mIndex]);
-
-			if (doubleMds[mIndex] == doubleMds[mIndex]) {
-				cout << doubleMds[mIndex] << endl;*/
 		attachUuids.push_back(uuid);
-		/*}
-			else {
-				cout << "NaN" << endl;
-			}
-			}
-		}
-		delete[] doubleMds;
-		 */
-
 	}
 
 	// attach all representation to multiblock
@@ -90,7 +68,6 @@ void VtkWellboreFrame::visualize(const std::string & uuid)
 void VtkWellboreFrame::toggleMarkerOrientation(const bool & orientation) {
 
 	for (auto &marker : uuid_to_VtkWellboreMarker) {
-		cout << "in Frame : " << getUuid() << " / " << marker.first << endl;
 		marker.second->toggleMarkerOrientation(orientation);
 	}
 }
@@ -113,5 +90,9 @@ void VtkWellboreFrame::remove(const std::string & uuid)
 {
 	if (uuid == getUuid()) {
 		vtkOutput = nullptr;
+	}	else { // => wellbore_Marker
+		detach();
+		attachUuids.erase(std::find(attachUuids.begin(), attachUuids.end(), uuid));
+		attach();
 	}
 }

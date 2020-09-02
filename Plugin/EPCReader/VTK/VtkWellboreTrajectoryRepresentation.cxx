@@ -101,7 +101,6 @@ void VtkWellboreTrajectoryRepresentation::toggleMarkerOrientation(const bool & o
 	// Iterate over an unordered_map using range based for loop
 	for (std::pair<std::string, VtkEpcCommon> element : uuid_Informations) {
 		if (element.second.getType() == VtkEpcCommon::Resqml2Type::WELL_MARKER){
-			cout << "in Trajectory : " << getUuid() << " / " << element.first << endl;
 			uuid_to_VtkWellboreFrame[element.second.getParent()]->toggleMarkerOrientation(orientation);
 		}
 	}
@@ -120,9 +119,7 @@ void VtkWellboreTrajectoryRepresentation::remove(const std::string & uuid)
 		attach();
 	}
 	else if (uuid_Informations[uuid].getType() == VtkEpcCommon::Resqml2Type::WELL_MARKER) {
-		detach();
-		attachUuids.erase(std::find(attachUuids.begin(), attachUuids.end(), uuid));
-		attach();
+		uuid_to_VtkWellboreFrame[uuid_Informations[uuid].getParent()]->remove(uuid);
 	}
 }
 
