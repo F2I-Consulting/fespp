@@ -53,7 +53,7 @@ void VtkUnstructuredGridRepresentation::visualize(const std::string & uuid)
 	if (!subRepresentation)	{
 		RESQML2_NS::UnstructuredGridRepresentation* unstructuredGridRep = epcPackageRepresentation->getDataObjectByUuid<RESQML2_NS::UnstructuredGridRepresentation>(getUuid());
 
-		if (!vtkOutput) {
+		if (vtkOutput == nullptr) {
 			vtkOutput = vtkSmartPointer<vtkUnstructuredGrid>::New();
 			vtkOutput->Allocate(unstructuredGridRep->getCellCount());
 
@@ -139,22 +139,23 @@ void VtkUnstructuredGridRepresentation::cellVtkTetra(const RESQML2_NS::Unstructu
 	ULONG64 cellIndex) {
 	unsigned int nodes[4];
 
-	// Face 1
+	// Face 0
 	ULONG64 const * nodeIndices = unstructuredGridRep->getNodeIndicesOfFaceOfCell(cellIndex, 0);
-	nodes[0] = nodeIndices[0];
 	size_t cellFaceIndex = unstructuredGridRep->isFaceCountOfCellsConstant() || cellIndex == 0
 		? cellIndex * 4
 		: cumulativeFaceCountPerCell[cellIndex - 1];
-	if (cellFaceNormalOutwardlyDirected[cellFaceIndex] == 0) { // The RESQML orientation of face 1 honors the VTK orientation of face 0 i.e. the face 1 normal defined using a right hand rule is inwardly directed.
+	if (cellFaceNormalOutwardlyDirected[cellFaceIndex] == 0) { // The RESQML orientation of face 0 honors the VTK orientation of face 0 i.e. the face 0 normal defined using a right hand rule is inwardly directed.
+		nodes[0] = nodeIndices[0];
 		nodes[1] = nodeIndices[1];
 		nodes[2] = nodeIndices[2];
 	}
-	else { // The RESQML orientation of face 1 does not honor the VTK orientation of face 0
-		nodes[1] = nodeIndices[2];
-		nodes[2] = nodeIndices[1];
+	else { // The RESQML orientation of face 0 does not honor the VTK orientation of face 0
+		nodes[0] = nodeIndices[2];
+		nodes[1] = nodeIndices[1];
+		nodes[2] = nodeIndices[0];
 	}
 
-	// Face 2
+	// Face 1
 	nodeIndices = unstructuredGridRep->getNodeIndicesOfFaceOfCell(cellIndex, 1);
 
 	for (size_t index = 0; index < 3; ++index) {
@@ -176,7 +177,7 @@ void VtkUnstructuredGridRepresentation::cellVtkWedgeOrPyramid(const RESQML2_NS::
 	ULONG64 const * cumulativeFaceCountPerCell, unsigned char const * cellFaceNormalOutwardlyDirected,
 	ULONG64 cellIndex) {
 	std::vector<unsigned int> localFaceIndexWith4Nodes;
-	for (ULONG64 localFaceIndex = 0; localFaceIndex < 5; ++localFaceIndex) {
+	for (unsigned int localFaceIndex = 0; localFaceIndex < 5; ++localFaceIndex) {
 		if (unstructuredGridRep->getNodeCountOfFaceOfCell(cellIndex, localFaceIndex) == 4) {
 			localFaceIndexWith4Nodes.push_back(localFaceIndex);
 		}
@@ -184,7 +185,7 @@ void VtkUnstructuredGridRepresentation::cellVtkWedgeOrPyramid(const RESQML2_NS::
 	if (localFaceIndexWith4Nodes.size() == 3) { // VTK_WEDGE
 		ULONG64 nodes[6];
 		unsigned int faceTo3Nodes = 0;
-		for (ULONG64 localFaceIndex = 0; localFaceIndex < 5; ++localFaceIndex) {
+		for (unsigned int localFaceIndex = 0; localFaceIndex < 5; ++localFaceIndex) {
 			const unsigned int localNodeCount = unstructuredGridRep->getNodeCountOfFaceOfCell(cellIndex, localFaceIndex);
 			if (localNodeCount == 3) {
 				ULONG64 const* nodeIndices = unstructuredGridRep->getNodeIndicesOfFaceOfCell(cellIndex, localFaceIndex);
@@ -208,7 +209,7 @@ void VtkUnstructuredGridRepresentation::cellVtkWedgeOrPyramid(const RESQML2_NS::
 		size_t cellFaceIndex = (unstructuredGridRep->isFaceCountOfCellsConstant() || cellIndex == 0
 			? cellIndex * 5
 			: cumulativeFaceCountPerCell[cellIndex - 1]) + localFaceIndexWith4Nodes[0];
-		if (cellFaceNormalOutwardlyDirected[cellFaceIndex] == 0) { // The RESQML orientation of the face honors the VTK orientation of face 0 i.e. the face 1 normal defined using a right hand rule is inwardly directed.
+		if (cellFaceNormalOutwardlyDirected[cellFaceIndex] == 0) { // The RESQML orientation of the face honors the VTK orientation of face 0 i.e. the face 0 normal defined using a right hand rule is inwardly directed.
 			nodes[0] = nodeIndices[0];
 			nodes[1] = nodeIndices[1];
 			nodes[2] = nodeIndices[2];
@@ -259,7 +260,7 @@ bool VtkUnstructuredGridRepresentation::cellVtkHexahedron(const RESQML2_NS::Unst
 	const size_t cellFaceIndex = unstructuredGridRep->isFaceCountOfCellsConstant() || cellIndex == 0
 		? cellIndex * 6
 		: cumulativeFaceCountPerCell[cellIndex - 1];
-	if (cellFaceNormalOutwardlyDirected[cellFaceIndex] == 0) { // The RESQML orientation of the face honors the VTK orientation of face 1 i.e. the face 0 normal defined using a right hand rule is inwardly directed.
+	if (cellFaceNormalOutwardlyDirected[cellFaceIndex] == 0) { // The RESQML orientation of the face honors the VTK orientation of face 0 i.e. the face 0 normal defined using a right hand rule is inwardly directed.
 		nodes[0] = nodeIndices[0];
 		nodes[1] = nodeIndices[1];
 		nodes[2] = nodeIndices[2];

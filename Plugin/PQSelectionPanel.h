@@ -24,6 +24,8 @@ under the License.
 #include <vector>
 #include <unordered_map>
 
+#include <vtkSMProxy.h>
+
 #include <QDockWidget>
 #include <qprogressbar.h>
 #include <qpushbutton.h>
@@ -40,8 +42,6 @@ under the License.
 
 #include <qprogressdialog.h>
 #include <qfuturewatcher.h>
-
-#include <fesapi/nsDefinitions.h>
 
 #include "VTK/VtkEpcCommon.h"
 
@@ -88,21 +88,11 @@ public:
 	void connectPQEtpPanel();
 #endif
 
-signals:
-	/**
-	* Signal emit when a item is selected
-	*/
-	void selectionName(const std::string &, const std::string &, COMMON_NS::EpcDocument*);
-
 protected slots:
 
 #ifdef WITH_ETP
 	void setEtpTreeView(std::vector<VtkEpcCommon>);
 #endif
-	/**
-	* When a line is selected.
-	*/
-	void clicSelection(QTreeWidgetItem* item,int column);
 
 	/**
 	* When a row is checked.
@@ -159,19 +149,12 @@ private:
 	/**
 	* Recursively uncheck all parents of an item (i.e. if all sibling items are also unchecked).
 	*/
-	void recursiveParentUncheck(QTreeWidgetItem* item);
+	void recursiveParentUncheck(QTreeWidgetItem* item, vtkSMProxy* fesppReaderProxy);
 
 	/**
 	* Recursively uncheck all children of an item
 	*/
-	void recursiveChildrenUncheck(QTreeWidgetItem* item);
-
-	/**
-	* Load/Unload representation/property uuid's
-	*
-	* @param load true if we want to load the UUID, other wise false.
-	*/
-	void toggleUuid(const std::string & uuid, bool load);
+	void recursiveChildrenUncheck(QTreeWidgetItem* item, vtkSMProxy* fesppReaderProxy);
 
 	/**
 	* @return all names of the currently opened EPC files in the plugin.
@@ -194,8 +177,6 @@ private:
 
 	// Map getting a present tree widget item from its uuid
 	std::unordered_map<std::string, TreeItem *> uuidItem;
-
-	std::unordered_map<std::string, COMMON_NS::EpcDocument *> pcksave;
 
 	std::unordered_map<std::string, QMap<time_t, std::string>> ts_timestamp_to_uuid;
 

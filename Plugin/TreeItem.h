@@ -122,7 +122,7 @@ public:
 	}
 	explicit TreeItem(QTreeWidget *view) :
 		QTreeWidgetItem(view, UserType), dataObjectInfo(nullptr) {}
-	~TreeItem() {}
+	~TreeItem() = default;
 
 	VtkEpcCommon const * getDataObjectInfo() const { return dataObjectInfo; }
 
