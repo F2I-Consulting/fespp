@@ -35,18 +35,6 @@ VtkWellboreTrajectoryRepresentation::VtkWellboreTrajectoryRepresentation(const s
 }
 
 //----------------------------------------------------------------------------
-VtkWellboreTrajectoryRepresentation::~VtkWellboreTrajectoryRepresentation()
-{
-	if (repositoryRepresentation != nullptr) {
-		repositoryRepresentation = nullptr;
-	}
-
-	if (repositorySubRepresentation != nullptr) {
-		repositorySubRepresentation = nullptr;
-	}
-}
-
-//----------------------------------------------------------------------------
 void VtkWellboreTrajectoryRepresentation::createTreeVtk(const std::string & uuid, const std::string & uuidParent, const std::string & name, VtkEpcCommon::Resqml2Type type)
 {
 	VtkEpcCommon informations(uuid, uuidParent, name, type);
@@ -97,7 +85,7 @@ void VtkWellboreTrajectoryRepresentation::visualize(const std::string & uuid)
 }
 
 //----------------------------------------------------------------------------
-void VtkWellboreTrajectoryRepresentation::toggleMarkerOrientation(const bool & orientation) {
+void VtkWellboreTrajectoryRepresentation::toggleMarkerOrientation(bool orientation) {
 	// Iterate over an unordered_map using range based for loop
 	for (std::pair<std::string, VtkEpcCommon> element : uuid_Informations) {
 		if (element.second.getType() == VtkEpcCommon::Resqml2Type::WELL_MARKER){

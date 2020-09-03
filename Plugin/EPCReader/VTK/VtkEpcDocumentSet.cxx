@@ -57,13 +57,13 @@ std::string VtkEpcDocumentSet::visualize(const std::string & uuid)
 			return "EXCEPTION in fesapi " + uuidToVtkEpc[uuid]->getFileName() + " : " + e.what();
 		}
 	}
-	return std::string();
+	return "";
 }
 
 //----------------------------------------------------------------------------
 void VtkEpcDocumentSet::visualizeFull()
 {
-	if(representationMode) {
+	if (representationMode) {
 		for (auto &vtkEpcElem : vtkEpcList) {
 			auto uuidList = vtkEpcElem->getListUuid();
 			for (const auto& uuidListElem : uuidList)	{
@@ -76,7 +76,7 @@ void VtkEpcDocumentSet::visualizeFull()
 //----------------------------------------------------------------------------
 void VtkEpcDocumentSet::visualizeFullWell(std::string fileName)
 {
-	if(representationMode) {
+	if (representationMode) {
 		for (const auto& vtkEpcElem : vtkEpcList) {
 			if (vtkEpcElem->getFileName() == fileName) {
 				vtkEpcElem->visualizeFullWell();
@@ -89,7 +89,7 @@ void VtkEpcDocumentSet::visualizeFullWell(std::string fileName)
 //----------------------------------------------------------------------------
 void VtkEpcDocumentSet::unvisualize(const std::string & uuid)
 {
-	if(representationMode) {
+	if (representationMode) {
 		uuidToVtkEpc[uuid]->remove(uuid);
 	}
 }
@@ -97,7 +97,7 @@ void VtkEpcDocumentSet::unvisualize(const std::string & uuid)
 //----------------------------------------------------------------------------
 void VtkEpcDocumentSet::unvisualizeFullWell(std::string fileName)
 {
-	if(representationMode) {
+	if (representationMode) {
 		for (auto &vtkEpcElem : vtkEpcList) {
 			if (vtkEpcElem->getFileName() == fileName) {
 				vtkEpcElem->unvisualizeFullWell();
@@ -132,7 +132,7 @@ VtkEpcCommon VtkEpcDocumentSet::getInfoUuid(std::string uuid)
 //----------------------------------------------------------------------------
 vtkSmartPointer<vtkMultiBlockDataSet> VtkEpcDocumentSet::getVisualization() const
 {
-	if(representationMode) {
+	if (representationMode) {
 		vtkOutput->Initialize();
 		unsigned int index = 0;
 		for (auto &vtkEpcElem : vtkEpcList) {
@@ -159,7 +159,7 @@ std::string VtkEpcDocumentSet::addEpcDocument(const std::string & fileName)
 
 		return vtkEpc->getError();
 	}
-	return std::string();
+	return "";
 }
 
 //----------------------------------------------------------------------------

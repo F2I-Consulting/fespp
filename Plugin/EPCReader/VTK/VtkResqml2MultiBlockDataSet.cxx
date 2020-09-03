@@ -26,16 +26,6 @@ VtkResqml2MultiBlockDataSet::VtkResqml2MultiBlockDataSet(const std::string & fil
 }
 
 //----------------------------------------------------------------------------
-VtkResqml2MultiBlockDataSet::~VtkResqml2MultiBlockDataSet()
-{
-	vtkOutput = NULL;
-
-	uuidIsChildOf.clear();
-
-	attachUuids.clear();
-}
-
-//----------------------------------------------------------------------------
 vtkSmartPointer<vtkMultiBlockDataSet> VtkResqml2MultiBlockDataSet::getOutput() const
 {
 	return vtkOutput;

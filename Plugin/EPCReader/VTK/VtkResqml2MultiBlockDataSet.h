@@ -42,7 +42,7 @@ public:
 	/**
 	* Destructor
 	*/
-	virtual ~VtkResqml2MultiBlockDataSet();
+	virtual ~VtkResqml2MultiBlockDataSet() = default;
 
 	/**
 	* method : getOutput

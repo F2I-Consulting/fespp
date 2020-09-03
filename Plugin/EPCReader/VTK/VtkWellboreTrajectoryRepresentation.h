@@ -42,7 +42,7 @@ public:
 	/**
 	* Destructor
 	*/
-	~VtkWellboreTrajectoryRepresentation();
+	~VtkWellboreTrajectoryRepresentation() = default;
 
 	/**
 	* method : createTreeVtk
@@ -58,7 +58,7 @@ public:
 	*/
 	void visualize(const std::string & uuid);
 	
-	void toggleMarkerOrientation(const bool & orientation);
+	void toggleMarkerOrientation(bool orientation);
 
 	/**
 	* method : remove
@@ -70,6 +70,7 @@ public:
 	void addProperty(const std::string & uuidProperty, vtkDataArray* dataProperty);
 
 	long getAttachmentPropertyCount(const std::string & uuid, VtkEpcCommon::FesppAttachmentProperty propertyUnit);
+
 protected:
 	/**
 	* method : createOutput
