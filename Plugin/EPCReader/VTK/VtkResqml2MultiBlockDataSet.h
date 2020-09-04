@@ -22,13 +22,13 @@ under the License.
 // include system
 #include <unordered_map>
 #include <vector>
+#include <string>
 
 // include VTK
 #include <vtkSmartPointer.h> 
 #include <vtkMultiBlockDataSet.h>
 
 // include Resqml2.0 VTK
-#include "VtkEpcDocumentSet.h"
 #include "VtkAbstractObject.h"
 
 class VtkResqml2MultiBlockDataSet : public VtkAbstractObject
@@ -45,23 +45,12 @@ public:
 	virtual ~VtkResqml2MultiBlockDataSet() = default;
 
 	/**
-	* method : getOutput
-	* variable : --
-	* return the vtkMultiBlockDataSet.
+	* return the vtkMultiBlockDataSet vtkOutput
 	*/
 	vtkSmartPointer<vtkMultiBlockDataSet> getOutput() const;
 	
 	/**
-	* method : isEmpty
-	* variable : --
-	* return 1 if vtkMultiBlockDataSet has no child.
-	*/
-	bool isEmpty();
-	
-	/**
-	* method : detach
-	* variable : --
-	* delete the vtkMultiBlockDataSet children.
+	* Remove all blocks from the vtkMultiBlockDataSet vtkOutput
 	*/
 	void detach();
 	

@@ -48,40 +48,39 @@ void VtkWellboreTrajectoryRepresentation::createTreeVtk(const std::string & uuid
 }
 
 //----------------------------------------------------------------------------
-int VtkWellboreTrajectoryRepresentation::createOutput(const std::string & uuid)
-{
-	polyline.visualize(uuid);
-	return 1;
-}
-//----------------------------------------------------------------------------
 void VtkWellboreTrajectoryRepresentation::visualize(const std::string & uuid)
 {
-	std::string uuid_to_attach = uuid;
+	// Create an empty output if necessary
+	// An empty output is automatically created in the (super) construtor.
+	// However it is deleted when we remove the trajectory from the display.
+	if (vtkOutput == nullptr) {
+		vtkOutput = vtkSmartPointer<vtkMultiBlockDataSet>::New();
+	}
 
-	// detach all representation to multiblock
-	detach();
-
-	// wellboreTrajectory representation
-	createOutput(getUuid());
-	if (attachUuids.empty()) {
-		attachUuids.push_back(getUuid());
+	// Build the VTK vtkPolyData which will be displayed
+	if (!polyline.getOutput()) {
+		polyline.visualize(getUuid());
+	}
+	// Add the built VTK vtkPolyData to the multiblock vtk output
+	unsigned int blockCount = vtkOutput->GetNumberOfBlocks();
+	if (blockCount == 0) {
+		vtkOutput->SetBlock(blockCount, polyline.getOutput());
+		vtkOutput->GetMetaData(blockCount)->Set(vtkCompositeDataSet::NAME(), polyline.getName().c_str());
 	}
 
 	// add uuids's wellboreFrame
-	if (uuid_Informations[uuid].getType() == VtkEpcCommon::Resqml2Type::WELL_MARKER_FRAME ||
-			uuid_Informations[uuid].getType() == VtkEpcCommon::Resqml2Type::WELL_FRAME) {
-		uuid_to_VtkWellboreFrame[uuid]->visualize(uuid);
+	VtkEpcCommon uuidInfo = uuid_Informations[uuid];
+	if (uuidInfo.getType() == VtkEpcCommon::Resqml2Type::WELL_MARKER_FRAME ||
+		uuidInfo.getType() == VtkEpcCommon::Resqml2Type::WELL_FRAME ||
+		uuidInfo.getType() == VtkEpcCommon::Resqml2Type::WELL_MARKER) {
+		VtkWellboreFrame* frame = uuidInfo.getType() == VtkEpcCommon::Resqml2Type::WELL_MARKER
+			? uuid_to_VtkWellboreFrame[uuidInfo.getParent()]
+			: uuid_to_VtkWellboreFrame[uuid];
+		frame->visualize(uuid);
+		blockCount = vtkOutput->GetNumberOfBlocks();
+		vtkOutput->SetBlock(blockCount, frame->getOutput());
+		vtkOutput->GetMetaData(blockCount)->Set(vtkCompositeDataSet::NAME(), frame->getName().c_str());
 	}
-	else if (uuid_Informations[uuid].getType() == VtkEpcCommon::Resqml2Type::WELL_MARKER) {
-		uuid_to_VtkWellboreFrame[uuid_Informations[uuid].getParent()]->visualize(uuid);
-		uuid_to_attach = uuid_Informations[uuid].getParent();
-	}
-
-	// attach representation to multiblock
-	if (std::find(attachUuids.begin(), attachUuids.end(), uuid_to_attach) == attachUuids.end()) {
-		attachUuids.push_back(uuid_to_attach);
-	}
-	attach();
 }
 
 //----------------------------------------------------------------------------
@@ -119,14 +118,15 @@ void VtkWellboreTrajectoryRepresentation::attach()
 	}
 
 	for (unsigned int newBlockIndex = 0; newBlockIndex < attachUuids.size(); ++newBlockIndex) {
-		std::string uuid = attachUuids[newBlockIndex];
+		const std::string uuid = attachUuids[newBlockIndex];
 		if (uuid == getUuid())	{
 			vtkOutput->SetBlock(newBlockIndex, polyline.getOutput());
 			vtkOutput->GetMetaData(newBlockIndex)->Set(vtkCompositeDataSet::NAME(), polyline.getName().c_str());
 		}
 		else {
-			vtkOutput->SetBlock(newBlockIndex, uuid_to_VtkWellboreFrame[uuid]->getOutput());
-			vtkOutput->GetMetaData(newBlockIndex)->Set(vtkCompositeDataSet::NAME(), uuid_to_VtkWellboreFrame[uuid]->getName().c_str());
+			const VtkWellboreFrame* frame = uuid_to_VtkWellboreFrame[uuid];
+			vtkOutput->SetBlock(newBlockIndex, frame->getOutput());
+			vtkOutput->GetMetaData(newBlockIndex)->Set(vtkCompositeDataSet::NAME(), frame->getName().c_str());
 		}
 	}
 }

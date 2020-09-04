@@ -32,15 +32,9 @@ vtkSmartPointer<vtkMultiBlockDataSet> VtkResqml2MultiBlockDataSet::getOutput() c
 }
 
 //----------------------------------------------------------------------------
-bool VtkResqml2MultiBlockDataSet::isEmpty()
-{
-	return attachUuids.empty();
-}
-
-//----------------------------------------------------------------------------
 void VtkResqml2MultiBlockDataSet::detach()
 {
-	for (size_t blockIndex = 0; blockIndex < attachUuids.size() ; ++blockIndex) {
+	while (vtkOutput->GetNumberOfBlocks() != 0) {
 		vtkOutput->RemoveBlock(0);
 	}
 }

@@ -291,13 +291,15 @@ void PQSelectionPanel::recursiveChildrenUncheck(QTreeWidgetItem* item, vtkSMProx
 	const int childCount = item->childCount();
 	for (int childIndex = 0; childIndex < childCount; ++childIndex) {
 		auto child = item->child(childIndex);
-		child->setCheckState(0, Qt::Unchecked);
-		vtkSMPropertyHelper(fesppReaderProxy, "UuidList").SetStatus(
-			static_cast<TreeItem*>(child)->getUuid().c_str(), 0);
-		if (uuidsWellbore.contains(static_cast<TreeItem*>(child)->getUuid())) {
-			uuidsWellbore[static_cast<TreeItem*>(child)->getUuid()] = false;
+		if (child->checkState(0) == Qt::Checked) {
+			child->setCheckState(0, Qt::Unchecked);
+			vtkSMPropertyHelper(fesppReaderProxy, "UuidList").SetStatus(
+				static_cast<TreeItem*>(child)->getUuid().c_str(), 0);
+			if (uuidsWellbore.contains(static_cast<TreeItem*>(child)->getUuid())) {
+				uuidsWellbore[static_cast<TreeItem*>(child)->getUuid()] = false;
+			}
+			recursiveChildrenUncheck(child, fesppReaderProxy);
 		}
-		recursiveChildrenUncheck(child, fesppReaderProxy);
 	}
 	if (static_cast<TreeItem*>(item)->getDataObjectInfo() == nullptr ||
 		static_cast<TreeItem*>(item)->getDataObjectInfo()->getType() != VtkEpcCommon::Resqml2Type::WELL_TRAJ) {

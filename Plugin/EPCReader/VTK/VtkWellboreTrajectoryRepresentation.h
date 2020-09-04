@@ -72,17 +72,9 @@ public:
 	long getAttachmentPropertyCount(const std::string & uuid, VtkEpcCommon::FesppAttachmentProperty propertyUnit);
 
 protected:
-	/**
-	* method : createOutput
-	* variable : std::string uuid (Wellbore trajectory representation UUID)
-	* create the vtk objects for represent Wellbore trajectory (polyline + datum + text).
-	*/
-	int createOutput(const std::string & uuid);
 	
 	/**
-	* method : attach
-	* variable : --
-	* Attach the vtk objects for represent Wellbore trajectory (polyline + datum + text) to this object
+	* Add as many blocks to the vtkMultiBlockDataSet vtkOutput as necessary
 	*/
 	void attach();
 	
