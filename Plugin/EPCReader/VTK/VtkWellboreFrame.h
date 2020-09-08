@@ -49,7 +49,7 @@ public:
 
 	void visualize(const std::string & uuid) final;
 
-	void toggleMarkerOrientation(const bool & orientation);
+	void toggleMarkerOrientation(bool orientation);
 
 	/**
 	* method : visualize
@@ -59,11 +59,6 @@ public:
 	void remove(const std::string & uuid) final;
 
 	long getAttachmentPropertyCount(const std::string & , VtkEpcCommon::FesppAttachmentProperty ) final { return 0; }
-	/**
-	* method : attach
-	* variable : --
-	*/
-	void attach();
 
 private:
 	// EPC DOCUMENT

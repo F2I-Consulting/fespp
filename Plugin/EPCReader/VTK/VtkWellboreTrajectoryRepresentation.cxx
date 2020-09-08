@@ -77,9 +77,11 @@ void VtkWellboreTrajectoryRepresentation::visualize(const std::string & uuid)
 			? uuid_to_VtkWellboreFrame[uuidInfo.getParent()]
 			: uuid_to_VtkWellboreFrame[uuid];
 		frame->visualize(uuid);
-		blockCount = vtkOutput->GetNumberOfBlocks();
-		vtkOutput->SetBlock(blockCount, frame->getOutput());
-		vtkOutput->GetMetaData(blockCount)->Set(vtkCompositeDataSet::NAME(), frame->getName().c_str());
+		if (getBlockNumberOf(frame->getOutput()) == (std::numeric_limits<unsigned int>::max)()) {
+			blockCount = vtkOutput->GetNumberOfBlocks();
+			vtkOutput->SetBlock(blockCount, frame->getOutput());
+			vtkOutput->GetMetaData(blockCount)->Set(vtkCompositeDataSet::NAME(), frame->getName().c_str());
+		}
 	}
 }
 
@@ -101,9 +103,7 @@ void VtkWellboreTrajectoryRepresentation::remove(const std::string & uuid)
 	}
 	else if (uuid_Informations[uuid].getType() == VtkEpcCommon::Resqml2Type::WELL_MARKER_FRAME ||
 			uuid_Informations[uuid].getType() == VtkEpcCommon::Resqml2Type::WELL_FRAME) {
-		detach();
-		attachUuids.erase(std::find(attachUuids.begin(), attachUuids.end(), uuid));
-		attach();
+		removeFromVtkOutput(uuid_to_VtkWellboreFrame[uuid]->getOutput());
 	}
 	else if (uuid_Informations[uuid].getType() == VtkEpcCommon::Resqml2Type::WELL_MARKER) {
 		uuid_to_VtkWellboreFrame[uuid_Informations[uuid].getParent()]->remove(uuid);

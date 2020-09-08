@@ -687,16 +687,14 @@ void VtkEpcDocument::remove(const std::string & uuid)
 	if (uuidIsChildOf[uuid].getType() == VtkEpcCommon::Resqml2Type::PROPERTY ||
 			uuidIsChildOf[uuid].getType() == VtkEpcCommon::Resqml2Type::WELL_MARKER_FRAME ||
 			uuidIsChildOf[uuid].getType() == VtkEpcCommon::Resqml2Type::WELL_FRAME) {
-		cout << "property ou WELL_MARKER_FRAME ou WELL_FRAME " << uuid << endl;
 		uuidtoAttach = uuidIsChildOf[uuid].getParent();
 	}
 	if (uuidIsChildOf[uuid].getType() == VtkEpcCommon::Resqml2Type::WELL_MARKER) {
-		cout << "WELL_MARKER " << uuid << endl;
 		if (uuidIsChildOf[uuid].getParentType() == VtkEpcCommon::Resqml2Type::WELL_MARKER_FRAME ||
 				uuidIsChildOf[uuid].getParentType() == VtkEpcCommon::Resqml2Type::WELL_FRAME) {
-			cout << "WELL_MARKER > WELL_MARKER_FRAME ou WELL_FRAME " << uuid << endl;
 			uuidtoAttach = uuidIsChildOf[uuidIsChildOf[uuid].getParent()].getParent();
-		} else {
+		}
+		else {
 			uuidtoAttach = uuidIsChildOf[uuid].getParent();
 		}
 	}
@@ -704,7 +702,6 @@ void VtkEpcDocument::remove(const std::string & uuid)
 	if (std::find(attachUuids.begin(), attachUuids.end(), uuidtoAttach) != attachUuids.end()) {
 		switch (uuidIsChildOf[uuidtoAttach].getType())	{
 		case VtkEpcCommon::Resqml2Type::GRID_2D:	{
-			cout << "GRID_2D " << uuid << endl;
 			uuidToVtkGrid2DRepresentation[uuidtoAttach]->remove(uuid);
 			if (uuid == uuidtoAttach){
 				detach();
@@ -714,7 +711,6 @@ void VtkEpcDocument::remove(const std::string & uuid)
 			break;
 		}
 		case VtkEpcCommon::Resqml2Type::POLYLINE_SET: {
-			cout << "POLYLINE_SET " << uuid << endl;
 			auto object = repository.getDataObjectByUuid(uuidtoAttach);
 			auto typeRepresentation = object->getXmlTag();
 			if (typeRepresentation == "PolylineRepresentation") {
@@ -736,9 +732,7 @@ void VtkEpcDocument::remove(const std::string & uuid)
 			break;
 		}
 		case VtkEpcCommon::Resqml2Type::TRIANGULATED_SET: {
-			cout << "TRIANGULATED_SET " << uuid << endl;
-			auto object = repository.getDataObjectByUuid(uuidtoAttach);
-			auto typeRepresentation = object->getXmlTag();
+			auto typeRepresentation = repository.getDataObjectByUuid(uuidtoAttach)->getXmlTag();
 			if (typeRepresentation == "TriangulatedRepresentation")  {
 				uuidToVtkTriangulatedRepresentation[uuidtoAttach]->remove(uuid);
 				if (uuid == uuidtoAttach){
@@ -747,7 +741,7 @@ void VtkEpcDocument::remove(const std::string & uuid)
 					attach();
 				}
 			}
-			else  {
+			else {
 				uuidToVtkSetPatch[uuidtoAttach]->remove(uuid);
 				if (uuid == uuidtoAttach){
 					detach();
@@ -758,7 +752,6 @@ void VtkEpcDocument::remove(const std::string & uuid)
 			break;
 		}
 		case VtkEpcCommon::Resqml2Type::WELL_TRAJ: {
-			cout << "WELL_TRAJ " << uuid << endl;
 			uuidToVtkWellboreTrajectoryRepresentation[uuidtoAttach]->remove(uuid);
 			if (uuid == uuidtoAttach){
 				detach();
@@ -768,7 +761,6 @@ void VtkEpcDocument::remove(const std::string & uuid)
 			break;
 		}
 		case VtkEpcCommon::Resqml2Type::IJK_GRID: {
-			cout << "IJK_GRID " << uuid << endl;
 			uuidToVtkIjkGridRepresentation[uuidtoAttach]->remove(uuid);
 			if (uuid == uuidtoAttach) {
 				detach();
@@ -778,7 +770,6 @@ void VtkEpcDocument::remove(const std::string & uuid)
 			break;
 		}
 		case VtkEpcCommon::Resqml2Type::UNSTRUC_GRID: {
-			cout << "UNSTRUC_GRID " << uuid << endl;
 			uuidToVtkUnstructuredGridRepresentation[uuidtoAttach]->remove(uuid);
 			if (uuid == uuidtoAttach) {
 				detach();
@@ -787,8 +778,7 @@ void VtkEpcDocument::remove(const std::string & uuid)
 			}
 			break;
 		}
-		case VtkEpcCommon::Resqml2Type::SUB_REP:	{
-			cout << "SUB_REP " << uuid << endl;
+		case VtkEpcCommon::Resqml2Type::SUB_REP: {
 			if (uuidIsChildOf[uuidIsChildOf[uuid].getParent()].getParentType() == VtkEpcCommon::Resqml2Type::IJK_GRID) {
 				uuidToVtkIjkGridRepresentation[uuidIsChildOf[uuidIsChildOf[uuid].getParent()].getUuid()]->remove(uuid);
 			}
@@ -810,12 +800,11 @@ void VtkEpcDocument::remove(const std::string & uuid)
 			}
 			break;
 		}
-		case VtkEpcCommon::Resqml2Type::PARTIAL:	{
-			cout << "PARTIAL " << uuid << endl;
+		case VtkEpcCommon::Resqml2Type::PARTIAL: {
 			uuidToVtkPartialRepresentation[uuidtoAttach]->remove(uuid);
 			break;
 		}
-		default: cout << "rien " << uuid << endl; break;
+		default: break;
 		}
 	}
 }

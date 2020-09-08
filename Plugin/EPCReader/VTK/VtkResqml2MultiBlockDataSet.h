@@ -55,6 +55,19 @@ public:
 	void detach();
 	
 protected:
+
+	/**
+	* Get the block number of a VTK Data object in the multiblock output
+	*
+	* @return unsigned int maximum if the vtkDataObj is not present in this multiblock output
+	*/
+	unsigned int getBlockNumberOf(vtkDataObject * vtkDataObj) const;
+
+	/**
+	* Remove a VTK data object from the multiblock output.
+	*/
+	void removeFromVtkOutput(vtkDataObject * vtkDataObj);
+
 	vtkSmartPointer<vtkMultiBlockDataSet> vtkOutput;
 
 	std::unordered_map<std::string, VtkEpcCommon> uuidIsChildOf;

@@ -44,45 +44,22 @@ void VtkWellboreFrame::createTreeVtk(const std::string & uuid, const std::string
 //----------------------------------------------------------------------------
 void VtkWellboreFrame::visualize(const std::string & uuid)
 {
-	// detach all representation to multiblock
-	detach();
-
-	// create representation
-	if (uuid == getUuid()) {
-		attachUuids.clear();
-		// Traversing an unordered map
-		for (auto marker : uuid_to_VtkWellboreMarker) {
-			marker.second->visualize(uuid);
-			attachUuids.push_back(marker.first);
-		}
-	} else {
+	if (uuid != getUuid()) { // if it is a marker and not a frame.
 		uuid_to_VtkWellboreMarker[uuid]->visualize(uuid);
-		attachUuids.push_back(uuid);
-	}
 
-	// attach all representation to multiblock
-	attach();
+		if (getBlockNumberOf(uuid_to_VtkWellboreMarker[uuid]->getOutput()) == (std::numeric_limits<unsigned int>::max)()) {
+			unsigned int blockCount = vtkOutput->GetNumberOfBlocks();
+			vtkOutput->SetBlock(blockCount, uuid_to_VtkWellboreMarker[uuid]->getOutput());
+			vtkOutput->GetMetaData(blockCount)->Set(vtkCompositeDataSet::NAME(), uuid_to_VtkWellboreMarker[uuid]->getName().c_str());
+		}
+	}
 }
 
 //----------------------------------------------------------------------------
-void VtkWellboreFrame::toggleMarkerOrientation(const bool & orientation) {
+void VtkWellboreFrame::toggleMarkerOrientation(bool orientation) {
 
 	for (auto &marker : uuid_to_VtkWellboreMarker) {
 		marker.second->toggleMarkerOrientation(orientation);
-	}
-}
-
-//----------------------------------------------------------------------------
-void VtkWellboreFrame::attach()
-{
-	if (attachUuids.size() > (std::numeric_limits<unsigned int>::max)()) {
-		throw std::range_error("Too much attached uuids");
-	}
-
-	for (unsigned int newBlockIndex = 0; newBlockIndex < attachUuids.size(); ++newBlockIndex) {
-		std::string uuid = attachUuids[newBlockIndex];
-		vtkOutput->SetBlock(newBlockIndex, uuid_to_VtkWellboreMarker[uuid]->getOutput());
-		vtkOutput->GetMetaData(newBlockIndex)->Set(vtkCompositeDataSet::NAME(), uuid_to_VtkWellboreMarker[uuid]->getUuid().c_str());
 	}
 }
 
@@ -90,9 +67,8 @@ void VtkWellboreFrame::remove(const std::string & uuid)
 {
 	if (uuid == getUuid()) {
 		vtkOutput = nullptr;
-	}	else { // => wellbore_Marker
-		detach();
-		attachUuids.erase(std::find(attachUuids.begin(), attachUuids.end(), uuid));
-		attach();
+	}
+	else { // => wellbore_Marker
+		removeFromVtkOutput(uuid_to_VtkWellboreMarker[uuid]->getOutput());
 	}
 }
