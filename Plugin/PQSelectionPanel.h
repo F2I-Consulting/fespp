@@ -34,7 +34,6 @@ under the License.
 #include <QComboBox>
 #include <QLabel>
 #include <QStringList>
-#include <qtreewidget.h>
 #include <qradiobutton.h>
 #include <QMap>
 #include <QHash>
@@ -42,6 +41,9 @@ under the License.
 
 #include <qprogressdialog.h>
 #include <qfuturewatcher.h>
+
+#include <pqTreeWidget.h>
+#include <pqTreeWidgetItem.h>
 
 #include "VTK/VtkEpcCommon.h"
 
@@ -97,7 +99,7 @@ protected slots:
 	/**
 	* When a row is checked.
 	*/
-	void onItemCheckedUnchecked(QTreeWidgetItem*,int);
+	void onItemCheckedUnchecked(QTreeWidgetItem* item, int);
 
 	void handleButtonAfter();
 	void handleButtonBefore();
@@ -161,7 +163,7 @@ private:
 	*/
 	std::vector<std::string> getAllOpenedEpcFileNames() const;
 	
-	QTreeWidget *treeWidget;
+	pqTreeWidget *treeWidget;
 	QPushButton *button_Time_After;
 	QPushButton *button_Time_Before;
 	QPushButton *button_Time_Play;
