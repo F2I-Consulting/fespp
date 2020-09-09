@@ -13,12 +13,9 @@
   <property name="windowTitle">
    <string>Form</string>
   </property>
-  
-<!-- -->
-  
   <action name="actionDataLoadManager">
    <property name="icon">
-    <iconset resource="Tools.qrc">
+    <iconset resource="Resources/Tools.qrc">
      <normaloff>:/Tools/DataLoadManager.png</normaloff>:/Tools/DataLoadManager.png</iconset>
    </property>
    <property name="text">
@@ -28,12 +25,9 @@
     <string>Dialog to open an EPC document</string>
    </property>
   </action>
-
-<!-- -->
-
-    <action name="actionPanelSelection">
+  <action name="actionPanelSelection">
    <property name="icon">
-    <iconset resource="Tools.qrc">
+    <iconset>
      <normaloff>:/Tools/PanelSelection.png</normaloff>:/Tools/PanelSelection.png</iconset>
    </property>
    <property name="text">
@@ -43,12 +37,9 @@
     <string>Selection TreeView</string>
    </property>
   </action>
-  
-<!-- -->
-
-    <action name="actionPanelMetadata">
+  <action name="actionPanelMetadata">
    <property name="icon">
-    <iconset resource="Tools.qrc">
+    <iconset>
      <normaloff>:/Tools/PanelMetadata.png</normaloff>:/Tools/PanelMetadata.png</iconset>
    </property>
    <property name="text">
@@ -58,12 +49,9 @@
     <string>metadata view</string>
    </property>
   </action>
-  
-<!-- -->
-
-    <action name="actionEtpCommand">
+  <action name="actionEtpCommand">
    <property name="icon">
-    <iconset resource="Tools.qrc">
+    <iconset resource="Resources/Tools.qrc">
      <normaloff>:/Tools/EtpConnect.png</normaloff>:/Tools/EtpConnect.png</iconset>
    </property>
    <property name="text">
@@ -73,12 +61,9 @@
     <string>etp connection</string>
    </property>
   </action>
-  
-<!-- -->
-  
  </widget>
  <resources>
-  <include location="Tools.qrc"/>
+  <include location="Resources/Tools.qrc"/>
  </resources>
  <connections/>
 </ui>
