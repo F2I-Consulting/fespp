@@ -18,21 +18,13 @@ under the License.
 -----------------------------------------------------------------------*/
 #include "VtkResqml2MultiBlockDataSet.h"
 
+#include <vtkDataObjectTreeIterator.h>
+
 //----------------------------------------------------------------------------
 VtkResqml2MultiBlockDataSet::VtkResqml2MultiBlockDataSet(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, int idProc, int maxProc):
 	VtkAbstractObject(fileName, name, uuid, uuidParent, idProc, maxProc)
 {
 	vtkOutput = vtkSmartPointer<vtkMultiBlockDataSet>::New();
-}
-
-//----------------------------------------------------------------------------
-VtkResqml2MultiBlockDataSet::~VtkResqml2MultiBlockDataSet()
-{
-	vtkOutput = NULL;
-
-	uuidIsChildOf.clear();
-
-	attachUuids.clear();
 }
 
 //----------------------------------------------------------------------------
@@ -42,15 +34,28 @@ vtkSmartPointer<vtkMultiBlockDataSet> VtkResqml2MultiBlockDataSet::getOutput() c
 }
 
 //----------------------------------------------------------------------------
-bool VtkResqml2MultiBlockDataSet::isEmpty()
-{
-	return attachUuids.empty();
-}
-
-//----------------------------------------------------------------------------
 void VtkResqml2MultiBlockDataSet::detach()
 {
-	for (size_t blockIndex = 0; blockIndex < attachUuids.size() ; ++blockIndex) {
+	while (vtkOutput->GetNumberOfBlocks() != 0) {
 		vtkOutput->RemoveBlock(0);
+	}
+}
+
+unsigned int VtkResqml2MultiBlockDataSet::getBlockNumberOf(vtkDataObject * vtkDataObj) const
+{
+	for (unsigned int i = 0; i < vtkOutput->GetNumberOfBlocks(); ++i) {
+		if (vtkOutput->GetBlock(i) == vtkDataObj) {
+			return i;
+		}
+	}
+
+	return (std::numeric_limits<unsigned int>::max)();
+}
+
+void VtkResqml2MultiBlockDataSet::removeFromVtkOutput(vtkDataObject * vtkDataObj)
+{
+	const unsigned int blockNumber = getBlockNumberOf(vtkDataObj);
+	if (blockNumber != (std::numeric_limits<unsigned int>::max)()) {
+		vtkOutput->RemoveBlock(blockNumber);
 	}
 }

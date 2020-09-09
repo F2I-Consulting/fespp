@@ -20,15 +20,15 @@ under the License.
 #ifndef TREEITEM_H
 #define TREEITEM_H
 
-#include <QTreeWidget>
+#include <pqTreeWidgetItem.h>
 
 #include "VTK/VtkEpcCommon.h"
 
-class TreeItem : public QTreeWidgetItem
+class TreeItem : public pqTreeWidgetItem
 {
 public:
 	explicit TreeItem(VtkEpcCommon const * vtkEpcCommon, TreeItem* parent) :
-		QTreeWidgetItem(UserType), dataObjectInfo(vtkEpcCommon) {
+		pqTreeWidgetItem(UserType), dataObjectInfo(vtkEpcCommon) {
 		setText(0, vtkEpcCommon->getName().c_str());
 		setFlags(flags() | Qt::ItemIsSelectable);
 
@@ -121,8 +121,8 @@ public:
 		parent->addChild(this);
 	}
 	explicit TreeItem(QTreeWidget *view) :
-		QTreeWidgetItem(view, UserType), dataObjectInfo(nullptr) {}
-	~TreeItem() {}
+		pqTreeWidgetItem(view, UserType), dataObjectInfo(nullptr) {}
+	~TreeItem() = default;
 
 	VtkEpcCommon const * getDataObjectInfo() const { return dataObjectInfo; }
 

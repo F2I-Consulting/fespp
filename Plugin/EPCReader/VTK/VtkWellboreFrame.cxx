@@ -44,68 +44,22 @@ void VtkWellboreFrame::createTreeVtk(const std::string & uuid, const std::string
 //----------------------------------------------------------------------------
 void VtkWellboreFrame::visualize(const std::string & uuid)
 {
-
-	// detach all representation to multiblock
-	detach();
-
-	// create representation
-	if (uuid == getUuid()) {
-		attachUuids.clear();
-		// Traversing an unordered map
-		for (auto marker : uuid_to_VtkWellboreMarker) {
-			marker.second->visualize(uuid);
-			attachUuids.push_back(marker.first);
-		}
-	} else {
+	if (uuid != getUuid()) { // if it is a marker and not a frame.
 		uuid_to_VtkWellboreMarker[uuid]->visualize(uuid);
-		/*
-		RESQML2_NS::::WellboreMarkerFrameRepresentation* markerFrame = static_cast<RESQML2_NS::::WellboreMarkerFrameRepresentation*>(repositoryRepresentation->getDataObjectByUuid(getUuid()));
 
-		std::vector<RESQML2_NS::::WellboreMarker *> markerSet = markerFrame->getWellboreMarkerSet();
-		double* doubleMds = new double[markerFrame->getMdValuesCount()];
-		markerFrame->getMdAsDoubleValues(doubleMds);
-		for (size_t mIndex = 0; mIndex < markerSet.size(); ++mIndex) {
-			if (markerSet[mIndex]->getUuid() == uuid) {
-				// uuid_to_VtkWellboreMarker[uuid]->translate(doubleMds[mIndex]);
-
-			if (doubleMds[mIndex] == doubleMds[mIndex]) {
-				cout << doubleMds[mIndex] << endl;*/
-		attachUuids.push_back(uuid);
-		/*}
-			else {
-				cout << "NaN" << endl;
-			}
-			}
+		if (getBlockNumberOf(uuid_to_VtkWellboreMarker[uuid]->getOutput()) == (std::numeric_limits<unsigned int>::max)()) {
+			unsigned int blockCount = vtkOutput->GetNumberOfBlocks();
+			vtkOutput->SetBlock(blockCount, uuid_to_VtkWellboreMarker[uuid]->getOutput());
+			vtkOutput->GetMetaData(blockCount)->Set(vtkCompositeDataSet::NAME(), uuid_to_VtkWellboreMarker[uuid]->getName().c_str());
 		}
-		delete[] doubleMds;
-		 */
-
 	}
-
-	// attach all representation to multiblock
-	attach();
 }
 
 //----------------------------------------------------------------------------
-void VtkWellboreFrame::toggleMarkerOrientation(const bool & orientation) {
+void VtkWellboreFrame::toggleMarkerOrientation(bool orientation) {
 
 	for (auto &marker : uuid_to_VtkWellboreMarker) {
-		cout << "in Frame : " << getUuid() << " / " << marker.first << endl;
 		marker.second->toggleMarkerOrientation(orientation);
-	}
-}
-
-//----------------------------------------------------------------------------
-void VtkWellboreFrame::attach()
-{
-	if (attachUuids.size() > (std::numeric_limits<unsigned int>::max)()) {
-		throw std::range_error("Too much attached uuids");
-	}
-
-	for (unsigned int newBlockIndex = 0; newBlockIndex < attachUuids.size(); ++newBlockIndex) {
-		std::string uuid = attachUuids[newBlockIndex];
-		vtkOutput->SetBlock(newBlockIndex, uuid_to_VtkWellboreMarker[uuid]->getOutput());
-		vtkOutput->GetMetaData(newBlockIndex)->Set(vtkCompositeDataSet::NAME(), uuid_to_VtkWellboreMarker[uuid]->getUuid().c_str());
 	}
 }
 
@@ -113,5 +67,8 @@ void VtkWellboreFrame::remove(const std::string & uuid)
 {
 	if (uuid == getUuid()) {
 		vtkOutput = nullptr;
+	}
+	else { // => wellbore_Marker
+		removeFromVtkOutput(uuid_to_VtkWellboreMarker[uuid]->getOutput());
 	}
 }

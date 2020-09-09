@@ -27,6 +27,7 @@ under the License.
 #include <vtkMultiProcessController.h>
 
 #include "EPCReaderModule.h"
+
 #ifdef WITH_ETP
 	#include "etp/VtkEtpDocument.h"
 #endif
@@ -36,7 +37,7 @@ class vtkDataArraySelection;
 
 /**
  * A VTK reader for EPC document.
-*/
+ */
 class EPCREADER_EXPORT vtkEPCReader : public vtkMultiBlockDataSetAlgorithm
 {
 public:
@@ -60,12 +61,11 @@ public:
 
 	vtkGetObjectMacro(UuidList, vtkDataArraySelection)
 	void SetUuidList(const char* name, int status);
-
+	
 	// Used by Paraview, derived from the attribute UuidList
 	int GetUuidListArrayStatus(const char* name);
 	int GetNumberOfUuidListArrays();
 	const char* GetUuidListArrayName(int index);
-
 
 	vtkSetMacro(MarkerOrientation, bool)
 	void setMarkerOrientation(const bool orientation);

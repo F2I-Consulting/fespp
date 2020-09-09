@@ -24,6 +24,8 @@ under the License.
 #include <vector>
 #include <unordered_map>
 
+#include <vtkSMProxy.h>
+
 #include <QDockWidget>
 #include <qprogressbar.h>
 #include <qpushbutton.h>
@@ -32,7 +34,6 @@ under the License.
 #include <QComboBox>
 #include <QLabel>
 #include <QStringList>
-#include <qtreewidget.h>
 #include <qradiobutton.h>
 #include <QMap>
 #include <QHash>
@@ -40,6 +41,9 @@ under the License.
 
 #include <qprogressdialog.h>
 #include <qfuturewatcher.h>
+
+#include <pqTreeWidget.h>
+#include <pqTreeWidgetItem.h>
 
 #include "VTK/VtkEpcCommon.h"
 
@@ -95,7 +99,7 @@ protected slots:
 	/**
 	* When a row is checked.
 	*/
-	void onItemCheckedUnchecked(QTreeWidgetItem*,int);
+	void onItemCheckedUnchecked(QTreeWidgetItem* item, int);
 
 	void handleButtonAfter();
 	void handleButtonBefore();
@@ -147,26 +151,19 @@ private:
 	/**
 	* Recursively uncheck all parents of an item (i.e. if all sibling items are also unchecked).
 	*/
-	void recursiveParentUncheck(QTreeWidgetItem* item);
+	void recursiveParentUncheck(QTreeWidgetItem* item, vtkSMProxy* fesppReaderProxy);
 
 	/**
 	* Recursively uncheck all children of an item
 	*/
-	void recursiveChildrenUncheck(QTreeWidgetItem* item);
-
-	/**
-	* Load/Unload representation/property uuid's
-	*
-	* @param load true if we want to load the UUID, other wise false.
-	*/
-	void toggleUuid(const std::string & uuid, bool load);
+	void recursiveChildrenUncheck(QTreeWidgetItem* item, vtkSMProxy* fesppReaderProxy);
 
 	/**
 	* @return all names of the currently opened EPC files in the plugin.
 	*/
 	std::vector<std::string> getAllOpenedEpcFileNames() const;
 	
-	QTreeWidget *treeWidget;
+	pqTreeWidget *treeWidget;
 	QPushButton *button_Time_After;
 	QPushButton *button_Time_Before;
 	QPushButton *button_Time_Play;

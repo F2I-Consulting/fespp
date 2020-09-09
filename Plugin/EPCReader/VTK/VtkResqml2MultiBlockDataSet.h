@@ -22,13 +22,13 @@ under the License.
 // include system
 #include <unordered_map>
 #include <vector>
+#include <string>
 
 // include VTK
 #include <vtkSmartPointer.h> 
 #include <vtkMultiBlockDataSet.h>
 
 // include Resqml2.0 VTK
-#include "VtkEpcDocumentSet.h"
 #include "VtkAbstractObject.h"
 
 class VtkResqml2MultiBlockDataSet : public VtkAbstractObject
@@ -42,30 +42,32 @@ public:
 	/**
 	* Destructor
 	*/
-	virtual ~VtkResqml2MultiBlockDataSet();
+	virtual ~VtkResqml2MultiBlockDataSet() = default;
 
 	/**
-	* method : getOutput
-	* variable : --
-	* return the vtkMultiBlockDataSet.
+	* return the vtkMultiBlockDataSet vtkOutput
 	*/
 	vtkSmartPointer<vtkMultiBlockDataSet> getOutput() const;
 	
 	/**
-	* method : isEmpty
-	* variable : --
-	* return 1 if vtkMultiBlockDataSet has no child.
-	*/
-	bool isEmpty();
-	
-	/**
-	* method : detach
-	* variable : --
-	* delete the vtkMultiBlockDataSet children.
+	* Remove all blocks from the vtkMultiBlockDataSet vtkOutput
 	*/
 	void detach();
 	
 protected:
+
+	/**
+	* Get the block number of a VTK Data object in the multiblock output
+	*
+	* @return unsigned int maximum if the vtkDataObj is not present in this multiblock output
+	*/
+	unsigned int getBlockNumberOf(vtkDataObject * vtkDataObj) const;
+
+	/**
+	* Remove a VTK data object from the multiblock output.
+	*/
+	void removeFromVtkOutput(vtkDataObject * vtkDataObj);
+
 	vtkSmartPointer<vtkMultiBlockDataSet> vtkOutput;
 
 	std::unordered_map<std::string, VtkEpcCommon> uuidIsChildOf;

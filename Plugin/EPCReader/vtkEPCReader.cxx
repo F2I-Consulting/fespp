@@ -110,6 +110,7 @@ int vtkEPCReader::GetUuidListArrayStatus(const char* uuid)
 {
 	return UuidList->ArrayIsEnabled(uuid);
 }
+
 //----------------------------------------------------------------------------
 void vtkEPCReader::SetUuidList(const char* uuid, int status)
 {
@@ -127,14 +128,14 @@ void vtkEPCReader::SetUuidList(const char* uuid, int status)
 	else if (uuidStr.find("allWell-") != std::string::npos) {
 		if (status == 0) {
 			epcDocumentSet->unvisualizeFullWell(uuidStr.substr(8));
-		} else {
+		}
+		else {
 			epcDocumentSet->visualizeFullWell(uuidStr.substr(8));
 		}
 	}
 	else if (status == 0) {
 		if (FileName != nullptr && strcmp(FileName,"EpcDocument") == 0)  {
 			epcDocumentSet->unvisualize(uuidStr);
-			UuidList->RemoveArrayByName(uuid);
 		}
 #ifdef WITH_ETP
 		if (isEtpDocument && etpDocument!=nullptr) {
@@ -144,7 +145,7 @@ void vtkEPCReader::SetUuidList(const char* uuid, int status)
 	}
 	else {
 		if (FileName != nullptr && strcmp(FileName,"EpcDocument") == 0)  {
-			auto msg = epcDocumentSet->visualize(uuidStr);
+			std::string msg = epcDocumentSet->visualize(uuidStr);
 			if  (!msg.empty()){
 				displayError(msg);
 			}

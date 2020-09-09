@@ -15,7 +15,7 @@
   </property>
   <layout class="QGridLayout" name="gridLayout">
    <item row="3" column="0" colspan="12">
-    <widget class="QTreeWidget" name="treeWidget">
+    <widget class="pqTreeWidget" name="treeWidget">
      <property name="enabled">
       <bool>true</bool>
      </property>

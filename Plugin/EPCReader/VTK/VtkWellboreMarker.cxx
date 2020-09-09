@@ -37,6 +37,10 @@ VtkResqml2PolyData(fileName, name, uuid, uuidParent, repoRepresentation, repoSub
 //----------------------------------------------------------------------------
 void VtkWellboreMarker::visualize(const std::string & uuid)
 {
+	if (vtkOutput != nullptr) {
+		return;
+	}
+
 	if (uuid == getUuid()) {
 		RESQML2_NS::WellboreMarkerFrameRepresentation *markerFrame = static_cast<RESQML2_NS::WellboreMarkerFrameRepresentation *>(epcPackageRepresentation->getDataObjectByUuid(getParent()));
 		std::vector<RESQML2_NS::WellboreMarker *> markerSet = markerFrame->getWellboreMarkerSet();
@@ -50,7 +54,6 @@ void VtkWellboreMarker::visualize(const std::string & uuid)
 				!std::isnan(doublePositions[3*marker_index+2])) { // no NaN Value
 				if (markerSet[marker_index]->hasDipAngle() &&
 					markerSet[marker_index]->hasDipDirection()) { // dips & direction exist
-					cout << markerSet[marker_index]->getDipDirectionUom() << endl;
 					createDisk(marker_index);
 				}
 				else {
