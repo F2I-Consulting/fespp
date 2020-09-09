@@ -68,3 +68,14 @@ endif()
 
 paraview_add_server_manager_xmls(
   XMLS  EPCReader.xml)
+  
+if (DEV_UNDER_WIN32)
+	add_custom_command(
+		TARGET EPCReader 
+		POST_BUILD
+		COMMAND ${CMAKE_COMMAND} -E copy
+			$<$<CONFIG:Debug>:$<TARGET_FILE:EPCReader>> $<$<CONFIG:Debug>:$<TARGET_PDB_FILE:EPCReader>>
+			$<$<CONFIG:RelWithDebInfo>:$<TARGET_FILE:EPCReader>> $<$<CONFIG:RelWithDebInfo>:$<TARGET_PDB_FILE:EPCReader>>
+			$<$<CONFIG:Debug>:"C:/pv57/pvbd/bin/paraview-5.7/plugins/Fespp"> $<$<CONFIG:RelWithDebInfo>:"C:/pv57/install_x64_vs2017/bin/paraview-5.7/plugins/Fespp">
+	)
+endif (DEV_UNDER_WIN32)

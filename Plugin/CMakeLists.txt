@@ -195,9 +195,7 @@ if (DEV_UNDER_WIN32)
 		POST_BUILD
 		COMMAND ${CMAKE_COMMAND} -E copy
 			$<$<CONFIG:Debug>:$<TARGET_FILE:Fespp>> $<$<CONFIG:Debug>:$<TARGET_PDB_FILE:Fespp>>
-			$<$<CONFIG:Debug>:$<TARGET_FILE:EPCReader>> $<$<CONFIG:Debug>:$<TARGET_PDB_FILE:EPCReader>>
 			$<$<CONFIG:RelWithDebInfo>:$<TARGET_FILE:Fespp>> $<$<CONFIG:RelWithDebInfo>:$<TARGET_PDB_FILE:Fespp>>
-			$<$<CONFIG:RelWithDebInfo>:$<TARGET_FILE:EPCReader>> $<$<CONFIG:RelWithDebInfo>:$<TARGET_PDB_FILE:EPCReader>>
-			$<$<CONFIG:Debug>:"C:/pv57/install_x64_vs2017_debug/bin/paraview-5.7/plugins/Fespp"> $<$<CONFIG:RelWithDebInfo>:"C:/pv57/install_x64_vs2017/bin/paraview-5.7/plugins/Fespp">
+			$<$<CONFIG:Debug>:"C:/pv57/pvbd/bin/paraview-5.7/plugins/Fespp"> $<$<CONFIG:RelWithDebInfo>:"C:/pv57/install_x64_vs2017/bin/paraview-5.7/plugins/Fespp">
 	)
 endif (DEV_UNDER_WIN32)
