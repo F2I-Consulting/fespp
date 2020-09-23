@@ -61,7 +61,7 @@
   </layout>
  </widget>
  <resources>
-  <include location="PQEtpPanel.qrc"/>
+  <include location="Resources/PQEtpPanel.qrc"/>
  </resources>
  <connections/>
 </ui>

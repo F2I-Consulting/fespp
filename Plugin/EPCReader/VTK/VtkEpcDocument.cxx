@@ -815,74 +815,74 @@ void VtkEpcDocument::attach()
 	if (attachUuids.size() > (std::numeric_limits<unsigned int>::max)()) {
 		throw std::range_error("Too much attached uuids");
 	}
-
-	for (unsigned int newBlockIndex = 0; newBlockIndex < attachUuids.size(); ++newBlockIndex) {
-		std::string uuid = attachUuids[newBlockIndex];
+	unsigned int newBlockIndex = 0;
+	for (unsigned int index_attachUuids = 0; index_attachUuids < attachUuids.size(); ++index_attachUuids) {
+		std::string uuid = attachUuids[index_attachUuids];
 		if (uuidIsChildOf[uuid].getType() == VtkEpcCommon::Resqml2Type::GRID_2D)	{
 			vtkOutput->SetBlock(newBlockIndex, uuidToVtkGrid2DRepresentation[uuid]->getOutput());
-			vtkOutput->GetMetaData(newBlockIndex)->Set(vtkCompositeDataSet::NAME(), uuidToVtkGrid2DRepresentation[uuid]->getUuid().c_str());
+			vtkOutput->GetMetaData(newBlockIndex++)->Set(vtkCompositeDataSet::NAME(), uuidToVtkGrid2DRepresentation[uuid]->getUuid().c_str());
 		}
 		else if (uuidIsChildOf[uuid].getType() == VtkEpcCommon::Resqml2Type::POLYLINE_SET) {
 			if (repository->getDataObjectByUuid(uuid)->getXmlTag() == "PolylineRepresentation") {
 				vtkOutput->SetBlock(newBlockIndex, uuidToVtkPolylineRepresentation[uuid]->getOutput());
-				vtkOutput->GetMetaData(newBlockIndex)->Set(vtkCompositeDataSet::NAME(), uuidToVtkPolylineRepresentation[uuid]->getUuid().c_str());
+				vtkOutput->GetMetaData(newBlockIndex++)->Set(vtkCompositeDataSet::NAME(), uuidToVtkPolylineRepresentation[uuid]->getUuid().c_str());
 			}
 			else  {
 				vtkOutput->SetBlock(newBlockIndex, uuidToVtkSetPatch[uuid]->getOutput());
-				vtkOutput->GetMetaData(newBlockIndex)->Set(vtkCompositeDataSet::NAME(), uuidToVtkSetPatch[uuid]->getUuid().c_str());
+				vtkOutput->GetMetaData(newBlockIndex++)->Set(vtkCompositeDataSet::NAME(), uuidToVtkSetPatch[uuid]->getUuid().c_str());
 			}
 		}
 		else if (uuidIsChildOf[uuid].getType() == VtkEpcCommon::Resqml2Type::TRIANGULATED_SET) {
 			if (repository->getDataObjectByUuid(uuid)->getXmlTag() == "TriangulatedRepresentation")  {
 				vtkOutput->SetBlock(newBlockIndex, uuidToVtkTriangulatedRepresentation[uuid]->getOutput());
-				vtkOutput->GetMetaData(newBlockIndex)->Set(vtkCompositeDataSet::NAME(), uuidToVtkTriangulatedRepresentation[uuid]->getUuid().c_str());
+				vtkOutput->GetMetaData(newBlockIndex++)->Set(vtkCompositeDataSet::NAME(), uuidToVtkTriangulatedRepresentation[uuid]->getUuid().c_str());
 			}
 			else  {
 				vtkOutput->SetBlock(newBlockIndex, uuidToVtkSetPatch[uuid]->getOutput());
-				vtkOutput->GetMetaData(newBlockIndex)->Set(vtkCompositeDataSet::NAME(), uuidToVtkSetPatch[uuid]->getUuid().c_str());
+				vtkOutput->GetMetaData(newBlockIndex++)->Set(vtkCompositeDataSet::NAME(), uuidToVtkSetPatch[uuid]->getUuid().c_str());
 			}
 		}
 		else if (uuidIsChildOf[uuid].getType() == VtkEpcCommon::Resqml2Type::WELL_TRAJ) {
 			vtkOutput->SetBlock(newBlockIndex, uuidToVtkWellboreTrajectoryRepresentation[uuid]->getOutput());
-			vtkOutput->GetMetaData(newBlockIndex)->Set(vtkCompositeDataSet::NAME(), uuidToVtkWellboreTrajectoryRepresentation[uuid]->getUuid().c_str());
+			vtkOutput->GetMetaData(newBlockIndex++)->Set(vtkCompositeDataSet::NAME(), uuidToVtkWellboreTrajectoryRepresentation[uuid]->getUuid().c_str());
 		}
 		else if (uuidIsChildOf[uuid].getType() == VtkEpcCommon::Resqml2Type::IJK_GRID) {
 			vtkOutput->SetBlock(newBlockIndex, uuidToVtkIjkGridRepresentation[uuid]->getOutput());
-			vtkOutput->GetMetaData(newBlockIndex)->Set(vtkCompositeDataSet::NAME(), uuidToVtkIjkGridRepresentation[uuid]->getUuid().c_str());
+			vtkOutput->GetMetaData(newBlockIndex++)->Set(vtkCompositeDataSet::NAME(), uuidToVtkIjkGridRepresentation[uuid]->getUuid().c_str());
 		}
 		else if (uuidIsChildOf[uuid].getType() == VtkEpcCommon::Resqml2Type::UNSTRUC_GRID) {
 			vtkOutput->SetBlock(newBlockIndex, uuidToVtkUnstructuredGridRepresentation[uuid]->getOutput());
-			vtkOutput->GetMetaData(newBlockIndex)->Set(vtkCompositeDataSet::NAME(), uuidToVtkUnstructuredGridRepresentation[uuid]->getUuid().c_str());
+			vtkOutput->GetMetaData(newBlockIndex++)->Set(vtkCompositeDataSet::NAME(), uuidToVtkUnstructuredGridRepresentation[uuid]->getUuid().c_str());
 		}
 		else if (uuidIsChildOf[uuid].getType() == VtkEpcCommon::Resqml2Type::SUB_REP) {
 			if (uuidIsChildOf[uuid].getParentType() == VtkEpcCommon::Resqml2Type::IJK_GRID) {
 				vtkOutput->SetBlock(newBlockIndex, uuidToVtkIjkGridRepresentation[uuidIsChildOf[uuid].getUuid()]->getOutput());
-				vtkOutput->GetMetaData(newBlockIndex)->Set(vtkCompositeDataSet::NAME(), uuidToVtkIjkGridRepresentation[uuid]->getUuid().c_str());
+				vtkOutput->GetMetaData(newBlockIndex++)->Set(vtkCompositeDataSet::NAME(), uuidToVtkIjkGridRepresentation[uuid]->getUuid().c_str());
 			}
 			else if (uuidIsChildOf[uuid].getParentType() == VtkEpcCommon::Resqml2Type::UNSTRUC_GRID) {
 				vtkOutput->SetBlock(newBlockIndex, uuidToVtkUnstructuredGridRepresentation[uuidIsChildOf[uuid].getUuid()]->getOutput());
-				vtkOutput->GetMetaData(newBlockIndex)->Set(vtkCompositeDataSet::NAME(), uuidToVtkUnstructuredGridRepresentation[uuidIsChildOf[uuid].getUuid()]->getUuid().c_str());
+				vtkOutput->GetMetaData(newBlockIndex++)->Set(vtkCompositeDataSet::NAME(), uuidToVtkUnstructuredGridRepresentation[uuidIsChildOf[uuid].getUuid()]->getUuid().c_str());
 			}
 			else if (uuidIsChildOf[uuid].getParentType() == VtkEpcCommon::Resqml2Type::PARTIAL) {
 				switch (uuidToVtkPartialRepresentation[uuidIsChildOf[uuid].getParent()]->getType())	{
 				case VtkEpcCommon::Resqml2Type::GRID_2D:	{
 					vtkOutput->SetBlock(newBlockIndex, uuidToVtkGrid2DRepresentation[uuid]->getOutput());
-					vtkOutput->GetMetaData(newBlockIndex)->Set(vtkCompositeDataSet::NAME(), uuidToVtkGrid2DRepresentation[uuid]->getUuid().c_str());
+					vtkOutput->GetMetaData(newBlockIndex++)->Set(vtkCompositeDataSet::NAME(), uuidToVtkGrid2DRepresentation[uuid]->getUuid().c_str());
 					break;
 				}
 				case VtkEpcCommon::Resqml2Type::WELL_TRAJ: {
 					vtkOutput->SetBlock(newBlockIndex, uuidToVtkWellboreTrajectoryRepresentation[uuid]->getOutput());
-					vtkOutput->GetMetaData(newBlockIndex)->Set(vtkCompositeDataSet::NAME(), uuidToVtkWellboreTrajectoryRepresentation[uuid]->getUuid().c_str());
+					vtkOutput->GetMetaData(newBlockIndex++)->Set(vtkCompositeDataSet::NAME(), uuidToVtkWellboreTrajectoryRepresentation[uuid]->getUuid().c_str());
 					break;
 				}
 				case VtkEpcCommon::Resqml2Type::IJK_GRID: {
 					vtkOutput->SetBlock(newBlockIndex, uuidToVtkIjkGridRepresentation[uuidIsChildOf[uuid].getUuid()]->getOutput());
-					vtkOutput->GetMetaData(newBlockIndex)->Set(vtkCompositeDataSet::NAME(), uuidToVtkIjkGridRepresentation[uuid]->getUuid().c_str());
+					vtkOutput->GetMetaData(newBlockIndex++)->Set(vtkCompositeDataSet::NAME(), uuidToVtkIjkGridRepresentation[uuid]->getUuid().c_str());
 					break;
 				}
 				case VtkEpcCommon::Resqml2Type::UNSTRUC_GRID: {
 					vtkOutput->SetBlock(newBlockIndex, uuidToVtkUnstructuredGridRepresentation[uuidIsChildOf[uuid].getUuid()]->getOutput());
-					vtkOutput->GetMetaData(newBlockIndex)->Set(vtkCompositeDataSet::NAME(), uuidToVtkUnstructuredGridRepresentation[uuidIsChildOf[uuid].getUuid()]->getUuid().c_str());
+					vtkOutput->GetMetaData(newBlockIndex++)->Set(vtkCompositeDataSet::NAME(), uuidToVtkUnstructuredGridRepresentation[uuidIsChildOf[uuid].getUuid()]->getUuid().c_str());
 					break;
 				}
 				default:

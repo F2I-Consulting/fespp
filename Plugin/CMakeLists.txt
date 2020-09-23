@@ -67,7 +67,7 @@ if (PARAVIEW_BUILD_QT_GUI)
 		list (REMOVE_ITEM FESPP_RESOURCES ${FESPP_RESOURCES_ETP})
 	endif ()
 	
-	find_package(Qt5 REQUIRED COMPONENTS Widgets)
+	find_package(Qt5 REQUIRED COMPONENTS Widgets X11Extras)
 
 	paraview_plugin_add_dock_window(
 		CLASS_NAME PQSelectionPanel
