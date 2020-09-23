@@ -147,6 +147,7 @@ void vtkEPCReader::SetUuidList(const char* uuid, int status)
 		if (FileName != nullptr && strcmp(FileName,"EpcDocument") == 0)  {
 			std::string msg = epcDocumentSet->visualize(uuidStr);
 			if  (!msg.empty()){
+				epcDocumentSet->bad_uuid(uuidStr);
 				displayError(msg);
 			}
 		}

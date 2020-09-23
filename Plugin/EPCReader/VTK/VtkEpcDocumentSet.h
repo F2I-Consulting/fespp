@@ -49,6 +49,7 @@ public:
 	* create uuid representation.
 	*/
 	std::string visualize(const std::string & uuid);
+	void bad_uuid(const std::string & uuid);
 	void visualizeFull();
 	void visualizeFullWell(std::string fileName);
 	
@@ -83,6 +84,7 @@ private:
 
 	std::vector<VtkEpcDocument*> vtkEpcList;
 	std::vector<std::string> vtkEpcNameList;
+	std::vector<std::string> badUuid;
 
 	std::unordered_map<std::string, VtkEpcDocument*> uuidToVtkEpc; // link uuid/VtkEpcdocument
 
