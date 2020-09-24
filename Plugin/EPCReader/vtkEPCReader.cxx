@@ -188,7 +188,7 @@ void vtkEPCReader::setMarkerOrientation(const bool orientation) {
 }
 
 //----------------------------------------------------------------------------
-void vtkEPCReader::setMarkerSize(const int size) {
+void vtkEPCReader::setMarkerSize(int size) {
 #ifdef WITH_ETP
 	if (etpDocument == nullptr) {
 		/******* TODO

@@ -68,7 +68,7 @@ public:
 	void setMarkerOrientation(const bool orientation);
 
 	vtkSetMacro(MarkerSize, int)
-	void setMarkerSize(const int size);
+	void setMarkerSize(int size);
 
 	void displayError(const std::string&);
 	void displayWarning(const std::string&);
