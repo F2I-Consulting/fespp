@@ -174,7 +174,6 @@ private:
 	QTimer *timer;
 	bool time_Changed;
 
-	std::unordered_map<std::string, std::string> uuidToFilename;
 	std::unordered_map<std::string, std::string> uuidToPipeName;
 
 	// Map getting a present tree widget item from its uuid

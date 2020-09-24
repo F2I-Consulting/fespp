@@ -40,7 +40,11 @@ if (PARAVIEW_BUILD_QT_GUI)
 		list (REMOVE_ITEM FESPP_RESOURCES ${FESPP_RESOURCES_ETP})
 	endif ()
 	
-	pv_find_package_qt(qt_targets REQUIRED QT5_COMPONENTS Widgets X11Extras)
+	if (WIN32)	
+		pv_find_package_qt(qt_targets REQUIRED QT5_COMPONENTS Widgets)
+	else (WIN32)
+		pv_find_package_qt(qt_targets REQUIRED QT5_COMPONENTS Widgets X11Extras)
+	endif (WIN32)
 	pv_qt_wrap_cpp(MOC_SRCS ${FESPP_PQ_HEADERS})
 	pv_qt_wrap_ui(UI_SRCS ${FESPP_FORMS})
 

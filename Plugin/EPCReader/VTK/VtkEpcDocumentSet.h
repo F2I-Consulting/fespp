@@ -38,6 +38,7 @@ public:
 	* Constructor
 	*/
 	VtkEpcDocumentSet (int idProc=0, int maxProc=0, VtkEpcCommon::modeVtkEpc mode = VtkEpcCommon::modeVtkEpc::Both);
+
 	/**
 	* Destructor
 	*/
@@ -49,7 +50,6 @@ public:
 	* create uuid representation.
 	*/
 	std::string visualize(const std::string & uuid);
-	void bad_uuid(const std::string & uuid);
 	void visualizeFull();
 	void visualizeFullWell(std::string fileName);
 	
@@ -77,16 +77,24 @@ public:
 	std::string addEpcDocument(const std::string & fileName);
 
 	const std::vector<VtkEpcDocument*>& getAllVtkEpcDocuments() const { return vtkEpcList; }
-	VtkEpcDocument* getVtkEpcDocument(const std::string & uuid);
+	VtkEpcDocument* getVtkEpcDocument(const std::string& uuid);
+
+	/**
+	* Get the datatype of a particular dataobject according to its uuid
+	*
+	* @param uuid	The UUID of the dataobject we want to know it datatype
+	* @return	An unknown datatype is returned if the dataobject is not contained on this set
+	*/
 	VtkEpcCommon::Resqml2Type getTypeInEpcDocument(const std::string & uuid);
 
 private:
 
+	// The list of EPC documents contained into this set
 	std::vector<VtkEpcDocument*> vtkEpcList;
-	std::vector<std::string> vtkEpcNameList;
+	// A list of uuid which cannot be visualized for some reasons (generally FESAPI exception)
 	std::vector<std::string> badUuid;
-
-	std::unordered_map<std::string, VtkEpcDocument*> uuidToVtkEpc; // link uuid/VtkEpcdocument
+	// link from a dataobject uuid to the VtkEpcDocument it belongs to
+	std::unordered_map<std::string, VtkEpcDocument*> uuidToVtkEpc;
 
 	vtkSmartPointer<vtkMultiBlockDataSet> vtkOutput;
 

@@ -55,4 +55,3 @@ if (WITH_ETP)
 endif (WITH_ETP)
 
 add_subdirectory(Plugin)
-add_subdirectory(doc)

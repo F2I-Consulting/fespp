@@ -40,37 +40,29 @@ VtkEpcDocumentSet::VtkEpcDocumentSet(int idProc, int maxProc, VtkEpcCommon::mode
 //----------------------------------------------------------------------------
 VtkEpcDocumentSet::~VtkEpcDocumentSet()
 {
-	for (const auto &vtkEpc : vtkEpcList)
-	{
+	for (const auto& vtkEpc : vtkEpcList) {
 		delete vtkEpc;
 	}
 }
 
 //----------------------------------------------------------------------------
-std::string VtkEpcDocumentSet::visualize(const std::string &uuid)
+std::string VtkEpcDocumentSet::visualize(const std::string& uuid)
 {
-	if (std::find(badUuid.begin(), badUuid.end(), uuid) == badUuid.end())
-	{
-		if (representationMode)
-		{
-			try
-			{
+	if (std::find(badUuid.begin(), badUuid.end(), uuid) == badUuid.end()) {
+		if (representationMode) {
+			try {
 				uuidToVtkEpc[uuid]->visualize(uuid);
 			}
-			catch (const std::exception &e)
-			{
+			catch (const std::exception& e) {
+				badUuid.push_back(uuid);
 				return "EXCEPTION in fesapi " + uuidToVtkEpc[uuid]->getFileName() + " : " + e.what();
 			}
 		}
+		return "";
 	}
-	return "";
-}
-
-//----------------------------------------------------------------------------
-void VtkEpcDocumentSet::bad_uuid(const std::string &uuid)
-{
-	badUuid.push_back(uuid);
-	// TODO: clean uuid...
+	else {
+		return "This object cannot be visualized";
+	}
 }
 
 //----------------------------------------------------------------------------
@@ -175,39 +167,38 @@ vtkSmartPointer<vtkMultiBlockDataSet> VtkEpcDocumentSet::getVisualization() cons
 }
 
 //----------------------------------------------------------------------------
-std::string VtkEpcDocumentSet::addEpcDocument(const std::string &fileName)
+std::string VtkEpcDocumentSet::addEpcDocument(const std::string& fileName)
 {
-	if (std::find(vtkEpcNameList.begin(), vtkEpcNameList.end(), fileName) == vtkEpcNameList.end())
-	{
-		auto vtkEpc = new VtkEpcDocument(fileName, procRank, nbProc, this);
-		auto uuidList = vtkEpc->getListUuid();
-		for (auto &uuidListElem : uuidList)
-		{
-			uuidToVtkEpc[uuidListElem] = vtkEpc;
+	// Check if the file relative to fileName has already been imported
+	for (auto epcDoc : vtkEpcList) {
+		if (epcDoc->getFileName() == fileName) {
+			return "The file \"" + fileName +"\" has already been imported";
 		}
-		vtkEpcList.push_back(vtkEpc);
-		vtkEpcNameList.push_back(fileName);
-
-		return vtkEpc->getError();
 	}
-	return "";
+
+	// Import the file relative to fileName
+	auto vtkEpc = new VtkEpcDocument(fileName, procRank, nbProc, this);
+	auto uuidList = vtkEpc->getListUuid();
+	for (auto& uuidListElem : uuidList) {
+		uuidToVtkEpc[uuidListElem] = vtkEpc;
+	}
+	vtkEpcList.push_back(vtkEpc);
+
+	return vtkEpc->getError();
 }
 
 //----------------------------------------------------------------------------
-VtkEpcDocument *VtkEpcDocumentSet::getVtkEpcDocument(const std::string &uuid)
+VtkEpcDocument* VtkEpcDocumentSet::getVtkEpcDocument(const std::string& uuid)
 {
 	return uuidToVtkEpc.find(uuid) != uuidToVtkEpc.end() ? uuidToVtkEpc[uuid] : nullptr;
 }
 
 //----------------------------------------------------------------------------
-VtkEpcCommon::Resqml2Type VtkEpcDocumentSet::getTypeInEpcDocument(const std::string &uuid)
+VtkEpcCommon::Resqml2Type VtkEpcDocumentSet::getTypeInEpcDocument(const std::string& uuid)
 {
-	auto epcDoc = uuidToVtkEpc.find(uuid) != uuidToVtkEpc.end() ? uuidToVtkEpc[uuid] : nullptr;
-	if (epcDoc != nullptr)
-	{
-		return epcDoc->getType(uuid);
-	}
-	return VtkEpcCommon::Resqml2Type::UNKNOW;
+	return uuidToVtkEpc.find(uuid) != uuidToVtkEpc.end()
+		? uuidToVtkEpc[uuid]->getType(uuid)
+		: VtkEpcCommon::Resqml2Type::UNKNOW;
 }
 
 //----------------------------------------------------------------------------
@@ -216,7 +207,7 @@ std::vector<VtkEpcCommon const *> VtkEpcDocumentSet::getAllVtkEpcCommons() const
 	std::vector<VtkEpcCommon const *> result;
 
 	// concatenate all VtkEpcCommons of all epc documents (i.e repos).
-	for (const auto &vtkRepo : vtkEpcList)
+	for (auto vtkRepo : vtkEpcList)
 	{
 		auto repoAllVtkEpcCommons = vtkRepo->getAllVtkEpcCommons();
 		result.insert(result.end(),
