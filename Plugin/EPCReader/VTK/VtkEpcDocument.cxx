@@ -681,7 +681,6 @@ void VtkEpcDocument::toggleMarkerOrientation(const bool orientation) {
 // ----------------------------------------------------------------------------
 void VtkEpcDocument::remove(const std::string & uuid)
 {
-	cout << "remove " << uuid << endl;
 	auto uuidtoAttach = uuid;
 
 	if (uuidIsChildOf[uuid].getType() == VtkEpcCommon::Resqml2Type::PROPERTY ||

@@ -72,8 +72,7 @@ void VtkEpcDocumentSet::visualizeFull()
 	{
 		for (auto &vtkEpcElem : vtkEpcList)
 		{
-			auto uuidList = vtkEpcElem->getListUuid();
-			for (const auto &uuidListElem : uuidList)
+			for (const auto &uuidListElem : vtkEpcElem->getListUuid())
 			{
 				vtkEpcElem->visualize(uuidListElem);
 			}
@@ -100,9 +99,13 @@ void VtkEpcDocumentSet::visualizeFullWell(std::string fileName)
 //----------------------------------------------------------------------------
 void VtkEpcDocumentSet::unvisualize(const std::string &uuid)
 {
-	if (representationMode)
-	{
-		uuidToVtkEpc[uuid]->remove(uuid);
+	if (representationMode) {
+		// Only unvisualize uuid which are referenced
+		// For example do not unvizualize an uuid which is an epc filename.
+		auto iterator = uuidToVtkEpc.find(uuid);
+		if (iterator != uuidToVtkEpc.end()) {
+			iterator->second->remove(uuid);
+		}
 	}
 }
 
@@ -154,7 +157,7 @@ vtkSmartPointer<vtkMultiBlockDataSet> VtkEpcDocumentSet::getVisualization() cons
 	{
 		vtkOutput->Initialize();
 		unsigned int index = 0;
-		for (auto &vtkEpcElem : vtkEpcList)
+		for (const auto& vtkEpcElem : vtkEpcList)
 		{
 			if (vtkEpcElem->getOutput()->GetNumberOfBlocks() > 0)
 			{
@@ -179,7 +182,7 @@ std::string VtkEpcDocumentSet::addEpcDocument(const std::string& fileName)
 	// Import the file relative to fileName
 	auto vtkEpc = new VtkEpcDocument(fileName, procRank, nbProc, this);
 	auto uuidList = vtkEpc->getListUuid();
-	for (auto& uuidListElem : uuidList) {
+	for (const auto& uuidListElem : uuidList) {
 		uuidToVtkEpc[uuidListElem] = vtkEpc;
 	}
 	vtkEpcList.push_back(vtkEpc);

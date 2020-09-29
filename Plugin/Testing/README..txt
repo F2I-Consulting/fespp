@@ -1,4 +1,4 @@
-- Copy the *content* of the "Data" folder in the PARAVIEW_DATA_ROOT (for example into C:\pv56\pvb\ExternalData\Testing\Data)
+- Copy the *content* of the "Data" folder in the PARAVIEW_DATA_ROOT (for example into C:\pv56\pvb\ExternalData\Testing\Data or /yourPath/paraview56/paraview_build/ExternalData/Testing/Data)
 - Start paraview.exe
 - Load the Fespp plugin if not already done (menu "Tools" -> submenu "Manage Plugins")
 - Choose menu "Tools" -> submenu "Play Test" to start
