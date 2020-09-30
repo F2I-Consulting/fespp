@@ -1462,9 +1462,9 @@ void VtkEpcDocument::searchSubRepresentation(const std::string & fileName) {
 		subRepresentationSet = repository.getSubRepresentationSet();
 	}
 	catch  (const std::exception & e)		{
-		cout << "EXCEPTION in fesapi when call getSubRepresentationSet with file: " << fileName << " : " << e.what();
+		epc_error = epc_error + "EXCEPTION in fesapi when call getSubRepresentationSet with file: " + fileName + " : " + e.what() + ".\n";
 	}
-	for (auto& subRepresentation : subRepresentationSet) {
+	for (auto subRepresentation : subRepresentationSet) {
 		if (subRepresentation->isPartial()){
 			auto vtkEpcSrc = epcSet->getVtkEpcDocument(subRepresentation->getUuid());
 			if (vtkEpcSrc)	{
@@ -1472,11 +1472,16 @@ void VtkEpcDocument::searchSubRepresentation(const std::string & fileName) {
 				uuidIsChildOf[subRepresentation->getUuid()].setParentType( VtkEpcCommon::Resqml2Type::SUB_REP);
 			}
 			else {
-				epc_error = epc_error + " Partial UUID: (" + subRepresentation->getUuid() + ") is not loaded \n";
+				epc_error = epc_error + " Partial subrepresentation \"" + subRepresentation->getTitle() + "\" with UUID " + subRepresentation->getUuid() + " is not loaded. Please load it first.\n";
 				continue;
 			}
 		}
 		else {
+			if (subRepresentation->getSupportingRepresentationCount() != 1) {
+				epc_error = epc_error + "Cannot import a subrepresentation which does not rely on a single IJK grid for now.\n";
+				continue;
+			}
+
 			auto uuidParent = subRepresentation->getSupportingRepresentationDor(0).getUuid();
 			createTreeVtk(subRepresentation->getUuid(), uuidParent, subRepresentation->getTitle().c_str(), VtkEpcCommon::Resqml2Type::SUB_REP);
 		}

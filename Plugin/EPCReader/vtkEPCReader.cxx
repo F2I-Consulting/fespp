@@ -97,7 +97,7 @@ void vtkEPCReader::SetSubFileName(const char* name)
 #endif
 
 	if (extension == "epc" ) {
-		FileName = "EpcDocument";
+		SetFileName("EpcDocument");
 		if (std::find(fileNameSet.begin(), fileNameSet.end(), nameStr) == fileNameSet.end())	{
 			fileNameSet.push_back(nameStr);
 			OpenEpcDocument(nameStr);
