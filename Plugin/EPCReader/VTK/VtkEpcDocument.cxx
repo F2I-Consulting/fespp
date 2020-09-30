@@ -677,6 +677,14 @@ void VtkEpcDocument::toggleMarkerOrientation(const bool orientation) {
 	}
 }
 
+// ----------------------------------------------------------------------------
+void VtkEpcDocument::setMarkerSize(int size) {
+	for (auto &uuid : uuidRep) {
+		if (uuidIsChildOf[uuid].getType() == VtkEpcCommon::Resqml2Type::WELL_MARKER) {
+			uuidToVtkWellboreTrajectoryRepresentation[uuidIsChildOf[uuidIsChildOf[uuid].getParent()].getParent()]->setMarkerSize(size);
+		}
+	}
+}
 
 // ----------------------------------------------------------------------------
 void VtkEpcDocument::remove(const std::string & uuid)

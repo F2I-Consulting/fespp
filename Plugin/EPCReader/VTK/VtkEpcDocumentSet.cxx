@@ -139,6 +139,18 @@ void VtkEpcDocumentSet::toggleMarkerOrientation(const bool orientation)
 }
 
 //----------------------------------------------------------------------------
+void VtkEpcDocumentSet::setMarkerSize(int size) {
+	if (representationMode)
+	{
+		for (VtkEpcDocument *epcDoc : vtkEpcList)
+		{
+			epcDoc->setMarkerSize(size);
+		}
+	}
+}
+
+
+//----------------------------------------------------------------------------
 VtkEpcCommon::Resqml2Type VtkEpcDocumentSet::getType(std::string uuid)
 {
 	return uuidToVtkEpc[uuid]->getType(uuid);

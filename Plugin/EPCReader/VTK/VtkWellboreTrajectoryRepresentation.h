@@ -58,7 +58,19 @@ public:
 	*/
 	void visualize(const std::string & uuid);
 	
+	/**
+	* method : toggleMarkerOrientation
+	* variable : const bool orientation
+	* enable/disable marker orientation option
+	*/
 	void toggleMarkerOrientation(bool orientation);
+
+	/**
+	* method : setMarkerSize
+	* variable : int size 
+	* set the new marker size
+	*/
+	void setMarkerSize(int size);
 
 	/**
 	* method : remove

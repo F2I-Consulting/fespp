@@ -91,6 +91,26 @@ void VtkWellboreTrajectoryRepresentation::toggleMarkerOrientation(bool orientati
 	for (std::pair<std::string, VtkEpcCommon> element : uuid_Informations) {
 		if (element.second.getType() == VtkEpcCommon::Resqml2Type::WELL_MARKER){
 			uuid_to_VtkWellboreFrame[element.second.getParent()]->toggleMarkerOrientation(orientation);
+			if (getBlockNumberOf(uuid_to_VtkWellboreFrame[element.second.getParent()]->getOutput()) == (std::numeric_limits<unsigned int>::max)()) {
+				unsigned int blockCount = vtkOutput->GetNumberOfBlocks();
+				vtkOutput->SetBlock(blockCount, uuid_to_VtkWellboreFrame[element.second.getParent()]->getOutput());
+				vtkOutput->GetMetaData(blockCount)->Set(vtkCompositeDataSet::NAME(), uuid_to_VtkWellboreFrame[element.second.getParent()]->getName().c_str());
+			}
+		}
+	}
+}
+
+//----------------------------------------------------------------------------
+void VtkWellboreTrajectoryRepresentation::setMarkerSize(int size) {
+	// Iterate over an unordered_map using range based for loop
+	for (std::pair<std::string, VtkEpcCommon> element : uuid_Informations) {
+		if (element.second.getType() == VtkEpcCommon::Resqml2Type::WELL_MARKER){
+			uuid_to_VtkWellboreFrame[element.second.getParent()]->setMarkerSize(size);
+			if (getBlockNumberOf(uuid_to_VtkWellboreFrame[element.second.getParent()]->getOutput()) == (std::numeric_limits<unsigned int>::max)()) {
+				unsigned int blockCount = vtkOutput->GetNumberOfBlocks();
+				vtkOutput->SetBlock(blockCount, uuid_to_VtkWellboreFrame[element.second.getParent()]->getOutput());
+				vtkOutput->GetMetaData(blockCount)->Set(vtkCompositeDataSet::NAME(), uuid_to_VtkWellboreFrame[element.second.getParent()]->getName().c_str());
+			}
 		}
 	}
 }

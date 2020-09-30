@@ -58,11 +58,33 @@ void VtkWellboreFrame::visualize(const std::string & uuid)
 //----------------------------------------------------------------------------
 void VtkWellboreFrame::toggleMarkerOrientation(bool orientation) {
 
+	detach();
 	for (auto &marker : uuid_to_VtkWellboreMarker) {
 		marker.second->toggleMarkerOrientation(orientation);
+
+		if (getBlockNumberOf(marker.second->getOutput()) == (std::numeric_limits<unsigned int>::max)()) {
+			unsigned int blockCount = vtkOutput->GetNumberOfBlocks();
+			vtkOutput->SetBlock(blockCount, marker.second->getOutput());
+			vtkOutput->GetMetaData(blockCount)->Set(vtkCompositeDataSet::NAME(), marker.second->getName().c_str());
+		}
 	}
 }
 
+//----------------------------------------------------------------------------
+void VtkWellboreFrame::setMarkerSize(int size) {
+	detach();
+	for (auto &marker : uuid_to_VtkWellboreMarker) {
+		marker.second->setMarkerSize(size);
+
+		if (getBlockNumberOf(marker.second->getOutput()) == (std::numeric_limits<unsigned int>::max)()) {
+			unsigned int blockCount = vtkOutput->GetNumberOfBlocks();
+			vtkOutput->SetBlock(blockCount, marker.second->getOutput());
+			vtkOutput->GetMetaData(blockCount)->Set(vtkCompositeDataSet::NAME(), marker.second->getName().c_str());
+		}
+	}
+}
+
+//----------------------------------------------------------------------------
 void VtkWellboreFrame::remove(const std::string & uuid)
 {
 	if (uuid == getUuid()) {
