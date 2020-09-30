@@ -543,7 +543,13 @@ void PQSelectionPanel::addFileName(const std::string & fileName) {
 
 	const std::vector<std::string> allOpenedEpcFileNames = getAllOpenedEpcFileNames();
 	if (std::find(allOpenedEpcFileNames.begin(), allOpenedEpcFileNames.end(), fileName) == allOpenedEpcFileNames.end()) {
-		vtkEpcDocumentSet->addEpcDocument(fileName);
+		try {
+			vtkEpcDocumentSet->addEpcDocument(fileName);
+		}
+		catch (const std::exception &e) {
+			return;
+		}
+		
 
 		std::unordered_map<std::string, std::string> name_to_uuid;
 		for (auto vtkEpcCommon : vtkEpcDocumentSet->getAllVtkEpcCommons()) {

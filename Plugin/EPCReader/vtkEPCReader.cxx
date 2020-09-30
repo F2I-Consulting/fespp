@@ -292,11 +292,15 @@ int vtkEPCReader::RequestInformation(
 //----------------------------------------------------------------------------
 void vtkEPCReader::OpenEpcDocument(const std::string &name)
 {
-	if (epcDocumentSet == nullptr)
-	{
+	if (epcDocumentSet == nullptr) {
 		epcDocumentSet = new VtkEpcDocumentSet(idProc, nbProc, VtkEpcCommon::modeVtkEpc::Both);
 	}
-	displayWarning(epcDocumentSet->addEpcDocument(name));
+	try {
+		displayWarning(epcDocumentSet->addEpcDocument(name));
+	}
+	catch (const std::exception &e) {
+		displayError("EXCEPTION in FESAPI library: " + std::string(e.what()));
+	}
 }
 
 //----------------------------------------------------------------------------

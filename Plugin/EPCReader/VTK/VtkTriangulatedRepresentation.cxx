@@ -20,6 +20,7 @@ under the License.
 
 // include VTK library
 #include <vtkPointData.h>
+#include <vtkCellData.h>
 #include <vtkCellArray.h>
 #include <vtkSmartPointer.h>
 #include <vtkTriangle.h>
@@ -40,7 +41,6 @@ VtkTriangulatedRepresentation::VtkTriangulatedRepresentation(const std::string &
 VtkTriangulatedRepresentation::~VtkTriangulatedRepresentation()
 {
 	patchIndex = 0;
-	lastProperty = "";
 }
 
 //----------------------------------------------------------------------------
@@ -87,8 +87,13 @@ void VtkTriangulatedRepresentation::visualize(const std::string &uuid)
 void VtkTriangulatedRepresentation::addProperty(const std::string & uuidProperty, vtkDataArray* dataProperty)
 {
 	vtkOutput->Modified();
-	vtkOutput->GetPointData()->AddArray(dataProperty);
-	lastProperty = uuidProperty;
+	const unsigned int propertyAttachmentKind = uuidToVtkProperty[uuidProperty]->getSupport();
+	if (propertyAttachmentKind == VtkProperty::typeSupport::CELLS) {
+		vtkOutput->GetCellData()->AddArray(dataProperty);
+	}
+	else if (propertyAttachmentKind == VtkProperty::typeSupport::POINTS) {
+		vtkOutput->GetPointData()->AddArray(dataProperty);
+	}
 }
 
 long VtkTriangulatedRepresentation::getAttachmentPropertyCount(const std::string &, VtkEpcCommon::FesppAttachmentProperty)
