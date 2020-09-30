@@ -38,7 +38,7 @@ VtkResqml2PolyData(fileName, name, uuid, uuidParent, repoRepresentation, repoSub
 void VtkWellboreMarker::visualize(const std::string & uuid)
 {
 	if (vtkOutput != nullptr) {
-		return;
+		vtkOutput = nullptr;
 	}
 
 	if (uuid == getUuid()) {
@@ -69,7 +69,7 @@ void VtkWellboreMarker::visualize(const std::string & uuid)
 
 //----------------------------------------------------------------------------
 void VtkWellboreMarker::toggleMarkerOrientation(bool orient) {
-	orientation = orient;
+	this->orientation = orient;
 	visualize(getUuid());
 }
 
