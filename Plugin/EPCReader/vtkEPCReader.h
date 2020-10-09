@@ -64,10 +64,8 @@ public:
 	int GetNumberOfUuidListArrays();
 	const char* GetUuidListArrayName(int index);
 
-	vtkSetMacro(MarkerOrientation, bool)
-	void setMarkerOrientation(const bool orientation);
+	void setMarkerOrientation(bool orientation);
 
-	vtkSetMacro(MarkerSize, int)
 	void setMarkerSize(int size);
 
 	void displayError(const std::string&);
@@ -82,8 +80,6 @@ private:
 	char* EpcFileName;
 
 	vtkDataArraySelection* UuidList;
-	bool MarkerOrientation;
-	int MarkerSize;
 
 	vtkMultiProcessController* Controller;
 	

@@ -46,9 +46,6 @@ vtkStandardNewMacro(vtkEPCReader)
 	SetNumberOfInputPorts(0);
 	SetNumberOfOutputPorts(1);
 
-	MarkerOrientation = 1;
-	MarkerSize = 10;
-
 	vtkMultiProcessController *controller = vtkMultiProcessController::GetGlobalController();
 	if (controller != nullptr)
 	{
@@ -185,55 +182,48 @@ void vtkEPCReader::SetUuidList(const char *uuid, int status)
 }
 
 //----------------------------------------------------------------------------
-void vtkEPCReader::setMarkerOrientation(const bool orientation)
+void vtkEPCReader::setMarkerOrientation(bool orientation)
 {
-	if (MarkerOrientation != orientation)
-	{
-		MarkerOrientation = orientation;
 #ifdef WITH_ETP
-		if (etpDocument == nullptr)
-		{
-			/******* TODO
-			 * enable/disable marker orientation for ETP document
-			 */
-		}
-#endif
-		if (FileName != nullptr && strcmp(FileName, "EpcDocument") == 0)
-		{
-			epcDocumentSet->toggleMarkerOrientation(MarkerOrientation);
-		}
-
-		Modified();
-		Update();
-		UpdateDataObject();
-		UpdateInformation();
-		UpdateWholeExtent();
+	if (etpDocument == nullptr)
+	{
+		/******* TODO
+			* enable/disable marker orientation for ETP document
+			*/
 	}
+#endif
+	if (FileName != nullptr && strcmp(FileName, "EpcDocument") == 0)
+	{
+		epcDocumentSet->toggleMarkerOrientation(orientation);
+	}
+
+	Modified();
+	Update();
+	UpdateDataObject();
+	UpdateInformation();
+	UpdateWholeExtent();
 }
 
 //----------------------------------------------------------------------------
 void vtkEPCReader::setMarkerSize(int size)
 {
-	if (MarkerSize != size)
-	{
 #ifdef WITH_ETP
-		if (etpDocument == nullptr)
-		{
-			/******* TODO
-		 * modify marker size for ETP document
-		 */
-		}
-#endif
-		if (FileName != nullptr && strcmp(FileName, "EpcDocument") == 0)
-		{
-			epcDocumentSet->setMarkerSize(size);
-		}
-		Modified();
-		Update();
-		UpdateDataObject();
-		UpdateInformation();
-		UpdateWholeExtent();
+	if (etpDocument == nullptr)
+	{
+		/******* TODO
+		* modify marker size for ETP document
+		*/
 	}
+#endif
+	if (FileName != nullptr && strcmp(FileName, "EpcDocument") == 0)
+	{
+		epcDocumentSet->setMarkerSize(size);
+	}
+	Modified();
+	Update();
+	UpdateDataObject();
+	UpdateInformation();
+	UpdateWholeExtent();
 }
 
 //----------------------------------------------------------------------------
