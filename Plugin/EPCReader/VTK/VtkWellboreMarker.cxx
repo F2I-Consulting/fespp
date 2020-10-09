@@ -38,7 +38,7 @@ VtkResqml2PolyData(fileName, name, uuid, uuidParent, repoRepresentation, repoSub
 void VtkWellboreMarker::visualize(const std::string & uuid)
 {
 	if (vtkOutput != nullptr) {
-		vtkOutput = nullptr;
+		return;
 	}
 
 	if (uuid == getUuid()) {
@@ -69,14 +69,12 @@ void VtkWellboreMarker::visualize(const std::string & uuid)
 
 //----------------------------------------------------------------------------
 void VtkWellboreMarker::toggleMarkerOrientation(bool orient) {
-	this->orientation = orient;
-	visualize(getUuid());
+	orientation = orient;
 }
 
 //----------------------------------------------------------------------------
 void VtkWellboreMarker::setMarkerSize(int new_size) {
-	this->size = new_size;
-	visualize(getUuid());
+	size = new_size;
 }
 
 //----------------------------------------------------------------------------
@@ -169,7 +167,6 @@ void VtkWellboreMarker::createSphere(size_t markerIndex) {
 
 	// get markerSet
 	RESQML2_NS::WellboreMarkerFrameRepresentation *frame = epcPackageRepresentation->getDataObjectByUuid<RESQML2_NS::WellboreMarkerFrameRepresentation>(getParent());
-	std::vector<RESQML2_NS::WellboreMarker *> markerSet = frame->getWellboreMarkerSet();
 	const double zIndice = frame->getLocalCrs(0)->isDepthOriented() ? -1 : 1;
 
 	//create  sphere

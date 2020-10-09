@@ -56,16 +56,18 @@ void VtkWellboreFrame::visualize(const std::string & uuid)
 }
 
 //----------------------------------------------------------------------------
-void VtkWellboreFrame::toggleMarkerOrientation(bool orientation) {
-
+void VtkWellboreFrame::toggleMarkerOrientation(bool orientation)
+{
 	detach();
 	for (auto &marker : uuid_to_VtkWellboreMarker) {
-		marker.second->toggleMarkerOrientation(orientation);
-
-		if (getBlockNumberOf(marker.second->getOutput()) == (std::numeric_limits<unsigned int>::max)()) {
-			unsigned int blockCount = vtkOutput->GetNumberOfBlocks();
-			vtkOutput->SetBlock(blockCount, marker.second->getOutput());
-			vtkOutput->GetMetaData(blockCount)->Set(vtkCompositeDataSet::NAME(), marker.second->getName().c_str());
+		// Check if the marker is visible or not.
+		if (marker.second->getOutput() != nullptr) {
+			remove(marker.first);
+			marker.second->toggleMarkerOrientation(orientation);
+			visualize(marker.first);
+		}
+		else {
+			marker.second->toggleMarkerOrientation(orientation);
 		}
 	}
 }
@@ -74,12 +76,14 @@ void VtkWellboreFrame::toggleMarkerOrientation(bool orientation) {
 void VtkWellboreFrame::setMarkerSize(int size) {
 	detach();
 	for (auto &marker : uuid_to_VtkWellboreMarker) {
-		marker.second->setMarkerSize(size);
-
-		if (getBlockNumberOf(marker.second->getOutput()) == (std::numeric_limits<unsigned int>::max)()) {
-			unsigned int blockCount = vtkOutput->GetNumberOfBlocks();
-			vtkOutput->SetBlock(blockCount, marker.second->getOutput());
-			vtkOutput->GetMetaData(blockCount)->Set(vtkCompositeDataSet::NAME(), marker.second->getName().c_str());
+		// Check if the marker is visible or not.
+		if (marker.second->getOutput() != nullptr) {
+			remove(marker.first);
+			marker.second->setMarkerSize(size);
+			visualize(marker.first);
+		}
+		else {
+			marker.second->setMarkerSize(size);
 		}
 	}
 }
@@ -92,5 +96,6 @@ void VtkWellboreFrame::remove(const std::string & uuid)
 	}
 	else { // => wellbore_Marker
 		removeFromVtkOutput(uuid_to_VtkWellboreMarker[uuid]->getOutput());
+		uuid_to_VtkWellboreMarker[uuid]->remove(uuid);
 	}
 }
