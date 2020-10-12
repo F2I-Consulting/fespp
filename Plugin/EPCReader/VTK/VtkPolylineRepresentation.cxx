@@ -38,33 +38,26 @@ VtkResqml2PolyData(fileName, name, uuid, uuidParent, repoRepresentation, repoSub
 }
 
 //----------------------------------------------------------------------------
-VtkPolylineRepresentation::~VtkPolylineRepresentation()
-{
-	patchIndex = 0;
-	lastProperty = "";
-}
-
-//----------------------------------------------------------------------------
 void VtkPolylineRepresentation::visualize(const std::string & uuid)
 {
 	if (!subRepresentation)	{
-		RESQML2_NS::PolylineSetRepresentation* polylineSetRepresentation = nullptr;
-		common::AbstractObject* obj = epcPackageRepresentation->getDataObjectByUuid(getUuid());
-		if (obj != nullptr && obj->getXmlTag() == "PolylineSetRepresentation") {
-			polylineSetRepresentation = static_cast<RESQML2_NS::PolylineSetRepresentation*>(obj);
+		RESQML2_NS::PolylineSetRepresentation* polylineSetRepresentation = epcPackageRepresentation->getDataObjectByUuid<RESQML2_NS::PolylineSetRepresentation>(getUuid());
+		if (polylineSetRepresentation == nullptr) {
+			vtkOutputWindowDisplayDebugText(("The UUID " + getUuid() + " is not a RESQML2 PolylineSetRepresentation\n").c_str());
+			return;
 		}
 
 		if (!vtkOutput) {
 			VtkResqml2PolyData::vtkOutput = vtkSmartPointer<vtkPolyData>::New();
 
 			// POINT
-			unsigned int nodeCount = polylineSetRepresentation->getXyzPointCountOfPatch(patchIndex);
+			const ULONG64 nodeCount = polylineSetRepresentation->getXyzPointCountOfPatch(patchIndex);
 
 			double* allPoints = new double[nodeCount * 3]; // Will be deleted by VTK
 			polylineSetRepresentation->getXyzPointsOfPatch(patchIndex, allPoints);
 
-			createVtkPoints(nodeCount, allPoints, polylineSetRepresentation->getLocalCrs(0));
-			vtkOutput->SetPoints(points);
+			vtkSmartPointer<vtkPoints> vtkPts = createVtkPoints(nodeCount, allPoints, polylineSetRepresentation->getLocalCrs(0));
+			vtkOutput->SetPoints(vtkPts);
 
 			// POLYLINE
 			vtkSmartPointer<vtkCellArray> setPolylineRepresentationLines = vtkSmartPointer<vtkCellArray>::New();
@@ -86,7 +79,6 @@ void VtkPolylineRepresentation::visualize(const std::string & uuid)
 				setPolylineRepresentationLines->InsertNextCell(polylineRepresentation);
 				vtkOutput->SetLines(setPolylineRepresentationLines);
 			}
-			points = nullptr;
 		}
 		if (uuid != getUuid()) {
 			vtkDataArray* arrayProperty = uuidToVtkProperty[uuid]->visualize(uuid, polylineSetRepresentation);

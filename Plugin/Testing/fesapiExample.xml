@@ -3,27 +3,29 @@
   <pqevent object="PQActionHolder/actionDataLoadManager" command="activate" arguments="" />
   <pqevent object="pqClientMainWindow/pqFileDialog" command="filesSelected" arguments="$PARAVIEW_DATA_ROOT/testingPackageCpp.epc" />
   
-  <!-- IJK grid explicit geometry -->
-  <pqevent object="pqClientMainWindow/PQSelectionPanel/panelSelection/treeWidget" command="setCheckState" arguments="0.0.9.0.2.0.2.0,2" />
+  <!-- IJK grid explicit geometry and property-->
+  <pqevent object="pqClientMainWindow/PQSelectionPanel/panelSelection/treeWidget" command="setCheckState" arguments="0.0.9.0.3.0.2.0,2" />
   <pqevent object="pqClientMainWindow/representationToolbar/displayRepresentation/comboBox" command="activated" arguments="Surface With Edges" />
   <pqevent object="pqClientMainWindow/variableToolbar/displayColor/Variables" command="activated" arguments="Two faulted sugar cubes other cellIndex" />
   <pqcompareview object="pqClientMainWindow/centralwidget/MultiViewWidget/CoreWidget/qt_tabwidget_stackedwidget/MultiViewWidget1/Frame.0/CentralWidgetFrame/Viewport" baseline="$PARAVIEW_DATA_ROOT/Baseline/TwoFaultedSugarCubesExplicitCellIndexProp.png" threshold="2" />
   <pqevent object="pqClientMainWindow/variableToolbar/displayColor/Variables" command="activated" arguments="Solid Color" />
-  <pqevent object="pqClientMainWindow/PQSelectionPanel/panelSelection/treeWidget" command="setCheckState" arguments="0.0.9.0.2.0.2.0,0" />
+  <pqevent object="pqClientMainWindow/PQSelectionPanel/panelSelection/treeWidget" command="setCheckState" arguments="0.0.9.0.3.0.2.0,0" />
   
   <!-- IJK grid parametric geometry -->
   <pqevent object="pqClientMainWindow/PQSelectionPanel/panelSelection/treeWidget" command="setCheckState" arguments="0.0.9.0.0.0,2" />
   <pqcompareview object="pqClientMainWindow/centralwidget/MultiViewWidget/CoreWidget/qt_tabwidget_stackedwidget/MultiViewWidget1/Frame.0/CentralWidgetFrame/Viewport" baseline="$PARAVIEW_DATA_ROOT/Baseline/TwoFaultedSugarCubesParam.png" threshold="2" />
   <pqevent object="pqClientMainWindow/PQSelectionPanel/panelSelection/treeWidget" command="setCheckState" arguments="0.0.9.0.0.0,0" />
   
-  <!-- Fault sticks and triangulations -->
+  <!-- Polyline set geometry -->
   <pqevent object="pqClientMainWindow/PQSelectionPanel/panelSelection/treeWidget" command="setCheckState" arguments="0.0.1.0.0.0,2" />
   <pqcompareview object="pqClientMainWindow/centralwidget/MultiViewWidget/CoreWidget/qt_tabwidget_stackedwidget/MultiViewWidget1/Frame.0/CentralWidgetFrame/Viewport" baseline="$PARAVIEW_DATA_ROOT/Baseline/PolylineSetRep.png" threshold="2" />
   <pqevent object="pqClientMainWindow/PQSelectionPanel/panelSelection/treeWidget" command="setCheckState" arguments="0.0.1.0.1.0,2" />
+  
+  <!-- Triangulation geometry -->
   <pqcompareview object="pqClientMainWindow/centralwidget/MultiViewWidget/CoreWidget/qt_tabwidget_stackedwidget/MultiViewWidget1/Frame.0/CentralWidgetFrame/Viewport" baseline="$PARAVIEW_DATA_ROOT/Baseline/TriangulatedSetRep.png" threshold="2" />
   <pqevent object="pqClientMainWindow/PQSelectionPanel/panelSelection/treeWidget" command="setCheckState" arguments="0.0.1.0,0" />     
       
-  <!-- Unstructured grid -->
+  <!-- Unstructured grid geoemtry -->
   <pqevent object="pqClientMainWindow/PQSelectionPanel/panelSelection/treeWidget" command="setCheckState" arguments="0.0.16.0.0.0,2" />
   <pqevent object="pqClientMainWindow/cameraToolbar/actionPositiveX" command="activate" arguments="" />
   <pqcompareview object="pqClientMainWindow/centralwidget/MultiViewWidget/CoreWidget/qt_tabwidget_stackedwidget/MultiViewWidget1/Frame.0/CentralWidgetFrame/Viewport" baseline="$PARAVIEW_DATA_ROOT/Baseline/UnstructuredPositiveX.png" threshold="2" />
@@ -31,7 +33,7 @@
   <pqcompareview object="pqClientMainWindow/centralwidget/MultiViewWidget/CoreWidget/qt_tabwidget_stackedwidget/MultiViewWidget1/Frame.0/CentralWidgetFrame/Viewport" baseline="$PARAVIEW_DATA_ROOT/Baseline/UnstructuredNegativeX.png" threshold="2" />
   <pqevent object="pqClientMainWindow/PQSelectionPanel/panelSelection/treeWidget" command="setCheckState" arguments="0.0.16.0.0.0,0" /> 
   
-  <!-- Horizon 2d grid -->
+  <!-- 2d grid -->
   <pqevent object="pqClientMainWindow/PQSelectionPanel/panelSelection/treeWidget" command="setCheckState" arguments="0.0.2.0.1.0.0.0,2" />
   <pqcompareview object="pqClientMainWindow/centralwidget/MultiViewWidget/CoreWidget/qt_tabwidget_stackedwidget/MultiViewWidget1/Frame.0/CentralWidgetFrame/Viewport" baseline="$PARAVIEW_DATA_ROOT/Baseline/Grid2dRep.png" threshold="2" />
   
@@ -39,5 +41,17 @@
   <pqevent object="pqClientMainWindow/PQSelectionPanel/panelSelection/treeWidget" command="setCheckState" arguments="0.0.0.0.0.0,2" />
   <pqcompareview object="pqClientMainWindow/centralwidget/MultiViewWidget/CoreWidget/qt_tabwidget_stackedwidget/MultiViewWidget1/Frame.0/CentralWidgetFrame/Viewport" baseline="$PARAVIEW_DATA_ROOT/Baseline/WellTrajRep.png" threshold="2" />
   <pqevent object="pqClientMainWindow/PQSelectionPanel/panelSelection/treeWidget" command="setCheckState" arguments="0.0,0" />
+  <!-- Well marker -->
+  <pqevent object="pqClientMainWindow/PQSelectionPanel/panelSelection/treeWidget" command="setCheckState" arguments="0.0.0.0.0.0.0.0.0.0,2" />
+  <pqevent object="pqClientMainWindow/PQSelectionPanel/panelSelection/treeWidget" command="setCheckState" arguments="0.0.0.0.0.0.0.0.1.0,2" />
+  <pqcompareview object="pqClientMainWindow/centralwidget/MultiViewWidget/CoreWidget/qt_tabwidget_stackedwidget/MultiViewWidget1/Frame.0/CentralWidgetFrame/Viewport" baseline="$PARAVIEW_DATA_ROOT/Baseline/WellMarkers.png" threshold="2" />
+  <!-- Well marker size -->
+  <pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/scrollArea/qt_scrollarea_viewport/scrollAreaWidgetContents/PropertiesFrame/ProxyPanel/MarkerSize/LineEdit0" command="set_string" arguments="50" />
+  <pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/Accept" command="activate" arguments="" />
+  <pqcompareview object="pqClientMainWindow/centralwidget/MultiViewWidget/CoreWidget/qt_tabwidget_stackedwidget/MultiViewWidget1/Frame.0/CentralWidgetFrame/Viewport" baseline="$PARAVIEW_DATA_ROOT/Baseline/WellMarkerSize.png" threshold="2" />
+  <!-- Well marker orientation -->
+  <pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/scrollArea/qt_scrollarea_viewport/scrollAreaWidgetContents/PropertiesFrame/ProxyPanel/MarkerOrientation/CheckBox" command="set_boolean" arguments="false" />
+  <pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/Accept" command="activate" arguments="" />
+  <pqcompareview object="pqClientMainWindow/centralwidget/MultiViewWidget/CoreWidget/qt_tabwidget_stackedwidget/MultiViewWidget1/Frame.0/CentralWidgetFrame/Viewport" baseline="$PARAVIEW_DATA_ROOT/Baseline/WellMarkerOrientation.png" threshold="2" />
 
 </pqevents>

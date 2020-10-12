@@ -51,7 +51,7 @@ void VtkWellboreTrajectoryRepresentation::createTreeVtk(const std::string & uuid
 void VtkWellboreTrajectoryRepresentation::visualize(const std::string & uuid)
 {
 	// Create an empty output if necessary
-	// An empty output is automatically created in the (super) construtor.
+	// An empty output is automatically created in the (super) constructor.
 	// However it is deleted when we remove the trajectory from the display.
 	if (vtkOutput == nullptr) {
 		vtkOutput = vtkSmartPointer<vtkMultiBlockDataSet>::New();
@@ -68,7 +68,7 @@ void VtkWellboreTrajectoryRepresentation::visualize(const std::string & uuid)
 		vtkOutput->GetMetaData(blockCount)->Set(vtkCompositeDataSet::NAME(), polyline.getName().c_str());
 	}
 
-	// add uuids's wellboreFrame
+	// add wellbore Marker and/or Frame
 	VtkEpcCommon uuidInfo = uuid_Informations[uuid];
 	if (uuidInfo.getType() == VtkEpcCommon::Resqml2Type::WELL_MARKER_FRAME ||
 		uuidInfo.getType() == VtkEpcCommon::Resqml2Type::WELL_FRAME ||

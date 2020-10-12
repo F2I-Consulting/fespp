@@ -44,7 +44,7 @@ void VtkAbstractRepresentation::createTreeVtk(const std::string & uuid, const st
 
 vtkSmartPointer<vtkPoints> VtkAbstractRepresentation::createVtkPoints(ULONG64 pointCount,  double * allXyzPoints, const RESQML2_NS::AbstractLocal3dCrs * localCRS)
 {
-	points = vtkSmartPointer<vtkPoints>::New();
+	vtkSmartPointer<vtkPoints> points = vtkSmartPointer<vtkPoints>::New();
 	const size_t coordCount = pointCount * 3;
 	if (localCRS->isDepthOriented()) {
 		for (size_t zCoordIndex = 2; zCoordIndex < coordCount; zCoordIndex += 3) {

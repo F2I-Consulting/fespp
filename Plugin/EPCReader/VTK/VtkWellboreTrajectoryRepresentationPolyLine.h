@@ -32,7 +32,7 @@ public:
 	/**
 	* Destructor
 	*/
-	~VtkWellboreTrajectoryRepresentationPolyLine();
+	~VtkWellboreTrajectoryRepresentationPolyLine() = default;
 
 	/**
 	* method : visualize

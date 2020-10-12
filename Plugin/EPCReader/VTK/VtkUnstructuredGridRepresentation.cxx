@@ -61,9 +61,8 @@ void VtkUnstructuredGridRepresentation::visualize(const std::string & uuid)
 			const ULONG64 pointCount = unstructuredGridRep->getXyzPointCountOfAllPatches();
 			double* allXyzPoints = new double[pointCount * 3];  // Will be deleted by VTK;
 			unstructuredGridRep->getXyzPointsOfAllPatchesInGlobalCrs(allXyzPoints);
-			createVtkPoints(pointCount, allXyzPoints, unstructuredGridRep->getLocalCrs(0));
-			vtkOutput->SetPoints(points);
-			points = nullptr;
+			vtkSmartPointer<vtkPoints> vtkPts = createVtkPoints(pointCount, allXyzPoints, unstructuredGridRep->getLocalCrs(0));
+			vtkOutput->SetPoints(vtkPts);
 
 			unstructuredGridRep->loadGeometry();
 			// CELLS

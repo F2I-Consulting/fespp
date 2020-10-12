@@ -38,12 +38,6 @@ VtkTriangulatedRepresentation::VtkTriangulatedRepresentation(const std::string &
 }
 
 //----------------------------------------------------------------------------
-VtkTriangulatedRepresentation::~VtkTriangulatedRepresentation()
-{
-	patchIndex = 0;
-}
-
-//----------------------------------------------------------------------------
 void VtkTriangulatedRepresentation::visualize(const std::string &uuid)
 {
 	if (!subRepresentation)	{
@@ -55,11 +49,11 @@ void VtkTriangulatedRepresentation::visualize(const std::string &uuid)
 			// POINT
 			vtkSmartPointer<vtkPoints> triangulatedRepresentationPoints = vtkSmartPointer<vtkPoints>::New();
 
-			const unsigned int nodeCount = triangulatedSetRepresentation->getXyzPointCountOfAllPatches();
+			const ULONG64 nodeCount = triangulatedSetRepresentation->getXyzPointCountOfAllPatches();
 			double* allXyzPoints = new double[nodeCount * 3]; // Will be deleted by VTK
 			triangulatedSetRepresentation->getXyzPointsOfAllPatchesInGlobalCrs(allXyzPoints);
-			createVtkPoints(nodeCount, allXyzPoints, triangulatedSetRepresentation->getLocalCrs(0));
-			vtkOutput->SetPoints(points);
+			vtkSmartPointer<vtkPoints> vtkPts = createVtkPoints(nodeCount, allXyzPoints, triangulatedSetRepresentation->getLocalCrs(0));
+			vtkOutput->SetPoints(vtkPts);
 
 			// CELLS
 			vtkSmartPointer<vtkCellArray> triangulatedRepresentationTriangles = vtkSmartPointer<vtkCellArray>::New();
@@ -73,8 +67,6 @@ void VtkTriangulatedRepresentation::visualize(const std::string &uuid)
 				triangulatedRepresentationTriangles->InsertNextCell(triangulatedRepresentationTriangle);
 			}
 			vtkOutput->SetPolys(triangulatedRepresentationTriangles);
-
-			points = nullptr;
 		}
 		if (uuid != getUuid()) {
 			vtkDataArray* arrayProperty = uuidToVtkProperty[uuid]->visualize(uuid, triangulatedSetRepresentation);

@@ -75,7 +75,6 @@ protected:
 	COMMON_NS::DataObjectRepository const * epcPackageRepresentation;
 	COMMON_NS::DataObjectRepository const * epcPackageSubRepresentation;
 
-	vtkSmartPointer<vtkPoints> points;
 	bool subRepresentation;
 };
 #endif

@@ -117,5 +117,6 @@ private:
 
 	bool isHyperslabed;
 
+	vtkSmartPointer<vtkPoints> points;
 };
 #endif
