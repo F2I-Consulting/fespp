@@ -82,13 +82,6 @@ public:
 	void addProperty(const std::string & uuidProperty, vtkDataArray* dataProperty);
 
 	long getAttachmentPropertyCount(const std::string & uuid, VtkEpcCommon::FesppAttachmentProperty propertyUnit);
-
-protected:
-	
-	/**
-	* Add as many blocks to the vtkMultiBlockDataSet vtkOutput as necessary
-	*/
-	void attach();
 	
 private:
 	// EPC DOCUMENT

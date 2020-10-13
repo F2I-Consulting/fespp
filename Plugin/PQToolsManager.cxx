@@ -290,10 +290,16 @@ void PQToolsManager::loadEpcState(vtkPVXMLElement *, vtkSMProxyLocator *)
 		getPQSelectionPanel()->addFileName(epcFileName);
 
 		auto UuidList = fesppReaderProxy->GetProperty("UuidList");
-		if (UuidList){
+		if (UuidList != nullptr) {
 			auto ald = UuidList->FindDomain<vtkSMArraySelectionDomain>();
-			for (unsigned int i=0; i < ald->GetNumberOfStrings() ; ++i) {
-				getPQSelectionPanel()->checkUuid(ald->GetString(i));
+			for (unsigned int i=0; i < ald->GetNumberOfStrings(); ++i) {
+				std::string uuid = ald->GetString(i);
+				try {
+					getPQSelectionPanel()->checkUuid(uuid);
+				}
+				catch (const std::out_of_range& oor) {
+					vtkOutputWindowDisplayErrorText(std::string("Unknown UUID " + uuid).c_str());
+				}
 			}
 		}
 	}

@@ -573,7 +573,7 @@ void PQSelectionPanel::addFileName(const std::string & fileName) {
 
 void PQSelectionPanel::checkUuid(const std::string & uuid) {
 	const QSignalBlocker blocker(treeWidget);
-	uuidItem[uuid]->setCheckState(0, Qt::Checked);
+	uuidItem.at(uuid)->setCheckState(0, Qt::Checked);
 }
 
 void PQSelectionPanel::populateTreeView(VtkEpcCommon const * vtkEpcCommon)

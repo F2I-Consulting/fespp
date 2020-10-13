@@ -51,7 +51,11 @@ std::string VtkEpcDocumentSet::visualize(const std::string& uuid)
 	if (std::find(badUuid.begin(), badUuid.end(), uuid) == badUuid.end()) {
 		if (representationMode) {
 			try {
-				uuidToVtkEpc[uuid]->visualize(uuid);
+				uuidToVtkEpc.at(uuid)->visualize(uuid);
+			}
+			catch (const std::out_of_range& oor) {
+				badUuid.push_back(uuid);
+				return "Unknown UUID " + uuid + " : " + oor.what();
 			}
 			catch (const std::exception& e) {
 				badUuid.push_back(uuid);

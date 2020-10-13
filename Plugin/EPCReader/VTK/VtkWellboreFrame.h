@@ -19,11 +19,7 @@ under the License.
 #ifndef SRC_VTK_VTKWELLBOREFRAME_H_
 #define SRC_VTK_VTKWELLBOREFRAME_H_
 
-// include VTK
-#include <string>
-
 #include "VtkResqml2MultiBlockDataSet.h"
-
 #include "VtkWellboreMarker.h"
 
 class VtkWellboreFrame : public VtkResqml2MultiBlockDataSet
@@ -33,7 +29,8 @@ public:
 	/**
 	* Constructor
 	*/
-	VtkWellboreFrame(const std::string &fileName, const std::string &name, const std::string &uuid, const std::string &uuidParent, const COMMON_NS::DataObjectRepository *epcPackageRepresentation, const COMMON_NS::DataObjectRepository *epcPackageSubRepresentation);
+	VtkWellboreFrame(const std::string &fileName, const std::string &name, const std::string &uuid, const std::string &uuidParent,
+		const COMMON_NS::DataObjectRepository *epcPackageRepresentation, const COMMON_NS::DataObjectRepository *epcPackageSubRepresentation);
 
 	/**
 	* Destructor
