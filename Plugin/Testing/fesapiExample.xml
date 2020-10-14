@@ -1,9 +1,15 @@
 <?xml version="1.0" ?>
 <pqevents>
+  <!-- Reset the session -->
+  <pqevent object="pqClientMainWindow/menubar" command="activate" arguments="menu_Edit" />
+  <pqevent object="pqClientMainWindow/menubar/menu_Edit" command="activate" arguments="actionDelete_All" />
+  <pqevent object="pqClientMainWindow/CoreUtilitiesPromptUser/qt_msgbox_buttonbox/1QPushButton0" command="activate" arguments="" />
+  
+  <!-- Load epc file -->
   <pqevent object="PQActionHolder/actionDataLoadManager" command="activate" arguments="" />
   <pqevent object="pqClientMainWindow/pqFileDialog" command="filesSelected" arguments="$PARAVIEW_DATA_ROOT/EPCReader/testingPackageCpp.epc" />
   
-  <!-- IJK grid explicit geometry and property-->
+  <!-- IJK grid explicit geometry and property -->
   <pqevent object="pqClientMainWindow/PQSelectionPanel/panelSelection/treeWidget" command="setCheckState" arguments="0.0.9.0.3.0.2.0,2" />
   <pqevent object="pqClientMainWindow/representationToolbar/displayRepresentation/comboBox" command="activated" arguments="Surface With Edges" />
   <pqevent object="pqClientMainWindow/variableToolbar/displayColor/Variables" command="activated" arguments="Two faulted sugar cubes other cellIndex" />
