@@ -35,10 +35,17 @@ VtkWellboreTrajectoryRepresentation::VtkWellboreTrajectoryRepresentation(const s
 }
 
 //----------------------------------------------------------------------------
+VtkWellboreTrajectoryRepresentation::~VtkWellboreTrajectoryRepresentation()
+{
+	for (auto& frame : uuid_to_VtkWellboreFrame) {
+		delete frame.second;
+	}
+}
+
+//----------------------------------------------------------------------------
 void VtkWellboreTrajectoryRepresentation::createTreeVtk(const std::string & uuid, const std::string & uuidParent, const std::string & name, VtkEpcCommon::Resqml2Type type)
 {
-	VtkEpcCommon informations(uuid, uuidParent, name, type);
-	uuid_Informations[uuid] = informations;
+	uuid_Informations[uuid] = VtkEpcCommon(uuid, uuidParent, name, type);
 	if (type == VtkEpcCommon::Resqml2Type::WELL_FRAME || type == VtkEpcCommon::Resqml2Type::WELL_MARKER_FRAME )	{
 		uuid_to_VtkWellboreFrame[uuid] = new VtkWellboreFrame(getFileName(), name, uuid, uuidParent, repositoryRepresentation, repositorySubRepresentation);
 	}

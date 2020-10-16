@@ -49,7 +49,7 @@ public:
 	/**
 	* Destructor
 	*/
-	virtual ~VtkEpcDocument();
+	~VtkEpcDocument();
 
 	/**
 	* method : visualize

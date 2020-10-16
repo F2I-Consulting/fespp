@@ -297,7 +297,7 @@ void PQToolsManager::loadEpcState(vtkPVXMLElement *, vtkSMProxyLocator *)
 				try {
 					getPQSelectionPanel()->checkUuid(uuid);
 				}
-				catch (const std::out_of_range& oor) {
+				catch (const std::out_of_range&) {
 					vtkOutputWindowDisplayErrorText(std::string("Unknown UUID " + uuid).c_str());
 				}
 			}

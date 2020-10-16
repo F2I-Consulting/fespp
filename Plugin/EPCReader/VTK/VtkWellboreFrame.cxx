@@ -32,26 +32,65 @@ VtkResqml2MultiBlockDataSet(fileName, name, uuid, uuidParent), repositoryReprese
 {
 }
 
+VtkWellboreFrame::~VtkWellboreFrame()
+{
+	for (auto& marker : uuid_to_VtkWellboreMarker) {
+		delete marker.second;
+	}
+	/*
+	for (auto& marker : uuid_to_VtkWellboreChannel) {
+		delete marker.second;
+	}
+	*/
+}
+
 //----------------------------------------------------------------------------
 void VtkWellboreFrame::createTreeVtk(const std::string & uuid, const std::string & uuidParent, const std::string & name, VtkEpcCommon::Resqml2Type type)
 {
 	if (type == VtkEpcCommon::Resqml2Type::WELL_MARKER) {
 		uuid_to_VtkWellboreMarker[uuid] = new VtkWellboreMarker(getFileName(), name, uuid, uuidParent, repositoryRepresentation, repositorySubRepresentation);
 	}
+	/*
+	else if (type == VtkEpcCommon::Resqml2Type::PROPERTY) {
+		uuid_to_VtkWellboreChannel[uuid] = new VtkWellboreMarker(getFileName(), name, uuid, uuidParent, repositoryRepresentation, repositorySubRepresentation);
+	}
+	*/
 }
 
 //----------------------------------------------------------------------------
 void VtkWellboreFrame::visualize(const std::string & uuid)
 {
-	if (uuid != getUuid()) { // if it is a marker and not a frame.
-		uuid_to_VtkWellboreMarker[uuid]->visualize(uuid);
+	// MARKER
+	auto vtkMarkerIt = uuid_to_VtkWellboreMarker.find(uuid);
+	if (vtkMarkerIt != uuid_to_VtkWellboreMarker.end()) {
+		auto vtkMarker = vtkMarkerIt->second;
+		vtkMarker->visualize(uuid);
 
-		if (getBlockNumberOf(uuid_to_VtkWellboreMarker[uuid]->getOutput()) == (std::numeric_limits<unsigned int>::max)()) {
+		if (getBlockNumberOf(vtkMarker->getOutput()) == (std::numeric_limits<unsigned int>::max)()) {
 			unsigned int blockCount = vtkOutput->GetNumberOfBlocks();
-			vtkOutput->SetBlock(blockCount, uuid_to_VtkWellboreMarker[uuid]->getOutput());
-			vtkOutput->GetMetaData(blockCount)->Set(vtkCompositeDataSet::NAME(), uuid_to_VtkWellboreMarker[uuid]->getName().c_str());
+			vtkOutput->SetBlock(blockCount, vtkMarker->getOutput());
+			vtkOutput->GetMetaData(blockCount)->Set(vtkCompositeDataSet::NAME(), vtkMarker->getName().c_str());
 		}
+
+		return;
 	}
+
+	/*
+	// CHANNEL
+	auto vtkChannelIt = uuid_to_VtkWellboreChannel.find(uuid);
+	if (vtkChannelIt != uuid_to_VtkWellboreChannel.end()) {
+		auto vtkChannel = vtkChannelIt->second;
+		vtkChannel->visualize(uuid);
+
+		if (getBlockNumberOf(vtkChannel->getOutput()) == (std::numeric_limits<unsigned int>::max)()) {
+			unsigned int blockCount = vtkOutput->GetNumberOfBlocks();
+			vtkOutput->SetBlock(blockCount, vtkChannel->getOutput());
+			vtkOutput->GetMetaData(blockCount)->Set(vtkCompositeDataSet::NAME(), vtkChannel->getName().c_str());
+		}
+
+		return;
+	}
+	*/
 }
 
 //----------------------------------------------------------------------------
@@ -91,9 +130,22 @@ void VtkWellboreFrame::remove(const std::string & uuid)
 {
 	if (uuid == getUuid()) {
 		vtkOutput = nullptr;
+		return;
 	}
-	else { // => wellbore_Marker
-		removeFromVtkOutput(uuid_to_VtkWellboreMarker[uuid]->getOutput());
-		uuid_to_VtkWellboreMarker[uuid]->remove(uuid);
+
+	// MARKER
+	auto vtkMarkerIt = uuid_to_VtkWellboreMarker.find(uuid);
+	if (vtkMarkerIt != uuid_to_VtkWellboreMarker.end()) {
+		removeFromVtkOutput(vtkMarkerIt->second->getOutput());
+		vtkMarkerIt->second->remove(uuid);
 	}
+
+	/*
+	// CHANNEL
+	auto vtkChannelIt = uuid_to_VtkWellboreChannel.find(uuid);
+	if (vtkChannelIt != vtkChannelIt.end()) {
+		removeFromVtkOutput(vtkChannelIt->second->getOutput());
+		vtkChannelIt->second->remove(uuid);
+	}
+	*/
 }
