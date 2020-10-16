@@ -31,7 +31,7 @@
   <pqcompareview object="pqClientMainWindow/centralwidget/MultiViewWidget/CoreWidget/qt_tabwidget_stackedwidget/MultiViewWidget1/Frame.0/CentralWidgetFrame/Viewport" baseline="$PARAVIEW_DATA_ROOT/EPCReader/Baseline/TriangulatedSetRep.png" threshold="0" />
   <pqevent object="pqClientMainWindow/PQSelectionPanel/panelSelection/treeWidget" command="setCheckState" arguments="0.0.1.0,0" />     
       
-  <!-- Unstructured grid geoemtry -->
+  <!-- Unstructured grid geometry -->
   <pqevent object="pqClientMainWindow/PQSelectionPanel/panelSelection/treeWidget" command="setCheckState" arguments="0.0.16.0.0.0,2" />
   <pqevent object="pqClientMainWindow/cameraToolbar/actionPositiveX" command="activate" arguments="" />
   <pqcompareview object="pqClientMainWindow/centralwidget/MultiViewWidget/CoreWidget/qt_tabwidget_stackedwidget/MultiViewWidget1/Frame.0/CentralWidgetFrame/Viewport" baseline="$PARAVIEW_DATA_ROOT/EPCReader/Baseline/UnstructuredPositiveX.png" threshold="0" />
