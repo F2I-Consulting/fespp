@@ -65,7 +65,19 @@ public:
 	void visualizeFullWell();
 	void unvisualizeFullWell();
 	
+	/**
+	* method : toggleMarkerOrientation
+	* variable : const bool orientation
+	* enable/disable marker orientation option
+	*/
 	void toggleMarkerOrientation(const bool orientation);
+
+	/**
+	* method : setMarkerSize
+	* variable : int size 
+	* set the new marker size
+	*/
+	void setMarkerSize(int size);
 
 	/**
 	* method : remove

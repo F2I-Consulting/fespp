@@ -23,9 +23,8 @@ under the License.
 #include <fesapi/resqml2/WellboreMarkerFrameRepresentation.h>
 
 #include <vtkInformation.h>
+
 #include "VtkWellboreMarker.h"
-
-
 
 //----------------------------------------------------------------------------
 VtkWellboreFrame::VtkWellboreFrame(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, const COMMON_NS::DataObjectRepository *repoRepresentation, const COMMON_NS::DataObjectRepository *repoSubRepresentation) :
@@ -56,13 +55,38 @@ void VtkWellboreFrame::visualize(const std::string & uuid)
 }
 
 //----------------------------------------------------------------------------
-void VtkWellboreFrame::toggleMarkerOrientation(bool orientation) {
-
+void VtkWellboreFrame::toggleMarkerOrientation(bool orientation)
+{
 	for (auto &marker : uuid_to_VtkWellboreMarker) {
-		marker.second->toggleMarkerOrientation(orientation);
+		// Check if the marker is visible or not.
+		if (marker.second->getOutput() != nullptr) {
+			remove(marker.first);
+			marker.second->toggleMarkerOrientation(orientation);
+			visualize(marker.first);
+		}
+		else {
+			marker.second->toggleMarkerOrientation(orientation);
+		}
 	}
 }
 
+//----------------------------------------------------------------------------
+void VtkWellboreFrame::setMarkerSize(int size)
+{
+	for (auto &marker : uuid_to_VtkWellboreMarker) {
+		// Check if the marker is visible or not.
+		if (marker.second->getOutput() != nullptr) {
+			remove(marker.first);
+			marker.second->setMarkerSize(size);
+			visualize(marker.first);
+		}
+		else {
+			marker.second->setMarkerSize(size);
+		}
+	}
+}
+
+//----------------------------------------------------------------------------
 void VtkWellboreFrame::remove(const std::string & uuid)
 {
 	if (uuid == getUuid()) {
@@ -70,5 +94,6 @@ void VtkWellboreFrame::remove(const std::string & uuid)
 	}
 	else { // => wellbore_Marker
 		removeFromVtkOutput(uuid_to_VtkWellboreMarker[uuid]->getOutput());
+		uuid_to_VtkWellboreMarker[uuid]->remove(uuid);
 	}
 }

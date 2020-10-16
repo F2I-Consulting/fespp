@@ -32,7 +32,7 @@ public:
 	/**
 	* Destructor
 	*/
-	~VtkTriangulatedRepresentation();
+	~VtkTriangulatedRepresentation() = default;
 
 	/**
 	* method : visualize

@@ -19,11 +19,7 @@ under the License.
 #ifndef SRC_VTK_VTKWELLBOREFRAME_H_
 #define SRC_VTK_VTKWELLBOREFRAME_H_
 
-// include VTK
-#include <string>
-
 #include "VtkResqml2MultiBlockDataSet.h"
-
 #include "VtkWellboreMarker.h"
 
 class VtkWellboreFrame : public VtkResqml2MultiBlockDataSet
@@ -33,7 +29,8 @@ public:
 	/**
 	* Constructor
 	*/
-	VtkWellboreFrame(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, const COMMON_NS::DataObjectRepository *epcPackageRepresentation, const COMMON_NS::DataObjectRepository *epcPackageSubRepresentation);
+	VtkWellboreFrame(const std::string &fileName, const std::string &name, const std::string &uuid, const std::string &uuidParent,
+		const COMMON_NS::DataObjectRepository *epcPackageRepresentation, const COMMON_NS::DataObjectRepository *epcPackageSubRepresentation);
 
 	/**
 	* Destructor
@@ -45,20 +42,37 @@ public:
 	* variable : std::string uuid (Wellbore trajectory representation UUID)
 	* create the vtk objects for represent Wellbore trajectory (polyline + datum + text).
 	*/
-	void createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, VtkEpcCommon::Resqml2Type resqmlType);
+	void createTreeVtk(const std::string &uuid, const std::string &parent, const std::string &name, VtkEpcCommon::Resqml2Type resqmlType);
 
-	void visualize(const std::string & uuid) final;
+	/**
+	* method : visualize
+	* variable : std::string uuid 
+	* create uuid representation.
+	*/
+	void visualize(const std::string &uuid) final;
 
+	/**
+	* method : toggleMarkerOrientation
+	* variable : const bool orientation
+	* enable/disable marker orientation option
+	*/
 	void toggleMarkerOrientation(bool orientation);
+
+	/**
+	* method : setMarkerSize
+	* variable : int size 
+	* set the new marker size
+	*/
+	void setMarkerSize(int size);
 
 	/**
 	* method : visualize
 	* variable : std::string uuid
 	* delete the vtkPolyData.
 	*/
-	void remove(const std::string & uuid) final;
+	void remove(const std::string &uuid) final;
 
-	long getAttachmentPropertyCount(const std::string & , VtkEpcCommon::FesppAttachmentProperty ) final { return 0; }
+	long getAttachmentPropertyCount(const std::string &, VtkEpcCommon::FesppAttachmentProperty) final { return 0; }
 
 private:
 	// EPC DOCUMENT

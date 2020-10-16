@@ -67,6 +67,5 @@ private:
 
 	bool orientation;
 	int size;
-
 };
 #endif /* SRC_VTK_VTKWELLBOREMARKER_H_ */

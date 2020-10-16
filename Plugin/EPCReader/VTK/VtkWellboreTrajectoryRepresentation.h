@@ -58,7 +58,19 @@ public:
 	*/
 	void visualize(const std::string & uuid);
 	
+	/**
+	* method : toggleMarkerOrientation
+	* variable : const bool orientation
+	* enable/disable marker orientation option
+	*/
 	void toggleMarkerOrientation(bool orientation);
+
+	/**
+	* method : setMarkerSize
+	* variable : int size 
+	* set the new marker size
+	*/
+	void setMarkerSize(int size);
 
 	/**
 	* method : remove
@@ -70,13 +82,6 @@ public:
 	void addProperty(const std::string & uuidProperty, vtkDataArray* dataProperty);
 
 	long getAttachmentPropertyCount(const std::string & uuid, VtkEpcCommon::FesppAttachmentProperty propertyUnit);
-
-protected:
-	
-	/**
-	* Add as many blocks to the vtkMultiBlockDataSet vtkOutput as necessary
-	*/
-	void attach();
 	
 private:
 	// EPC DOCUMENT

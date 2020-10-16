@@ -37,7 +37,7 @@ public:
 	/**
 	* Destructor
 	*/
-	virtual ~VtkResqml2StructuredGrid();
+	virtual ~VtkResqml2StructuredGrid() = default;
 
 	/**
 	* method : getOutput

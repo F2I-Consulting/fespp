@@ -22,7 +22,6 @@ under the License.
 #include <vtkPointData.h>
 #include <vtkCellArray.h>
 #include <vtkPolyLine.h>
-#include <vtkSmartPointer.h>
 #include <vtkDataArray.h>
 
 // FESAPI
@@ -32,8 +31,9 @@ under the License.
 #include "VtkProperty.h"
 
 //----------------------------------------------------------------------------
-VtkWellboreTrajectoryRepresentationPolyLine::VtkWellboreTrajectoryRepresentationPolyLine(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, COMMON_NS::DataObjectRepository const * repoRepresentation, COMMON_NS::DataObjectRepository const * repoSubRepresentation) :
-VtkResqml2PolyData(fileName, name, uuid, uuidParent, repoRepresentation, repoSubRepresentation)
+VtkWellboreTrajectoryRepresentationPolyLine::VtkWellboreTrajectoryRepresentationPolyLine(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent,
+	COMMON_NS::DataObjectRepository const * repoRepresentation, COMMON_NS::DataObjectRepository const * repoSubRepresentation) :
+	VtkResqml2PolyData(fileName, name, uuid, uuidParent, repoRepresentation, repoSubRepresentation)
 {
 }
 
@@ -42,21 +42,24 @@ void VtkWellboreTrajectoryRepresentationPolyLine::visualize(const std::string & 
 {
 	if (!subRepresentation)	{
 
-		RESQML2_NS::WellboreTrajectoryRepresentation* wellboreSetRepresentation = epcPackageRepresentation->getDataObjectByUuid<RESQML2_NS::WellboreTrajectoryRepresentation>(getUuid().substr(0, 36));
+		const std::string internalStoredUuid = getUuid().substr(0, 36);
+
+		RESQML2_NS::WellboreTrajectoryRepresentation const * const wellboreSetRepresentation = epcPackageRepresentation->getDataObjectByUuid<RESQML2_NS::WellboreTrajectoryRepresentation>(internalStoredUuid);
 		if (wellboreSetRepresentation == nullptr) {
-			vtkOutputWindowDisplayDebugText(("The UUID " + getUuid().substr(0, 36) + " is not a RESQML2 WellboreTrajectoryRepresentation\n").c_str());
+			vtkOutputWindowDisplayDebugText(("The UUID " + internalStoredUuid + " is not a RESQML2 WellboreTrajectoryRepresentation\n").c_str());
 			return;
 		}
 
+		// GEOMETRY
 		if (!vtkOutput) {
 			vtkOutput = vtkSmartPointer<vtkPolyData>::New();
 
 			// POINT
-			unsigned int pointCount = wellboreSetRepresentation->getXyzPointCountOfPatch(0);
+			const ULONG64 pointCount = wellboreSetRepresentation->getXyzPointCountOfPatch(0);
 			double* allXyzPoints = new double[pointCount * 3]; // Will be deleted by VTK
 			wellboreSetRepresentation->getXyzPointsOfAllPatchesInGlobalCrs(allXyzPoints);
-			createVtkPoints(pointCount, allXyzPoints, wellboreSetRepresentation->getLocalCrs(0));
-			vtkOutput->SetPoints(points);
+			vtkSmartPointer<vtkPoints> vtkPts = createVtkPoints(pointCount, allXyzPoints, wellboreSetRepresentation->getLocalCrs(0));
+			vtkOutput->SetPoints(vtkPts);
 
 			// POLYLINE
 			vtkSmartPointer<vtkPolyLine> polylineRepresentation = vtkSmartPointer<vtkPolyLine>::New();
@@ -69,21 +72,14 @@ void VtkWellboreTrajectoryRepresentationPolyLine::visualize(const std::string & 
 			setPolylineRepresentationLines->InsertNextCell(polylineRepresentation);
 
 			vtkOutput->SetLines(setPolylineRepresentationLines);
-			points = nullptr;
 		}
+
 		// PROPERTY(IES)
-		if (uuid != getUuid().substr(0, 36)) {
+		if (uuid != internalStoredUuid) {
 			vtkDataArray* arrayProperty = uuidToVtkProperty[uuid]->visualize(uuid, wellboreSetRepresentation);
 			addProperty(uuid, arrayProperty);
 		}
 	}
-}
-
-
-//----------------------------------------------------------------------------
-VtkWellboreTrajectoryRepresentationPolyLine::~VtkWellboreTrajectoryRepresentationPolyLine()
-{
-	lastProperty = "";
 }
 
 //----------------------------------------------------------------------------
@@ -96,6 +92,6 @@ void VtkWellboreTrajectoryRepresentationPolyLine::addProperty(const std::string 
 
 long VtkWellboreTrajectoryRepresentationPolyLine::getAttachmentPropertyCount(const std::string &, VtkEpcCommon::FesppAttachmentProperty)
 {
-	RESQML2_NS::WellboreTrajectoryRepresentation* obj = epcPackageRepresentation->getDataObjectByUuid<RESQML2_NS::WellboreTrajectoryRepresentation>(getUuid().substr(0, 36));
+	RESQML2_NS::WellboreTrajectoryRepresentation const * const obj = epcPackageRepresentation->getDataObjectByUuid<RESQML2_NS::WellboreTrajectoryRepresentation>(getUuid().substr(0, 36));
 	return obj != nullptr ? obj->getXyzPointCountOfAllPatches() : 0;
 }

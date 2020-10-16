@@ -32,7 +32,7 @@ public:
 	/**
 	* Destructor
 	*/
-	~VtkPolylineRepresentation();
+	~VtkPolylineRepresentation() = default;
 
 	/**
 	* method : visualize

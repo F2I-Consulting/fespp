@@ -86,7 +86,6 @@ unsigned int VtkProperty::getSupport()
 vtkDataArray* VtkProperty::visualize(const std::string &, RESQML2_NS::PolylineSetRepresentation const * polylineSetRepresentation)
 {
 	std::vector<RESQML2_NS::AbstractValuesProperty*> valuesPropertySet = polylineSetRepresentation->getValuesPropertySet();
-
 	long pointCount = polylineSetRepresentation->getXyzPointCountOfPatch(0);
 	return loadValuesPropertySet(valuesPropertySet, 0, pointCount);
 }
@@ -95,8 +94,9 @@ vtkDataArray* VtkProperty::visualize(const std::string &, RESQML2_NS::PolylineSe
 vtkDataArray* VtkProperty::visualize(const std::string &, RESQML2_NS::TriangulatedSetRepresentation const * triangulatedSetRepresentation)
 {
 	std::vector<RESQML2_NS::AbstractValuesProperty*> valuesPropertySet = triangulatedSetRepresentation->getValuesPropertySet();
+	long cellCount = triangulatedSetRepresentation->getTriangleCountOfAllPatches();
 	long pointCount = triangulatedSetRepresentation->getXyzPointCountOfAllPatches();
-	return loadValuesPropertySet(valuesPropertySet, 0, pointCount);
+	return loadValuesPropertySet(valuesPropertySet, cellCount, pointCount);
 }
 
 //----------------------------------------------------------------------------
@@ -143,16 +143,22 @@ vtkSmartPointer<vtkDataArray> VtkProperty::loadValuesPropertySet(const std::vect
 
 			int nbElement = 0;
 			gsoap_eml2_3::resqml22__IndexableElement element = valuesProperty->getAttachmentKind();
-			if (element == gsoap_eml2_3::resqml22__IndexableElement__cells ) {
+			if (element == gsoap_eml2_3::resqml22__IndexableElement__cells ||
+			    element == gsoap_eml2_3::resqml22__IndexableElement__triangles ) {
 				nbElement = cellCount;
 				support = typeSupport::CELLS;
 			}
 			else if (element == gsoap_eml2_3::resqml22__IndexableElement__nodes ) {
 				support = typeSupport::POINTS ;
 				nbElement = pointCount;
-			}
+			} 
 			else {
-				vtkOutputWindowDisplayDebugText("property not supported...  (resqml2__IndexableElements: not cells or nodes)");
+				vtkOutputWindowDisplayDebugText("property not supported...  (resqml2__IndexableElements: not cells or triangles or nodes)");
+				continue;
+			}
+			// verify nbElement != 0
+			if (nbElement == 0) {
+				vtkOutputWindowDisplayDebugText("property not supported...");
 				continue;
 			}
 

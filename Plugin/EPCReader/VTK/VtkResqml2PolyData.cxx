@@ -20,7 +20,9 @@ under the License.
 #include "VtkResqml2PolyData.h"
 
 // VTK
+#include <vtkCellData.h>
 #include <vtkPointData.h>
+
 // FESPP
 #include "VtkProperty.h"
 
@@ -50,6 +52,10 @@ void VtkResqml2PolyData::remove(const std::string & uuid)
 		vtkOutput = nullptr;
 	}
 	else if (uuidToVtkProperty[uuid] != nullptr) {
-		vtkOutput->GetPointData()->RemoveArray(uuidToVtkProperty[uuid]->getName().c_str());
+		switch (uuidToVtkProperty[uuid]->getSupport()) {
+			case VtkProperty::typeSupport::CELLS: vtkOutput->GetCellData()->RemoveArray(uuidToVtkProperty[uuid]->getName().c_str()); break;
+			case VtkProperty::typeSupport::POINTS: vtkOutput->GetPointData()->RemoveArray(uuidToVtkProperty[uuid]->getName().c_str()); break;
+			default: throw std::invalid_argument("The property is attached on a non supported topological element i.e. not cell, not point.");
+		}
 	}
 }

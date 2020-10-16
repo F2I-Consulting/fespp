@@ -375,8 +375,6 @@ void PQSelectionPanel::onItemCheckedUnchecked(QTreeWidgetItem * item, int)
 void PQSelectionPanel::deleteTreeView() {
 	treeWidget->clear();
 
-	uuidToFilename.clear();
-
 	uuidItem.clear();
 
 	if (vtkEpcDocumentSet != nullptr) {
@@ -545,8 +543,13 @@ void PQSelectionPanel::addFileName(const std::string & fileName) {
 
 	const std::vector<std::string> allOpenedEpcFileNames = getAllOpenedEpcFileNames();
 	if (std::find(allOpenedEpcFileNames.begin(), allOpenedEpcFileNames.end(), fileName) == allOpenedEpcFileNames.end()) {
-		vtkEpcDocumentSet->addEpcDocument(fileName);
-		uuidToFilename[fileName] = fileName;
+		try {
+			vtkEpcDocumentSet->addEpcDocument(fileName);
+		}
+		catch (const std::exception&) {
+			return;
+		}
+		
 
 		std::unordered_map<std::string, std::string> name_to_uuid;
 		for (auto vtkEpcCommon : vtkEpcDocumentSet->getAllVtkEpcCommons()) {
@@ -570,7 +573,7 @@ void PQSelectionPanel::addFileName(const std::string & fileName) {
 
 void PQSelectionPanel::checkUuid(const std::string & uuid) {
 	const QSignalBlocker blocker(treeWidget);
-	uuidItem[uuid]->setCheckState(0, Qt::Checked);
+	uuidItem.at(uuid)->setCheckState(0, Qt::Checked);
 }
 
 void PQSelectionPanel::populateTreeView(VtkEpcCommon const * vtkEpcCommon)

@@ -22,6 +22,7 @@ under the License.
 
 #include <vtkCellData.h>
 #include <vtkPointData.h>
+
 // FESPP
 #include "VtkProperty.h"
 

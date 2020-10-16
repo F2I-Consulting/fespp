@@ -20,6 +20,7 @@ under the License.
 
 // include VTK library
 #include <vtkPointData.h>
+#include <vtkCellData.h>
 #include <vtkCellArray.h>
 #include <vtkSmartPointer.h>
 #include <vtkTriangle.h>
@@ -37,13 +38,6 @@ VtkTriangulatedRepresentation::VtkTriangulatedRepresentation(const std::string &
 }
 
 //----------------------------------------------------------------------------
-VtkTriangulatedRepresentation::~VtkTriangulatedRepresentation()
-{
-	patchIndex = 0;
-	lastProperty = "";
-}
-
-//----------------------------------------------------------------------------
 void VtkTriangulatedRepresentation::visualize(const std::string &uuid)
 {
 	if (!subRepresentation)	{
@@ -55,11 +49,11 @@ void VtkTriangulatedRepresentation::visualize(const std::string &uuid)
 			// POINT
 			vtkSmartPointer<vtkPoints> triangulatedRepresentationPoints = vtkSmartPointer<vtkPoints>::New();
 
-			const unsigned int nodeCount = triangulatedSetRepresentation->getXyzPointCountOfAllPatches();
+			const ULONG64 nodeCount = triangulatedSetRepresentation->getXyzPointCountOfAllPatches();
 			double* allXyzPoints = new double[nodeCount * 3]; // Will be deleted by VTK
 			triangulatedSetRepresentation->getXyzPointsOfAllPatchesInGlobalCrs(allXyzPoints);
-			createVtkPoints(nodeCount, allXyzPoints, triangulatedSetRepresentation->getLocalCrs(0));
-			vtkOutput->SetPoints(points);
+			vtkSmartPointer<vtkPoints> vtkPts = createVtkPoints(nodeCount, allXyzPoints, triangulatedSetRepresentation->getLocalCrs(0));
+			vtkOutput->SetPoints(vtkPts);
 
 			// CELLS
 			vtkSmartPointer<vtkCellArray> triangulatedRepresentationTriangles = vtkSmartPointer<vtkCellArray>::New();
@@ -73,8 +67,6 @@ void VtkTriangulatedRepresentation::visualize(const std::string &uuid)
 				triangulatedRepresentationTriangles->InsertNextCell(triangulatedRepresentationTriangle);
 			}
 			vtkOutput->SetPolys(triangulatedRepresentationTriangles);
-
-			points = nullptr;
 		}
 		if (uuid != getUuid()) {
 			vtkDataArray* arrayProperty = uuidToVtkProperty[uuid]->visualize(uuid, triangulatedSetRepresentation);
@@ -87,8 +79,13 @@ void VtkTriangulatedRepresentation::visualize(const std::string &uuid)
 void VtkTriangulatedRepresentation::addProperty(const std::string & uuidProperty, vtkDataArray* dataProperty)
 {
 	vtkOutput->Modified();
-	vtkOutput->GetPointData()->AddArray(dataProperty);
-	lastProperty = uuidProperty;
+	const unsigned int propertyAttachmentKind = uuidToVtkProperty[uuidProperty]->getSupport();
+	if (propertyAttachmentKind == VtkProperty::typeSupport::CELLS) {
+		vtkOutput->GetCellData()->AddArray(dataProperty);
+	}
+	else if (propertyAttachmentKind == VtkProperty::typeSupport::POINTS) {
+		vtkOutput->GetPointData()->AddArray(dataProperty);
+	}
 }
 
 long VtkTriangulatedRepresentation::getAttachmentPropertyCount(const std::string &, VtkEpcCommon::FesppAttachmentProperty)
