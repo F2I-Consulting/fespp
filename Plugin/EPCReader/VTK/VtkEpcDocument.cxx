@@ -63,6 +63,7 @@ VtkEpcDocument::VtkEpcDocument(const std::string & fileName, int idProc, int max
 VtkResqml2MultiBlockDataSet(fileName, fileName, fileName, "", idProc, maxProc), epcSet(epcDocSet)
 {
 	COMMON_NS::EpcDocument pck(fileName);
+	repository = new common::DataObjectRepository();
 	std::string resqmlResult = pck.deserializeInto(*repository);
 	pck.close();
 	if (!resqmlResult.empty()) {
@@ -121,6 +122,8 @@ VtkEpcDocument::~VtkEpcDocument()
 	for(auto i : uuidToVtkPartialRepresentation) {
 		delete i.second;
 	}
+
+	delete repository;
 }
 
 // ----------------------------------------------------------------------------
