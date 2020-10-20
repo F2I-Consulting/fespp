@@ -41,8 +41,9 @@ public:
 	
 	/**
 	* Destructor
+	* Release the created VtkWellboreFrames
 	*/
-	~VtkWellboreTrajectoryRepresentation() = default;
+	~VtkWellboreTrajectoryRepresentation();
 
 	/**
 	* method : createTreeVtk
@@ -91,6 +92,7 @@ private:
 	// VTK object
 	VtkWellboreTrajectoryRepresentationPolyLine polyline;
 
+	// We need to persist somehow the vtk representation of the wellbore frames in order not to have to redraw them at each selection change.
 	std::unordered_map<std::string, VtkWellboreFrame *> uuid_to_VtkWellboreFrame;
 	std::unordered_map<std::string, VtkEpcCommon> uuid_Informations;
 };

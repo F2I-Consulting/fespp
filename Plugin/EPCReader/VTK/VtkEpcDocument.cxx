@@ -130,7 +130,7 @@ VtkEpcDocument::~VtkEpcDocument()
 void VtkEpcDocument::createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, VtkEpcCommon::Resqml2Type type)
 {
 	int return_code = 1;
-	uuidIsChildOf[uuid].setType( type);
+	uuidIsChildOf[uuid].setType(type);
 	uuidIsChildOf[uuid].setUuid(uuid);
 	uuidIsChildOf[uuid].setParent(parent);
 	uuidIsChildOf[uuid].setName(name);
@@ -141,15 +141,15 @@ void VtkEpcDocument::createTreeVtk(const std::string & uuid, const std::string &
 		if (type == VtkEpcCommon::Resqml2Type::GRID_2D ||
 				type == VtkEpcCommon::Resqml2Type::POLYLINE_SET ||
 				type == VtkEpcCommon::Resqml2Type::TRIANGULATED_SET) {
-			uuidIsChildOf[uuid].setParentType( VtkEpcCommon::Resqml2Type::INTERPRETATION_2D);
+			uuidIsChildOf[uuid].setParentType(VtkEpcCommon::Resqml2Type::INTERPRETATION_2D);
 		}
 		else if (type == VtkEpcCommon::Resqml2Type::WELL_TRAJ) {
-			uuidIsChildOf[uuid].setParentType( VtkEpcCommon::Resqml2Type::INTERPRETATION_1D);
+			uuidIsChildOf[uuid].setParentType(VtkEpcCommon::Resqml2Type::INTERPRETATION_1D);
 		}
 		else if (type == VtkEpcCommon::Resqml2Type::IJK_GRID ||
 				type == VtkEpcCommon::Resqml2Type::UNSTRUC_GRID ||
 				type == VtkEpcCommon::Resqml2Type::SUB_REP) {
-			uuidIsChildOf[uuid].setParentType( VtkEpcCommon::Resqml2Type::INTERPRETATION_3D);
+			uuidIsChildOf[uuid].setParentType(VtkEpcCommon::Resqml2Type::INTERPRETATION_3D);
 		}
 	}
 	else {
@@ -305,7 +305,7 @@ int VtkEpcDocument::addSubRepTreeVtk(const std::string & uuid, const std::string
 int VtkEpcDocument::addPropertyTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name)
 {
 	switch (uuidIsChildOf[parent].getType()) {
-	case VtkEpcCommon::Resqml2Type::GRID_2D:	{
+	case VtkEpcCommon::Resqml2Type::GRID_2D: {
 		uuidToVtkGrid2DRepresentation[parent]->createTreeVtk(uuid, parent, name, uuidIsChildOf[uuid].getType());
 		return 1;
 	}
@@ -721,9 +721,7 @@ void VtkEpcDocument::remove(const std::string & uuid)
 			break;
 		}
 		case VtkEpcCommon::Resqml2Type::POLYLINE_SET: {
-			auto object = repository->getDataObjectByUuid(uuidtoAttach);
-			auto typeRepresentation = object->getXmlTag();
-			if (typeRepresentation == "PolylineRepresentation") {
+			if (repository->getDataObjectByUuid(uuidtoAttach)->getXmlTag() == "PolylineRepresentation") {
 				uuidToVtkPolylineRepresentation[uuidIsChildOf[uuidtoAttach].getUuid()]->remove(uuid);
 				if (uuid == uuidtoAttach){
 					detach();
@@ -742,8 +740,7 @@ void VtkEpcDocument::remove(const std::string & uuid)
 			break;
 		}
 		case VtkEpcCommon::Resqml2Type::TRIANGULATED_SET: {
-			auto typeRepresentation = repository->getDataObjectByUuid(uuidtoAttach)->getXmlTag();
-			if (typeRepresentation == "TriangulatedRepresentation")  {
+			if (repository->getDataObjectByUuid(uuidtoAttach)->getXmlTag() == "TriangulatedRepresentation")  {
 				uuidToVtkTriangulatedRepresentation[uuidtoAttach]->remove(uuid);
 				if (uuid == uuidtoAttach){
 					detach();
@@ -826,8 +823,7 @@ void VtkEpcDocument::attach()
 		throw std::range_error("Too much attached uuids");
 	}
 	unsigned int newBlockIndex = 0;
-	for (unsigned int index_attachUuids = 0; index_attachUuids < attachUuids.size(); ++index_attachUuids) {
-		std::string uuid = attachUuids[index_attachUuids];
+	for (std::string& uuid : attachUuids) {
 		if (uuidIsChildOf[uuid].getType() == VtkEpcCommon::Resqml2Type::GRID_2D)	{
 			vtkOutput->SetBlock(newBlockIndex, uuidToVtkGrid2DRepresentation[uuid]->getOutput());
 			vtkOutput->GetMetaData(newBlockIndex++)->Set(vtkCompositeDataSet::NAME(), uuidToVtkGrid2DRepresentation[uuid]->getUuid().c_str());
@@ -1271,7 +1267,7 @@ void VtkEpcDocument::searchUnstructuredGrid(const std::string & fileName) {
 				uuidParent = interpretation->getUuid();
 				createTreeVtk(uuidParent, fileName, interpretation->getTitle().c_str(), VtkEpcCommon::Resqml2Type::INTERPRETATION_3D);
 			}
-			createTreeVtk(unstructuredGrid->getUuid(), fileName, unstructuredGrid->getTitle().c_str(), VtkEpcCommon::Resqml2Type::UNSTRUC_GRID);
+			createTreeVtk(unstructuredGrid->getUuid(), uuidParent, unstructuredGrid->getTitle().c_str(), VtkEpcCommon::Resqml2Type::UNSTRUC_GRID);
 		}
 
 		//properties

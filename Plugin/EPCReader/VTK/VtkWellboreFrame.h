@@ -21,6 +21,7 @@ under the License.
 
 #include "VtkResqml2MultiBlockDataSet.h"
 #include "VtkWellboreMarker.h"
+//#include "VtkWellboreChannel.h"
 
 class VtkWellboreFrame : public VtkResqml2MultiBlockDataSet
 {
@@ -34,8 +35,9 @@ public:
 
 	/**
 	* Destructor
+	* Release the created VtkWellboreMarkers
 	*/
-	~VtkWellboreFrame() = default;
+	~VtkWellboreFrame();
 
 	/**
 	* method : createTreeVtk
@@ -79,7 +81,10 @@ private:
 	COMMON_NS::DataObjectRepository const *repositoryRepresentation;
 	COMMON_NS::DataObjectRepository const *repositorySubRepresentation;
 
+	// We need to persist somehow the vtk representation of the wellbore markers in order not to have to redraw them at each selection change.
 	std::unordered_map<std::string, VtkWellboreMarker *> uuid_to_VtkWellboreMarker;
+	// We need to persist somehow the vtk representation of the wellbore channels in order not to have to redraw them at each selection change.
+	//std::unordered_map<std::string, VtkWellboreChannel *> uuid_to_VtkWellboreMarker;
 };
 
 #endif /* SRC_VTK_VTKWELLBOREFRAME_H_ */
