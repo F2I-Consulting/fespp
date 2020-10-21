@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>PQActionHolder</class>
+ <widget class="QWidget" name="PQActionHolder">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>400</width>
+    <height>300</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <action name="actionDataLoadManager">
+   <property name="icon">
+    <iconset resource="Resources/Tools.qrc">
+     <normaloff>:/Tools/DataLoadManager.png</normaloff>:/Tools/DataLoadManager.png</iconset>
+   </property>
+   <property name="text">
+    <string>Data Load Manager</string>
+   </property>
+   <property name="toolTip">
+    <string>Dialog to open an EPC document</string>
+   </property>
+  </action>
+  <action name="actionPanelSelection">
+   <property name="icon">
+    <iconset>
+     <normaloff>:/Tools/PanelSelection.png</normaloff>:/Tools/PanelSelection.png</iconset>
+   </property>
+   <property name="text">
+    <string>Panel Selection</string>
+   </property>
+   <property name="toolTip">
+    <string>Selection TreeView</string>
+   </property>
+  </action>
+  <action name="actionPanelMetadata">
+   <property name="icon">
+    <iconset>
+     <normaloff>:/Tools/PanelMetadata.png</normaloff>:/Tools/PanelMetadata.png</iconset>
+   </property>
+   <property name="text">
+    <string>Panel Metadata</string>
+   </property>
+   <property name="toolTip">
+    <string>metadata view</string>
+   </property>
+  </action>
+  <action name="actionEtpCommand">
+   <property name="icon">
+    <iconset resource="Resources/Tools.qrc">
+     <normaloff>:/Tools/EtpConnect.png</normaloff>:/Tools/EtpConnect.png</iconset>
+   </property>
+   <property name="text">
+    <string>etp connection</string>
+   </property>
+   <property name="toolTip">
+    <string>etp connection</string>
+   </property>
+  </action>
+ </widget>
+ <resources>
+  <include location="Resources/Tools.qrc"/>
+ </resources>
+ <connections/>
+</ui>

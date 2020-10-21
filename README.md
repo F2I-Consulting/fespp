@@ -1,8 +1,11 @@
+## WINDOWS BINARIES
+- Please download the windows binaries of Fespp in the [release section](https://github.com/F2I-Consulting/fespp/releases) and follow instructions of the README.txt contained in the zip.
+- If you want to build Fespp by your own, look below for instructions.
+
 ## BUILD dependencies
-- [Fesapi v1.1.0.0](https://github.com/F2I-Consulting/fesapi/releases/tag/v1.1.0.0)
+- [Fesapi v2.0.0.0](https://github.com/F2I-Consulting/fesapi/releases/tag/v2.0.0.0)
 - ParaView with same HDF5 libraries used by Fesapi
 	 > known to work on Linux and Windows with ParaView 5.6.0
-
 
 ## BUILD & INSTALL Fespp
 1. **CONFIGURE** Fespp with CMAKE
@@ -17,13 +20,14 @@ A FindFesapi script will automatically use the above variable to set the FESAPI_
  
 	- On Linux:
 	   - <span>libFesapiCpp.so</span> (from Fesapi built)
-	   - libFesapiCpp.so.1.1 (from Fesapi built)
-	   - libFesapiCpp.so.1.1.0 (from Fesapi built)
+	   - libFesapiCpp.so.2.0 (from Fesapi built)
+	   - libFesapiCpp.so.2.0.0 (from Fesapi built)
 	   - <span>libFespp.so</span> (from Fespp built)
    
 	- on Windows:
-	   -  FesapiCpp.1.1.0.0.dll (from Fesapi built)
+	   -  FesapiCpp.2.0.0.0.dll (from Fesapi built)
 	   -  Fespp.dll (from Fespp built)
+
 ## Execution
 1. Only if you use MPI Paraview version, **Run** the **Paraview server** (Caution : use **MPI** build of ParaView!!!) : 
 	> mpirun -np 8 ./pvserver
