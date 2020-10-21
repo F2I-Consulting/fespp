@@ -24,6 +24,9 @@ under the License.
 #include "VtkResqml2MultiBlockDataSet.h"
 #include "VtkGrid2DRepresentationPoints.h"
 
+/** @brief	The grid2D representation.
+ */
+
 class VtkGrid2DRepresentation : public VtkResqml2MultiBlockDataSet
 {
 public:
@@ -38,35 +41,48 @@ public:
 	~VtkGrid2DRepresentation();
 
 	/**
-	* method : createTreeVtk
-	* variable : 
-	* prepare grid2D points and grid2D cells.
+	* create link between uuid
+	*
+	* @param 	uuid	uuid source
+	* @param	parent	uuid parent
+	* @param	name	name/title of object uuid's
+	* @param	resqmlType	type of object uuid's
 	*/
 	void createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, VtkEpcCommon::Resqml2Type resqmlType);
 
 	/**
-	* method : attach
-	* variable : --
-	* attach grid2D points and grid2D cells.
+	* add all Vtk representation to the epc VtkMultiblockDataset
 	*/
 	void attach();
 	
 	/**
-	* method : remove
-	* variable : std::string uuid 
-	* create grid2D points and grid2D cells.
-	*/
+	 * load grid2D or property in VtkMultiBlockDataSet 
+	 *
+	 * @param 	uuid	uuid to load
+	 */
 	void visualize(const std::string & uuid);
 	
 	/**
-	* method : remove
-	* variable : std::string uuid
-	* delete the vtkMultiBlockDataSet
-	*/
+	 * unload grid2D or property in VtkMultiBlockDataSet 
+	 *
+	 * @param 	uuid	uuid to unload
+	 */
 	void remove(const std::string & uuid);
 
+	/**
+	* apply data for a property
+	*
+	* @param 	uuidProperty	the property uuid
+	* @param 	uuid	the data
+	*/
 	void addProperty(const std::string & uuidProperty, vtkDataArray* dataProperty);
 
+	/**
+	* get the element count for a unit (points/cells) on which property values attached 
+	*
+	* @param 	uuid	property or representation uuid
+	* @param 	propertyUnit	unit	
+	*/
 	long getAttachmentPropertyCount(const std::string & uuid, VtkEpcCommon::FesppAttachmentProperty propertyUnit);
 	
 protected:

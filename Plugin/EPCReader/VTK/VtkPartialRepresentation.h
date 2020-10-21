@@ -36,6 +36,9 @@ namespace COMMON_NS
 	class DataObjectRepository;
 }
 
+/** @brief	link the partial object with the object source.
+ */
+
 class VtkPartialRepresentation
 {
 public:
@@ -50,29 +53,56 @@ public:
 	~VtkPartialRepresentation();
 
 	/**
-	* method : visualize
-	* variable : std::string uuid 
-	*/
+	 * load a property to object source
+	 * loading a full representation is not possible, the source will be taken first
+	 *
+	 * @param 	uuid	property to load on the source
+	 */
 	void visualize(const std::string & uuid);
 	
 	/**
-	* method : createTreeVtk
-	* variable : std::string uuid, std::string parent, std::string name, Resqml2Type resqmlTypeParent
+	* create link between uuid
+	*
+	* @param 	uuid	uuid source
+	* @param	parent	uuid parent
+	* @param	name	name/title of object uuid's
+	* @param	resqmlType	type of object uuid's
 	*/
 	void createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, VtkEpcCommon::Resqml2Type resqmlTypeParent);
 	
 	/**
-	* method : remove
-	* variable : std::string uuid
-	* delete the vtkDataArray.
-	*/
+	 * unload a property to object source
+	 * unload a full representation is not possible, the source will be taken first
+	 *
+	 * @param 	uuid	property to unload at the source
+	 */
 	void remove(const std::string & uuid);
 
+	/**
+	* get type for a uuid
+	*
+	* @param 	uuid	
+	*/
 	VtkEpcCommon::Resqml2Type getType();
+	
+	/**
+	* get all info (VtkEpcCommon) for a uuid
+	*
+	* @param 	uuid	
+	*/
 	VtkEpcCommon getInfoUuid();
 
+	/**
+	* return the vtkEpcDocument which contain source uuid
+	*/
 	const COMMON_NS::DataObjectRepository& getEpcSource() const;
 
+	/**
+	* get the element count for a unit (points/cells) on which property values attached 
+	*
+	* @param 	uuid	property or representation uuid
+	* @param 	propertyUnit	unit	
+	*/
 	long getAttachmentPropertyCount(const std::string & uuid, VtkEpcCommon::FesppAttachmentProperty propertyUnit);
 
 private:

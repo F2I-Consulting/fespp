@@ -31,6 +31,9 @@ under the License.
 // include Resqml2.0 VTK
 #include "VtkAbstractObject.h"
 
+/** @brief	The fespp tree representation in VtkMultiBlockDataSet.
+ */
+
 class VtkResqml2MultiBlockDataSet : public VtkAbstractObject
 {
 public:
@@ -45,7 +48,7 @@ public:
 	virtual ~VtkResqml2MultiBlockDataSet() = default;
 
 	/**
-	* return the vtkMultiBlockDataSet vtkOutput
+	* return the vtkMultiBlockDataSet output
 	*/
 	vtkSmartPointer<vtkMultiBlockDataSet> getOutput() const;
 	

@@ -21,6 +21,9 @@ under the License.
 
 #include "VtkResqml2PolyData.h"
 
+/** @brief	The fespp polyline representation (set or simple)
+ */
+
 class VtkPolylineRepresentation : public VtkResqml2PolyData 
 {
 public:
@@ -35,14 +38,26 @@ public:
 	~VtkPolylineRepresentation() = default;
 
 	/**
-	* method : visualize
-	* variable : std::string uuid (Polyline representation UUID)
-	* create the vtk objects for represent Polyline.
-	*/
+	 * load polyline  or property in vtkPolyData
+	 *
+	 * @param 	uuid	uuid to load
+	 */
 	void visualize(const std::string & uuid);
 
+	/**
+	* apply data for a property
+	*
+	* @param 	uuidProperty	the property uuid
+	* @param 	uuid	the data
+	*/
 	void addProperty(const std::string & uuidProperty, vtkDataArray* dataProperty);
 	
+	/**
+	* get the element count for a unit (points/cells) on which property values attached 
+	*
+	* @param 	uuid	property or representation uuid
+	* @param 	propertyUnit	unit	
+	*/
 	long getAttachmentPropertyCount(const std::string & uuid, VtkEpcCommon::FesppAttachmentProperty propertyUnit);
 
 private:

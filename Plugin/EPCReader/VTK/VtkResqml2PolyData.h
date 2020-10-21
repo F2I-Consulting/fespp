@@ -26,6 +26,9 @@ under the License.
 #include <vtkSmartPointer.h> 
 #include <vtkPolyData.h>
 
+/** @brief	The fespp polyline/triangulate/grid2D representation in VtkPolyData.
+ */
+
 class VtkResqml2PolyData : public VtkAbstractRepresentation
 {
 
@@ -41,16 +44,12 @@ public:
 	virtual ~VtkResqml2PolyData();
 
 	/**
-	* method : visualize
-	* variable : --
-	* return the vtkPolyData.
+	* return the vtkPolyData output
 	*/
 	vtkSmartPointer<vtkPolyData> getOutput() const;
 
 	/**
-	* method : visualize
-	* variable : std::string uuid
-	* delete the vtkPolyData.
+	* Remove a property or unload polylineRepresentation
 	*/
 	void remove(const std::string & uuid);
 
