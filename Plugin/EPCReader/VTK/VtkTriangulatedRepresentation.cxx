@@ -46,9 +46,6 @@ void VtkTriangulatedRepresentation::visualize(const std::string &uuid)
 		if (vtkOutput == nullptr && triangulatedSetRepresentation != nullptr) {
 			vtkOutput = vtkSmartPointer<vtkPolyData>::New();
 
-			// POINT
-			vtkSmartPointer<vtkPoints> triangulatedRepresentationPoints = vtkSmartPointer<vtkPoints>::New();
-
 			const ULONG64 nodeCount = triangulatedSetRepresentation->getXyzPointCountOfAllPatches();
 			double* allXyzPoints = new double[nodeCount * 3]; // Will be deleted by VTK
 			triangulatedSetRepresentation->getXyzPointsOfAllPatchesInGlobalCrs(allXyzPoints);

@@ -85,7 +85,7 @@ void VtkEpcDocumentSet::visualizeFull()
 }
 
 //----------------------------------------------------------------------------
-void VtkEpcDocumentSet::visualizeFullWell(std::string fileName)
+void VtkEpcDocumentSet::visualizeFullWell(const std::string& fileName)
 {
 	if (representationMode)
 	{
@@ -114,7 +114,7 @@ void VtkEpcDocumentSet::unvisualize(const std::string &uuid)
 }
 
 //----------------------------------------------------------------------------
-void VtkEpcDocumentSet::unvisualizeFullWell(std::string fileName)
+void VtkEpcDocumentSet::unvisualizeFullWell(const std::string& fileName)
 {
 	if (representationMode)
 	{

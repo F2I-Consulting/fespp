@@ -45,14 +45,13 @@ vtkSmartPointer<vtkPoints> VtkIjkGridRepresentation::createPoints()
 {
 	if (points == nullptr) {
 		points = vtkSmartPointer<vtkPoints>::New();
-		COMMON_NS::AbstractObject* obj = subRepresentation
-			? epcPackageRepresentation->getDataObjectByUuid(getParent())
-			: epcPackageRepresentation->getDataObjectByUuid(getUuid());
-		if (obj != nullptr && dynamic_cast<RESQML2_NS::AbstractIjkGridRepresentation*>(obj) == nullptr) {
+		RESQML2_NS::AbstractIjkGridRepresentation* ijkGridRepresentation = subRepresentation
+			? epcPackageRepresentation->getDataObjectByUuid<RESQML2_NS::AbstractIjkGridRepresentation>(getParent())
+			: epcPackageRepresentation->getDataObjectByUuid<RESQML2_NS::AbstractIjkGridRepresentation>(getUuid());
+		if (ijkGridRepresentation == nullptr) {
 			throw std::logic_error("The object is not an IjkGridRepresentation");
 		}
 
-		RESQML2_NS::AbstractIjkGridRepresentation* ijkGridRepresentation = static_cast<RESQML2_NS::AbstractIjkGridRepresentation*>(obj);
 		iCellCount = ijkGridRepresentation->getICellCount();
 		jCellCount = ijkGridRepresentation->getJCellCount();
 		kCellCount = ijkGridRepresentation->getKCellCount();

@@ -66,7 +66,7 @@ public:
 	 * 
 	 * @param 	fileName	epc document fileName
 	 */
-	void visualizeFullWell(std::string fileName);
+	void visualizeFullWell(const std::string& fileName);
 	
 	/**
 	 * unload a data object in VTK object
@@ -80,7 +80,7 @@ public:
 	 * 
 	 * @param 	fileName	epc document fileName
 	 */	
-	void unvisualizeFullWell(std::string fileName);
+	void unvisualizeFullWell(const std::string& fileName);
 
 	/**
 	* get type for a uuid
