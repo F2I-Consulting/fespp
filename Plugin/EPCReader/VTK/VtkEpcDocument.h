@@ -37,6 +37,9 @@ class VtkTriangulatedRepresentation;
 class VtkSetPatch;
 class VtkWellboreTrajectoryRepresentation;
 
+/** @brief	The epc document representation.
+ */
+
 class VtkEpcDocument : public VtkResqml2MultiBlockDataSet
 {
 
@@ -52,67 +55,121 @@ public:
 	~VtkEpcDocument();
 
 	/**
-	* method : visualize
-	* variable : std::string uuid 
-	* create uuid representation.
-	*/
+	 * load a data object in VTK object
+	 *
+	 * @param 	uuid	a uuid of epc document to load
+	 */
 	void visualize(const std::string & uuid);
 
 	/**
-	* method : visualizeFullWell
-	* create uuid representation with all Welbore_trajectory
-	*/
+	 * load all Wellbores in VTK object
+	 */
 	void visualizeFullWell();
+
+	/**
+	 * unload all Wellbores in VTK object
+	 */
 	void unvisualizeFullWell();
 	
 	/**
-	* method : toggleMarkerOrientation
-	* variable : const bool orientation
-	* enable/disable marker orientation option
-	*/
+	 * Change orientation state for all Welbore markers
+	 *
+	 * @param 	orientation	false - no orientation for all welbore markers
+	 * 						true - dips/azimuth orientation for all wellbore markers
+	 */
 	void toggleMarkerOrientation(const bool orientation);
 
 	/**
-	* method : setMarkerSize
-	* variable : int size 
-	* set the new marker size
-	*/
+	 * Change for all markers size
+	 *
+	 * @param 	size	size in pixel for all markers
+	 */
 	void setMarkerSize(int size);
 
 	/**
-	* method : remove
-	* variable : std::string uuid 
-	* delete uuid representation.
-	*/
+	 * unload a data object in VTK object
+	 *
+	 * @param 	uuid	a uuid of epc document to unload
+	 */
 	void remove(const std::string & uuid);
 	
 	/**
-	* method : get TreeView
-	* variable :
-	*
-	* if timeIndex = -1 then no time series link.
+	* return all VtkEpcCommons for calculate TreeView representation
+	* notes: when no time series link => timeIndex = -1 
 	*/
 	std::vector<VtkEpcCommon const *> getAllVtkEpcCommons() const;
 
 	/**
-	* method : attach
-	* variable : --
+	* add all Vtk representation to the epc VtkMultiblockDataset
 	*/
 	void attach();
 
+	/**
+	* return all uuids in epc document
+	*/
 	std::vector<std::string> getListUuid();
 
+	/**
+	* apply data for a property
+	*
+	* @param 	uuidProperty	the property uuid
+	* @param 	uuid	the data
+	*/
 	void addProperty(const std::string & uuidProperty, vtkDataArray* dataProperty);
 
-	VtkEpcCommon::Resqml2Type getType(std::string);
-	VtkEpcCommon getInfoUuid(std::string);
+	/**
+	* get type for a uuid
+	*
+	* @param 	uuid	
+	*/
+	VtkEpcCommon::Resqml2Type getType(std::string uuid);
 
+	/**
+	* get all info (VtkEpcCommon) for a uuid
+	*
+	* @param 	uuid	
+	*/
+	VtkEpcCommon getInfoUuid(std::string uuid);
+
+	/**
+	* get the element count for a unit (points/cells) on which property values attached 
+	*
+	* @param 	uuid	property or representation uuid
+	* @param 	propertyUnit	unit	
+	*/
 	long getAttachmentPropertyCount(const std::string & uuid, VtkEpcCommon::FesppAttachmentProperty propertyUnit);
+
+	/**
+	* get the ICell count for a representation or property uuid
+	*
+	* @param 	uuid	property or representation uuid
+	*/
 	int getICellCount(const std::string & uuid);
+
+	/**
+	* get the JCell count for a representation or property uuid
+	*
+	* @param 	uuid	property or representation uuid
+	*/
 	int getJCellCount(const std::string & uuid);
+
+	/**
+	* get the KCell count for a representation or property uuid
+	*
+	* @param 	uuid	property or representation uuid
+	*/
 	int getKCellCount(const std::string & uuid);
+
+	/**
+	* for multiprocess get the init K layer index for a process
+	*
+	* @param 	uuid	property or representation uuid
+	*/
 	int getInitKIndex(const std::string & uuid);
 
+	/**
+	* return error messages
+	*/
 	std::string getError() ;
 
 	const common::DataObjectRepository* getDataObjectRepository() const;

@@ -38,12 +38,16 @@ namespace COMMON_NS
 	class DataObjectRepository;
 }
 
+/** @brief	The fespp patch representation for polylineSet/TriangulatedSet in VtkMultiBlockDataSet.
+ */
+
 class VtkSetPatch : public VtkResqml2MultiBlockDataSet
 {
 
 public:
 	/**
-	* Constructor
+	* create a polyline or triangulated representation for each patch.
+	* The patch name = "Patch"+patch_index
 	*/
 	VtkSetPatch (const std::string & fileName, const std::string & name, const std:: string & uuid, const std::string & uuidParent, COMMON_NS::DataObjectRepository *pckEPC, int idProc=0, int maxProc=0);
 	
@@ -53,28 +57,42 @@ public:
 	virtual ~VtkSetPatch();
 
 	/**
-	* method : createTreeVtk
-	* variable : std::string uuid, std::string parent, std::string name, Resqml2Type resqml Type
-	* prepare the vtk object for represent the set representation.
+	* Add to trees structure a patch or a property.
+	*
+	* @param uuid		uuid property.
+	* @param parent		uuid property parent.
+	* @param name		name (i.e. title) property
+	* @param resqmlType		verification of property type
+	*
 	*/
 	void createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, VtkEpcCommon::Resqml2Type resqmlType);
 
 	/**
-	* method : visualize
-	* variable : std::string uuid 
-	* create the vtk objects.
-	*/
+	 * load patch or property for patch in vtkPolyData
+	 *
+	 * @param 	uuid	uuid to load
+	 */
 	void visualize(const std::string & uuid);
 
 	/**
-	* method : remove
-	* variable : std::string uuid 
-	* delete this object.
+	* Remove a property or detach of tree the set 
 	*/
 	void remove(const std::string & uuid);
 
+	/**
+	* apply data for a property
+	*
+	* @param 	uuidProperty	the property uuid
+	* @param 	uuid	the data
+	*/
 	void addProperty(const std::string & uuidProperty, vtkDataArray* dataProperty);
 	
+	/**
+	* get the element count for a unit (points/cells) on which property values attached 
+	*
+	* @param 	uuid	property or representation uuid
+	* @param 	propertyUnit	unit	
+	*/
 	long getAttachmentPropertyCount(const std::string & uuid, VtkEpcCommon::FesppAttachmentProperty propertyUnit);
 
 protected:

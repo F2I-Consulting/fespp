@@ -31,6 +31,9 @@ namespace RESQML2_NS
 	class AbstractIjkGridRepresentation;
 }
 
+/** @brief	The ijkGrid representation.
+ */
+
 class VtkIjkGridRepresentation : public VtkResqml2UnstructuredGrid
 {
 public:
@@ -45,45 +48,89 @@ public:
 	~VtkIjkGridRepresentation() {}
 	
 	/**
-	* method : visualize
-	* variable : uuid (ijk Grid representation or property) 
-	* description : 
-	*    - if ijk uuid : create the vtk objects for represent ijk Grid 
-	*    - if property uuid : add property to ijk Grid 
-	*/
+	 * load ijkgrid or property in VtkUnstructuredGrid
+	 *
+	 * @param 	uuid	uuid to load
+	 */
 	void visualize(const std::string & uuid);
 	
 	/**
-	* method : addProperty
-	* variable : uuid,  dataProperty
-	* description :
-	* add property to ijk Grid
+	* apply data for a property
+	*
+	* @param 	uuidProperty	the property uuid
+	* @param 	uuid	the data
 	*/
 	void addProperty(const std::string & uuidProperty, vtkDataArray* dataProperty);
 
 	/**
-	* method : getAttachmentPropertyCount
-	* variable : uuid,  support property (CELLS or POINTS)
-	* return : count 
+	* get the element count for a unit (points/cells) on which property values attached 
+	*
+	* @param 	uuid	property or representation uuid
+	* @param 	propertyUnit	unit	
 	*/
 	long getAttachmentPropertyCount(const std::string & uuid, VtkEpcCommon::FesppAttachmentProperty propertyUnit) ;
 
+	/**
+	* get the ICell count for a representation or property uuid
+	*
+	* @param 	uuid	property or representation uuid
+	*/
 	int getICellCount(const std::string & uuid) const;
 
+	/**
+	* get the ICell count for ijkGrid
+	*
+	* @param 	uuid	property or representation uuid
+	*/
 	int getJCellCount(const std::string & uuid) const;
 
+	/**
+	* get the ICell count for ijkGrid
+	*
+	* @param 	uuid	property or representation uuid
+	*/
 	int getKCellCount(const std::string & uuid) const;
 
+	/**
+	* get the ICell count for ijkGrid
+	*
+	* @param 	uuid	property or representation uuid
+	*/
 	int getInitKIndex(const std::string & uuid) const;
 
+	/**
+	* set the ICell count for ijkGrid
+	*
+	* @param 	value	ICell count
+	*/
 	void setICellCount(int value) {	iCellCount = value; }
 
+	/**
+	* set the JCell count for ijkGrid
+	*
+		* @param 	value	JCell count
+	*/
 	void setJCellCount(int value) { jCellCount = value; }
 
+	/**
+	* set the KCell count for ijkGrid
+	*
+	* @param 	value	KCell count
+	*/
 	void setKCellCount(int value) { kCellCount = value; }
 
+	/**
+	* for multiprocess set the init Klayer index
+	*
+	* @param 	value	init klayer index
+	*/
 	void setInitKIndex(int value) { initKIndex = value; }
 
+	/**
+	* for multiprocess set the max Klayer index
+	*
+	* @param 	value	max klayer index
+	*/
 	void setMaxKIndex(int value) { maxKIndex = value; }
 
 private:

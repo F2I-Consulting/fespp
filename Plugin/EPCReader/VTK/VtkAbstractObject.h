@@ -24,6 +24,10 @@ under the License.
 
 #include "VtkEpcCommon.h"
 
+/** @brief	An abstract data object.
+ *  - tree structure info
+ *  - multi-processor info
+ */
 class VtkAbstractObject
 {
 public:
@@ -34,31 +38,101 @@ public:
 	*/
 	virtual ~VtkAbstractObject() = default;
 
+	/**
+	 * Gets the epc fileName of this data object.
+	 * 
+	 * @returns	The epc fileName of this data object.
+	 */
 	const std::string& getFileName() const { return fileName; }
+
+	/**
+	 * Gets the name (i.e. the title) of this data object.
+	 *
+	 * @returns	The namz of this data object.
+	 */
 	const std::string& getName() const { return name; }
+
+	/**
+	 * Gets the UUID of this data object. 
+	 *
+	 * @returns	The UUID of this data object.
+	 */
 	const std::string& getUuid() const { return uuid; }
+
+	/**
+	 * Gets the UUID of data object parent. 
+	 *
+	 * @returns	The UUID of data object parent.
+	 */	
 	const std::string& getParent() const { return uuidParent; }
 	
+	/**
+	 * Gets the id of data object processor. 
+	 *
+	 * @returns	The id of data object processor.
+	 */		
 	int getIdProc() const;
+
+	/**
+	 * Gets the id of data object processor. 
+	 *
+	 * @returns	The id of data object processor.
+	 */	
 	int getMaxProc() const;
 
+	/**
+	 * Set a epc fileName of this data object.
+	 *
+	 * @param 	epcFileName	The epc fileName.
+	 */
 	void setFileName(const std::string &);
+
+	/**
+	 * Set a name (i.e. a title) of this data object.
+	 *
+	 * @param 	name	The name.
+	 */
 	void setName(const std::string &);
+
+	/**
+	 * Set a uuid of this data object.
+	 *
+	 * @param 	name	The name.
+	 */
 	void setUuid(const std::string &);
+		
+	/**
+	 * Set a uuid parent of this data object.
+	 *
+	 * @param 	name	The name.
+	 */
 	void setParent(const std::string &);
 
 	/**
-	* load & display representation uuid's
-	*/
+	 * data object load in VTKMultiBlockDataSet
+	 * if uuid param isn't data object uuid then load child of data object uuid.
+	 *
+	 * @param 	uuid	uuid to load.
+	 */
 	virtual void visualize(const std::string & uuid) = 0;
 
 	/**
-	* remove representation uuid's
-	*/
+	 * data object unload in VTKMultiBlockDataSet
+	 * if uuid param isn't data object uuid then unload child of data object uuid.
+	 *
+	 * @param 	uuid	uuid to load.
+	 */
 	virtual void remove(const std::string & uuid) = 0;
 
 	/**
-	*/
+	 * data object unload in VTKMultiBlockDataSet
+	 * if uuid param isn't data object uuid then unload child of data object uuid.
+	 *
+	 * @param 	uuid	uuid of data object property.
+	 * @param 	propertyUnit	type of property unit (cells/points).
+	 * 
+	 * @returns	The number of values.
+	 */
 	virtual long getAttachmentPropertyCount(const std::string & uuid, VtkEpcCommon::FesppAttachmentProperty propertyUnit) = 0;
 
 private:

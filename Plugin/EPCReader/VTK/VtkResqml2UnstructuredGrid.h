@@ -26,6 +26,8 @@ under the License.
 // include Resqml2.0 VTK
 #include "VtkAbstractRepresentation.h"
 
+/** @brief	The fespp ijkGrid/unstructuredGrid representation in vtkUnstructuredGrid.
+ */
 class VtkResqml2UnstructuredGrid : public VtkAbstractRepresentation
 {
 public:
@@ -40,16 +42,12 @@ public:
 	virtual ~VtkResqml2UnstructuredGrid() = default;
 
 	/**
-	* method : getOutput
-	* variable : --
-	* return the vtkUnstructuredGrid
+	* return the vtkUnstructuredGrid output
 	*/
 	vtkSmartPointer<vtkUnstructuredGrid> getOutput() const;
 	
 	/**
-	* method : remove
-	* variable : std::string uuid
-	* delete the vtkUnstructuredGrid
+* Remove all property & unload the output
 	*/
 	void remove(const std::string & uuid) final;
 

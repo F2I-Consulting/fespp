@@ -34,6 +34,8 @@ under the License.
 
 class VtkEpcDocument;
 
+/** @brief	The epc document set representation (vtkMultiBlockDataSet)
+ */
 class EPCREADER_EXPORT VtkEpcDocumentSet
 {
 public:
@@ -48,50 +50,96 @@ public:
 	~VtkEpcDocumentSet();
 
 	/**
-	* method : visualize
-	* variable : std::string uuid 
-	* create uuid representation.
-	*/
+	 * load a data object in VTK object
+	 *
+	 * @param 	uuid	a uuid of epc document to load
+	 */
 	std::string visualize(const std::string & uuid);
+
+	/**
+	 * load all epc documents in VTK object
+	 */
 	void visualizeFull();
+
+	/**
+	 * load all Wellbores for an epc document in VTK object
+	 * 
+	 * @param 	fileName	epc document fileName
+	 */
 	void visualizeFullWell(std::string fileName);
 	
 	/**
-	* method : remove
-	* variable : std::string uuid 
-	* delete uuid representation.
-	*/
+	 * unload a data object in VTK object
+	 *
+	 * @param 	uuid	a uuid of epc document to load
+	 */
 	void unvisualize(const std::string & uuid);
+
+	/**
+	 * unload all Wellbores for an epc document in VTK object
+	 * 
+	 * @param 	fileName	epc document fileName
+	 */	
 	void unvisualizeFullWell(std::string fileName);
 
+	/**
+	* get type for a uuid
+	*
+	* @param 	uuid	
+	*/
 	VtkEpcCommon::Resqml2Type getType(std::string uuid);
+
+	/**
+	* get all info (VtkEpcCommon) for a uuid
+	*
+	* @param 	uuid	
+	*/
 	VtkEpcCommon getInfoUuid(std::string);
 
 	/**
-	* method : toggleMarkerOrientation
-	* variable : const bool orientation
-	* enable/disable marker orientation option
-	*/
+	 * Change orientation state for all Welbore markers
+	 *
+	 * @param 	orientation	false - no orientation for all welbore markers
+	 * 						true - dips/azimuth orientation for all wellbore markers
+	 */
 	void toggleMarkerOrientation(const bool orientation);
 
 	/**
-	* method : setMarkerSize
-	* variable : int size 
-	* set the new marker size
-	*/
+	 * Change for all markers size
+	 *
+	 * @param 	size	size in pixel for all markers
+	 */
 	void setMarkerSize(int size);
 
 	/**
-	* method : getOutput
-	* variable : --
-	* return the vtkMultiBlockDataSet for each epcdocument.
+	* return the vtkMultiBlockDataSet of epc document set.
 	*/
 	vtkSmartPointer<vtkMultiBlockDataSet> getVisualization() const;
+
+	/**
+	* return all VtkEpcCommons for calculate TreeView representation
+	* notes: when no time series link => timeIndex = -1 
+	*/
 	std::vector<VtkEpcCommon const *> getAllVtkEpcCommons() const;
 
+	/**
+	* add a epc document to the set
+	*
+	* @param filename	epc document filename's
+	*/
 	std::string addEpcDocument(const std::string & fileName);
 
+	/**
+	* return all VtkEpcCommons for calculate TreeView representation
+	* notes: when no time series link => timeIndex = -1 
+	*/
 	const std::vector<VtkEpcDocument*>& getAllVtkEpcDocuments() const { return vtkEpcList; }
+
+	/**
+	* return VtkEpcDocument which contain uuid
+	*
+	* @param uuid	uuid to search
+	*/	
 	VtkEpcDocument* getVtkEpcDocument(const std::string& uuid);
 
 	/**

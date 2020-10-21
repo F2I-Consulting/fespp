@@ -22,6 +22,9 @@ under the License.
 // FESPP
 #include "VtkResqml2PolyData.h"
 
+/** @brief	The grid2D representation with points
+ */
+
 class VtkGrid2DRepresentationPoints : public VtkResqml2PolyData
 {
 public:
@@ -36,14 +39,26 @@ public:
 	~VtkGrid2DRepresentationPoints();
 
 	/**
-	* method : visualize
-	* variable : std::string uuid (grid 2D representation UUID)
-	* create the vtk objects for represent grid 2D.
-	*/
+	 * load grid2D or property in VtkPolyData 
+	 *
+	 * @param 	uuid	uuid to load
+	 */
 	void visualize(const std::string & uuid);
 
+	/**
+	* apply data for a property
+	*
+	* @param 	uuidProperty	the property uuid
+	* @param 	uuid	the data
+	*/
 	void addProperty(const std::string & uuidProperty, vtkDataArray* dataProperty);
 
+	/**
+	* get the element count for a unit (points/cells) on which property values attached 
+	*
+	* @param 	uuid	property or representation uuid
+	* @param 	propertyUnit	unit	
+	*/
 	long getAttachmentPropertyCount(const std::string & uuid, VtkEpcCommon::FesppAttachmentProperty propertyUnit);
 			
 private:

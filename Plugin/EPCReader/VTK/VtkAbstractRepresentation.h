@@ -37,6 +37,8 @@ namespace COMMON_NS
 	class DataObjectRepository;
 }
 
+/** @brief	An abstract of data object representation.
+ */
 class VtkAbstractRepresentation : public VtkAbstractObject
 {
 public:
@@ -51,7 +53,13 @@ public:
 	virtual ~VtkAbstractRepresentation();
 
 	/**
-	* create property
+	* Add to trees structure a property.
+	*
+	* @param uuid		uuid property.
+	* @param parent		uuid property parent.
+	* @param name		name (i.e. title) property
+	* @param resqmlType		verification of property type
+	*
 	*/
 	void createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, VtkEpcCommon::Resqml2Type resqmlType);
 

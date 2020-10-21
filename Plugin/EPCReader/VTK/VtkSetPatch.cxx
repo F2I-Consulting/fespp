@@ -60,7 +60,7 @@ VtkSetPatch::VtkSetPatch(const std::string & fileName, const std::string & name,
 	else if (xmlTag == "TriangulatedSetRepresentation") {
 		triangulatedSetRep = static_cast<RESQML2_NS::TriangulatedSetRepresentation*>(object);
 		if (triangulatedSetRep == nullptr) {
-			cout << "Not found an ijk grid with the right uuid." << endl;
+			cout << "Not found an TriangulatedSetRepresentation with the right uuid." << endl;
 		}
 		for (unsigned int patchIndex = 0; patchIndex < triangulatedSetRep->getPatchCount(); ++ patchIndex) {
 			std::stringstream sstm;

@@ -42,6 +42,9 @@ namespace RESQML2_NS
 	class WellboreTrajectoryRepresentation;
 }
 
+/** @brief	the data table of a property
+ */
+
 class VtkProperty  : public VtkAbstractObject
 {
 public:
@@ -51,41 +54,24 @@ public:
 	* Constructor
 	*/
 	VtkProperty(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, COMMON_NS::DataObjectRepository const * repo, int idProc=0, int maxProc=0);
-
-	/**
-	* Destructor
-	*/
 	~VtkProperty();
 
 	/**
-	* method : getCellData
-	* variable : --
-	* return the vtkDataArray.
+	* Don't call
 	*/
-//	vtkDataArray* getCellData() const;
+	void visualize(const std::string &);
 
 	/**
-	* method : visualize
-	* variable : std::string uuid 
-	*/
-	void visualize(const std::string & uuid);
-	
-	/**
-	* method : createTreeVtk
-	* variable : std::string uuid, std::string parent, std::string name, Resqml2Type resqmlTypeParent
+	* Don't call
 	*/
 	void createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, VtkEpcCommon::Resqml2Type resqmlTypeParent);
 	
 	/**
-	* method : remove
-	* variable : std::string uuid
 	* delete the vtkDataArray.
 	*/
 	void remove(const std::string & uuid);
 
 	/**
-	* method : visualize
-	* variable : std::string uuid , FESAPI representation
 	* create the vtkDataArray.
 	*/
 	vtkDataArray* visualize(const std::string & uuid, RESQML2_NS::PolylineSetRepresentation const * polylineSetRepresentation);

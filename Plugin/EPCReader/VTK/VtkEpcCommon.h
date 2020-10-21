@@ -22,12 +22,24 @@ under the License.
 // include system
 #include <string>
 
+/** @brief	data object metadata.
+ */
 class VtkEpcCommon
 {
 public:
 
+	/** Values that represent the type of attachment property */
+	/*  - points for resqml type: points                      */
+	/*  - cells for resqml type: cells / triangles            */
 	enum class FesppAttachmentProperty { POINTS = 0, CELLS = 1 };
+
+	/** Values that represent the plugin use case:            */
+	/*  - TreeView => only create Tree                        */
+	/*  - Representation => only create VTK representation    */
+	/*  - Both => TreeView & Representation                   */
 	enum class modeVtkEpc {TreeView=0, Representation=1, Both=2};
+
+	/** Enumeration for the various resqml type               */
 	enum class Resqml2Type {
 		UNKNOW = -1,
 		EPC_DOC = 0,
@@ -57,26 +69,88 @@ public:
 		uuid(uuid),parent(parent),name(name),myType(type),parentType(Resqml2Type::UNKNOW),timeIndex(-1),timestamp(0) {}
 	~VtkEpcCommon() {}
 
-
+	/**
+	 * Gets the Uuid.
+	 *
+	 * @returns	The Uuid.
+	 */
 	const std::string& getUuid() const { return uuid; }
+
+	/**
+	 * Set the Uuid when creating a new dataobject
+	 */
 	void setUuid(const std::string & value) { uuid = value; }
 
+	/**
+	 * Gets the parent Uuid.
+	 *
+	 * @returns	The parent Uuid.
+	 */
 	const std::string& getParent() const { return parent; }
+	
+	/**
+	 * Set the parent Uuid when creating a new dataobject
+	 */
 	void setParent(const std::string & value) { parent = value; }
 
+	/**
+	 * Gets the name/title Uuid.
+	 *
+	 * @returns	The name/title Uuid.
+	 */
 	const std::string& getName() const { return name; }
+
+	/**
+	 * Set the name/title Uuid when creating a new dataobject
+	 */
 	void setName(const std::string & value) { name = value; }
 
+	/**
+	 * Gets the type Uuid.
+	 *
+	 * @returns	The type Uuid.
+	 */
 	Resqml2Type	getType() const { return myType; }
+	
+	/**
+	 * Set the type Uuid when creating a new dataobject
+	 */
 	void setType(Resqml2Type value) { myType = value; }
 
+	/**
+	 * Gets the parent type Uuid.
+	 *
+	 * @returns	The parent type Uuid.
+	 */
 	Resqml2Type	getParentType() const { return parentType; }
+
+	/**
+	 * Set the parent type Uuid when creating a new dataobject
+	 */
 	void setParentType(Resqml2Type value) { parentType = value; }
 
+	/**
+	 * Gets the Time Index Uuid.
+	 *
+	 * @returns	The Time Index Uuid, if no time index -1 value
+	 */
 	int	getTimeIndex() const { return timeIndex; }
+	
+	/**
+	 * Set the Time Index Uuid when creating a new dataobject
+	 */
 	void setTimeIndex(int value) { timeIndex = value; }
 
+	/**
+	 * Gets the timestamp Uuid.
+	 *
+	 * @returns	The timestamp Uuid, if no time index -1 value
+	 */
 	time_t	getTimestamp() const { return timestamp; }
+
+	/**
+	 * Set the timestamp Uuid when creating a new dataobject
+	 */
 	void setTimestamp(time_t value) { timestamp = value; }
 
 private:
