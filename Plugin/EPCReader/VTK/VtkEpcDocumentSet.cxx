@@ -64,20 +64,16 @@ std::string VtkEpcDocumentSet::visualize(const std::string& uuid)
 		}
 		return "";
 	}
-	else {
-		return "This object cannot be visualized";
-	}
+
+	return "This object cannot be visualized";
 }
 
 //----------------------------------------------------------------------------
 void VtkEpcDocumentSet::visualizeFull()
 {
-	if (representationMode)
-	{
-		for (auto &vtkEpcElem : vtkEpcList)
-		{
-			for (const auto &uuidListElem : vtkEpcElem->getListUuid())
-			{
+	if (representationMode) {
+		for (auto vtkEpcElem : vtkEpcList) {
+			for (const auto &uuidListElem : vtkEpcElem->getListUuid()) {
 				vtkEpcElem->visualize(uuidListElem);
 			}
 		}
@@ -87,12 +83,9 @@ void VtkEpcDocumentSet::visualizeFull()
 //----------------------------------------------------------------------------
 void VtkEpcDocumentSet::visualizeFullWell(const std::string& fileName)
 {
-	if (representationMode)
-	{
-		for (const auto &vtkEpcElem : vtkEpcList)
-		{
-			if (vtkEpcElem->getFileName() == fileName)
-			{
+	if (representationMode) {
+		for (const auto vtkEpcElem : vtkEpcList) {
+			if (vtkEpcElem->getFileName() == fileName) 	{
 				vtkEpcElem->visualizeFullWell();
 				break;
 			}
@@ -116,12 +109,9 @@ void VtkEpcDocumentSet::unvisualize(const std::string &uuid)
 //----------------------------------------------------------------------------
 void VtkEpcDocumentSet::unvisualizeFullWell(const std::string& fileName)
 {
-	if (representationMode)
-	{
-		for (auto &vtkEpcElem : vtkEpcList)
-		{
-			if (vtkEpcElem->getFileName() == fileName)
-			{
+	if (representationMode) {
+		for (auto vtkEpcElem : vtkEpcList) {
+			if (vtkEpcElem->getFileName() == fileName) {
 				vtkEpcElem->unvisualizeFullWell();
 				break;
 			}
@@ -169,19 +159,17 @@ VtkEpcCommon VtkEpcDocumentSet::getInfoUuid(std::string uuid)
 //----------------------------------------------------------------------------
 vtkSmartPointer<vtkMultiBlockDataSet> VtkEpcDocumentSet::getVisualization() const
 {
-	if (representationMode)
-	{
+	if (representationMode) {
 		vtkOutput->Initialize();
 		unsigned int index = 0;
-		for (const auto& vtkEpcElem : vtkEpcList)
-		{
-			if (vtkEpcElem->getOutput()->GetNumberOfBlocks() > 0)
-			{
+		for (const auto vtkEpcElem : vtkEpcList) {
+			if (vtkEpcElem->getOutput()->GetNumberOfBlocks() > 0) {
 				vtkOutput->SetBlock(index, vtkEpcElem->getOutput());
 				vtkOutput->GetMetaData(index++)->Set(vtkCompositeDataSet::NAME(), vtkEpcElem->getFileName().c_str());
 			}
 		}
 	}
+
 	return vtkOutput;
 }
 

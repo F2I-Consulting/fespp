@@ -546,7 +546,8 @@ void PQSelectionPanel::addFileName(const std::string & fileName) {
 		try {
 			vtkEpcDocumentSet->addEpcDocument(fileName);
 		}
-		catch (const std::exception&) {
+		catch (const std::exception& e) {
+			vtkOutputWindowDisplayDebugText(("Impossible to add file " + fileName + "\nReason:" + e.what()).c_str());
 			return;
 		}
 		

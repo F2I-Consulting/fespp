@@ -223,7 +223,7 @@ void VtkIjkGridRepresentation::createVtkUnstructuredGrid(RESQML2_NS::AbstractRep
 
 	// Define hexahedron node ordering according to Paraview convention : https://lorensen.github.io/VTKExamples/site/VTKBook/05Chapter5/#Figure%205-3
 	std::array<unsigned int, 8> correspondingResqmlCornerId = { 0, 1, 2, 3, 4, 5, 6, 7 };
-	if (ijkGridRepresentation->getLocalCrs(0)->isDepthOriented() == ijkGridRepresentation->isRightHanded()) {
+	if (!ijkGridRepresentation->isRightHanded()) {
 		correspondingResqmlCornerId = { 4, 5, 6, 7, 0, 1, 2, 3 };
 	}
 
