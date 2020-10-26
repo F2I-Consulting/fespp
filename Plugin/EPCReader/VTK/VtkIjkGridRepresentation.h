@@ -163,7 +163,5 @@ private:
 	int maxKIndex;
 
 	bool isHyperslabed;
-
-	vtkSmartPointer<vtkPoints> points;
 };
 #endif
