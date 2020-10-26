@@ -90,7 +90,7 @@ vtkSmartPointer<vtkPoints> VtkIjkGridRepresentation::createPoints()
 			const auto nodeCount = ijkGridRepresentation->getXyzPointCountOfAllPatches();
 			double* allXyzPoints = new double[nodeCount * 3]; // Will be deleted by VTK
 			ijkGridRepresentation->getXyzPointsOfAllPatchesInGlobalCrs(allXyzPoints);
-			createVtkPoints(nodeCount, allXyzPoints, ijkGridRepresentation->getLocalCrs(0));
+			points = createVtkPoints(nodeCount, allXyzPoints, ijkGridRepresentation->getLocalCrs(0));
 		}
 	}
 	return points;
@@ -286,8 +286,8 @@ void VtkIjkGridRepresentation::createVtkUnstructuredGrid(RESQML2_NS::AbstractRep
 						vtkSmartPointer<vtkHexahedron> hex = vtkSmartPointer<vtkHexahedron>::New();
 
 						for (unsigned int cornerId = 0; cornerId < 8; ++cornerId) {
-							hex->GetPointIds()->SetId(cornerId,
-								ijkGridRepresentation->getXyzPointIndexFromCellCorner(vtkICellIndex, vtkJCellIndex, vtkKCellIndex, correspondingResqmlCornerId[cornerId]) - translatePoint);
+							auto pointIndex = ijkGridRepresentation->getXyzPointIndexFromCellCorner(vtkICellIndex, vtkJCellIndex, vtkKCellIndex, correspondingResqmlCornerId[cornerId]);
+							hex->GetPointIds()->SetId(cornerId, pointIndex - translatePoint);
 						}
 
 						vtkOutput->InsertNextCell(hex->GetCellType(), hex->GetPointIds());

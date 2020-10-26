@@ -357,7 +357,7 @@ void PQSelectionPanel::onItemCheckedUnchecked(QTreeWidgetItem * item, int)
 				recursiveParentUncheck(item, fesppReaderProxy);
 			}
 
-			// Poulate the uuids set above into the property information
+			// Populate the uuids set above into the property information
 			fesppReaderProxy->UpdatePropertyInformation(fesppReaderProxy->GetProperty("UuidList"));
 			// Send a single message to the server containing all uuids to be displayed or removed from the display.
 			fesppReaderProxy->UpdateVTKObjects();
