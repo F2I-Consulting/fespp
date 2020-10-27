@@ -34,18 +34,6 @@ VtkResqml2PolyData::VtkResqml2PolyData(const std::string & fileName, const std::
 }
 
 //----------------------------------------------------------------------------
-VtkResqml2PolyData::~VtkResqml2PolyData()
-{
-	vtkOutput = nullptr;
-}
-
-//----------------------------------------------------------------------------
-vtkSmartPointer<vtkPolyData> VtkResqml2PolyData::getOutput() const
-{
-	return vtkOutput;
-}
-
-//----------------------------------------------------------------------------
 void VtkResqml2PolyData::remove(const std::string & uuid)
 {
 	if (uuid == getUuid()) {

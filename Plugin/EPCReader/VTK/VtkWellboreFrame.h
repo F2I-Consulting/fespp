@@ -20,12 +20,12 @@ under the License.
 #define SRC_VTK_VTKWELLBOREFRAME_H_
 
 #include "VtkResqml2MultiBlockDataSet.h"
+
 #include "VtkWellboreMarker.h"
-//#include "VtkWellboreChannel.h"
+#include "VtkWellboreChannel.h"
 
 class VtkWellboreFrame : public VtkResqml2MultiBlockDataSet
 {
-
 public:
 	/**
 	* Constructor
@@ -84,7 +84,7 @@ private:
 	// We need to persist somehow the vtk representation of the wellbore markers in order not to have to redraw them at each selection change.
 	std::unordered_map<std::string, VtkWellboreMarker *> uuid_to_VtkWellboreMarker;
 	// We need to persist somehow the vtk representation of the wellbore channels in order not to have to redraw them at each selection change.
-	//std::unordered_map<std::string, VtkWellboreChannel *> uuid_to_VtkWellboreMarker;
+	std::unordered_map<std::string, VtkWellboreChannel *> uuid_to_VtkWellboreChannel;
 };
 
 #endif /* SRC_VTK_VTKWELLBOREFRAME_H_ */

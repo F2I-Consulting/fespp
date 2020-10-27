@@ -41,12 +41,12 @@ public:
 	/**
 	* Destructor
 	*/
-	virtual ~VtkResqml2PolyData();
+	virtual ~VtkResqml2PolyData() = default;
 
 	/**
 	* return the vtkPolyData output
 	*/
-	vtkSmartPointer<vtkPolyData> getOutput() const;
+	vtkSmartPointer<vtkPolyData> getOutput() const { return vtkOutput; }
 
 	/**
 	* Remove a property or unload polylineRepresentation

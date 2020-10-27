@@ -30,17 +30,17 @@ under the License.
 #include "VtkEpcDocument.h"
 
 //----------------------------------------------------------------------------
-VtkEpcDocumentSet::VtkEpcDocumentSet(int idProc, int maxProc, VtkEpcCommon::modeVtkEpc mode) : vtkOutput(vtkSmartPointer<vtkMultiBlockDataSet>::New()),
-																							   procRank(idProc), nbProc(maxProc),
-																							   treeViewMode(mode == VtkEpcCommon::modeVtkEpc::Both || mode == VtkEpcCommon::modeVtkEpc::TreeView),
-																							   representationMode(mode == VtkEpcCommon::modeVtkEpc::Both || mode == VtkEpcCommon::modeVtkEpc::Representation)
-{
-}
+VtkEpcDocumentSet::VtkEpcDocumentSet(int idProc, int maxProc, VtkEpcCommon::modeVtkEpc mode) :
+	vtkOutput(vtkSmartPointer<vtkMultiBlockDataSet>::New()),
+	procRank(idProc), nbProc(maxProc),
+	treeViewMode(mode == VtkEpcCommon::modeVtkEpc::Both || mode == VtkEpcCommon::modeVtkEpc::TreeView),
+	representationMode(mode == VtkEpcCommon::modeVtkEpc::Both || mode == VtkEpcCommon::modeVtkEpc::Representation)
+{}
 
 //----------------------------------------------------------------------------
 VtkEpcDocumentSet::~VtkEpcDocumentSet()
 {
-	for (const auto& vtkEpc : vtkEpcList) {
+	for (const auto vtkEpc : vtkEpcList) {
 		delete vtkEpc;
 	}
 }
@@ -122,11 +122,8 @@ void VtkEpcDocumentSet::unvisualizeFullWell(const std::string& fileName)
 //----------------------------------------------------------------------------
 void VtkEpcDocumentSet::toggleMarkerOrientation(const bool orientation)
 {
-
-	if (representationMode)
-	{
-		for (VtkEpcDocument *epcDoc : vtkEpcList)
-		{
+	if (representationMode) {
+		for (VtkEpcDocument *epcDoc : vtkEpcList) {
 			epcDoc->toggleMarkerOrientation(orientation);
 		}
 	}
@@ -134,10 +131,8 @@ void VtkEpcDocumentSet::toggleMarkerOrientation(const bool orientation)
 
 //----------------------------------------------------------------------------
 void VtkEpcDocumentSet::setMarkerSize(int size) {
-	if (representationMode)
-	{
-		for (VtkEpcDocument *epcDoc : vtkEpcList)
-		{
+	if (representationMode) {
+		for (VtkEpcDocument *epcDoc : vtkEpcList) {
 			epcDoc->setMarkerSize(size);
 		}
 	}
@@ -214,8 +209,7 @@ std::vector<VtkEpcCommon const *> VtkEpcDocumentSet::getAllVtkEpcCommons() const
 	std::vector<VtkEpcCommon const *> result;
 
 	// concatenate all VtkEpcCommons of all epc documents (i.e repos).
-	for (auto vtkRepo : vtkEpcList)
-	{
+	for (auto vtkRepo : vtkEpcList) {
 		auto repoAllVtkEpcCommons = vtkRepo->getAllVtkEpcCommons();
 		result.insert(result.end(),
 					  repoAllVtkEpcCommons.begin(), repoAllVtkEpcCommons.end());

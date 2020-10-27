@@ -34,14 +34,13 @@ VtkResqml2MultiBlockDataSet(fileName, name, uuid, uuidParent), repositoryReprese
 
 VtkWellboreFrame::~VtkWellboreFrame()
 {
-	for (auto& marker : uuid_to_VtkWellboreMarker) {
+	for (auto marker : uuid_to_VtkWellboreMarker) {
 		delete marker.second;
 	}
-	/*
-	for (auto& marker : uuid_to_VtkWellboreChannel) {
+
+	for (auto marker : uuid_to_VtkWellboreChannel) {
 		delete marker.second;
 	}
-	*/
 }
 
 //----------------------------------------------------------------------------
@@ -50,11 +49,9 @@ void VtkWellboreFrame::createTreeVtk(const std::string & uuid, const std::string
 	if (type == VtkEpcCommon::Resqml2Type::WELL_MARKER) {
 		uuid_to_VtkWellboreMarker[uuid] = new VtkWellboreMarker(getFileName(), name, uuid, uuidParent, repositoryRepresentation, repositorySubRepresentation);
 	}
-	/*
 	else if (type == VtkEpcCommon::Resqml2Type::PROPERTY) {
-		uuid_to_VtkWellboreChannel[uuid] = new VtkWellboreMarker(getFileName(), name, uuid, uuidParent, repositoryRepresentation, repositorySubRepresentation);
+		uuid_to_VtkWellboreChannel[uuid] = new VtkWellboreChannel(getFileName(), name, uuid, uuidParent, repositoryRepresentation, repositorySubRepresentation);
 	}
-	*/
 }
 
 //----------------------------------------------------------------------------
@@ -75,7 +72,6 @@ void VtkWellboreFrame::visualize(const std::string & uuid)
 		return;
 	}
 
-	/*
 	// CHANNEL
 	auto vtkChannelIt = uuid_to_VtkWellboreChannel.find(uuid);
 	if (vtkChannelIt != uuid_to_VtkWellboreChannel.end()) {
@@ -90,13 +86,12 @@ void VtkWellboreFrame::visualize(const std::string & uuid)
 
 		return;
 	}
-	*/
 }
 
 //----------------------------------------------------------------------------
 void VtkWellboreFrame::toggleMarkerOrientation(bool orientation)
 {
-	for (auto &marker : uuid_to_VtkWellboreMarker) {
+	for (auto marker : uuid_to_VtkWellboreMarker) {
 		// Check if the marker is visible or not.
 		if (marker.second->getOutput() != nullptr) {
 			remove(marker.first);
@@ -112,7 +107,7 @@ void VtkWellboreFrame::toggleMarkerOrientation(bool orientation)
 //----------------------------------------------------------------------------
 void VtkWellboreFrame::setMarkerSize(int size)
 {
-	for (auto &marker : uuid_to_VtkWellboreMarker) {
+	for (auto marker : uuid_to_VtkWellboreMarker) {
 		// Check if the marker is visible or not.
 		if (marker.second->getOutput() != nullptr) {
 			remove(marker.first);
@@ -140,12 +135,10 @@ void VtkWellboreFrame::remove(const std::string & uuid)
 		vtkMarkerIt->second->remove(uuid);
 	}
 
-	/*
 	// CHANNEL
 	auto vtkChannelIt = uuid_to_VtkWellboreChannel.find(uuid);
-	if (vtkChannelIt != vtkChannelIt.end()) {
+	if (vtkChannelIt != uuid_to_VtkWellboreChannel.end()) {
 		removeFromVtkOutput(vtkChannelIt->second->getOutput());
 		vtkChannelIt->second->remove(uuid);
 	}
-	*/
 }
