@@ -192,14 +192,16 @@ std::string VtkEpcDocumentSet::addEpcDocument(const std::string& fileName)
 //----------------------------------------------------------------------------
 VtkEpcDocument* VtkEpcDocumentSet::getVtkEpcDocument(const std::string& uuid)
 {
-	return uuidToVtkEpc.find(uuid) != uuidToVtkEpc.end() ? uuidToVtkEpc[uuid] : nullptr;
+	auto result = uuidToVtkEpc.find(uuid);
+	return result != uuidToVtkEpc.end() ? result->second : nullptr;
 }
 
 //----------------------------------------------------------------------------
 VtkEpcCommon::Resqml2Type VtkEpcDocumentSet::getTypeInEpcDocument(const std::string& uuid)
 {
-	return uuidToVtkEpc.find(uuid) != uuidToVtkEpc.end()
-		? uuidToVtkEpc[uuid]->getType(uuid)
+	auto vtkEpcDoc = getVtkEpcDocument(uuid);
+	return vtkEpcDoc != nullptr
+		? vtkEpcDoc->getType(uuid)
 		: VtkEpcCommon::Resqml2Type::UNKNOW;
 }
 

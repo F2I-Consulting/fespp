@@ -64,7 +64,7 @@ VtkResqml2MultiBlockDataSet(fileName, fileName, fileName, "", idProc, maxProc), 
 {
 	COMMON_NS::EpcDocument pck(fileName);
 	repository = new common::DataObjectRepository();
-	std::string resqmlResult = pck.deserializeInto(*repository);
+	const std::string resqmlResult = pck.deserializeInto(*repository);
 	pck.close();
 	if (!resqmlResult.empty()) {
 		epc_error = epc_error + resqmlResult;
@@ -699,21 +699,13 @@ void VtkEpcDocument::setMarkerSize(int size) {
 // ----------------------------------------------------------------------------
 void VtkEpcDocument::remove(const std::string & uuid)
 {
-	auto uuidtoAttach = uuid;
+	std::string uuidtoAttach = uuidIsChildOf[uuid].getType() == VtkEpcCommon::Resqml2Type::PROPERTY || uuidIsChildOf[uuid].getType() == VtkEpcCommon::Resqml2Type::WELL_MARKER
+		? uuidIsChildOf[uuid].getParent()
+		: uuid;
 
-	if (uuidIsChildOf[uuid].getType() == VtkEpcCommon::Resqml2Type::PROPERTY ||
-			uuidIsChildOf[uuid].getType() == VtkEpcCommon::Resqml2Type::WELL_MARKER_FRAME ||
-			uuidIsChildOf[uuid].getType() == VtkEpcCommon::Resqml2Type::WELL_FRAME) {
-		uuidtoAttach = uuidIsChildOf[uuid].getParent();
-	}
-	if (uuidIsChildOf[uuid].getType() == VtkEpcCommon::Resqml2Type::WELL_MARKER) {
-		if (uuidIsChildOf[uuid].getParentType() == VtkEpcCommon::Resqml2Type::WELL_MARKER_FRAME ||
-				uuidIsChildOf[uuid].getParentType() == VtkEpcCommon::Resqml2Type::WELL_FRAME) {
-			uuidtoAttach = uuidIsChildOf[uuidIsChildOf[uuid].getParent()].getParent();
-		}
-		else {
-			uuidtoAttach = uuidIsChildOf[uuid].getParent();
-		}
+	if (uuidIsChildOf[uuidtoAttach].getType() == VtkEpcCommon::Resqml2Type::WELL_MARKER_FRAME ||
+		uuidIsChildOf[uuidtoAttach].getType() == VtkEpcCommon::Resqml2Type::WELL_FRAME) {
+		uuidtoAttach = uuidIsChildOf[uuidtoAttach].getParent();
 	}
 
 	if (std::find(attachUuids.begin(), attachUuids.end(), uuidtoAttach) != attachUuids.end()) {
@@ -1166,7 +1158,7 @@ void VtkEpcDocument::searchFaultPolylines(const std::string & fileName) {
 		polylines = repository->getFaultPolylineSetRepSet();
 	}
 	catch  (const std::exception & e) {
-		cout << "EXCEPTION in fesapi when call getFaultPolylineSetRepSet with file: " << fileName << " : " << e.what();
+		cout << "EXCEPTION in fesapi when calling getFaultPolylineSetRepSet with file: " << fileName << " : " << e.what();
 	}
 	for (size_t idx = 0; idx < polylines.size(); ++idx)	{
 		if (polylines[idx]->isPartial()) {
@@ -1189,7 +1181,7 @@ void VtkEpcDocument::searchFaultPolylines(const std::string & fileName) {
 		}
 		else {
 			std::string uuidParent= fileName;
-			auto interpretation = polylines[idx]->getInterpretation();
+			const auto interpretation = polylines[idx]->getInterpretation();
 			if (interpretation != nullptr) {
 				uuidParent = interpretation->getUuid();
 				createTreeVtk(uuidParent, fileName, interpretation->getTitle().c_str(), VtkEpcCommon::Resqml2Type::INTERPRETATION_2D);
@@ -1198,7 +1190,7 @@ void VtkEpcDocument::searchFaultPolylines(const std::string & fileName) {
 		}
 
 		//property
-		for (auto prop : polylines[idx]->getValuesPropertySet()) {
+		for (const auto prop : polylines[idx]->getValuesPropertySet()) {
 			createTreeVtk(prop->getUuid(), polylines[idx]->getUuid(), prop->getTitle().c_str(), VtkEpcCommon::Resqml2Type::PROPERTY);
 		}
 	}
@@ -1210,7 +1202,7 @@ void VtkEpcDocument::searchHorizonPolylines(const std::string & fileName) {
 		polylines = repository->getHorizonPolylineSetRepSet();
 	}
 	catch  (const std::exception & e) {
-		cout << "EXCEPTION in fesapi when call getHorizonPolylineSetRepSet with file: " << fileName << " : " << e.what();
+		cout << "EXCEPTION in fesapi when calling getHorizonPolylineSetRepSet with file: " << fileName << " : " << e.what();
 	}
 	for (size_t idx = 0; idx < polylines.size(); ++idx)	{
 		if (polylines[idx]->isPartial()) {
@@ -1232,7 +1224,7 @@ void VtkEpcDocument::searchHorizonPolylines(const std::string & fileName) {
 			}
 		} else {
 			std::string uuidParent = fileName;
-			auto interpretation = polylines[idx]->getInterpretation();
+			const auto interpretation = polylines[idx]->getInterpretation();
 			if (interpretation) {
 				uuidParent = interpretation->getUuid();
 				createTreeVtk(uuidParent, fileName, interpretation->getTitle().c_str(), VtkEpcCommon::Resqml2Type::INTERPRETATION_2D);
@@ -1241,7 +1233,7 @@ void VtkEpcDocument::searchHorizonPolylines(const std::string & fileName) {
 		}
 
 		//property
-		for (auto prop : polylines[idx]->getValuesPropertySet()) {
+		for (const auto prop : polylines[idx]->getValuesPropertySet()) {
 			createTreeVtk(prop->getUuid(), polylines[idx]->getUuid(), prop->getTitle().c_str(), VtkEpcCommon::Resqml2Type::PROPERTY);
 		}
 	}
@@ -1269,7 +1261,7 @@ void VtkEpcDocument::searchUnstructuredGrid(const std::string & fileName) {
 		}
 		else {
 			std::string uuidParent = fileName;
-			auto interpretation = unstructuredGrid->getInterpretation();
+			const auto interpretation = unstructuredGrid->getInterpretation();
 			if (interpretation != nullptr) {
 				uuidParent = interpretation->getUuid();
 				createTreeVtk(uuidParent, fileName, interpretation->getTitle().c_str(), VtkEpcCommon::Resqml2Type::INTERPRETATION_3D);
@@ -1278,7 +1270,7 @@ void VtkEpcDocument::searchUnstructuredGrid(const std::string & fileName) {
 		}
 
 		//properties
-		for (auto prop : unstructuredGrid->getValuesPropertySet()) {
+		for (const auto prop : unstructuredGrid->getValuesPropertySet()) {
 			createTreeVtk(prop->getUuid(), unstructuredGrid->getUuid(), prop->getTitle().c_str(), VtkEpcCommon::Resqml2Type::PROPERTY);
 		}
 	}
@@ -1289,7 +1281,7 @@ void VtkEpcDocument::searchTriangulated(const std::string & fileName) {
 	try	{
 		triangulated = repository->getAllTriangulatedSetRepSet();
 	} catch  (const std::exception & e)	{
-		cout << "EXCEPTION in fesapi when call getAllTriangulatedSetRepSet with file: " << fileName << " : " << e.what();
+		cout << "EXCEPTION in fesapi when calling getAllTriangulatedSetRepSet with file: " << fileName << " : " << e.what();
 	}
 	for (size_t iter = 0; iter < triangulated.size(); ++iter)	{
 		if (triangulated[iter]->isPartial()) {
@@ -1309,9 +1301,10 @@ void VtkEpcDocument::searchTriangulated(const std::string & fileName) {
 				epc_error = epc_error + " Partial UUID: (" + triangulated[iter]->getUuid() + ") is not loaded \n";
 				continue;
 			}
-		} else {
+		}
+		else {
 			std::string uuidParent= fileName;
-			auto interpretation = triangulated[iter]->getInterpretation();
+			const auto interpretation = triangulated[iter]->getInterpretation();
 			if (interpretation) {
 				uuidParent = interpretation->getUuid();
 				createTreeVtk(uuidParent, fileName, interpretation->getTitle().c_str(), VtkEpcCommon::Resqml2Type::INTERPRETATION_2D);
@@ -1319,7 +1312,7 @@ void VtkEpcDocument::searchTriangulated(const std::string & fileName) {
 			createTreeVtk(triangulated[iter]->getUuid(), uuidParent, triangulated[iter]->getTitle().c_str(), VtkEpcCommon::Resqml2Type::TRIANGULATED_SET);
 		}
 		//property
-		for (auto prop : triangulated[iter]->getValuesPropertySet()) {
+		for (const auto prop : triangulated[iter]->getValuesPropertySet()) {
 			createTreeVtk(prop->getUuid(), triangulated[iter]->getUuid(), prop->getTitle().c_str(), VtkEpcCommon::Resqml2Type::PROPERTY);
 		}
 	}
@@ -1331,7 +1324,7 @@ void VtkEpcDocument::searchGrid2d(const std::string & fileName) {
 		grid2D = repository->getHorizonGrid2dRepSet();
 	}
 	catch  (const std::exception & e)	{
-		cout << "EXCEPTION in fesapi when call getHorizonGrid2dRepSet with file: " << fileName << " : " << e.what();
+		cout << "EXCEPTION in fesapi when calling getHorizonGrid2dRepSet with file: " << fileName << " : " << e.what();
 	}
 	for (size_t iter = 0; iter < grid2D.size(); ++iter)	{
 		if (grid2D[iter]->isPartial())	{
@@ -1353,7 +1346,7 @@ void VtkEpcDocument::searchGrid2d(const std::string & fileName) {
 			}
 		} 
 		else {
-			auto interpretation = grid2D[iter]->getInterpretation();
+			const auto interpretation = grid2D[iter]->getInterpretation();
 			std::string uuidParent = fileName;
 			if (interpretation) {
 				uuidParent = interpretation->getUuid();
@@ -1362,7 +1355,7 @@ void VtkEpcDocument::searchGrid2d(const std::string & fileName) {
 			createTreeVtk(grid2D[iter]->getUuid(), uuidParent, grid2D[iter]->getTitle().c_str(), VtkEpcCommon::Resqml2Type::GRID_2D);
 		}
 		//property
-		for (auto prop : grid2D[iter]->getValuesPropertySet()) {
+		for (const auto prop : grid2D[iter]->getValuesPropertySet()) {
 			createTreeVtk(prop->getUuid(), grid2D[iter]->getUuid(), prop->getTitle().c_str(), VtkEpcCommon::Resqml2Type::PROPERTY);
 		}
 	}
@@ -1374,7 +1367,7 @@ void VtkEpcDocument::searchIjkGrid(const std::string & fileName) {
 		ijkGrid = repository->getIjkGridRepresentationSet();
 	}
 	catch (const std::exception & e) {
-		cout << "EXCEPTION in fesapi when call getIjkGridRepresentationSet with file: " << fileName << " : " << e.what();
+		cout << "EXCEPTION in fesapi when calling getIjkGridRepresentationSet with file: " << fileName << " : " << e.what();
 	}
 	for (size_t iter = 0; iter < ijkGrid.size(); ++iter) {
 		if (ijkGrid[iter]->isPartial())	{
@@ -1396,7 +1389,7 @@ void VtkEpcDocument::searchIjkGrid(const std::string & fileName) {
 			}
 		}
 		else {
-			auto interpretation = ijkGrid[iter]->getInterpretation();
+			const auto interpretation = ijkGrid[iter]->getInterpretation();
 			std::string uuidParent = fileName;
 			if (interpretation) {
 				uuidParent = interpretation->getUuid();
@@ -1406,7 +1399,7 @@ void VtkEpcDocument::searchIjkGrid(const std::string & fileName) {
 		}
 
 		//property
-		for (auto prop : ijkGrid[iter]->getValuesPropertySet()) {
+		for (const auto prop : ijkGrid[iter]->getValuesPropertySet()) {
 			createTreeVtk(prop->getUuid(), ijkGrid[iter]->getUuid(), prop->getTitle().c_str(), VtkEpcCommon::Resqml2Type::PROPERTY);
 		}
 	}
@@ -1444,7 +1437,7 @@ void VtkEpcDocument::searchWellboreTrajectory(const std::string & fileName) {
 
 		//wellboreFrame
 		for (const auto wellboreFrame: wellboreTrajectory->getWellboreFrameRepresentationSet()) {
-			auto wellboreMarkerFrame = dynamic_cast<RESQML2_NS::WellboreMarkerFrameRepresentation*>(wellboreFrame);
+			const auto wellboreMarkerFrame = dynamic_cast<RESQML2_NS::WellboreMarkerFrameRepresentation*>(wellboreFrame);
 			if (wellboreMarkerFrame == nullptr) { // WellboreFrame
 				createTreeVtk(wellboreFrame->getUuid(), wellboreTrajectory->getUuid(), wellboreFrame->getTitle().c_str(), VtkEpcCommon::Resqml2Type::WELL_FRAME);
 				for (const auto property: wellboreFrame->getValuesPropertySet()) {
@@ -1467,9 +1460,9 @@ void VtkEpcDocument::searchSubRepresentation(const std::string & fileName) {
 		subRepresentationSet = repository->getSubRepresentationSet();
 	}
 	catch  (const std::exception & e)		{
-		epc_error = epc_error + "EXCEPTION in fesapi when call getSubRepresentationSet with file: " + fileName + " : " + e.what() + ".\n";
+		epc_error = epc_error + "EXCEPTION in fesapi when calling getSubRepresentationSet with file: " + fileName + " : " + e.what() + ".\n";
 	}
-	for (auto subRepresentation : subRepresentationSet) {
+	for (const auto subRepresentation : subRepresentationSet) {
 		if (subRepresentation->isPartial()){
 			auto vtkEpcSrc = epcSet->getVtkEpcDocument(subRepresentation->getUuid());
 			if (vtkEpcSrc)	{
@@ -1492,7 +1485,7 @@ void VtkEpcDocument::searchSubRepresentation(const std::string & fileName) {
 		}
 
 		//property
-		for (auto prop : subRepresentation->getValuesPropertySet()) {
+		for (const auto prop : subRepresentation->getValuesPropertySet()) {
 			createTreeVtk(prop->getUuid(), subRepresentation->getUuid(), prop->getTitle().c_str(), VtkEpcCommon::Resqml2Type::PROPERTY);
 		}
 	}
@@ -1504,12 +1497,12 @@ void VtkEpcDocument::searchTimeSeries(const std::string & fileName) {
 		timeSeries = repository->getTimeSeriesSet();
 	}
 	catch  (const std::exception & e)	{
-		cout << "EXCEPTION in fesapi when call getTimeSeriesSet with file: " << fileName << " : " << e.what();
+		cout << "EXCEPTION in fesapi when calling getTimeSeriesSet with file: " << fileName << " : " << e.what();
 	}
 
-	for (auto timeSerie : timeSeries) {
+	for (const auto timeSerie : timeSeries) {
 		auto propSeries = timeSerie->getPropertySet();
-		for (auto prop : propSeries) {
+		for (const auto prop : propSeries) {
 			if (prop->getXmlTag() != "ContinuousPropertySeries") {
 				auto prop_uuid = prop->getUuid();
 				if (uuidIsChildOf.find(prop_uuid) == uuidIsChildOf.end()) {

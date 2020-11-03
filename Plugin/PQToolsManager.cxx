@@ -275,21 +275,19 @@ void PQToolsManager::deletePipelineSource(pqPipelineSource* pipe)
 //----------------------------------------------------------------------------
 void PQToolsManager::loadEpcState(vtkPVXMLElement *, vtkSMProxyLocator *)
 {
-	pqActiveObjects *activeObjects = &pqActiveObjects::instance();
-	auto fesppReader = PQToolsManager::instance()->getFesppReader("EpcDocument");
-	if (fesppReader) {
+	pqPipelineSource* fesppReader = PQToolsManager::instance()->getFesppReader("EpcDocument");
+	if (fesppReader != nullptr) {
 		existPipe(true);
-		activeObjects->setActiveSource(fesppReader);
+		pqActiveObjects::instance().setActiveSource(fesppReader);
 		vtkSMProxy* fesppReaderProxy = fesppReader->getProxy();
 		std::string epcFileName = vtkSMPropertyHelper(fesppReaderProxy, "EpcFileName").GetAsString();
 
 		getPQSelectionPanel()->addFileName(epcFileName);
 
-		auto UuidList = fesppReaderProxy->GetProperty("UuidList");
-		if (UuidList != nullptr) {
-			auto ald = UuidList->FindDomain<vtkSMArraySelectionDomain>();
-			for (unsigned int i=0; i < ald->GetNumberOfStrings(); ++i) {
-				std::string uuid = ald->GetString(i);
+		const unsigned int uuidCount = vtkSMPropertyHelper(fesppReaderProxy, "UuidList").GetNumberOfElements();
+		for (unsigned int i = 0; i < uuidCount; i += 2) {
+			if (vtkSMPropertyHelper(fesppReaderProxy, "UuidList").GetAsInt(i + 1) > 0) {
+				const std::string uuid = vtkSMPropertyHelper(fesppReaderProxy, "UuidList").GetAsString(i);
 				try {
 					getPQSelectionPanel()->checkUuid(uuid);
 				}
