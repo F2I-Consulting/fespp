@@ -135,8 +135,10 @@ void VtkWellboreMarker::createDisk(size_t markerIndex) {
 
 	// disk orientation with dipAngle & dip Direction
 	vtkSmartPointer<vtkTransform> rotation = vtkSmartPointer<vtkTransform>::New();
-	rotation->RotateY(convertToDegree(markerSet[markerIndex]->getDipAngleValue(), markerSet[markerIndex]->getDipAngleUom()));
-	rotation->RotateZ(90 - convertToDegree(markerSet[markerIndex]->getDipDirectionValue(), markerSet[markerIndex]->getDipDirectionUom())); // The strike direction is perpendicular to the dip direction
+	double dipDirectionInDegree = convertToDegree(markerSet[markerIndex]->getDipDirectionValue(), markerSet[markerIndex]->getDipDirectionUom());
+	rotation->RotateZ(-dipDirectionInDegree);
+	double dipAngleInDegree = convertToDegree(markerSet[markerIndex]->getDipAngleValue(), markerSet[markerIndex]->getDipAngleUom());
+	rotation->RotateX(-dipAngleInDegree);
 
 	vtkSmartPointer<vtkTransformPolyDataFilter> transformFilter = vtkSmartPointer<vtkTransformPolyDataFilter>::New();
 	transformFilter->SetInputData(vtkOutput);
