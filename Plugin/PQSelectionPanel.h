@@ -161,7 +161,7 @@ private:
 	/**
 	* @return all names of the currently opened EPC files in the plugin.
 	*/
-	std::vector<std::string> getAllOpenedEpcFileNames() const;
+	std::vector<std::string> getAllOpenedFiles() const;
 	
 	pqTreeWidget *treeWidget;
 	QPushButton *button_Time_After;

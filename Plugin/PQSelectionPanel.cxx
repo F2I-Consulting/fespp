@@ -181,7 +181,7 @@ void PQSelectionPanel::treeCustomMenu(const QPoint & pos)
 			menu->exec(treeWidget->mapToGlobal(pos));
 		}
 		else {
-			for (const auto& file_name : getAllOpenedEpcFileNames()) {
+			for (const auto& file_name : getAllOpenedFiles()) {
 				if (file_name == pickedBlocksEtp) {
 					if (uuidsWellbore.keys(true).size() == uuidsWellbore.size()) {
 						menu->addAction(QString("Unselect all wellbores"), this, [this] { toggleAllWells(false); });
@@ -527,7 +527,7 @@ void PQSelectionPanel::updateTimeSeries(const std::string & uuid, bool newUuid) 
 //********************************* TreeView *********************************
 //----------------------------------------------------------------------------
 
-std::vector<std::string> PQSelectionPanel::getAllOpenedEpcFileNames() const
+std::vector<std::string> PQSelectionPanel::getAllOpenedFiles() const
 {
 	std::vector<std::string> result;
 	for (VtkEpcDocument* vtkEpcDoc : vtkEpcDocumentSet->getAllVtkEpcDocuments()) {
@@ -541,8 +541,8 @@ void PQSelectionPanel::addFileName(const std::string & fileName) {
 	// This is only for performance reason
 	const QSignalBlocker blocker(treeWidget);
 
-	const std::vector<std::string> allOpenedEpcFileNames = getAllOpenedEpcFileNames();
-	if (std::find(allOpenedEpcFileNames.begin(), allOpenedEpcFileNames.end(), fileName) == allOpenedEpcFileNames.end()) {
+	const std::vector<std::string> allOpenedFiles = getAllOpenedFiles();
+	if (std::find(allOpenedFiles.begin(), allOpenedFiles.end(), fileName) == allOpenedFiles.end()) {
 		try {
 			vtkEpcDocumentSet->addEpcDocument(fileName);
 		}

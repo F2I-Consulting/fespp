@@ -190,7 +190,8 @@ void PQToolsManager::showEpcImportFileDialog()
 		activeObjects->setActiveSource(fesppReader);
 
 		vtkSMProxy* fesppReaderProxy = fesppReader->getProxy();
-		vtkSMPropertyHelper(fesppReaderProxy, "EpcFileName").Set(dialog.getSelectedFiles()[0].toStdString().c_str());
+		vtkSMPropertyHelper(fesppReaderProxy, "FilesList").SetStatus(
+					dialog.getSelectedFiles()[0].toStdString().c_str(), 1);
 
 		fesppReaderProxy->UpdateSelfAndAllInputs();
 
@@ -280,10 +281,18 @@ void PQToolsManager::loadEpcState(vtkPVXMLElement *, vtkSMProxyLocator *)
 		existPipe(true);
 		pqActiveObjects::instance().setActiveSource(fesppReader);
 		vtkSMProxy* fesppReaderProxy = fesppReader->getProxy();
-		std::string epcFileName = vtkSMPropertyHelper(fesppReaderProxy, "EpcFileName").GetAsString();
-
-		getPQSelectionPanel()->addFileName(epcFileName);
-
+		const unsigned int FilesCount = vtkSMPropertyHelper(fesppReaderProxy, "FilesList").GetNumberOfElements();
+		for (unsigned int i = 0; i < FilesCount; i += 2) {
+			if (vtkSMPropertyHelper(fesppReaderProxy, "FilesList").GetAsInt(i + 1) > 0) {
+				const std::string file = vtkSMPropertyHelper(fesppReaderProxy, "FilesList").GetAsString(i);
+				try {
+					getPQSelectionPanel()->addFileName(file);
+				}
+				catch (const std::out_of_range&) {
+					vtkOutputWindowDisplayErrorText(std::string("Unknown file " + file).c_str());
+				}
+			}
+		}
 		const unsigned int uuidCount = vtkSMPropertyHelper(fesppReaderProxy, "UuidList").GetNumberOfElements();
 		for (unsigned int i = 0; i < uuidCount; i += 2) {
 			if (vtkSMPropertyHelper(fesppReaderProxy, "UuidList").GetAsInt(i + 1) > 0) {
@@ -317,7 +326,9 @@ void PQToolsManager::newPipelineSource(pqPipelineSource* pipe, const QStringList
 		for (size_t i = 0; i < epcfiles.size(); ++i){
 			pipe->rename(QString(newName.c_str()));
 			// add file to EpcDocument pipe
-			vtkSMPropertyHelper(fesppReaderProxy, "EpcFileName").Set(epcfiles[i].c_str());
+			vtkSMPropertyHelper(fesppReaderProxy, "FilesName").Set(epcfiles[i].c_str());
+				vtkSMPropertyHelper(fesppReaderProxy, "FilesList").SetStatus(
+					epcfiles[i].c_str(), 1);
 			fesppReaderProxy->UpdateSelfAndAllInputs();
 			// add file to Selection Panel
 			newFile(epcfiles[i].c_str());

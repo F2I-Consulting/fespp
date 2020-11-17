@@ -33,7 +33,8 @@ under the License.
 vtkStandardNewMacro(vtkEPCReader)
 
 	//----------------------------------------------------------------------------
-	vtkEPCReader::vtkEPCReader() : FileName(nullptr), EpcFileName(nullptr),
+	vtkEPCReader::vtkEPCReader() : FileName(nullptr),
+								   FilesList(vtkDataArraySelection::New()), 
 								   UuidList(vtkDataArraySelection::New()), Controller(nullptr),
 								   loadedFile(false), fileNameSet(std::vector<std::string>()),
 								   epcDocumentSet(nullptr)
@@ -80,21 +81,28 @@ vtkEPCReader::~vtkEPCReader()
 }
 
 //----------------------------------------------------------------------------
-void vtkEPCReader::SetSubFileName(const char *name)
+int vtkEPCReader::GetFilesListArrayStatus(const char *file)
 {
-	const std::string nameStr(name);
-	const std::string extension = nameStr.length() > 3
-									  ? nameStr.substr(nameStr.length() - 3, 3)
+	return FilesList->ArrayIsEnabled(file);
+}
+
+//----------------------------------------------------------------------------
+void vtkEPCReader::SetFilesList(const char *file, int status)
+{
+	const std::string fileStr(file);
+	FilesList->AddArray(file, status);
+	const std::string extension = fileStr.length() > 3
+									  ? fileStr.substr(fileStr.length() - 3, 3)
 									  : "";
 
 #ifdef WITH_ETP
 	if (isEtpDocument)
 	{
-		const auto it = nameStr.find(":");
+		const auto it = fileStr.find(":");
 		if (it != std::string::npos)
 		{
-			port = nameStr.substr(it + 1);
-			ip = nameStr.substr(0, it);
+			port = fileStr.substr(it + 1);
+			ip = fileStr.substr(0, it);
 		}
 	}
 #endif
@@ -102,12 +110,24 @@ void vtkEPCReader::SetSubFileName(const char *name)
 	if (extension == "epc")
 	{
 		SetFileName("EpcDocument");
-		if (std::find(fileNameSet.begin(), fileNameSet.end(), nameStr) == fileNameSet.end())
+		if (std::find(fileNameSet.begin(), fileNameSet.end(), fileStr) == fileNameSet.end())
 		{
-			fileNameSet.push_back(nameStr);
-			OpenEpcDocument(nameStr);
+			fileNameSet.push_back(fileStr);
+			OpenEpcDocument(fileStr);
 		}
 	}
+}
+
+//----------------------------------------------------------------------------
+int vtkEPCReader::GetNumberOfFilesListArrays()
+{
+	return FilesList->GetNumberOfArrays();
+}
+
+//----------------------------------------------------------------------------
+const char *vtkEPCReader::GetFilesListArrayName(int index)
+{
+	return FilesList->GetArrayName(index);
 }
 
 //----------------------------------------------------------------------------
@@ -182,6 +202,18 @@ void vtkEPCReader::SetUuidList(const char *uuid, int status)
 }
 
 //----------------------------------------------------------------------------
+int vtkEPCReader::GetNumberOfUuidListArrays()
+{
+	return UuidList->GetNumberOfArrays();
+}
+
+//----------------------------------------------------------------------------
+const char *vtkEPCReader::GetUuidListArrayName(int index)
+{
+	return UuidList->GetArrayName(index);
+}
+
+//----------------------------------------------------------------------------
 void vtkEPCReader::setMarkerOrientation(bool orientation)
 {
 #ifdef WITH_ETP
@@ -224,18 +256,6 @@ void vtkEPCReader::setMarkerSize(int size)
 	UpdateDataObject();
 	UpdateInformation();
 	UpdateWholeExtent();
-}
-
-//----------------------------------------------------------------------------
-int vtkEPCReader::GetNumberOfUuidListArrays()
-{
-	return UuidList->GetNumberOfArrays();
-}
-
-//----------------------------------------------------------------------------
-const char *vtkEPCReader::GetUuidListArrayName(int index)
-{
-	return UuidList->GetArrayName(index);
 }
 
 //----------------------------------------------------------------------------
