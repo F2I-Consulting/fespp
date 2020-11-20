@@ -274,39 +274,47 @@ void PQToolsManager::deletePipelineSource(pqPipelineSource* pipe)
 }
 
 //----------------------------------------------------------------------------
-void PQToolsManager::loadEpcState(vtkPVXMLElement *, vtkSMProxyLocator *)
+void PQToolsManager::loadEpcState(vtkPVXMLElement *root, vtkSMProxyLocator *)
 {
-	pqPipelineSource* fesppReader = PQToolsManager::instance()->getFesppReader("EpcDocument");
-	if (fesppReader != nullptr) {
-		existPipe(true);
-		pqActiveObjects::instance().setActiveSource(fesppReader);
-		vtkSMProxy* fesppReaderProxy = fesppReader->getProxy();
-		const unsigned int FilesCount = vtkSMPropertyHelper(fesppReaderProxy, "FilesList").GetNumberOfElements();
-		for (unsigned int i = 0; i < FilesCount; i += 2) {
-			if (vtkSMPropertyHelper(fesppReaderProxy, "FilesList").GetAsInt(i + 1) > 0) {
-				const std::string file = vtkSMPropertyHelper(fesppReaderProxy, "FilesList").GetAsString(i);
-				try {
-					getPQSelectionPanel()->addFileName(file);
-				}
-				catch (const std::out_of_range&) {
-					vtkOutputWindowDisplayErrorText(std::string("Unknown file " + file).c_str());
-				}
-			}
-		}
-		const unsigned int uuidCount = vtkSMPropertyHelper(fesppReaderProxy, "UuidList").GetNumberOfElements();
-		for (unsigned int i = 0; i < uuidCount; i += 2) {
-			if (vtkSMPropertyHelper(fesppReaderProxy, "UuidList").GetAsInt(i + 1) > 0) {
-				const std::string uuid = vtkSMPropertyHelper(fesppReaderProxy, "UuidList").GetAsString(i);
-				try {
-					getPQSelectionPanel()->checkUuid(uuid);
-				}
-				catch (const std::out_of_range&) {
-					vtkOutputWindowDisplayErrorText(std::string("Unknown UUID " + uuid).c_str());
+	vtkPVXMLElement* e = root->FindNestedElementByName("EpcDocument");
+  	if (e) {
+		vtkSMProxy* fesppReaderProxy = getOrCreatePipelineSource()->getProxy();
+		vtkPVXMLElement* f = e->FindNestedElementByName("files");
+		if (f) {
+			for (unsigned cc = 0; cc < f->GetNumberOfNestedElements(); cc++) {
+				vtkPVXMLElement* child = f->GetNestedElement(cc);
+				if (child && child->GetName()) {
+        			if (strcmp(child->GetName(), "name") == 0) {
+						const char* name = child->GetAttributeOrEmpty("value");
+						// add file to EpcDocument pipe
+						vtkSMPropertyHelper(fesppReaderProxy, "FilesList").SetStatus(name, 1);
+						fesppReaderProxy->UpdateSelfAndAllInputs();
+						// add file to Selection Panel
+						newFile(name);
+					}
 				}
 			}
 		}
-	}
-
+	vtkPVXMLElement* u = e->FindNestedElementByName("uuids");
+		if (u) {
+			for (unsigned cc = 0; cc < u->GetNumberOfNestedElements(); cc++) {
+				vtkPVXMLElement* child = u->GetNestedElement(cc);
+				if (child && child->GetName()) {
+        			if (strcmp(child->GetName(), "uuid") == 0) {
+						std::string uuid = child->GetAttributeOrEmpty("value");
+						try {
+							getPQSelectionPanel()->checkUuid(uuid);
+							vtkSMPropertyHelper(fesppReaderProxy, "UuidList").SetStatus(uuid.c_str(), 1);
+							fesppReaderProxy->UpdateSelfAndAllInputs();
+						}
+						catch (const std::out_of_range&) {
+							vtkOutputWindowDisplayErrorText(std::string("Unknown UUID " + uuid).c_str());
+						}
+					}
+				}
+			}
+		}
+  	}
 }
 
 //----------------------------------------------------------------------------
@@ -320,14 +328,12 @@ void PQToolsManager::newPipelineSource(pqPipelineSource* pipe, const QStringList
 	}
 
 	if (!epcfiles.empty()) {
-		/*		QMessageBox::information(NULL, "epc reader", "please! open this files with epc button"); */
 		vtkSMProxy* fesppReaderProxy = getOrCreatePipelineSource()->getProxy();
 		std::string newName = "To delete (Artefact create by File-Open EPC)";
-		for (size_t i = 0; i < epcfiles.size(); ++i){
+		for (size_t i = 0; i < epcfiles.size(); ++i) {
 			pipe->rename(QString(newName.c_str()));
 			// add file to EpcDocument pipe
-			vtkSMPropertyHelper(fesppReaderProxy, "FilesName").Set(epcfiles[i].c_str());
-				vtkSMPropertyHelper(fesppReaderProxy, "FilesList").SetStatus(
+			vtkSMPropertyHelper(fesppReaderProxy, "FilesList").SetStatus(
 					epcfiles[i].c_str(), 1);
 			fesppReaderProxy->UpdateSelfAndAllInputs();
 			// add file to Selection Panel

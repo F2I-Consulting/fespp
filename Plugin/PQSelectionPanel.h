@@ -22,6 +22,7 @@ under the License.
 // include system
 #include <string>
 #include <vector>
+#include <set>
 #include <unordered_map>
 
 #include <vtkSMProxy.h>
@@ -56,6 +57,8 @@ class pqPipelineSource;
 class pqServer;
 class VtkEpcDocumentSet;
 class TreeItem;
+class vtkPVXMLElement;
+class vtkSMProxyLocator;
 
 class PQSelectionPanel : public QDockWidget
 {
@@ -125,6 +128,9 @@ protected slots:
 	void subscribe_slot();
 	void subscribeChildren_slot();
 
+	void loadState(vtkPVXMLElement*, vtkSMProxyLocator*);
+	void saveState(vtkPVXMLElement*);
+
 #ifdef WITH_TEST
 	void handleButtonTest();
 #endif
@@ -180,6 +186,8 @@ private:
 	std::unordered_map<std::string, TreeItem *> uuidItem;
 
 	std::unordered_map<std::string, QMap<time_t, std::string>> ts_timestamp_to_uuid;
+
+	std::set<std::string> uuid_checked;
 
 	QMap<std::string, bool> uuidsWellbore;
 

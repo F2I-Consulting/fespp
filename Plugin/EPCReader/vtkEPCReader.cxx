@@ -89,32 +89,35 @@ int vtkEPCReader::GetFilesListArrayStatus(const char *file)
 //----------------------------------------------------------------------------
 void vtkEPCReader::SetFilesList(const char *file, int status)
 {
-	const std::string fileStr(file);
-	FilesList->AddArray(file, status);
-	const std::string extension = fileStr.length() > 3
+	if (file!="") {
+		const std::string fileStr(file);
+//	FilesList->AddArray(file, status);
+		const std::string extension = fileStr.length() > 3
 									  ? fileStr.substr(fileStr.length() - 3, 3)
 									  : "";
 
 #ifdef WITH_ETP
-	if (isEtpDocument)
-	{
-		const auto it = fileStr.find(":");
-		if (it != std::string::npos)
+		if (isEtpDocument)
 		{
-			port = fileStr.substr(it + 1);
-			ip = fileStr.substr(0, it);
+			const auto it = fileStr.find(":");
+			if (it != std::string::npos)
+			{
+				port = fileStr.substr(it + 1);
+				ip = fileStr.substr(0, it);
+			}
 		}
-	}
 #endif
 
-	if (extension == "epc")
-	{
-		SetFileName("EpcDocument");
-		if (std::find(fileNameSet.begin(), fileNameSet.end(), fileStr) == fileNameSet.end())
+		if (extension == "epc")
 		{
-			fileNameSet.push_back(fileStr);
-			OpenEpcDocument(fileStr);
+			SetFileName("EpcDocument");
+			if (std::find(fileNameSet.begin(), fileNameSet.end(), fileStr) == fileNameSet.end())
+			{
+				fileNameSet.push_back(fileStr);
+				OpenEpcDocument(fileStr);
+			}
 		}
+		SetFilesList("",0);
 	}
 }
 
@@ -139,8 +142,9 @@ int vtkEPCReader::GetUuidListArrayStatus(const char *uuid)
 //----------------------------------------------------------------------------
 void vtkEPCReader::SetUuidList(const char *uuid, int status)
 {
+	if (uuid!="") {
 	const std::string uuidStr(uuid);
-	UuidList->AddArray(uuid, status);
+//	UuidList->AddArray(uuid, status);
 	loadedFile = true;
 	if (uuidStr == "connect")
 	{
@@ -194,11 +198,13 @@ void vtkEPCReader::SetUuidList(const char *uuid, int status)
 #endif
 	}
 
+	SetUuidList("",0);
 	Modified();
 	Update();
 	UpdateDataObject();
 	UpdateInformation();
 	UpdateWholeExtent();
+	}
 }
 
 //----------------------------------------------------------------------------
@@ -282,20 +288,6 @@ int vtkEPCReader::RequestInformation(
 	vtkInformationVector **,
 	vtkInformationVector *)
 {
-	/*
-	if ( !loadedFile ) {
-		const std::string stringFileName = std::string(FileName);
-		if (stringFileName == "EpcDocument") {
-			loadedFile = true;
-			epcDocumentSet = new VtkEpcDocumentSet(idProc, nbProc, VtkEpcCommon::modeVtkEpc::Both);
-		}
-#ifdef WITH_ETP
-		else if(stringFileName == "EtpDocument") {
-			isEtpDocument = true;
-		}
-#endif
-	}
-	*/
 	return 1;
 }
 
