@@ -53,12 +53,9 @@ namespace COMMON_NS
 	class EpcDocument;
 }
 
-class pqPipelineSource;
-class pqServer;
 class VtkEpcDocumentSet;
 class TreeItem;
-class vtkPVXMLElement;
-class vtkSMProxyLocator;
+class PQControler;
 
 class PQSelectionPanel : public QDockWidget
 {
@@ -83,6 +80,8 @@ public:
 	void checkUuid(const std::string & uuid);
 
 	void uuidKO(const std::string & uuid);
+
+//	void controlerConnect(PQControler* controler);
 
 	/**
 	* When a pipeline source is deleted
@@ -143,26 +142,16 @@ private:
 	void updateTimeSeries(const std::string & uuid, bool isnew);
 
 	void constructor();
-	
-	/**
-	* search a pqPipelineSource 
-	*/
-	virtual pqPipelineSource * findPipelineSource(const char *SMName);
-
-	/**
-	* Return the active server
-	*/
-    virtual pqServer * getActiveServer();
 
 	/**
 	* Recursively uncheck all parents of an item (i.e. if all sibling items are also unchecked).
 	*/
-	void recursiveParentUncheck(QTreeWidgetItem* item, vtkSMProxy* fesppReaderProxy);
+	void recursiveParentUncheck(QTreeWidgetItem* item);
 
 	/**
 	* Recursively uncheck all children of an item
 	*/
-	void recursiveChildrenUncheck(QTreeWidgetItem* item, vtkSMProxy* fesppReaderProxy);
+	void recursiveChildrenUncheck(QTreeWidgetItem* item);
 
 	/**
 	* @return all names of the currently opened EPC files in the plugin.
@@ -187,8 +176,6 @@ private:
 
 	std::unordered_map<std::string, QMap<time_t, std::string>> ts_timestamp_to_uuid;
 
-	std::set<std::string> uuid_checked;
-
 	QMap<std::string, bool> uuidsWellbore;
 
 	time_t save_time;
@@ -202,6 +189,8 @@ private:
 	std::string pickedBlocksEtp;
 	std::vector<std::string> uri_subscribe;
 	std::vector<std::string> list_uri_etp;
+
+//	PQControler* controler;
 
 #ifdef WITH_TEST
 	QPushButton *button_test_perf;

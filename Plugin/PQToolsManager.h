@@ -23,11 +23,8 @@ under the License.
 
 class QAction;
 
-class vtkSMProxyLocator;
-class vtkPVXMLElement;
-class pqPipelineSource;
+class PQControler;
 class pqServer;
-class pqView;
 
 /// This singleton class manages the state associated with the packaged
 /// visualizations provided by the Fespp tools.
@@ -37,7 +34,6 @@ class PQToolsManager : public QObject
 
 public:
 	static PQToolsManager* instance();
-
 	~PQToolsManager();
 
 	/// Get the action for the respective operation.
@@ -52,19 +48,6 @@ public:
 	/// Convenience function for getting the main window.
 	QWidget* getMainWindow();
 
-	/// Get the reader objects.  Returns NULL if that reader was never created.
-	pqPipelineSource* getFesppReader(const std::string & pipe_name);
-
-	bool existPipe();
-	void existPipe(bool value);
-
-#ifdef WITH_ETP
-	bool etp_existPipe();
-	void etp_existPipe(bool value);
-#endif
-
-	void newFile(const std::string & fileName);
-
 public slots:
 	void showEpcImportFileDialog();
 #ifdef WITH_ETP
@@ -72,29 +55,16 @@ public slots:
 #endif
 
 protected:
-	pqPipelineSource* findPipelineSource(const char* SMName);
 	void setVisibilityPanelSelection(bool visible);
-
-protected slots:
-	/**
-	 * When a pipeline source is deleted
-	 */
-	void deletePipelineSource(pqPipelineSource*);
-	void loadEpcState(vtkPVXMLElement *root, vtkSMProxyLocator *locator);
-	void newPipelineSource(pqPipelineSource*, const QStringList &);
 
 private:
 	PQToolsManager(QObject* p);
 
-	pqPipelineSource* getOrCreatePipelineSource();
+	PQControler* controler;
 
 	class pqInternal;
 	pqInternal* Internal;
 
-	bool existEpcPipe;
-#ifdef WITH_ETP
-	bool existEtpPipe;
-#endif
 	bool panelSelectionVisible;
 	Q_DISABLE_COPY(PQToolsManager)
 };

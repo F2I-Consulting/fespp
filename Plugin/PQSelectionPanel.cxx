@@ -39,12 +39,7 @@ under the License.
 #include <pqServer.h>
 #include <pqActiveObjects.h>
 
-// include VTK
-#include <vtkSMPropertyHelper.h>
-#include <vtkSMProxyLocator.h>
-#include <vtkPVXMLElement.h>
-#include <vtkCollection.h>
-
+#include "PQControler.h"
 #include "PQToolsManager.h"
 #ifdef WITH_ETP
 #include "PQEtpPanel.h"
@@ -67,17 +62,6 @@ namespace {
 		return nullptr;
 	}
 	#endif
-
-	pqPropertiesPanel* getpqPropertiesPanel() {
-		foreach(QWidget *widget, qApp->topLevelWidgets())
-		{
-			pqPropertiesPanel* panel = widget->findChild<pqPropertiesPanel *>();
-			if (panel != nullptr) {
-				return panel;
-			}
-		}
-		return nullptr;
-	}
 }
 
 //----------------------------------------------------------------------------
@@ -163,9 +147,6 @@ void PQSelectionPanel::constructor() {
 
 	vtkEpcDocumentSet = new VtkEpcDocumentSet(0, 0, VtkEpcCommon::modeVtkEpc::TreeView);
 	etpCreated = false;
-
-	connect(pqApplicationCore::instance(), SIGNAL(stateSaved(vtkPVXMLElement*)), 
-		this, SLOT(saveState(vtkPVXMLElement*)));
 }
 
 PQSelectionPanel::~PQSelectionPanel() {
@@ -173,48 +154,9 @@ PQSelectionPanel::~PQSelectionPanel() {
 	delete vtkEpcDocumentSet;
 }
 
-void PQSelectionPanel::saveState(vtkPVXMLElement* root)
-{
-  	vtkNew<vtkPVXMLElement> files;
-  	files->SetName("files");
-  	for (const auto& file : getAllOpenedFiles()) {
-		vtkNew<vtkPVXMLElement> value;
-		value->SetName("name");
-	  	value->AddAttribute("value", file.c_str());
-		files->AddNestedElement(value);
-  	}
- 	vtkNew<vtkPVXMLElement> uuids;
-	uuids->SetName("uuids");
-  	for (const auto& uuid : uuid_checked) {
-		vtkNew<vtkPVXMLElement> value;
-		value->SetName("uuid");
-  		value->AddAttribute("value", uuid.c_str());
-		uuids->AddNestedElement(value);
-  	}
-  	vtkNew<vtkPVXMLElement> e;
-  	e->SetName("EpcDocument");
-  	e->AddNestedElement(files);
-  	e->AddNestedElement(uuids);
-  	root->AddNestedElement(e.Get(), 1);
-
-	vtkPVXMLElement* ServerManagerState = root->FindNestedElementByName("ServerManagerState");
-  	if (ServerManagerState) {
-		vtkNew<vtkCollection> elements;
-		ServerManagerState->GetElementsByName("ProxyCollection", elements.GetPointer());
-		int nbItems = elements->GetNumberOfItems();
-	    for (int i = 0; i < nbItems; ++i) {
-			vtkPVXMLElement* proxyElement = vtkPVXMLElement::SafeDownCast(elements->GetItemAsObject(i));
-			if (strcmp(proxyElement->GetAttributeOrEmpty("name"), "sources") == 0) {
-				for (unsigned cc = 0; cc < proxyElement->GetNumberOfNestedElements(); cc++) {
-					vtkPVXMLElement* child = proxyElement->GetNestedElement(cc);
-					if (strcmp(child->GetAttributeOrEmpty("name"), "EpcDocument") == 0) {
-						child->SetAttribute("name", "To delete (Artefact create by File-Open EPC)");
-					}
-				}
-			}
-		}
-	}
-}
+//void PQSelectionPanel::controlerConnect(PQControler * control){
+	//controler = control;
+//}
 
 //******************************* ACTIONS ************************************
 
@@ -249,37 +191,9 @@ void PQSelectionPanel::treeCustomMenu(const QPoint & pos)
 //----------------------------------------------------------------------------
 void PQSelectionPanel::toggleAllWells(bool select)
 {
-	pqPipelineSource * source = findPipelineSource("EpcDocument");
-	if (source != nullptr) {
-		pqActiveObjects *activeObjects = &pqActiveObjects::instance();
-		activeObjects->setActiveSource(source);
-
-		pqPipelineSource* fesppReader = PQToolsManager::instance()->getFesppReader("EpcDocument");
-
-		if (fesppReader != nullptr) {
-			activeObjects->setActiveSource(fesppReader);
-
-			// add uuid to property panel
-			vtkSMProxy* fesppReaderProxy = fesppReader->getProxy();
-
-			for (const auto& uuid : uuidsWellbore.keys()) {
-				uuidItem[uuid]->setCheckState(0, select ? Qt::Checked : Qt::Unchecked);
-				vtkSMPropertyHelper(fesppReaderProxy, "UuidList").SetStatus(
-					uuid.c_str(), select ? 1 : 0);
-				if (select > 0){
-					uuid_checked.insert(uuid);
-				} else {
-					uuid_checked.erase(uuid);
-				}
-				uuidsWellbore[uuid] = select;
-			}
-			
-			fesppReaderProxy->UpdatePropertyInformation(fesppReaderProxy->GetProperty("UuidList"));
-			fesppReaderProxy->UpdateVTKObjects();
-			pqPropertiesPanel* propertiesPanel = getpqPropertiesPanel();
-			propertiesPanel->update();
-			propertiesPanel->apply();
-		}
+	for (const auto& uuid : uuidsWellbore.keys()) {
+		uuidItem[uuid]->setCheckState(0, select ? Qt::Checked : Qt::Unchecked);
+		uuidsWellbore[uuid] = select;
 	}
 }
 
@@ -301,7 +215,8 @@ void PQSelectionPanel::subscribeChildren_slot() {
 	uuidItem[pickedBlocksEtp]->setIcon(1, QIcon(QString::fromUtf8(":pqEyeball16.png")));
 }
 
-void PQSelectionPanel::recursiveParentUncheck(QTreeWidgetItem* item, vtkSMProxy* fesppReaderProxy)
+//----------------------------------------------------------------------------
+void PQSelectionPanel::recursiveParentUncheck(QTreeWidgetItem* item)
 {
 	if (item == nullptr) {
 		return;
@@ -326,18 +241,17 @@ void PQSelectionPanel::recursiveParentUncheck(QTreeWidgetItem* item, vtkSMProxy*
 		parent->setData(0, Qt::CheckStateRole, QVariant());
 	}
 	if (parent->getDataObjectInfo() != nullptr) {
-		vtkSMPropertyHelper(fesppReaderProxy, "UuidList").SetStatus(
-			parent->getUuid().c_str(), 0);
-		uuid_checked.erase(parent->getUuid());	
+		PQControler::instance()->setUuidStatus(parent->getUuid(),0);
 		if (uuidsWellbore.contains(parent->getUuid())) {
 			uuidsWellbore[parent->getUuid()] = false;
 		}
 	}
 
-	recursiveParentUncheck(parent, fesppReaderProxy);
+	recursiveParentUncheck(parent);
 }
 
-void PQSelectionPanel::recursiveChildrenUncheck(QTreeWidgetItem* item, vtkSMProxy* fesppReaderProxy)
+//----------------------------------------------------------------------------
+void PQSelectionPanel::recursiveChildrenUncheck(QTreeWidgetItem* item)
 {
 	if (item == nullptr) {
 		return;
@@ -348,13 +262,11 @@ void PQSelectionPanel::recursiveChildrenUncheck(QTreeWidgetItem* item, vtkSMProx
 		auto child = item->child(childIndex);
 		if (child->checkState(0) == Qt::Checked) {
 			child->setCheckState(0, Qt::Unchecked);
-			vtkSMPropertyHelper(fesppReaderProxy, "UuidList").SetStatus(
-				static_cast<TreeItem*>(child)->getUuid().c_str(), 0);
-			uuid_checked.erase(static_cast<TreeItem*>(child)->getUuid());
+			PQControler::instance()->setUuidStatus(static_cast<TreeItem*>(child)->getUuid(),0);
 			if (uuidsWellbore.contains(static_cast<TreeItem*>(child)->getUuid())) {
 				uuidsWellbore[static_cast<TreeItem*>(child)->getUuid()] = false;
 			}
-			recursiveChildrenUncheck(child, fesppReaderProxy);
+			recursiveChildrenUncheck(child);
 		}
 	}
 	if (static_cast<TreeItem*>(item)->getDataObjectInfo() == nullptr ||
@@ -368,66 +280,33 @@ void PQSelectionPanel::recursiveChildrenUncheck(QTreeWidgetItem* item, vtkSMProx
 //----------------------------------------------------------------------------
 void PQSelectionPanel::onItemCheckedUnchecked(QTreeWidgetItem * item, int)
 {
-	pqPipelineSource * source = findPipelineSource("EpcDocument");
-	if (source != nullptr) {
-		pqActiveObjects *activeObjects = &pqActiveObjects::instance();
-		activeObjects->setActiveSource(source);
-
-		pqPipelineSource* fesppReader = PQToolsManager::instance()->getFesppReader("EpcDocument");
-
-		if (fesppReader != nullptr) {
-			activeObjects->setActiveSource(fesppReader);
-
-			// add uuid to property panel
-			vtkSMProxy* fesppReaderProxy = fesppReader->getProxy();
-
-			// Set all uuids to be displayed or removed from display.
-			// Do not push those uuids to server in a message yet.
-			const QSignalBlocker blocker(treeWidget);
-			const std::string uuid = static_cast<TreeItem*>(item)->getUuid();
-			if (item->checkState(0) == Qt::Checked) {
-				while (item->parent() != nullptr && item->parent()->checkState(0) == Qt::Unchecked) {
-					item = item->parent();
-					if (static_cast<TreeItem*>(item)->getDataObjectInfo() != nullptr) {
-						vtkSMPropertyHelper(fesppReaderProxy, "UuidList").SetStatus(
-							static_cast<TreeItem*>(item)->getUuid().c_str(), 1);
-						uuid_checked.insert(static_cast<TreeItem*>(item)->getUuid());
-						if (uuidsWellbore.contains(static_cast<TreeItem*>(item)->getUuid())) {
-							uuidsWellbore[static_cast<TreeItem*>(item)->getUuid()] = true;
-						}
-					}
-					item->setCheckState(0, Qt::Checked);
-				}
-				vtkSMPropertyHelper(fesppReaderProxy, "UuidList").SetStatus(
-					uuid.c_str(), 1);
-				uuid_checked.insert(uuid);	
-				if (uuidsWellbore.contains(uuid)) {
-					uuidsWellbore[uuid] = true;
+	// Set all uuids to be displayed or removed from display.
+	// Do not push those uuids to server in a message yet.
+	const QSignalBlocker blocker(treeWidget);
+	const std::string uuid = static_cast<TreeItem*>(item)->getUuid();
+	if (item->checkState(0) == Qt::Checked) {
+		while (item->parent() != nullptr && item->parent()->checkState(0) == Qt::Unchecked) {
+			item = item->parent();
+			if (static_cast<TreeItem*>(item)->getDataObjectInfo() != nullptr) {
+				PQControler::instance()->setUuidStatus(static_cast<TreeItem*>(item)->getUuid(),1);
+				if (uuidsWellbore.contains(static_cast<TreeItem*>(item)->getUuid())) {
+					uuidsWellbore[static_cast<TreeItem*>(item)->getUuid()] = true;
 				}
 			}
-			else if (item->checkState(0) == Qt::Unchecked) {
-				recursiveChildrenUncheck(item, fesppReaderProxy);
-				vtkSMPropertyHelper(fesppReaderProxy, "UuidList").SetStatus(
-					uuid.c_str(), 0);
-				uuid_checked.erase(uuid);
-				if (uuidsWellbore.contains(uuid)) {
-					uuidsWellbore[uuid] = false;
-				}
-				recursiveParentUncheck(item, fesppReaderProxy);
-			}
-
-			// Populate the uuids set above into the property information
-			fesppReaderProxy->UpdatePropertyInformation(fesppReaderProxy->GetProperty("UuidList"));
-			// Send a single message to the server containing all uuids to be displayed or removed from the display.
-			fesppReaderProxy->UpdateVTKObjects();
-
-			// Update the property panel
-			pqPropertiesPanel* propertiesPanel = getpqPropertiesPanel();
-			propertiesPanel->update();
-			propertiesPanel->apply();
+			item->setCheckState(0, Qt::Checked);
 		}
+		PQControler::instance()->setUuidStatus(uuid,1);
+		if (uuidsWellbore.contains(uuid)) {
+			uuidsWellbore[uuid] = true;
+		}
+	} else if (item->checkState(0) == Qt::Unchecked) {
+		recursiveChildrenUncheck(item);
+		PQControler::instance()->setUuidStatus(uuid,0);
+		if (uuidsWellbore.contains(uuid)) {
+			uuidsWellbore[uuid] = false;
+		}
+		recursiveParentUncheck(item);
 	}
-
 }
 
 //----------------------------------------------------------------------------
@@ -491,53 +370,24 @@ void PQSelectionPanel::updateTimer() {
 }
 
 //----------------------------------------------------------------------------
-void PQSelectionPanel::timeChangedComboBox(int) {
-	pqPipelineSource * source = findPipelineSource("EpcDocument");
-	if (source != nullptr) {
-		pqActiveObjects *activeObjects = &pqActiveObjects::instance();
-		activeObjects->setActiveSource(source);
-
-		pqPipelineSource* fesppReader = PQToolsManager::instance()->getFesppReader("EpcDocument");
-
-		if (fesppReader != nullptr) {
-			activeObjects->setActiveSource(fesppReader);
-
-			// add uuid to property panel
-			vtkSMProxy* fesppReaderProxy = fesppReader->getProxy();
-
-			slider_Time_Step->setValue(time_series->currentIndex());
-
-			time_t time = QDateTime::fromString(time_series->currentText()).toSecsSinceEpoch();
-
-			if (time != save_time) {
-				// remove old time properties
-				if (save_time != 0) {
-					for (const auto& ts : ts_displayed) {
-						vtkSMPropertyHelper(fesppReaderProxy, "UuidList").SetStatus(
-							ts_timestamp_to_uuid[ts][save_time].c_str(), 0);
-						uuid_checked.erase(ts_timestamp_to_uuid[ts][save_time]);
-						vtkSMPropertyHelper(fesppReaderProxy, "UuidList").SetStatus(
-							ts_timestamp_to_uuid[ts][time].c_str(), 1);
-						uuid_checked.insert(ts_timestamp_to_uuid[ts][time]);
-					}
-				}
-				else {
-					// load time properties
-					for (const auto& ts : ts_displayed) {
-						vtkSMPropertyHelper(fesppReaderProxy, "UuidList").SetStatus(
-							ts_timestamp_to_uuid[ts][time].c_str(), 1);
-						uuid_checked.insert(ts_timestamp_to_uuid[ts][time]);
-					}
-				}
-				save_time = time;
+void PQSelectionPanel::timeChangedComboBox(int)
+{
+	slider_Time_Step->setValue(time_series->currentIndex());
+	time_t time = QDateTime::fromString(time_series->currentText()).toSecsSinceEpoch();
+	if (time != save_time) {
+		// remove old time properties
+		if (save_time != 0) {
+			for (const auto& ts : ts_displayed) {
+				PQControler::instance()->setUuidStatus(ts_timestamp_to_uuid[ts][save_time],0);
+				PQControler::instance()->setUuidStatus(ts_timestamp_to_uuid[ts][time],1);
 			}
-			
-			fesppReaderProxy->UpdatePropertyInformation(fesppReaderProxy->GetProperty("UuidList"));
-			fesppReaderProxy->UpdateVTKObjects();
-			pqPropertiesPanel* propertiesPanel = getpqPropertiesPanel();
-			propertiesPanel->update();
-			propertiesPanel->apply();
+		} else {
+			// load time properties
+			for (const auto& ts : ts_displayed) {
+				PQControler::instance()->setUuidStatus(ts_timestamp_to_uuid[ts][time],1);
+			}
 		}
+		save_time = time;
 	}
 }
 
@@ -607,6 +457,7 @@ void PQSelectionPanel::addFileName(const std::string & fileName) {
 	if (std::find(allOpenedFiles.begin(), allOpenedFiles.end(), fileName) == allOpenedFiles.end()) {
 		try {
 			vtkEpcDocumentSet->addEpcDocument(fileName);
+			PQControler::instance()->setFileStatus(fileName, 1);
 		}
 		catch (const std::exception& e) {
 			vtkOutputWindowDisplayDebugText(("Impossible to add file " + fileName + "\nReason:" + e.what()).c_str());
@@ -635,9 +486,9 @@ void PQSelectionPanel::addFileName(const std::string & fileName) {
 }
 
 void PQSelectionPanel::checkUuid(const std::string & uuid) {
-	const QSignalBlocker blocker(treeWidget);
+	//const QSignalBlocker blocker(treeWidget);
 	uuidItem.at(uuid)->setCheckState(0, Qt::Checked);
-	uuid_checked.insert(uuid);
+	//uuid_checked.insert(uuid);
 }
 
 void PQSelectionPanel::populateTreeView(VtkEpcCommon const * vtkEpcCommon)
@@ -684,26 +535,6 @@ std::string PQSelectionPanel::searchSource(const std::string & uuid)
 //****************************************************************************
 
 //************************** Pipeline & Server *******************************
-
-//----------------------------------------------------------------------------
-pqPipelineSource * PQSelectionPanel::findPipelineSource(const char *SMName) {
-	pqApplicationCore *core = pqApplicationCore::instance();
-	pqServerManagerModel *smModel = core->getServerManagerModel();
-
-	QList<pqPipelineSource*> sources = smModel->findItems<pqPipelineSource*>(
-			getActiveServer());
-	foreach(pqPipelineSource *s, sources)
-	{
-		if (strcmp(s->getSMName().toStdString().c_str(), SMName) == 0)
-			return s;
-	}
-	return nullptr;
-}
-
-//----------------------------------------------------------------------------
-pqServer * PQSelectionPanel::getActiveServer() {
-	return pqApplicationCore::instance()->getServerManagerModel()->getItemAtIndex<pqServer*>(0);
-}
 
 //----------------------------------------------------------------------------
 void PQSelectionPanel::uuidKO(const std::string & uuid) {
@@ -753,8 +584,7 @@ void PQSelectionPanel::setEtpTreeView(std::vector<VtkEpcCommon> treeView) {
 				// add file to property
 				vtkSMProxy* fesppReaderProxy = fesppReader->getProxy();
 
-				vtkSMPropertyHelper(fesppReaderProxy, "UuidList").SetStatus(
-						"connect", 0);
+				vtkSMPropertyHelper(fesppReaderProxy, "UuidList").SetStatus("connect", 0);
 				etpCreated = true;
 
 				fesppReaderProxy->UpdatePropertyInformation();

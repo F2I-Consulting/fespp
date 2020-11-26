@@ -91,7 +91,7 @@ void vtkEPCReader::SetFilesList(const char *file, int status)
 {
 	if (file!="") {
 		const std::string fileStr(file);
-//	FilesList->AddArray(file, status);
+		FilesList->AddArray(file, status);
 		const std::string extension = fileStr.length() > 3
 									  ? fileStr.substr(fileStr.length() - 3, 3)
 									  : "";
@@ -144,7 +144,7 @@ void vtkEPCReader::SetUuidList(const char *uuid, int status)
 {
 	if (uuid!="") {
 	const std::string uuidStr(uuid);
-//	UuidList->AddArray(uuid, status);
+	UuidList->AddArray(uuid, status);
 	loadedFile = true;
 	if (uuidStr == "connect")
 	{
