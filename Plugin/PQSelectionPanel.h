@@ -127,9 +127,6 @@ protected slots:
 	void subscribe_slot();
 	void subscribeChildren_slot();
 
-	void loadState(vtkPVXMLElement*, vtkSMProxyLocator*);
-	void saveState(vtkPVXMLElement*);
-
 #ifdef WITH_TEST
 	void handleButtonTest();
 #endif

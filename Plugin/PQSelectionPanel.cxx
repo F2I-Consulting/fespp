@@ -166,23 +166,25 @@ void PQSelectionPanel::treeCustomMenu(const QPoint & pos)
 	if (treeWidget->itemAt(pos) != nullptr) {
 		auto menu = new QMenu;
 		pickedBlocksEtp = static_cast<TreeItem*>(treeWidget->itemAt(pos))->getUuid();
-		auto it = std::find (list_uri_etp.begin(), list_uri_etp.end(), pickedBlocksEtp);
+#ifdef WITH_ETP
+		auto it = std::find(list_uri_etp.begin(), list_uri_etp.end(), pickedBlocksEtp);
 		if (it != uri_subscribe.end() && !list_uri_etp.empty()) {  // subscribe
 			menu->addAction(QString("subscribe/unsubscribe"), this, &PQSelectionPanel::subscribe_slot);
 			menu->exec(treeWidget->mapToGlobal(pos));
+			return;
 		}
-		else {
-			for (const auto& file_name : getAllOpenedFiles()) {
-				if (file_name == pickedBlocksEtp) {
-					if (uuidsWellbore.keys(true).size() == uuidsWellbore.size()) {
-						menu->addAction(QString("Unselect all wellbores"), this, [this] { toggleAllWells(false); });
-					}
-					else {
-						menu->addAction(QString("Select all wellbores"), this, [this] { toggleAllWells(true); });
-					}
-					menu->exec(treeWidget->mapToGlobal(pos));
-					break;
+
+#endif
+		for (const auto& file_name : getAllOpenedFiles()) {
+			if (file_name == pickedBlocksEtp) {
+				if (uuidsWellbore.keys(true).size() == uuidsWellbore.size()) {
+					menu->addAction(QString("Unselect all wellbores"), this, [this] { toggleAllWells(false); });
 				}
+				else {
+					menu->addAction(QString("Select all wellbores"), this, [this] { toggleAllWells(true); });
+				}
+				menu->exec(treeWidget->mapToGlobal(pos));
+				break;
 			}
 		}
 	}
