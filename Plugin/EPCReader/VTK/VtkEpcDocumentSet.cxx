@@ -55,11 +55,11 @@ std::string VtkEpcDocumentSet::visualize(const std::string& uuid)
 			}
 			catch (const std::out_of_range& oor) {
 				badUuid.push_back(uuid);
-				return "Unknown UUID " + uuid + " : " + oor.what();
+				return "Out of range exception when trying to visualize UUID " + uuid + " of file " + uuidToVtkEpc[uuid]->getFileName() + " : " + oor.what();
 			}
 			catch (const std::exception& e) {
 				badUuid.push_back(uuid);
-				return "EXCEPTION in fesapi " + uuidToVtkEpc[uuid]->getFileName() + " : " + e.what();
+				return "EXCEPTION (probably in FESAPI) when trying to visualize UUID " + uuid + " of file " + uuidToVtkEpc[uuid]->getFileName() + " : " + e.what();
 			}
 		}
 		return "";
