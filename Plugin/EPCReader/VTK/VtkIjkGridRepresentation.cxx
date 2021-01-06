@@ -96,7 +96,6 @@ vtkSmartPointer<vtkPoints> VtkIjkGridRepresentation::createPoints()
 			}
 		}
 
-		vtkOutputWindowDisplayDebugText(("Have read and converted to VTK " + std::to_string(kInterfaceNodeCount*(maxKInterfaceIndex - initKInterfaceIndex)) + " XYZ points on Processor id " + std::to_string(getIdProc()) + ". Max processor being id " + std::to_string(getMaxProc()) + ".\n").c_str());
 		return points;
 	}
 	else {
@@ -224,7 +223,7 @@ void VtkIjkGridRepresentation::createVtkUnstructuredGrid(RESQML2_NS::AbstractRep
 		: dynamic_cast<RESQML2_NS::AbstractIjkGridRepresentation*>(ijkOrSubrep);
 
 	if (ijkGridRepresentation == nullptr) {
-		vtkOutputWindowDisplayDebugText("The input data is neither a subrepresentation of an IJK grid nor an entire IJK grid.\n");
+		vtkOutputWindowDisplayErrorText("The input data is neither a subrepresentation of an IJK grid nor an entire IJK grid.\n");
 		return;
 	}
 
@@ -253,8 +252,6 @@ void VtkIjkGridRepresentation::createVtkUnstructuredGrid(RESQML2_NS::AbstractRep
 		initKIndex = 0;
 		maxKIndex = kCellCount;
 
-		vtkOutputWindowDisplayDebugText(("ijkGrid- SubRep idProc-maxProc : " + std::to_string(getIdProc()) + "-" + std::to_string(getMaxProc()) + " Kcell " + std::to_string(initKIndex) + " to " + std::to_string(maxKIndex) + "\n").c_str());
-
 		size_t indice = 0;
 
 		for (uint32_t vtkKCellIndex = initKIndex; vtkKCellIndex < maxKIndex; ++vtkKCellIndex) {
@@ -276,8 +273,6 @@ void VtkIjkGridRepresentation::createVtkUnstructuredGrid(RESQML2_NS::AbstractRep
 		}
 	}
 	else {
-		vtkOutputWindowDisplayDebugText(("Is going to build VTK hexahedra from the converted XYZ points points on Processor id " + std::to_string(getIdProc()) + ". Max processor being id " + std::to_string(getMaxProc()) + ".\n").c_str());
-
 		const uint64_t cellCount = ijkGridRepresentation->getCellCount();
 		std::unique_ptr<bool[]> enabledCells(new bool[cellCount]);
 		if (ijkGridRepresentation->hasEnabledCellInformation())	{
