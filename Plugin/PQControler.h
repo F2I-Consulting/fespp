@@ -39,7 +39,7 @@ class PQControler : public QObject
 
 public:
 	static PQControler* instance();
-	~PQControler();
+	~PQControler() = default;
 
 	void newFile(std::string);
 

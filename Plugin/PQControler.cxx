@@ -94,8 +94,6 @@ PQControler::PQControler(QObject* p)
 	existEtpPipe = false;
 #endif
 
-
-
 	// connection with pipeline
 	connect(pqApplicationCore::instance()->getServerManagerModel(), &pqServerManagerModel::sourceRemoved,
 			this, &PQControler::deletePipelineSource);
@@ -108,13 +106,6 @@ PQControler::PQControler(QObject* p)
 	connect(pqApplicationCore::instance(), SIGNAL(stateLoaded(vtkPVXMLElement*, vtkSMProxyLocator*)),
 			this, SLOT(loadEpcState(vtkPVXMLElement*, vtkSMProxyLocator*)));
 
-}
-
-//----------------------------------------------------------------------------
-PQControler::~PQControler()
-{
-	file_name_set.clear();
-	uuid_checked_set.clear();
 }
 
 //----------------------------------------------------------------------------
@@ -191,8 +182,7 @@ void PQControler::newPipelineSource(pqPipelineSource* pipe, const QStringList &f
 	}
 
 	if (!epcfiles.empty()) {
-		std::string newName = "To delete (Artefact create by File-Open EPC)";
-		pipe->rename(QString(newName.c_str()));
+		pipe->rename(QString("To delete (Artefact create by File-Open EPC)"));
 
 		// creation of a pipe if it does not exist
 		getOrCreatePipelineSource();
