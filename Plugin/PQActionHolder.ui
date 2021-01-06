@@ -13,7 +13,8 @@
   <property name="windowTitle">
    <string>Form</string>
   </property>
-  <action name="actionDataLoadManager">
+
+  <action name="actionEtpFileSelection">
    <property name="icon">
     <iconset resource="Resources/Tools.qrc">
      <normaloff>:/Tools/DataLoadManager.png</normaloff>:/Tools/DataLoadManager.png</iconset>
@@ -25,30 +26,7 @@
     <string>Dialog to open an EPC document</string>
    </property>
   </action>
-  <action name="actionPanelSelection">
-   <property name="icon">
-    <iconset>
-     <normaloff>:/Tools/PanelSelection.png</normaloff>:/Tools/PanelSelection.png</iconset>
-   </property>
-   <property name="text">
-    <string>Panel Selection</string>
-   </property>
-   <property name="toolTip">
-    <string>Selection TreeView</string>
-   </property>
-  </action>
-  <action name="actionPanelMetadata">
-   <property name="icon">
-    <iconset>
-     <normaloff>:/Tools/PanelMetadata.png</normaloff>:/Tools/PanelMetadata.png</iconset>
-   </property>
-   <property name="text">
-    <string>Panel Metadata</string>
-   </property>
-   <property name="toolTip">
-    <string>metadata view</string>
-   </property>
-  </action>
+
   <action name="actionEtpCommand">
    <property name="icon">
     <iconset resource="Resources/Tools.qrc">

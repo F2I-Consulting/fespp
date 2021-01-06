@@ -95,7 +95,7 @@ public:
 	/**
 	* return the vtkEpcDocument which contain source uuid
 	*/
-	const COMMON_NS::DataObjectRepository& getEpcSource() const;
+	const COMMON_NS::DataObjectRepository* getEpcSource() const;
 
 	/**
 	* get the element count for a unit (points/cells) on which property values attached 

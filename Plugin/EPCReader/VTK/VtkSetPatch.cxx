@@ -39,13 +39,14 @@ under the License.
 VtkSetPatch::VtkSetPatch(const std::string & fileName, const std::string & name, const std:: string & uuid, const std::string & uuidParent, COMMON_NS::DataObjectRepository *pck, int idProc, int maxProc):
 	VtkResqml2MultiBlockDataSet(fileName, name, uuid, uuidParent, idProc, maxProc), epcPackage(pck)
 {
-	//	uuidIsChildOf[uuid] = new VtkEpcCommon();
-	RESQML2_NS::PolylineSetRepresentation* polylineSetRep = nullptr;
-	RESQML2_NS::TriangulatedSetRepresentation * triangulatedSetRep = nullptr;
-	COMMON_NS::AbstractObject *object = epcPackage->getDataObjectByUuid(uuid);
+	COMMON_NS::AbstractObject* object = epcPackage->getDataObjectByUuid(uuid);
+	if (object == nullptr) {
+		throw std::logic_error("The object " + uuid + " is null");
+	}
+
 	std::string xmlTag = object->getXmlTag();
-	if (xmlTag == "PolylineSetRepresentation") {
-		polylineSetRep = static_cast<RESQML2_NS::PolylineSetRepresentation*>(object);
+	if (xmlTag == RESQML2_NS::PolylineSetRepresentation::XML_TAG) {
+		RESQML2_NS::PolylineSetRepresentation* polylineSetRep = static_cast<RESQML2_NS::PolylineSetRepresentation*>(object);
 		if (polylineSetRep == nullptr) {
 			cout << "Not found an PolylineSetRepresentation with the right uuid." << endl;
 		}
@@ -57,8 +58,8 @@ VtkSetPatch::VtkSetPatch(const std::string & fileName, const std::string & name,
 		uuidIsChildOf[uuid].setType( VtkEpcCommon::Resqml2Type::POLYLINE_SET);
 		uuidIsChildOf[uuid].setUuid( uuid);
 	}
-	else if (xmlTag == "TriangulatedSetRepresentation") {
-		triangulatedSetRep = static_cast<RESQML2_NS::TriangulatedSetRepresentation*>(object);
+	else if (xmlTag == RESQML2_NS::TriangulatedSetRepresentation::XML_TAG) {
+		RESQML2_NS::TriangulatedSetRepresentation * triangulatedSetRep = static_cast<RESQML2_NS::TriangulatedSetRepresentation*>(object);
 		if (triangulatedSetRep == nullptr) {
 			cout << "Not found an TriangulatedSetRepresentation with the right uuid." << endl;
 		}
@@ -70,15 +71,14 @@ VtkSetPatch::VtkSetPatch(const std::string & fileName, const std::string & name,
 		uuidIsChildOf[uuid].setType(VtkEpcCommon::Resqml2Type::TRIANGULATED_SET);
 		uuidIsChildOf[uuid].setUuid(uuid);
 	}
+	else {
+		throw std::logic_error("The object " + uuid + " is not a PolylineSetRepresentation nor a TriangulatedSetRepresentation");
+	}
 }
 
 //----------------------------------------------------------------------------
 VtkSetPatch::~VtkSetPatch()
 {
-	if (epcPackage != nullptr) {
-		epcPackage = nullptr;
-	}
-
 	for(auto i : uuidToVtkPolylineRepresentation) {
 		for (const auto& elem : i.second) {
 			delete elem;
@@ -91,27 +91,21 @@ VtkSetPatch::~VtkSetPatch()
 			delete elem;
 		}
 	}
-	uuidToVtkTriangulatedRepresentation.clear();
-
-	uuidToVtkProperty.clear();
 }
 
 //----------------------------------------------------------------------------
 void VtkSetPatch::createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, VtkEpcCommon::Resqml2Type type)
 {
-	uuidIsChildOf[uuid].setType( type);
-	uuidIsChildOf[uuid].setUuid( uuid);
-
-	RESQML2_NS::PolylineSetRepresentation* polylineSetRep = nullptr;
-	RESQML2_NS::TriangulatedSetRepresentation * triangulatedSetRep = nullptr;
-	COMMON_NS::AbstractObject* obj = epcPackage->getDataObjectByUuid(getUuid());
+	uuidIsChildOf[uuid].setType(type);
+	uuidIsChildOf[uuid].setUuid(uuid);
 
 	// PROPERTY
 	uuidIsChildOf[uuid].setType( uuidIsChildOf[parent].getType());
 	uuidIsChildOf[uuid].setUuid( uuidIsChildOf[parent].getUuid());
 	if (uuidIsChildOf[parent].getType() == VtkEpcCommon::Resqml2Type::POLYLINE_SET) {
-		if ((obj != nullptr && obj->getXmlTag() == "PolylineRepresentation") || (obj != nullptr && obj->getXmlTag() == "PolylineSetRepresentation")) {
-			polylineSetRep = static_cast<RESQML2_NS::PolylineSetRepresentation*>(obj);
+		RESQML2_NS::PolylineSetRepresentation* polylineSetRep = epcPackage->getDataObjectByUuid<RESQML2_NS::PolylineSetRepresentation>(getUuid());
+		if (polylineSetRep == nullptr) {
+			throw std::logic_error("The object " + uuid + " is not a PolylineSetRepresentation");
 		}
 
 		for (unsigned int patchIndex = 0; patchIndex < polylineSetRep->getPatchCount(); ++ patchIndex) {
@@ -119,13 +113,17 @@ void VtkSetPatch::createTreeVtk(const std::string & uuid, const std::string & pa
 		}
 	}
 	if (uuidIsChildOf[parent].getType() == VtkEpcCommon::Resqml2Type::TRIANGULATED_SET) {
-		if (obj != nullptr && obj->getXmlTag() ==  "TriangulatedSetRepresentation") {
-			triangulatedSetRep = static_cast<RESQML2_NS::TriangulatedSetRepresentation*>(obj);
+		RESQML2_NS::TriangulatedSetRepresentation * triangulatedSetRep = epcPackage->getDataObjectByUuid<RESQML2_NS::TriangulatedSetRepresentation>(getUuid());
+		if (triangulatedSetRep == nullptr) {
+			throw std::logic_error("The object " + uuid + " is not a TriangulatedSetRepresentation");
 		}
 
 		for (unsigned int patchIndex = 0; patchIndex < triangulatedSetRep->getPatchCount(); ++ patchIndex) {
 			uuidToVtkTriangulatedRepresentation[uuidIsChildOf[uuid].getUuid()][patchIndex]->createTreeVtk(uuid, parent, name, type);
 		}
+	}
+	else {
+		throw std::logic_error("The object " + uuid + " is not a PolylineSetRepresentation nor a TriangulatedSetRepresentation");
 	}
 }
 

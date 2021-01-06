@@ -16,57 +16,58 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 -----------------------------------------------------------------------*/
-#ifndef _PQToolsManager_H
-#define _PQToolsManager_H
+#ifndef _PQControler_H
+#define _PQControler_H
+
+#include <string>
+#include <vector>
+#include <set>
 
 #include <QObject>
 
-class QAction;
-
-class PQControler;
+class vtkSMProxyLocator;
+class vtkPVXMLElement;
+class pqPipelineSource;
 class pqServer;
+class pqView;
 
 /// This singleton class manages the state associated with the packaged
 /// visualizations provided by the Fespp tools.
-class PQToolsManager : public QObject
+class PQControler : public QObject
 {
 	Q_OBJECT
 
 public:
-	static PQToolsManager* instance();
-	~PQToolsManager();
+	static PQControler* instance();
+	~PQControler() = default;
 
-	/// Get the action for the respective operation.
-	QAction* actionEtpFileSelection();
-#ifdef WITH_ETP
-	QAction* actionEtpCommand();
-#endif
+	void newFile(std::string);
 
-	/// Convenience function for getting the current server.
-	pqServer* getActiveServer();
+	void setFileStatus(std::string, int);
+	void setUuidStatus(std::string, int);
 
-	/// Convenience function for getting the main window.
-	QWidget* getMainWindow();
+protected slots:
+	// connection with pipeline
+	void deletePipelineSource(pqPipelineSource*);
+	void newPipelineSource(pqPipelineSource*, const QStringList &);
 
-public slots:
-	void showEpcImportFileDialog();
-#ifdef WITH_ETP
-	void showEtpConnectionManager();
-#endif
-
-protected:
-	void setVisibilityPanelSelection(bool visible);
+	// connection with pvsm (load/save state)
+	void loadEpcState(vtkPVXMLElement *root, vtkSMProxyLocator *locator);
+	void saveEpcState(vtkPVXMLElement* root);
 
 private:
-	PQToolsManager(QObject* p);
+	PQControler(QObject* p);
 
-	PQControler* controler;
+	pqPipelineSource* getOrCreatePipelineSource();
+	
+	bool existEpcPipe;
+#ifdef WITH_ETP
+	bool existEtpPipe;
+#endif
+	std::set<std::string> uuid_checked_set;
+	std::set<std::string> file_name_set;
 
-	class pqInternal;
-	pqInternal* Internal;
-
-	bool panelSelectionVisible;
-	Q_DISABLE_COPY(PQToolsManager)
+	Q_DISABLE_COPY(PQControler)
 };
 
 #endif

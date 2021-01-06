@@ -23,8 +23,10 @@ under the License.
 
 // VTK
 #include <vtkInformation.h>
+#include <vtkTubeFilter.h>
 
 // FESPP
+#include "VtkWellboreFrame.h"
 #include "VtkWellboreTrajectoryRepresentationPolyLine.h"
 
 //----------------------------------------------------------------------------
@@ -37,7 +39,7 @@ VtkWellboreTrajectoryRepresentation::VtkWellboreTrajectoryRepresentation(const s
 //----------------------------------------------------------------------------
 VtkWellboreTrajectoryRepresentation::~VtkWellboreTrajectoryRepresentation()
 {
-	for (auto& frame : uuid_to_VtkWellboreFrame) {
+	for (auto frame : uuid_to_VtkWellboreFrame) {
 		delete frame.second;
 	}
 }
@@ -50,6 +52,9 @@ void VtkWellboreTrajectoryRepresentation::createTreeVtk(const std::string & uuid
 		uuid_to_VtkWellboreFrame[uuid] = new VtkWellboreFrame(getFileName(), name, uuid, uuidParent, repositoryRepresentation, repositorySubRepresentation);
 	}
 	else if (type == VtkEpcCommon::Resqml2Type::WELL_MARKER) {
+		uuid_to_VtkWellboreFrame[uuidParent]->createTreeVtk(uuid, uuidParent, name, type);
+	}
+	else if (type == VtkEpcCommon::Resqml2Type::PROPERTY) {
 		uuid_to_VtkWellboreFrame[uuidParent]->createTreeVtk(uuid, uuidParent, name, type);
 	}
 }
@@ -68,6 +73,7 @@ void VtkWellboreTrajectoryRepresentation::visualize(const std::string & uuid)
 	if (!polyline.getOutput()) {
 		polyline.visualize(getUuid());
 	}
+
 	// Add the built VTK vtkPolyData to the multiblock vtk output
 	unsigned int blockCount = vtkOutput->GetNumberOfBlocks();
 	if (blockCount == 0) {
@@ -75,12 +81,14 @@ void VtkWellboreTrajectoryRepresentation::visualize(const std::string & uuid)
 		vtkOutput->GetMetaData(blockCount)->Set(vtkCompositeDataSet::NAME(), polyline.getName().c_str());
 	}
 
-	// add wellbore Marker and/or Frame
+	// Check if we also need to visualize a wellbore Marker
 	VtkEpcCommon uuidInfo = uuid_Informations[uuid];
-	if (uuidInfo.getType() == VtkEpcCommon::Resqml2Type::WELL_MARKER_FRAME ||
-		uuidInfo.getType() == VtkEpcCommon::Resqml2Type::WELL_FRAME ||
-		uuidInfo.getType() == VtkEpcCommon::Resqml2Type::WELL_MARKER) {
-		VtkWellboreFrame* frame = uuidInfo.getType() == VtkEpcCommon::Resqml2Type::WELL_MARKER
+	auto datatype = uuidInfo.getType();
+	if (datatype == VtkEpcCommon::Resqml2Type::WELL_MARKER_FRAME ||
+		datatype == VtkEpcCommon::Resqml2Type::WELL_MARKER ||
+		datatype == VtkEpcCommon::Resqml2Type::WELL_FRAME ||
+		datatype == VtkEpcCommon::Resqml2Type::PROPERTY) {
+		VtkWellboreFrame* frame = datatype == VtkEpcCommon::Resqml2Type::WELL_MARKER || datatype == VtkEpcCommon::Resqml2Type::PROPERTY
 			? uuid_to_VtkWellboreFrame[uuidInfo.getParent()]
 			: uuid_to_VtkWellboreFrame[uuid];
 		frame->visualize(uuid);

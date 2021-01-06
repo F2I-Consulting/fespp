@@ -26,6 +26,8 @@ under the License.
 #include <vtkMultiBlockDataSetAlgorithm.h>
 #include <vtkMultiProcessController.h>
 
+#include "EPCReaderModule.h"
+
 #ifdef WITH_ETP
 	#include "etp/VtkEtpDocument.h"
 #endif
@@ -35,8 +37,8 @@ class vtkDataArraySelection;
 
 /**
  * A VTK reader for EPC document.
-*/
-class vtkEPCReader : public vtkMultiBlockDataSetAlgorithm
+ */
+class EPCREADER_EXPORT vtkEPCReader : public vtkMultiBlockDataSetAlgorithm
 {
 public:
 	vtkTypeMacro(vtkEPCReader, vtkMultiBlockDataSetAlgorithm)
@@ -48,15 +50,21 @@ public:
 	vtkSetStringMacro(FileName)
 	vtkGetStringMacro(FileName)
 
-	void SetSubFileName(const char* name);
-	vtkGetStringMacro(EpcFileName)
-
 	// Description:
 	// Get/set the multi process controller to use for coordinated reads.
 	// By default, set to the global controller.
 	vtkGetObjectMacro(Controller, vtkMultiProcessController)
 	vtkSetObjectMacro(Controller, vtkMultiProcessController)
 
+	vtkGetObjectMacro(FilesList, vtkDataArraySelection)
+	void SetFilesList(const char* file, int status);
+	
+	// Used by Paraview, derived from the attribute UuidList
+	int GetFilesListArrayStatus(const char* name);
+	int GetNumberOfFilesListArrays();
+	const char* GetFilesListArrayName(int index);
+
+	vtkGetObjectMacro(UuidList, vtkDataArraySelection)
 	void SetUuidList(const char* name, int status);
 	
 	// Used by Paraview, derived from the attribute UuidList
@@ -76,9 +84,10 @@ private:
 	vtkEPCReader(const vtkEPCReader&);
 	~vtkEPCReader() final;
 
+	//  pipename
 	char* FileName;
-	char* EpcFileName;
 
+	vtkDataArraySelection* FilesList;
 	vtkDataArraySelection* UuidList;
 
 	vtkMultiProcessController* Controller;

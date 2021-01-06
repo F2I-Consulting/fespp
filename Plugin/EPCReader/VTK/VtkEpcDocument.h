@@ -21,12 +21,12 @@ under the License.
 
 #include <vtkDataArray.h>
 
-// Fesapi namespaces
-#include <fesapi/nsDefinitions.h>
-#include <fesapi/common/DataObjectRepository.h>
-
 #include "VtkResqml2MultiBlockDataSet.h"
 #include "VtkEpcDocumentSet.h"
+
+namespace common {
+	class DataObjectRepository;
+}
 
 class VtkIjkGridRepresentation;
 class VtkUnstructuredGridRepresentation;
@@ -172,7 +172,7 @@ public:
 	*/
 	std::string getError() ;
 
-	const COMMON_NS::DataObjectRepository& getDataObjectRepository() const;
+	const common::DataObjectRepository* getDataObjectRepository() const;
 
 private:
 	void addGrid2DTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name);
@@ -211,7 +211,7 @@ private:
 	*/
 	void createTreeVtk(const std::string & uuid, const std::string & parent, const std::string & name, VtkEpcCommon::Resqml2Type resqmlType);
 
-	COMMON_NS::DataObjectRepository repository;
+	common::DataObjectRepository* repository;
 
 	std::unordered_map<std::string, VtkGrid2DRepresentation*> uuidToVtkGrid2DRepresentation;
 	std::unordered_map<std::string, VtkPolylineRepresentation*> uuidToVtkPolylineRepresentation;

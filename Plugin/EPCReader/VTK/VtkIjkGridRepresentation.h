@@ -156,14 +156,12 @@ private:
 
 	std::string lastProperty;
 
-	int iCellCount;
-	int jCellCount;
-	int kCellCount;
-	int initKIndex;
-	int maxKIndex;
+	uint32_t iCellCount;
+	uint32_t jCellCount;
+	uint32_t kCellCount;
+	uint32_t initKIndex;
+	uint32_t maxKIndex;
 
 	bool isHyperslabed;
-
-	vtkSmartPointer<vtkPoints> points;
 };
 #endif

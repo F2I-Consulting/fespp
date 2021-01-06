@@ -75,21 +75,23 @@ public:
 	 * @returns	The Uuid.
 	 */
 	const std::string& getUuid() const { return uuid; }
+
 	/**
 	 * Set the Uuid when creating a new dataobject
 	 */
-	void setUuid(const std::string &);
-	
+	void setUuid(const std::string & value) { uuid = value; }
+
 	/**
 	 * Gets the parent Uuid.
 	 *
 	 * @returns	The parent Uuid.
 	 */
 	const std::string& getParent() const { return parent; }
+	
 	/**
 	 * Set the parent Uuid when creating a new dataobject
 	 */
-	void setParent(const std::string &);
+	void setParent(const std::string & value) { parent = value; }
 
 	/**
 	 * Gets the name/title Uuid.
@@ -97,10 +99,11 @@ public:
 	 * @returns	The name/title Uuid.
 	 */
 	const std::string& getName() const { return name; }
+
 	/**
 	 * Set the name/title Uuid when creating a new dataobject
 	 */
-	void setName(const std::string &);
+	void setName(const std::string & value) { name = value; }
 
 	/**
 	 * Gets the type Uuid.
@@ -108,10 +111,11 @@ public:
 	 * @returns	The type Uuid.
 	 */
 	Resqml2Type	getType() const { return myType; }
+	
 	/**
 	 * Set the type Uuid when creating a new dataobject
 	 */
-	void setType(Resqml2Type);
+	void setType(Resqml2Type value) { myType = value; }
 
 	/**
 	 * Gets the parent type Uuid.
@@ -119,10 +123,11 @@ public:
 	 * @returns	The parent type Uuid.
 	 */
 	Resqml2Type	getParentType() const { return parentType; }
+
 	/**
 	 * Set the parent type Uuid when creating a new dataobject
 	 */
-	void setParentType(Resqml2Type);
+	void setParentType(Resqml2Type value) { parentType = value; }
 
 	/**
 	 * Gets the Time Index Uuid.
@@ -130,10 +135,11 @@ public:
 	 * @returns	The Time Index Uuid, if no time index -1 value
 	 */
 	int	getTimeIndex() const { return timeIndex; }
+	
 	/**
 	 * Set the Time Index Uuid when creating a new dataobject
 	 */
-	void setTimeIndex(int);
+	void setTimeIndex(int value) { timeIndex = value; }
 
 	/**
 	 * Gets the timestamp Uuid.
@@ -141,10 +147,11 @@ public:
 	 * @returns	The timestamp Uuid, if no time index -1 value
 	 */
 	time_t	getTimestamp() const { return timestamp; }
+
 	/**
 	 * Set the timestamp Uuid when creating a new dataobject
 	 */
-	void setTimestamp(time_t);
+	void setTimestamp(time_t value) { timestamp = value; }
 
 private:
 	std::string	uuid;

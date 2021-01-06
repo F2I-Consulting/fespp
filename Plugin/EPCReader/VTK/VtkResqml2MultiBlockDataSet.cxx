@@ -22,10 +22,8 @@ under the License.
 
 //----------------------------------------------------------------------------
 VtkResqml2MultiBlockDataSet::VtkResqml2MultiBlockDataSet(const std::string & fileName, const std::string & name, const std::string & uuid, const std::string & uuidParent, int idProc, int maxProc):
-	VtkAbstractObject(fileName, name, uuid, uuidParent, idProc, maxProc)
-{
-	vtkOutput = vtkSmartPointer<vtkMultiBlockDataSet>::New();
-}
+	VtkAbstractObject(fileName, name, uuid, uuidParent, idProc, maxProc), vtkOutput(vtkSmartPointer<vtkMultiBlockDataSet>::New())
+{}
 
 //----------------------------------------------------------------------------
 vtkSmartPointer<vtkMultiBlockDataSet> VtkResqml2MultiBlockDataSet::getOutput() const

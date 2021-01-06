@@ -19,9 +19,10 @@ under the License.
 #ifndef __VtkEpcDocumentSet_h
 #define __VtkEpcDocumentSet_h
 
-#include "VtkEpcCommon.h"
+#include "EPCReaderModule.h"
 
 // include system
+#include <string>
 #include <unordered_map>
 #include <vector>
 
@@ -29,11 +30,13 @@ under the License.
 #include <vtkSmartPointer.h>
 #include <vtkMultiBlockDataSet.h>
 
+#include "VtkEpcCommon.h"
+
 class VtkEpcDocument;
 
 /** @brief	The epc document set representation (vtkMultiBlockDataSet)
  */
-class VtkEpcDocumentSet
+class EPCREADER_EXPORT VtkEpcDocumentSet
 {
 public:
 	/**
@@ -63,7 +66,7 @@ public:
 	 * 
 	 * @param 	fileName	epc document fileName
 	 */
-	void visualizeFullWell(std::string fileName);
+	void visualizeFullWell(const std::string& fileName);
 	
 	/**
 	 * unload a data object in VTK object
@@ -77,7 +80,7 @@ public:
 	 * 
 	 * @param 	fileName	epc document fileName
 	 */	
-	void unvisualizeFullWell(std::string fileName);
+	void unvisualizeFullWell(const std::string& fileName);
 
 	/**
 	* get type for a uuid

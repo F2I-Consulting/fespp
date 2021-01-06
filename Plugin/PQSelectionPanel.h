@@ -22,6 +22,7 @@ under the License.
 // include system
 #include <string>
 #include <vector>
+#include <set>
 #include <unordered_map>
 
 #include <vtkSMProxy.h>
@@ -52,10 +53,9 @@ namespace COMMON_NS
 	class EpcDocument;
 }
 
-class pqPipelineSource;
-class pqServer;
 class VtkEpcDocumentSet;
 class TreeItem;
+class PQControler;
 
 class PQSelectionPanel : public QDockWidget
 {
@@ -80,6 +80,8 @@ public:
 	void checkUuid(const std::string & uuid);
 
 	void uuidKO(const std::string & uuid);
+
+//	void controlerConnect(PQControler* controler);
 
 	/**
 	* When a pipeline source is deleted
@@ -137,31 +139,21 @@ private:
 	void updateTimeSeries(const std::string & uuid, bool isnew);
 
 	void constructor();
-	
-	/**
-	* search a pqPipelineSource 
-	*/
-	virtual pqPipelineSource * findPipelineSource(const char *SMName);
-
-	/**
-	* Return the active server
-	*/
-    virtual pqServer * getActiveServer();
 
 	/**
 	* Recursively uncheck all parents of an item (i.e. if all sibling items are also unchecked).
 	*/
-	void recursiveParentUncheck(QTreeWidgetItem* item, vtkSMProxy* fesppReaderProxy);
+	void recursiveParentUncheck(QTreeWidgetItem* item);
 
 	/**
 	* Recursively uncheck all children of an item
 	*/
-	void recursiveChildrenUncheck(QTreeWidgetItem* item, vtkSMProxy* fesppReaderProxy);
+	void recursiveChildrenUncheck(QTreeWidgetItem* item);
 
 	/**
 	* @return all names of the currently opened EPC files in the plugin.
 	*/
-	std::vector<std::string> getAllOpenedEpcFileNames() const;
+	std::vector<std::string> getAllOpenedFiles() const;
 	
 	pqTreeWidget *treeWidget;
 	QPushButton *button_Time_After;
@@ -194,6 +186,8 @@ private:
 	std::string pickedBlocksEtp;
 	std::vector<std::string> uri_subscribe;
 	std::vector<std::string> list_uri_etp;
+
+//	PQControler* controler;
 
 #ifdef WITH_TEST
 	QPushButton *button_test_perf;

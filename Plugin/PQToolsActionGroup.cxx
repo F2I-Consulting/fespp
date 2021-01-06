@@ -29,8 +29,7 @@ PQToolsActionGroup::PQToolsActionGroup(QObject* p)
 		return;
 	}
 
-	addAction(manager->actionDataLoadManager());
-//	addAction(manager->actionPanelMetadata());
+	addAction(manager->actionEtpFileSelection());
 #ifdef WITH_ETP
 	addAction(manager->actionEtpCommand());
 #endif // ETP support
