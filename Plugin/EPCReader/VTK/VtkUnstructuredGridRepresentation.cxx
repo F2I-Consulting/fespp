@@ -106,19 +106,20 @@ void VtkUnstructuredGridRepresentation::visualize(const std::string & uuid)
 				}
 
 				if (!isOptimizedCell) {
-					vtkSmartPointer<vtkCellArray> faces = vtkSmartPointer<vtkCellArray>::New();
+					vtkSmartPointer<vtkIdList> idList = vtkSmartPointer<vtkIdList>::New();
+
+					// For polyhedron cell, a special ptIds input format is required : (numCellFaces, numFace0Pts, id1, id2, id3, numFace1Pts, id1, id2, id3, ...)
+					idList->InsertNextId(localFaceCount);
 					for (ULONG64 localFaceIndex = 0; localFaceIndex < localFaceCount; ++localFaceIndex) {
 						const unsigned int localNodeCount = unstructuredGridRep->getNodeCountOfFaceOfCell(cellIndex, localFaceIndex);
-						std::unique_ptr<vtkIdType[]> nodes(new vtkIdType[localNodeCount]);
+						idList->InsertNextId(localNodeCount);
 						ULONG64 const * nodeIndices = unstructuredGridRep->getNodeIndicesOfFaceOfCell(cellIndex, localFaceIndex);
 						for (unsigned int i = 0; i < localNodeCount; ++i) {
-							nodes[i] = nodeIndices[i];
+							idList->InsertNextId(nodeIndices[i]);
 						}
-						faces->InsertNextCell(localNodeCount, nodes.get());
 					}
-					vtkOutput->InsertNextCell(VTK_POLYHEDRON, nodeCount, pointIds.get(), unstructuredGridRep->getFaceCountOfCell(cellIndex), faces->GetPointer());
 
-					faces = nullptr;
+					vtkOutput->InsertNextCell(VTK_POLYHEDRON, idList);
 				}
 
 			}
