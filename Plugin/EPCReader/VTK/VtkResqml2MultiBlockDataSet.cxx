@@ -18,6 +18,8 @@ under the License.
 -----------------------------------------------------------------------*/
 #include "VtkResqml2MultiBlockDataSet.h"
 
+#include <limits>
+
 #include <vtkDataObjectTreeIterator.h>
 
 //----------------------------------------------------------------------------
