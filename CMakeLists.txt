@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 3.12.0)
 cmake_policy(SET CMP0048 NEW)
 
 project(Fespp
-	VERSION 2.3.1
+	VERSION 3.0.0
 	DESCRIPTION "Paraview plugin for importing EPC documents"
 	HOMEPAGE_URL "https://github.com/F2I-Consulting/fespp"
 	LANGUAGES C CXX
@@ -19,7 +19,18 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}"
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}")
 set(BUILD_SHARED_LIBS ON)
 
-# Find ParaView. This will bring in ParaView's CMake API and imported targets.
+# Find ParaView. This will bring in ParaView's CMake API and imported targets.cmake_minimum_required(VERSION 3.14)
+set(ParaView_DIR "/home/cedric/ParaView/ParaView-v5.10.0-RC1/build")
+set(VTK_DIR "/home/cedric/ParaView/ParaView-v5.10.0-RC1/build")
+
+find_package(VTK COMPONENTS
+PythonUsed
+ParallelMPI
+PythonInterpreter
+WebCore
+WebGLExporter
+)
+
 find_package(ParaView REQUIRED)
 
 # Scan the plugin file in order to set up internal data structures for building plugins

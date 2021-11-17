@@ -50,77 +50,17 @@ if (PARAVIEW_BUILD_QT_GUI)
 	# -----------------------------------------------------------------------------
 	# Identify all QT related source files
 	# -----------------------------------------------------------------------------
-	file (GLOB FESPP_PQ_HEADERS PQ*.h)
-	file (GLOB FESPP_PQ_SOURCES PQ*.cxx)
-	file (GLOB FESPP_TREE_HEADERS Tree*.h)
-	file (GLOB FESPP_TREE_SOURCES Tree*.cxx)
-	file (GLOB FESPP_FORMS *.ui)
-	file (GLOB FESPP_RESOURCES Resources/*.qrc)
-	if (NOT WITH_ETP)
-		file (GLOB FESPP_PQ_HEADERS_ETP PQEtp*.h)
-		file (GLOB FESPP_PQ_SOURCES_ETP PQEtp*.cxx)
-		file (GLOB FESPP_FORMS_ETP PQEtp*.ui)
-		file (GLOB FESPP_RESOURCES_ETP Resources/PQEtp*.qrc)
-		list (REMOVE_ITEM FESPP_PQ_HEADERS ${FESPP_PQ_HEADERS_ETP})
-		list (REMOVE_ITEM FESPP_PQ_SOURCES ${FESPP_PQ_SOURCES_ETP})
-		list (REMOVE_ITEM FESPP_FORMS ${FESPP_FORMS_ETP})
-		list (REMOVE_ITEM FESPP_RESOURCES ${FESPP_RESOURCES_ETP})
-	endif ()
-
 	if (WIN32)	
 		find_package(Qt5 REQUIRED COMPONENTS Widgets)
 	else (WIN32)
 		find_package(Qt5 REQUIRED COMPONENTS Widgets X11Extras)
 	endif (WIN32)
-
-	paraview_plugin_add_dock_window(
-		CLASS_NAME PQSelectionPanel
-		INTERFACES IFACES
-		SOURCES IFACE_SRCS
-	)
-	
-	paraview_plugin_add_action_group (
-		CLASS_NAME PQToolsActionGroup
-		GROUP_NAME "ToolBar/Fespp"
-		INTERFACES IFACES3
-		SOURCES IFACE3_SRCS
-	)
-	
-	set (interfaces
-		${IFACES}
-		${IFACES3}
-	)
-	set (FESPP_QT_SOURCES
-		${FESPP_PQ_HEADERS}
-		${FESPP_PQ_SOURCES}
-		${FESPP_TREE_HEADERS}
-		${FESPP_TREE_SOURCES}
-		${IFACE_SRCS} 
-		${IFACE3_SRCS}
-	)
-	set (sources
-		${FESPP_NO_QT_SOURCES}
-		${FESPP_QT_SOURCES})
-	
-	if (WITH_ETP)
-		paraview_plugin_add_dock_window (
-			CLASS_NAME PQEtpPanel
-			INTERFACES IFACES4
-			SOURCES IFACE4_SRCS
-		)		
-		list (APPEND interfaces ${IFACES4})
-		list (APPEND FESPP_QT_SOURCES ${IFACE4_SRCS})
-	endif ()
 	
 	paraview_add_plugin(${PROJECT_NAME}
 		VERSION ${PROJECT_VERSION}
-		UI_INTERFACES ${interfaces}
-		UI_RESOURCES ${FESPP_RESOURCES}
-		UI_FILES ${FESPP_FORMS}
-		SOURCES ${FESPP_QT_SOURCES}
-		#SERVER_MANAGER_XML EPCReader.xml
-		MODULES EPCReader
-		MODULE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/EPCReader/vtk.module"
+		SOURCES ${FESPP_NO_QT_SOURCES}
+		MODULES EnergisticsPlugin
+		MODULE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/EnergisticsPlugin/vtk.module"
 		XML_DOCUMENTATION OFF
 	)
 
@@ -130,10 +70,9 @@ else (PARAVIEW_BUILD_QT_GUI)
 	paraview_add_plugin(${PROJECT_NAME}
 		REQUIRED_ON_SERVER
 		VERSION ${PROJECT_VERSION}
-		SOURCES ${FESPP_QT_SOURCES}
-		#SERVER_MANAGER_XML EPCReader.xml
-		MODULES EPCReader
-		MODULE_FILES EPCReader/vtk.module
+		SOURCES ${FESPP_NO_QT_SOURCES}
+		MODULES EnergisticsPlugin
+		MODULE_FILES EnergisticsPlugin/vtk.module
 		XML_DOCUMENTATION OFF)
 
 endif (PARAVIEW_BUILD_QT_GUI)

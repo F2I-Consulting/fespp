@@ -1,6 +1,0 @@
-<RCC>
-  <qresource prefix="/Tools" >
-    <file>DataLoadManager.png</file>
-    <file>EtpConnect.png</file>
-  </qresource>
-</RCC>
