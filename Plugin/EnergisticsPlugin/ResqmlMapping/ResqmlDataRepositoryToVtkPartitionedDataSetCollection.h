@@ -33,7 +33,7 @@ namespace common
     class DataObjectRepository;
 }
 
-namespace RESQML2_NS
+namespace resqml2
 {
     class AbstractRepresentation;
 }
@@ -44,7 +44,7 @@ namespace RESQML2_NS
 class ResqmlDataRepositoryToVtkPartitionedDataSetCollection : public vtkPartitionedDataSetCollection
 {
 public:
-    ResqmlDataRepositoryToVtkPartitionedDataSetCollection(vtkMultiProcessController *);
+    ResqmlDataRepositoryToVtkPartitionedDataSetCollection(int proc_number, int max_proc);
     ~ResqmlDataRepositoryToVtkPartitionedDataSetCollection() final;
     
 	void addFile(const char* file, int status);
@@ -64,20 +64,22 @@ private:
     std::string searchFaultPolylines(const std::string &fileName);
     std::string searchHorizonPolylines(const std::string &fileName);
     std::string searchUnstructuredGrid(const std::string &fileName);
-    std::string searchTriangulated(const std::string &fileName);
+    std::string searchFaultTriangulated(const std::string &fileName);
+    std::string searchHorizonTriangulated(const std::string &fileName);
     std::string searchGrid2d(const std::string &fileName);
     std::string searchIjkGrid(const std::string &fileName);
     std::string searchWellboreTrajectory(const std::string &fileName);
     std::string searchSubRepresentation(const std::string &fileName);
     std::string searchTimeSeries(const std::string &fileName);
-    void searchRepresentations(std::vector<RESQML2_NS::AbstractRepresentation *> representation_set);
+    std::string searchRepresentations(resqml2::AbstractRepresentation * representation);
 
 	char* FileName; // pipename
 
     bool markerOrientation; 
     int markerSize;
 
- 	vtkMultiProcessController *controler;
+ 	int proc_number;
+    int max_proc;
     
     common::DataObjectRepository *repository;
 

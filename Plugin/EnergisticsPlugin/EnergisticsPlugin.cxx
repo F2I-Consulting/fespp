@@ -37,39 +37,38 @@ vtkCxxSetObjectMacro(EnergisticsPlugin, Controller, vtkMultiProcessController);
 
 //----------------------------------------------------------------------------
 EnergisticsPlugin::EnergisticsPlugin() : FileNames({}),
-										 Controller(nullptr),
-										 AssemblyTag(0),
-										 MarkerOrientation(true),
-										 MarkerSize(10)
+                                         Controller(nullptr),
+                                         AssemblyTag(0),
+                                         MarkerOrientation(true),
+                                         MarkerSize(10)
 
 {
-	//SetNumberOfInputPorts(0);
-	//SetNumberOfOutputPorts(1);
+  SetNumberOfInputPorts(0);
+  SetNumberOfOutputPorts(1);
 
-	this->SetController(vtkMultiProcessController::GetGlobalController());
+  this->SetController(vtkMultiProcessController::GetGlobalController());
 
-  	vtkMultiProcessController *controller = vtkMultiProcessController::GetGlobalController();
+  vtkMultiProcessController *controller = vtkMultiProcessController::GetGlobalController();
 
-
-	this->repository = new ResqmlDataRepositoryToVtkPartitionedDataSetCollection(this->Controller);
+  this->repository = new ResqmlDataRepositoryToVtkPartitionedDataSetCollection(this->Controller->GetLocalProcessId(), this->Controller->GetNumberOfProcesses());
 }
 
 //----------------------------------------------------------------------------
 EnergisticsPlugin::~EnergisticsPlugin()
 {
-	this->SetController(nullptr);
-	delete this->repository;
+  this->SetController(nullptr);
+  delete this->repository;
 }
 
 //----------------------------------------------------------------------------
 int EnergisticsPlugin::FillOutputPortInformation(int vtkNotUsed(port), vtkInformation *info)
 {
-	info->Set(vtkDataObject::DATA_TYPE_NAME(), "vtkPartitionedDataSetCollection");
-	return 1;
+  info->Set(vtkDataObject::DATA_TYPE_NAME(), "vtkPartitionedDataSetCollection");
+  return 1;
 }
 
 //----------------------------------------------------------------------------
-void EnergisticsPlugin::SetFileName(const char* fname)
+void EnergisticsPlugin::SetFileName(const char *fname)
 {
   if (fname == nullptr)
   {
@@ -92,7 +91,7 @@ void EnergisticsPlugin::SetFileName(const char* fname)
 }
 
 //----------------------------------------------------------------------------
-void EnergisticsPlugin::AddFileName(const char* fname)
+void EnergisticsPlugin::AddFileName(const char *fname)
 {
   if (fname != nullptr && !this->FileNames.insert(fname).second)
   {
@@ -111,7 +110,7 @@ void EnergisticsPlugin::ClearFileNames()
 }
 
 //----------------------------------------------------------------------------
-const char* EnergisticsPlugin::GetFileName(int index) const
+const char *EnergisticsPlugin::GetFileName(int index) const
 {
   if (this->FileNames.size() > index)
   {
@@ -128,52 +127,52 @@ int EnergisticsPlugin::GetNumberOfFileNames() const
 }
 
 /*****************************************
-	*  OLD => DELETE ?
+  *  OLD => DELETE ?
 //----------------------------------------------------------------------------
 int vtkEPCReader::GetFilesListArrayStatus(const char *file)
 {
-	return FilesList->ArrayIsEnabled(file);
+  return FilesList->ArrayIsEnabled(file);
 }
 
 //----------------------------------------------------------------------------
 int vtkEPCReader::GetNumberOfFilesListArrays()
 {
-	return FilesList->GetNumberOfArrays();
+  return FilesList->GetNumberOfArrays();
 }
 
 //----------------------------------------------------------------------------
 const char *vtkEPCReader::GetFilesListArrayName(int index)
 {
-	return FilesList->GetArrayName(index);
+  return FilesList->GetArrayName(index);
 }
 
 //----------------------------------------------------------------------------
 void vtkEPCReader::SetFilesList(const char *file, int status)
 {
-	if (status)
-	{
-		if (strlen(file) != 0) {
-			std::string extension = vtksys::SystemTools::GetFilenameExtension(std::string(fileName));
-			
-			// const std::string fileStr(file);
-			// FilesList->AddArray(file, status);
-			// const std::string extension = std::string(fileName).length() > 3
-			// 						  ? std::string(fileName).substr(std::string(fileName).length() - 3, 3)
-			// 						  : "";
+  if (status)
+  {
+    if (strlen(file) != 0) {
+      std::string extension = vtksys::SystemTools::GetFilenameExtension(std::string(fileName));
 
-			if (extension == "epc")
-			{
-				repository.addEpcDocument(std::string(fileName))
-			}
-		}
-	}
-	//******* TODO ********
-	// status disable 
+      // const std::string fileStr(file);
+      // FilesList->AddArray(file, status);
+      // const std::string extension = std::string(fileName).length() > 3
+      // 						  ? std::string(fileName).substr(std::string(fileName).length() - 3, 3)
+      // 						  : "";
+
+      if (extension == "epc")
+      {
+        repository.addEpcDocument(std::string(fileName))
+      }
+    }
+  }
+  //******* TODO ********
+  // status disable
 }
 */
 
 //----------------------------------------------------------------------------
-vtkDataArraySelection* EnergisticsPlugin::GetEntitySelection(int type)
+vtkDataArraySelection *EnergisticsPlugin::GetEntitySelection(int type)
 {
   if (type < 0 || type >= NUMBER_OF_ENTITY_TYPES)
   {
@@ -196,45 +195,44 @@ void EnergisticsPlugin::RemoveAllEntitySelections()
 }
 
 //----------------------------------------------------------------------------
-const char* EnergisticsPlugin::GetDataAssemblyNodeNameForEntityType(int type)
+const char *EnergisticsPlugin::GetDataAssemblyNodeNameForEntityType(int type)
 {
   switch (type)
   {
-    case WELL_TRAJ:
-      return "wellbore_trajectory";
-    case WELL_MARKER:
-      return "wellbore_marker";
-    case WELL_MARKER_FRAME:
-      return "wellbore_marker_frame";
-    case WELL_FRAME:
-      return "wellbore_frame";
-    case POLYLINE_SET:
-      return "polyline_set";
-    case TRIANGULATED_SET:
-      return "triangulated_set";
-    case GRID_2D:
-      return "grid_2D";
-    case IJK_GRID:
-      return "ijk_grid";
-    case UNSTRUC_GRID:
-      return "unstructured_grid";
-    case SUB_REP:
-      return "sub_representation";
-    default:
-      vtkLogF(ERROR, "Invalid type '%d'", type);
-      return nullptr;
+  case WELL_TRAJ:
+    return "wellbore_trajectory";
+  case WELL_MARKER:
+    return "wellbore_marker";
+  case WELL_MARKER_FRAME:
+    return "wellbore_marker_frame";
+  case WELL_FRAME:
+    return "wellbore_frame";
+  case POLYLINE_SET:
+    return "polyline_set";
+  case TRIANGULATED_SET:
+    return "triangulated_set";
+  case GRID_2D:
+    return "grid_2D";
+  case IJK_GRID:
+    return "ijk_grid";
+  case UNSTRUC_GRID:
+    return "unstructured_grid";
+  case SUB_REP:
+    return "sub_representation";
+  default:
+    vtkLogF(ERROR, "Invalid type '%d'", type);
+    return nullptr;
   }
 }
 
 //----------------------------------------------------------------------------
-vtkDataAssembly* EnergisticsPlugin::GetAssembly()
+vtkDataAssembly *EnergisticsPlugin::GetAssembly()
 {
   return this->Assembly;
 }
 
-
 //----------------------------------------------------------------------------
-bool EnergisticsPlugin::AddSelector(const char* selector)
+bool EnergisticsPlugin::AddSelector(const char *selector)
 {
   if (selector != nullptr && this->Selectors.insert(selector).second)
   {
@@ -262,14 +260,14 @@ int EnergisticsPlugin::GetNumberOfSelectors() const
 }
 
 //----------------------------------------------------------------------------
-void EnergisticsPlugin::SetSelector(const char* selector)
+void EnergisticsPlugin::SetSelector(const char *selector)
 {
   this->ClearSelectors();
   this->AddSelector(selector);
 }
 
 //----------------------------------------------------------------------------
-const char* EnergisticsPlugin::GetSelector(int index) const
+const char *EnergisticsPlugin::GetSelector(int index) const
 {
   if (index >= 0 && index < this->GetNumberOfSelectors())
   {
@@ -282,20 +280,20 @@ const char* EnergisticsPlugin::GetSelector(int index) const
 //----------------------------------------------------------------------------
 void EnergisticsPlugin::setMarkerOrientation(bool orientation)
 {
-	/******* TODO ********/
+  /******* TODO ********/
 }
 
 //----------------------------------------------------------------------------
 void EnergisticsPlugin::setMarkerSize(int size)
 {
-	/******* TODO ********/
+  /******* TODO ********/
 }
 
 //----------------------------------------------------------------------------
 int EnergisticsPlugin::RequestInformation(
-	vtkInformation* metadata,
-	vtkInformationVector **,
-	vtkInformationVector *)
+    vtkInformation *metadata,
+    vtkInformationVector **,
+    vtkInformationVector *)
 {
   vtkLogScopeF(TRACE, "ReadMetaData");
   /*
@@ -349,18 +347,18 @@ int EnergisticsPlugin::RequestInformation(
 
 //----------------------------------------------------------------------------
 int EnergisticsPlugin::RequestData(vtkInformation *,
-								   vtkInformationVector **,
-								   vtkInformationVector *outputVector)
+                                   vtkInformationVector **,
+                                   vtkInformationVector *outputVector)
 {
 
-	if (!FileNames.empty())
-	{
-		vtkInformation *outInfo = outputVector->GetInformationObject(0);
-		vtkPartitionedDataSetCollection *output = vtkPartitionedDataSetCollection::SafeDownCast(outInfo->Get(vtkPartitionedDataSetCollection::DATA_OBJECT()));
+  if (!FileNames.empty())
+  {
+    vtkInformation *outInfo = outputVector->GetInformationObject(0);
+    vtkPartitionedDataSetCollection *output = vtkPartitionedDataSetCollection::SafeDownCast(outInfo->Get(vtkPartitionedDataSetCollection::DATA_OBJECT()));
 
-		output->DeepCopy(repository->getVtkPartionedDatasSetCollection());
-	}
-	return 1;
+    output->DeepCopy(repository->getVtkPartionedDatasSetCollection());
+  }
+  return 1;
 }
 
 //----------------------------------------------------------------------------

@@ -18,15 +18,11 @@ under the License.
 -----------------------------------------------------------------------*/
 #include "ResqmlAbstractObjectToParaView.h"
 
-
-ResqmlAbstractObjectToParaView::ResqmlAbstractObjectToParaView::ResqmlAbstractObjectToParaView::ResqmlAbstractObjectToParaView(COMMON_NS::AbstractObject *resqmlObject) {
-   this.resqmlObject  = resqmlObject; 
+ResqmlAbstractObjectToParaView::ResqmlAbstractObjectToParaView::ResqmlAbstractObjectToParaView::ResqmlAbstractObjectToParaView(COMMON_NS::AbstractObject *resqmlObject)
+    : resqmlObject(resqmlObject)
+{
 }
 
-ResqmlAbstractObjectToParaView::ResqmlAbstractObjectToParaView::ResqmlAbstractObjectToParaView::~ResqmlAbstractObjectToParaView() {
-    
-}
-
-void ResqmlAbstractObjectToParaView::ResqmlAbstractObjectToParaView::ResqmlAbstractObjectToParaView::test2() {
-    
+ResqmlAbstractObjectToParaView::ResqmlAbstractObjectToParaView::ResqmlAbstractObjectToParaView::~ResqmlAbstractObjectToParaView()
+{
 }
