@@ -19,6 +19,7 @@ under the License.
 #include "EnergisticsPlugin.h"
 
 #include <algorithm>
+#include <assert.h>
 
 #include <vtkDataArraySelection.h>
 #include <vtkIndent.h>
@@ -38,10 +39,9 @@ vtkCxxSetObjectMacro(EnergisticsPlugin, Controller, vtkMultiProcessController);
 //----------------------------------------------------------------------------
 EnergisticsPlugin::EnergisticsPlugin() : FileNames({}),
                                          Controller(nullptr),
-                                         AssemblyTag(0),
                                          MarkerOrientation(true),
+                                         AssemblyTag(0),
                                          MarkerSize(10)
-
 {
   SetNumberOfInputPorts(0);
   SetNumberOfOutputPorts(1);
@@ -58,13 +58,6 @@ EnergisticsPlugin::~EnergisticsPlugin()
 {
   this->SetController(nullptr);
   delete this->repository;
-}
-
-//----------------------------------------------------------------------------
-int EnergisticsPlugin::FillOutputPortInformation(int vtkNotUsed(port), vtkInformation *info)
-{
-  info->Set(vtkDataObject::DATA_TYPE_NAME(), "vtkPartitionedDataSetCollection");
-  return 1;
 }
 
 //----------------------------------------------------------------------------
@@ -93,8 +86,9 @@ void EnergisticsPlugin::SetFileName(const char *fname)
 //----------------------------------------------------------------------------
 void EnergisticsPlugin::AddFileName(const char *fname)
 {
-  if (fname != nullptr && !this->FileNames.insert(fname).second)
+  if (fname != nullptr)                                            //&& !this->FileNames.insert(fname).second)
   {
+    this->repository->addFile(fname, 1);
     this->Modified();
   }
 }
@@ -172,74 +166,15 @@ void vtkEPCReader::SetFilesList(const char *file, int status)
 */
 
 //----------------------------------------------------------------------------
-vtkDataArraySelection *EnergisticsPlugin::GetEntitySelection(int type)
-{
-  if (type < 0 || type >= NUMBER_OF_ENTITY_TYPES)
-  {
-    vtkErrorMacro("Invalid type '" << type
-                                   << "'. Supported values are "
-                                      "EnergisticsPlugin::WELL_TRAJ (0), ... EnergisticsPlugin::SUB_REP ("
-                                   << EnergisticsPlugin::SUB_REP << ").");
-    return nullptr;
-  }
-  return this->EntitySelection[type];
-}
-
-//----------------------------------------------------------------------------
-void EnergisticsPlugin::RemoveAllEntitySelections()
-{
-  for (int cc = ENTITY_START; cc < ENTITY_END; ++cc)
-  {
-    this->GetEntitySelection(cc)->RemoveAllArrays();
-  }
-}
-
-//----------------------------------------------------------------------------
-const char *EnergisticsPlugin::GetDataAssemblyNodeNameForEntityType(int type)
-{
-  switch (type)
-  {
-  case WELL_TRAJ:
-    return "wellbore_trajectory";
-  case WELL_MARKER:
-    return "wellbore_marker";
-  case WELL_MARKER_FRAME:
-    return "wellbore_marker_frame";
-  case WELL_FRAME:
-    return "wellbore_frame";
-  case POLYLINE_SET:
-    return "polyline_set";
-  case TRIANGULATED_SET:
-    return "triangulated_set";
-  case GRID_2D:
-    return "grid_2D";
-  case IJK_GRID:
-    return "ijk_grid";
-  case UNSTRUC_GRID:
-    return "unstructured_grid";
-  case SUB_REP:
-    return "sub_representation";
-  default:
-    vtkLogF(ERROR, "Invalid type '%d'", type);
-    return nullptr;
-  }
-}
-
-//----------------------------------------------------------------------------
-vtkDataAssembly *EnergisticsPlugin::GetAssembly()
-{
-  return this->Assembly;
-}
-
-//----------------------------------------------------------------------------
 bool EnergisticsPlugin::AddSelector(const char *selector)
 {
   if (selector != nullptr && this->Selectors.insert(selector).second)
   {
+    auto node_id = this->dataAssembly->GetFirstNodeByPath(selector);
+    this->repository->selectNodeId(node_id);
     this->Modified();
     return true;
   }
-
   return false;
 }
 
@@ -281,67 +216,22 @@ const char *EnergisticsPlugin::GetSelector(int index) const
 void EnergisticsPlugin::setMarkerOrientation(bool orientation)
 {
   /******* TODO ********/
+  vtkWarningMacro(<< "EnergisticsPlugin -> setMarkerOrientation -> DEBUT FIN"); //- test
 }
 
 //----------------------------------------------------------------------------
 void EnergisticsPlugin::setMarkerSize(int size)
 {
   /******* TODO ********/
+  vtkWarningMacro(<< "EnergisticsPlugin -> setMarkerSize -> DEBUT FIN"); //- test
 }
 
 //----------------------------------------------------------------------------
 int EnergisticsPlugin::RequestInformation(
     vtkInformation *metadata,
     vtkInformationVector **,
-    vtkInformationVector *)
+    vtkInformationVector *outputVector)
 {
-  vtkLogScopeF(TRACE, "ReadMetaData");
-  /*
-  auto& internals = (*this->Internals);
-  if (!internals.UpdateDatabaseNames(this))
-  {
-    return 0;
-  }
-
-  // read time information and generate that.
-  if (!internals.UpdateTimeInformation(this))
-  {
-    return 0;
-  }
-  else
-  {
-    // add timesteps to metadata
-    const auto& timesteps = internals.GetTimeSteps();
-    if (!timesteps.empty())
-    {
-      metadata->Set(vtkStreamingDemandDrivenPipeline::TIME_STEPS(), &timesteps[0],
-        static_cast<int>(timesteps.size()));
-      double time_range[2] = { timesteps.front(), timesteps.back() };
-      metadata->Set(vtkStreamingDemandDrivenPipeline::TIME_RANGE(), time_range, 2);
-    }
-    else
-    {
-      metadata->Remove(vtkStreamingDemandDrivenPipeline::TIME_STEPS());
-      metadata->Remove(vtkStreamingDemandDrivenPipeline::TIME_RANGE());
-    }
-  }
-
-  // read field/entity selection meta-data. i.e. update vtkDataArraySelection
-  // instances for all available entity-blocks, entity-sets, and their
-  // corresponding data arrays.
-  if (!internals.UpdateEntityAndFieldSelections(this))
-  {
-    return 0;
-  }
-
-  // read assembly information.
-  if (!internals.UpdateAssembly(this, &this->AssemblyTag))
-  {
-    return 0;
-  }
-
-  metadata->Set(vtkAlgorithm::CAN_HANDLE_PIECE_REQUEST(), 1);
-  */
   return 1;
 }
 
@@ -350,14 +240,11 @@ int EnergisticsPlugin::RequestData(vtkInformation *,
                                    vtkInformationVector **,
                                    vtkInformationVector *outputVector)
 {
-
-  if (!FileNames.empty())
-  {
-    vtkInformation *outInfo = outputVector->GetInformationObject(0);
-    vtkPartitionedDataSetCollection *output = vtkPartitionedDataSetCollection::SafeDownCast(outInfo->Get(vtkPartitionedDataSetCollection::DATA_OBJECT()));
-
-    output->DeepCopy(repository->getVtkPartionedDatasSetCollection());
-  }
+  vtkInformation *outInfo = outputVector->GetInformationObject(0);
+  vtkPartitionedDataSetCollection *output = vtkPartitionedDataSetCollection::SafeDownCast(outInfo->Get(vtkPartitionedDataSetCollection::DATA_OBJECT()));
+  output->DeepCopy(this->repository->getVtkPartionedDatasSetCollection());
+  this->dataAssembly = output->GetDataAssembly();
+  this->AssemblyTag = 1;
   return 1;
 }
 
@@ -365,26 +252,10 @@ int EnergisticsPlugin::RequestData(vtkInformation *,
 void EnergisticsPlugin::PrintSelf(ostream &os, vtkIndent indent)
 {
   this->Superclass::PrintSelf(os, indent);
-  os << indent << "WELL_TRAJ selection: " << endl;
-  this->GetWellTrajSelection()->PrintSelf(os, indent.GetNextIndent());
-  os << indent << "WELL_MARKER selection: " << endl;
-  this->GetWellMarkerSelection()->PrintSelf(os, indent.GetNextIndent());
-  os << indent << "WELL_MARKER_FRAME selection: " << endl;
-  this->GetWellMarkerFrameSelection()->PrintSelf(os, indent.GetNextIndent());
-  os << indent << "WELL_FRAME selection: " << endl;
-  this->GetWellFrameSelection()->PrintSelf(os, indent.GetNextIndent());
+}
 
-  os << indent << "POLYLINE_SET selection: " << endl;
-  this->GetWellPolylineSetSelection()->PrintSelf(os, indent.GetNextIndent());
-  os << indent << "TRIANGULATED_SET selection: " << endl;
-  this->GetWellTriangulatedFrameSelection()->PrintSelf(os, indent.GetNextIndent());
-  os << indent << "GRID_2D selection: " << endl;
-  this->GetWellGrid2DSelection()->PrintSelf(os, indent.GetNextIndent());
-
-  os << indent << "IJK_GRID selection: " << endl;
-  this->GetWellIjkGridSelection()->PrintSelf(os, indent.GetNextIndent());
-  os << indent << "UNSTRUC_GRID selection: " << endl;
-  this->GetWellUnstructuredGridSelection()->PrintSelf(os, indent.GetNextIndent());
-  os << indent << "SUB_REP selection: " << endl;
-  this->GetWellSubRepSelection()->PrintSelf(os, indent.GetNextIndent());
+//----------------------------------------------------------------------------
+vtkDataAssembly* EnergisticsPlugin::GetAssembly()
+{
+  return dataAssembly;
 }
