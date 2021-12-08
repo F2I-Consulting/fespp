@@ -39,6 +39,7 @@ ResqmlPolylineToVtkPolyData::ResqmlPolylineToVtkPolyData(RESQML2_NS::PolylineSet
 											  proc_number,
 											  max_proc)
 {
+	this->pointCount = polyline->getXyzPointCountOfPatch(0);
 }
 
 //----------------------------------------------------------------------------
@@ -49,8 +50,6 @@ void ResqmlPolylineToVtkPolyData::loadVtkObject()
 	const auto polylineSetRepresentation = dynamic_cast<const RESQML2_NS::PolylineSetRepresentation *>(this->resqmlData);
 
 	// POINT
-	this->pointCount = polylineSetRepresentation->getXyzPointCountOfPatch(0);
-
 	double *allXyzPoints = new double[this->pointCount * 3]; // Will be deleted by VTK
 	polylineSetRepresentation->getXyzPointsOfPatch(0, allXyzPoints);
 

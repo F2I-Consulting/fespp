@@ -36,6 +36,7 @@ ResqmlGrid2dToVtkPolyData::ResqmlGrid2dToVtkPolyData(RESQML2_NS::Grid2dRepresent
 											  proc_number,
 											  max_proc)
 {
+	this->pointCount = grid2D->getNodeCountAlongIAxis() * grid2D->getNodeCountAlongJAxis();
 }
 
 //----------------------------------------------------------------------------

@@ -40,6 +40,8 @@ under the License.
 
 #include "ResqmlAbstractRepresentationToVtkDataset.h"
 #include "ResqmlIjkGridToVtkUnstructuredGrid.h"
+#include "ResqmlGrid2dToVtkPolyData.h"
+#include "ResqmlPolylineToVtkPolyData.h"
 
 ResqmlDataRepositoryToVtkPartitionedDataSetCollection::ResqmlDataRepositoryToVtkPartitionedDataSetCollection(int proc_number, int max_proc)
     : output(vtkSmartPointer<vtkPartitionedDataSetCollection>::New()),
@@ -451,6 +453,22 @@ ResqmlAbstractRepresentationToVtkDataset *ResqmlDataRepositoryToVtkPartitionedDa
     {
         auto ijkGrid = repository->getDataObjectByUuid<RESQML2_NS::AbstractIjkGridRepresentation>(uuid);
         auto rep = new ResqmlIjkGridToVtkUnstructuredGrid(ijkGrid);
+        // rep->loadVtkObject();
+        return rep;
+        break;
+    }
+    case ResqmlDataRepositoryToVtkPartitionedDataSetCollection::EntityType::GRID_2D:
+    {
+        auto grid2D = repository->getDataObjectByUuid<RESQML2_NS::Grid2dRepresentation>(uuid);
+        auto rep = new ResqmlGrid2dToVtkPolyData(grid2D);
+        // rep->loadVtkObject();
+        return rep;
+        break;
+    }
+        case ResqmlDataRepositoryToVtkPartitionedDataSetCollection::EntityType::POLYLINE_SET:
+    {
+        auto polyline = repository->getDataObjectByUuid<RESQML2_NS::PolylineSetRepresentation>(uuid);
+        auto rep = new ResqmlPolylineToVtkPolyData(polyline);
         // rep->loadVtkObject();
         return rep;
         break;
