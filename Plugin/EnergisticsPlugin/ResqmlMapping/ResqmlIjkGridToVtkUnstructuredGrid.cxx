@@ -29,7 +29,6 @@ under the License.
 #include <vtkHexahedron.h>
 #include <vtkUnstructuredGrid.h>
 
-
 // include F2i-consulting Energistics Standards API
 #include <fesapi/resqml2/AbstractIjkGridRepresentation.h>
 //#include <fesapi/resqml2/SubRepresentation.h>
@@ -47,14 +46,15 @@ ResqmlIjkGridToVtkUnstructuredGrid::ResqmlIjkGridToVtkUnstructuredGrid(RESQML2_N
 	this->iCellCount = ijkGrid->getICellCount();
 	this->jCellCount = ijkGrid->getJCellCount();
 	this->kCellCount = ijkGrid->getKCellCount();
-	this->checkHyperslabingCapacity();
+	this->pointCount = ijkGrid->getXyzPointCountOfAllPatches();
+	this->checkHyperslabingCapacity(ijkGrid);
+		this->vtkData = vtkSmartPointer<vtkUnstructuredGrid>::New();
+	this->vtkData->Modified();
 }
 
 //----------------------------------------------------------------------------
-void ResqmlIjkGridToVtkUnstructuredGrid::checkHyperslabingCapacity()
+void ResqmlIjkGridToVtkUnstructuredGrid::checkHyperslabingCapacity(RESQML2_NS::AbstractIjkGridRepresentation *ijkGrid)
 {
-	auto ijkGrid = dynamic_cast<RESQML2_NS::AbstractIjkGridRepresentation *>(this->resqmlData);
-
 	try
 	{
 		const auto kInterfaceNodeCount = ijkGrid->getXyzPointCountOfKInterface();
@@ -74,9 +74,8 @@ void ResqmlIjkGridToVtkUnstructuredGrid::loadVtkObject()
 	// Create and set the list of points of the vtkUnstructuredGrid
 	vtkSmartPointer<vtkUnstructuredGrid> vtk_unstructuredGrid = vtkSmartPointer<vtkUnstructuredGrid>::New();
 
-	auto ijkGrid = dynamic_cast< RESQML2_NS::AbstractIjkGridRepresentation *>(this->resqmlData);
-
-	vtk_unstructuredGrid->SetPoints(createPoints());
+	auto ijkGrid = dynamic_cast<RESQML2_NS::AbstractIjkGridRepresentation *>(this->resqmlData);
+	vtk_unstructuredGrid->SetPoints(createPoints(ijkGrid));
 
 	// Define hexahedron node ordering according to Paraview convention : https://lorensen.github.io/VTKExamples/site/VTKBook/05Chapter5/#Figure%205-3
 	std::array<unsigned int, 8> correspondingResqmlCornerId = {0, 1, 2, 3, 4, 5, 6, 7};
@@ -138,11 +137,9 @@ void ResqmlIjkGridToVtkUnstructuredGrid::loadVtkObject()
 }
 
 //----------------------------------------------------------------------------
-vtkSmartPointer<vtkPoints> ResqmlIjkGridToVtkUnstructuredGrid::createPoints()
+vtkSmartPointer<vtkPoints> ResqmlIjkGridToVtkUnstructuredGrid::createPoints(RESQML2_NS::AbstractIjkGridRepresentation *ijkGrid)
 {
 	vtkSmartPointer<vtkPoints> points = vtkSmartPointer<vtkPoints>::New();
-
-	auto ijkGrid = dynamic_cast<RESQML2_NS::AbstractIjkGridRepresentation *>(this->resqmlData);
 
 	if (this->isHyperslabed && !ijkGrid->isNodeGeometryCompressed())
 	{
@@ -182,8 +179,6 @@ vtkSmartPointer<vtkPoints> ResqmlIjkGridToVtkUnstructuredGrid::createPoints()
 		std::unique_ptr<double[]> allXyzPoints(new double[kInterfaceNodeCount * 3]);
 		for (uint32_t kInterface = initKInterfaceIndex; kInterface <= maxKInterfaceIndex; ++kInterface)
 		{
-			this->pointCount += kInterfaceNodeCount;
-
 			ijkGrid->getXyzPointsOfKInterface(kInterface, allXyzPoints.get());
 			const double zIndice = ijkGrid->getLocalCrs(0)->isDepthOriented() ? -1 : 1;
 			for (uint64_t nodeIndex = 0; nodeIndex < kInterfaceNodeCount * 3; nodeIndex += 3)
@@ -197,24 +192,21 @@ vtkSmartPointer<vtkPoints> ResqmlIjkGridToVtkUnstructuredGrid::createPoints()
 		this->initKIndex = 0;
 		this->maxKIndex = this->kCellCount;
 
-		// POINT
-		this->pointCount = ijkGrid->getXyzPointCountOfAllPatches();
-
-		double *allXyzPoints = new double[this->pointCount * 3]; // Will be deleted by VTK
-		ijkGrid->getXyzPointsOfAllPatchesInGlobalCrs(allXyzPoints);
+		std::unique_ptr<double[]> allXyzPoints(new double[this->pointCount * 3]);
+		ijkGrid->getXyzPointsOfAllPatchesInGlobalCrs(allXyzPoints.get());
 		const size_t coordCount = this->pointCount * 3;
 		if (ijkGrid->getLocalCrs(0)->isDepthOriented())
 		{
-			for (size_t zCoordIndex = 2; zCoordIndex < coordCount; zCoordIndex += 3)
+			for (size_t i = 0; i < this->pointCount; ++i)
 			{
-				allXyzPoints[zCoordIndex] *= -1;
+				allXyzPoints[i * 3 + 2] *= -1;
 			}
 		}
 
 		vtkSmartPointer<vtkDoubleArray> vtkUnderlyingArray = vtkSmartPointer<vtkDoubleArray>::New();
 		vtkUnderlyingArray->SetNumberOfComponents(3);
 		// Take ownership of the underlying C array
-		vtkUnderlyingArray->SetArray(allXyzPoints, coordCount, vtkAbstractArray::VTK_DATA_ARRAY_DELETE);
+		vtkUnderlyingArray->SetArray(allXyzPoints.get(), coordCount, vtkAbstractArray::VTK_DATA_ARRAY_DELETE);
 		points->SetData(vtkUnderlyingArray);
 	}
 	return points;

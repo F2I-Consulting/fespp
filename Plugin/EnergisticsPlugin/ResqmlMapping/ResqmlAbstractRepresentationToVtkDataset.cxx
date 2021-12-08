@@ -35,19 +35,11 @@ ResqmlAbstractRepresentationToVtkDataset::ResqmlAbstractRepresentationToVtkDatas
 	  procNumber(proc_number),
 	  maxProc(max_proc)
 {
-	this->iCellCount = 0;
-	this->jCellCount = 0;
-	this->kCellCount = 0;
-	this->initKIndex = 0;
-	this->maxKIndex = 0;
-
-	this->pointCount = 0;
-
-	this->isHyperslabed = false;
 }
 
 void ResqmlAbstractRepresentationToVtkDataset::addDataArray(const std::string &uuid)
 {
+	/*
 	std::vector<RESQML2_NS::AbstractValuesProperty *> valuesPropertySet = this->resqmlData->getValuesPropertySet();
 	for (auto &property : valuesPropertySet)
 	{
@@ -57,7 +49,7 @@ void ResqmlAbstractRepresentationToVtkDataset::addDataArray(const std::string &u
 			if (isHyperslabed)
 			{
 				fesppProperty = new ResqmlPropertyToVtkDataArray(property,
-																 this->iCellCount * this->jCellCount * (this->maxKIndex - this->initKIndex),
+																 this->resqmlData->getICellCount() * this->resqmlData->getJCellCount() * (this->maxKIndex - this->initKIndex),
 																 this->pointCount,
 																 this->iCellCount,
 																 this->jCellCount,
@@ -83,6 +75,7 @@ void ResqmlAbstractRepresentationToVtkDataset::addDataArray(const std::string &u
 			}
 		}
 	}
+	*/
 }
 
 void ResqmlAbstractRepresentationToVtkDataset::deleteDataArray(const std::string &uuid)

@@ -56,7 +56,7 @@ EnergisticsPlugin::EnergisticsPlugin() : FileNames({}),
 //----------------------------------------------------------------------------
 EnergisticsPlugin::~EnergisticsPlugin()
 {
-  this->SetController(nullptr);
+   this->SetController(nullptr);
   delete this->repository;
 }
 
@@ -216,14 +216,12 @@ const char *EnergisticsPlugin::GetSelector(int index) const
 void EnergisticsPlugin::setMarkerOrientation(bool orientation)
 {
   /******* TODO ********/
-  vtkWarningMacro(<< "EnergisticsPlugin -> setMarkerOrientation -> DEBUT FIN"); //- test
 }
 
 //----------------------------------------------------------------------------
 void EnergisticsPlugin::setMarkerSize(int size)
 {
   /******* TODO ********/
-  vtkWarningMacro(<< "EnergisticsPlugin -> setMarkerSize -> DEBUT FIN"); //- test
 }
 
 //----------------------------------------------------------------------------

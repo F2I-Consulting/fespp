@@ -57,13 +57,13 @@ private:
 	/**
 	* Create the VTK points from the RESQML points of the RESQML IJK grid representation.
 	*/
-	vtkSmartPointer<vtkPoints> createPoints();
+	vtkSmartPointer<vtkPoints> createPoints(RESQML2_NS::AbstractIjkGridRepresentation *ijkGrid);
 
 	/**
 	* method : checkHyperslabingCapacity
 	* variable : ijkGridRepresentation
 	* check if an ijkgrid is Hyperslabed
 	*/	
-	void checkHyperslabingCapacity();
+	void checkHyperslabingCapacity(RESQML2_NS::AbstractIjkGridRepresentation *ijkGrid);
 };
 #endif

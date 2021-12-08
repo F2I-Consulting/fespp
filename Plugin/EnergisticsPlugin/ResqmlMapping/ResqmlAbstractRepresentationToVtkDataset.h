@@ -40,6 +40,8 @@ public:
 	 */
 	ResqmlAbstractRepresentationToVtkDataset(RESQML2_NS::AbstractRepresentation *abstract_representation, int proc_number = 1, int max_proc = 1);
 
+	virtual ~ResqmlAbstractRepresentationToVtkDataset() = default;
+
 	/**
 	 * Destructor
 	 */
@@ -70,10 +72,8 @@ public:
 	vtkSmartPointer<vtkDataSet> getOutput() const;
 
 protected:
-	virtual ~ResqmlAbstractRepresentationToVtkDataset() = default;
-
 	RESQML2_NS::AbstractRepresentation *resqmlData;
-	ULONG64 pointCount;
+	uint64_t pointCount;
 	uint32_t iCellCount;
 	uint32_t jCellCount;
 	uint32_t kCellCount;

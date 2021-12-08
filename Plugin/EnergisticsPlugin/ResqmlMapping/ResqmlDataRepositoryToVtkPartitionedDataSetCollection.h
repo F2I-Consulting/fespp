@@ -37,6 +37,7 @@ namespace resqml2
 {
     class AbstractRepresentation;
 }
+class ResqmlAbstractRepresentationToVtkDataset;
 
 /** 
  * @brief	class description.
@@ -62,6 +63,7 @@ public:
 		IJK_GRID,
 		UNSTRUC_GRID,
 		SUB_REP,
+		PROP,
 		NUMBER_OF_ENTITY_TYPES,
 
 		INTERPRETATION_1D_START = WELL_TRAJ,
@@ -69,7 +71,7 @@ public:
 		INTERPRETATION_2D_START = POLYLINE_SET,
 		INTERPRETATION_2D_END = IJK_GRID,
 		INTERPRETATION_3D_START = IJK_GRID,
-		INTERPRETATION_3D_END = NUMBER_OF_ENTITY_TYPES,
+		INTERPRETATION_3D_END = PROP,
 
 		ENTITY_START = WELL_TRAJ,
 		ENTITY_END = NUMBER_OF_ENTITY_TYPES,
@@ -121,6 +123,10 @@ private:
     std::string searchSubRepresentation(const std::string &fileName);
     std::string searchTimeSeries(const std::string &fileName);
     std::string searchRepresentations(resqml2::AbstractRepresentation * representation, EntityType type);
+
+	ResqmlAbstractRepresentationToVtkDataset* loadToVtk(std::string uuid, EntityType type);
+
+	std::string space2underscore(std::string text);
 
 	vtkNew<vtkDataArraySelection> EntitySelection[NUMBER_OF_ENTITY_TYPES];
     
