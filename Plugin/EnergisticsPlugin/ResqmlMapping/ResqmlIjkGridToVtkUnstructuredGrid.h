@@ -50,6 +50,8 @@ public:
 	*/
 	void loadVtkObject();
 
+	std::string message;
+
 protected:
 	RESQML2_NS::AbstractIjkGridRepresentation *resqmlData;
 
@@ -57,7 +59,7 @@ private:
 	/**
 	* Create the VTK points from the RESQML points of the RESQML IJK grid representation.
 	*/
-	vtkSmartPointer<vtkPoints> createPoints(RESQML2_NS::AbstractIjkGridRepresentation *ijkGrid);
+	vtkSmartPointer<vtkPoints> createPoints(/* RESQML2_NS::AbstractIjkGridRepresentation *ijkGrid */);
 
 	/**
 	* method : checkHyperslabingCapacity
@@ -65,5 +67,6 @@ private:
 	* check if an ijkgrid is Hyperslabed
 	*/	
 	void checkHyperslabingCapacity(RESQML2_NS::AbstractIjkGridRepresentation *ijkGrid);
+
 };
 #endif

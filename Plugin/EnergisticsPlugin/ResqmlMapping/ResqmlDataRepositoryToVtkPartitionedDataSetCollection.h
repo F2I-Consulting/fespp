@@ -22,7 +22,7 @@ under the License.
 // include system
 #include <string>
 #include <map>
-#include <vector>
+#include <set>
 
 #include <vtkSmartPointer.h>
 #include <vtkPartitionedDataSetCollection.h>
@@ -64,34 +64,9 @@ public:
 		UNSTRUC_GRID,
 		SUB_REP,
 		PROP,
+		INTERPRETATION,
 		NUMBER_OF_ENTITY_TYPES,
-
-		INTERPRETATION_1D_START = WELL_TRAJ,
-		INTERPRETATION_1D_END = POLYLINE_SET,
-		INTERPRETATION_2D_START = POLYLINE_SET,
-		INTERPRETATION_2D_END = IJK_GRID,
-		INTERPRETATION_3D_START = IJK_GRID,
-		INTERPRETATION_3D_END = PROP,
-
-		ENTITY_START = WELL_TRAJ,
-		ENTITY_END = NUMBER_OF_ENTITY_TYPES,
 	};
-
-	static bool GetEntityTypeIs1D(int type) { return (type >= INTERPRETATION_1D_START && type < INTERPRETATION_1D_END); }
-	static bool GetEntityTypeIs2D(int type) { return (type >= INTERPRETATION_2D_START && type < INTERPRETATION_2D_END); }
-	static bool GetEntityTypeIs3D(int type) { return (type >= INTERPRETATION_3D_START && type < INTERPRETATION_3D_END); }
-
-	vtkDataArraySelection* GetEntitySelection(int type);
-	vtkDataArraySelection* GetWellTrajSelection() { return this->GetEntitySelection(WELL_TRAJ); }
-	vtkDataArraySelection* GetWellMarkerSelection() { return this->GetEntitySelection(WELL_MARKER); }
-	vtkDataArraySelection* GetWellMarkerFrameSelection() { return this->GetEntitySelection(WELL_MARKER_FRAME); }
-	vtkDataArraySelection* GetWellFrameSelection() { return this->GetEntitySelection(WELL_FRAME); }
-	vtkDataArraySelection* GetWellPolylineSetSelection() { return this->GetEntitySelection(POLYLINE_SET); }
-	vtkDataArraySelection* GetWellTriangulatedFrameSelection() { return this->GetEntitySelection(TRIANGULATED_SET); }
-	vtkDataArraySelection* GetWellGrid2DSelection() { return this->GetEntitySelection(GRID_2D); }
-	vtkDataArraySelection* GetWellIjkGridSelection() { return this->GetEntitySelection(IJK_GRID); }
-	vtkDataArraySelection* GetWellUnstructuredGridSelection() { return this->GetEntitySelection(UNSTRUC_GRID); }
-	vtkDataArraySelection* GetWellSubRepSelection() { return this->GetEntitySelection(SUB_REP); }
 
     vtkDataAssembly *GetAssembly();
 
@@ -103,9 +78,10 @@ public:
     void setMarkerOrientation(bool orientation);
 	void setMarkerSize(int size);
 
-    vtkPartitionedDataSetCollection *getVtkPartionedDatasSetCollection() { return output; }
+    vtkPartitionedDataSetCollection *getVtkPartionedDatasSetCollection();
 
 	void selectNodeId(int node);
+	void clearSelection();
     
 
 protected:
@@ -126,7 +102,8 @@ private:
 
 	ResqmlAbstractRepresentationToVtkDataset* loadToVtk(std::string uuid, EntityType type);
 
-	std::string space2underscore(std::string text);
+	std::string changeInvalidCharacter(std::string text);
+	int searchNodeByUuid(std::string uuid);
 
 	vtkNew<vtkDataArraySelection> EntitySelection[NUMBER_OF_ENTITY_TYPES];
     
@@ -144,5 +121,9 @@ private:
 
     std::map<int, std::string> nodeId_to_uuid; // index of VtkDataAssembly to Resqml uuid
 	std::map<int, EntityType> nodeId_to_EntityType; // index of VtkDataAssembly to entity type
+	std::map<int, ResqmlAbstractRepresentationToVtkDataset*> nodeId_to_resqml; // index of VtkDataAssembly to ResqmlAbstractRepresentationToVtkDataset
+
+	std::set<int> current_selection;
+	std::set<int> old_selection;
 };
 #endif

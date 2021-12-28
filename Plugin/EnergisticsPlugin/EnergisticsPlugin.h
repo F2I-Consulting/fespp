@@ -26,6 +26,7 @@ under the License.
 
 #include <vtkSmartPointer.h>
 #include <vtkPartitionedDataSetCollectionAlgorithm.h>
+#include <vtkStringArray.h>
 
 #include "EnergisticsPluginModule.h"
 #include "ResqmlMapping/ResqmlDataRepositoryToVtkPartitionedDataSetCollection.h"
@@ -61,21 +62,6 @@ public:
    */
 	void SetFileName(const char *fname);
 
-	/*****************************************
-	*  OLD => DELETE ?
-	// Description:
-	// Specify file name of the .epc file.
-	vtkSetStringMacro(FileName)
-	vtkGetStringMacro(FileName)
-
-	
-	vtkGetObjectMacro(FilesList, vtkDataArraySelection) void SetFilesList(const char *file, int status);
-	// Used by Paraview, derived from the attribute UuidList
-	int GetFilesListArrayStatus(const char *name);
-	int GetNumberOfFilesListArrays();
-	const char *GetFilesListArrayName(int index);
-	*******************************************/
-
 	// --------------- PART: Multi-Processor -------------
 
 	///@{
@@ -87,6 +73,18 @@ public:
 	vtkGetObjectMacro(Controller, vtkMultiProcessController);
 	void SetController(vtkMultiProcessController *controller);
 	///@}
+
+ ///@{
+  /**
+   * Get/Set the scene to be used by the reader
+   */
+  void SetFiles(const std::string& file);
+  ///@}
+	
+ /**
+   * Get a list all file names as a vtkStringArray.
+   */
+  vtkStringArray* GetAllFilesNames();
 
 ///@{
   /**
@@ -159,15 +157,17 @@ private:
 
 	// files
 	std::set<std::string> FileNames;
+	vtkSmartPointer<vtkStringArray> FilesNames;
 
 	// multi-processor
 	vtkMultiProcessController *Controller;
 
 	// treeview
-	std::set<std::string> Selectors;
+	std::set<std::string> selectors;
 	 int AssemblyTag;
+
 	 vtkDataAssembly* dataAssembly;
-	
+
 	// Properties
 	bool MarkerOrientation;
 	int MarkerSize;

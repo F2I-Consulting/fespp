@@ -116,6 +116,6 @@ void ResqmlWellboreChannelToVtkPolyData::loadVtkObject()
 	tubeFilter->SetVaryRadiusToVaryRadiusByScalar();
 	tubeFilter->Update();
 
-		this->vtkData = tubeFilter->GetOutput();
+		this->vtkData->SetPartition(0, tubeFilter->GetOutput());
 	this->vtkData->Modified();
 }

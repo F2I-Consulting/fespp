@@ -36,27 +36,33 @@ under the License.
 //----------------------------------------------------------------------------
 ResqmlPolylineToVtkPolyData::ResqmlPolylineToVtkPolyData(RESQML2_NS::PolylineSetRepresentation *polyline, int proc_number, int max_proc)
 	: ResqmlAbstractRepresentationToVtkDataset(polyline,
-											  proc_number,
-											  max_proc)
+											   proc_number - 1,
+											   max_proc - 1),
+	  resqmlData(polyline)
 {
 	this->pointCount = polyline->getXyzPointCountOfPatch(0);
+
+	this->vtkData = vtkSmartPointer<vtkPartitionedDataSet>::New();
+
+	this->loadVtkObject();
+
+	this->vtkData->Modified();
 }
 
 //----------------------------------------------------------------------------
 void ResqmlPolylineToVtkPolyData::loadVtkObject()
 {
+	// Create and set the list of points of the vtkPolyData
 	vtkSmartPointer<vtkPolyData> vtk_polydata = vtkSmartPointer<vtkPolyData>::New();
-
-	const auto polylineSetRepresentation = dynamic_cast<const RESQML2_NS::PolylineSetRepresentation *>(this->resqmlData);
 
 	// POINT
 	double *allXyzPoints = new double[this->pointCount * 3]; // Will be deleted by VTK
-	polylineSetRepresentation->getXyzPointsOfPatch(0, allXyzPoints);
+	this->resqmlData->getXyzPointsOfPatch(0, allXyzPoints);
 
 	vtkSmartPointer<vtkPoints> vtkPts = vtkSmartPointer<vtkPoints>::New();
 
 	const size_t coordCount = this->pointCount * 3;
-	if (polylineSetRepresentation->getLocalCrs(0)->isDepthOriented())
+	if (this->resqmlData->getLocalCrs(0)->isDepthOriented())
 	{
 		for (size_t zCoordIndex = 2; zCoordIndex < coordCount; zCoordIndex += 3)
 		{
@@ -74,10 +80,10 @@ void ResqmlPolylineToVtkPolyData::loadVtkObject()
 	// POLYLINE
 	vtkSmartPointer<vtkCellArray> setPolylineRepresentationLines = vtkSmartPointer<vtkCellArray>::New();
 
-	unsigned int countPolyline = polylineSetRepresentation->getPolylineCountOfPatch(0);
+	unsigned int countPolyline = this->resqmlData->getPolylineCountOfPatch(0);
 
 	std::unique_ptr<unsigned int[]> countNodePolylineInPatch(new unsigned int[countPolyline]);
-	polylineSetRepresentation->getNodeCountPerPolylineInPatch(0, countNodePolylineInPatch.get());
+	this->resqmlData->getNodeCountPerPolylineInPatch(0, countNodePolylineInPatch.get());
 
 	unsigned int idPoint = 0;
 	for (unsigned int polylineIndex = 0; polylineIndex < countPolyline; ++polylineIndex)
@@ -93,6 +99,6 @@ void ResqmlPolylineToVtkPolyData::loadVtkObject()
 		vtk_polydata->SetLines(setPolylineRepresentationLines);
 	}
 
-	this->vtkData = vtk_polydata;
+	this->vtkData->SetPartition(0, vtk_polydata);
 	this->vtkData->Modified();
 }

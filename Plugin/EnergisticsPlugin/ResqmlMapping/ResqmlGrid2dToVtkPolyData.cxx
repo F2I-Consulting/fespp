@@ -33,10 +33,17 @@ under the License.
 //----------------------------------------------------------------------------
 ResqmlGrid2dToVtkPolyData::ResqmlGrid2dToVtkPolyData(RESQML2_NS::Grid2dRepresentation *grid2D, int proc_number, int max_proc)
 	: ResqmlAbstractRepresentationToVtkDataset(grid2D,
-											  proc_number,
-											  max_proc)
+											   proc_number - 1,
+											   max_proc - 1),
+	  resqmlData(grid2D)
 {
 	this->pointCount = grid2D->getNodeCountAlongIAxis() * grid2D->getNodeCountAlongJAxis();
+
+	this->vtkData = vtkSmartPointer<vtkPartitionedDataSet>::New();
+
+	this->loadVtkObject();
+
+	this->vtkData->Modified();
 }
 
 //----------------------------------------------------------------------------
@@ -44,23 +51,21 @@ void ResqmlGrid2dToVtkPolyData::loadVtkObject()
 {
 	vtkSmartPointer<vtkPolyData> vtkPolydata = vtkSmartPointer<vtkPolyData>::New();
 
-	const auto grid2D = dynamic_cast<const RESQML2_NS::Grid2dRepresentation *>(this->resqmlData);
-
-	const double originX = grid2D->getXOriginInGlobalCrs();
-	const double originY = grid2D->getYOriginInGlobalCrs();
-	const double XIOffset = grid2D->getXIOffsetInGlobalCrs();
-	const double XJOffset = grid2D->getXJOffsetInGlobalCrs();
-	const double YIOffset = grid2D->getYIOffsetInGlobalCrs();
-	const double YJOffset = grid2D->getYJOffsetInGlobalCrs();
-	const double zIndice = grid2D->getLocalCrs(0)->isDepthOriented() ? -1 : 1;
-	const ULONG64 nbNodeI = grid2D->getNodeCountAlongIAxis();
-	const ULONG64 nbNodeJ = grid2D->getNodeCountAlongJAxis();
+	const double originX = this->resqmlData->getXOriginInGlobalCrs();
+	const double originY = this->resqmlData->getYOriginInGlobalCrs();
+	const double XIOffset = this->resqmlData->getXIOffsetInGlobalCrs();
+	const double XJOffset = this->resqmlData->getXJOffsetInGlobalCrs();
+	const double YIOffset = this->resqmlData->getYIOffsetInGlobalCrs();
+	const double YJOffset = this->resqmlData->getYJOffsetInGlobalCrs();
+	const double zIndice = this->resqmlData->getLocalCrs(0)->isDepthOriented() ? -1 : 1;
+	const ULONG64 nbNodeI = this->resqmlData->getNodeCountAlongIAxis();
+	const ULONG64 nbNodeJ = this->resqmlData->getNodeCountAlongJAxis();
 
 	// POINT
 	this->pointCount = nbNodeI * nbNodeJ;
 
 	std::unique_ptr<double[]> z(new double[nbNodeI * nbNodeJ]);
-	grid2D->getZValuesInGlobalCrs(z.get());
+	this->resqmlData->getZValuesInGlobalCrs(z.get());
 
 	vtkSmartPointer<vtkPoints> points = vtkSmartPointer<vtkPoints>::New();
 	vtkSmartPointer<vtkCellArray> vertices = vtkSmartPointer<vtkCellArray>::New();
@@ -83,6 +88,6 @@ void ResqmlGrid2dToVtkPolyData::loadVtkObject()
 	vtkPolydata->SetPoints(points);
 	vtkPolydata->SetVerts(vertices);
 
-	this->vtkData = vtkPolydata;
+	this->vtkData->SetPartition(0,vtkPolydata);
 	this->vtkData->Modified();
 }

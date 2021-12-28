@@ -171,7 +171,7 @@ void ResqmlWellboreMarkerToVtkPolyData::createDisk(size_t markerIndex)
 	transformFilter->SetTransform(translation);
 	transformFilter->Update();
 
-	this->vtkData = transformFilter->GetOutput();
+	this->vtkData->SetPartition(0, transformFilter->GetOutput());
 }
 
 //----------------------------------------------------------------------------
@@ -192,5 +192,5 @@ void ResqmlWellboreMarkerToVtkPolyData::createSphere(size_t markerIndex)
 	sphereSource->SetRadius(size);
 	sphereSource->Update();
 
-	this->vtkData = sphereSource->GetOutput();
+	this->vtkData->SetPartition(0, sphereSource->GetOutput());
 }

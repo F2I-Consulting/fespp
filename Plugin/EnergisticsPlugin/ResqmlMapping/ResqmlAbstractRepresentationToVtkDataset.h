@@ -27,7 +27,7 @@ under the License.
 
 // include VTK library
 #include <vtkSmartPointer.h>
-#include <vtkDataSet.h>
+#include <vtkPartitionedDataSet.h>
 
 // include F2i-consulting Energistics Standards API
 #include <fesapi/resqml2/AbstractRepresentation.h>
@@ -67,12 +67,11 @@ public:
 	void deleteDataArray(const std::string &uuid);
 
 	/**
-	 * return the vtkDataSet of resqml representation
+	 * return the vtkPartitionedDataSet of resqml representation
 	 */
-	vtkSmartPointer<vtkDataSet> getOutput() const;
+	vtkSmartPointer<vtkPartitionedDataSet> getOutput() const;
 
-protected:
-	RESQML2_NS::AbstractRepresentation *resqmlData;
+
 	uint64_t pointCount;
 	uint32_t iCellCount;
 	uint32_t jCellCount;
@@ -85,8 +84,24 @@ protected:
 	int procNumber;
 	int maxProc;
 
-	vtkSmartPointer<vtkDataSet> vtkData;
+protected:
+	RESQML2_NS::AbstractRepresentation *resqmlData;
+/*	uint64_t pointCount;
+	uint32_t iCellCount;
+	uint32_t jCellCount;
+	uint32_t kCellCount;
+	uint32_t initKIndex;
+	uint32_t maxKIndex;
+
+	bool isHyperslabed;
+
+	int procNumber;
+	int maxProc;*/
+
+	vtkSmartPointer<vtkPartitionedDataSet> vtkData;
 	std::unordered_map<std::string, class ResqmlPropertyToVtkDataArray *> uuidToVtkDataArray;
+
+
 
 };
 #endif

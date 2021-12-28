@@ -21,6 +21,7 @@ under the License.
 // include VTK library
 #include <vtkPointData.h>
 #include <vtkCellData.h>
+#include <vtkDataSet.h>
 
 // include F2i-consulting Energistics Standards API
 #include <fesapi/resqml2/AbstractValuesProperty.h>
@@ -35,11 +36,11 @@ ResqmlAbstractRepresentationToVtkDataset::ResqmlAbstractRepresentationToVtkDatas
 	  procNumber(proc_number),
 	  maxProc(max_proc)
 {
+	this->isHyperslabed = false;
 }
 
 void ResqmlAbstractRepresentationToVtkDataset::addDataArray(const std::string &uuid)
 {
-	/*
 	std::vector<RESQML2_NS::AbstractValuesProperty *> valuesPropertySet = this->resqmlData->getValuesPropertySet();
 	for (auto &property : valuesPropertySet)
 	{
@@ -49,7 +50,7 @@ void ResqmlAbstractRepresentationToVtkDataset::addDataArray(const std::string &u
 			if (isHyperslabed)
 			{
 				fesppProperty = new ResqmlPropertyToVtkDataArray(property,
-																 this->resqmlData->getICellCount() * this->resqmlData->getJCellCount() * (this->maxKIndex - this->initKIndex),
+																 this->iCellCount * this->jCellCount * (this->maxKIndex - this->initKIndex),
 																 this->pointCount,
 																 this->iCellCount,
 																 this->jCellCount,
@@ -65,17 +66,17 @@ void ResqmlAbstractRepresentationToVtkDataset::addDataArray(const std::string &u
 			switch (fesppProperty->getSupport())
 			{
 			case ResqmlPropertyToVtkDataArray::typeSupport::CELLS:
-				vtkData->GetCellData()->AddArray(fesppProperty->getVtkData());
+				this->vtkData->GetPartition(0)->GetCellData()->AddArray(fesppProperty->getVtkData());
 				break;
 			case ResqmlPropertyToVtkDataArray::typeSupport::POINTS:
-				vtkData->GetPointData()->AddArray(fesppProperty->getVtkData());
+				this->vtkData->GetPartition(0)->GetPointData()->AddArray(fesppProperty->getVtkData());
 				break;
 			default:
 				throw std::invalid_argument("The property is attached on a non supported topological element i.e. not cell, not point.");
 			}
 		}
 	}
-	*/
+	this->vtkData->Modified();
 }
 
 void ResqmlAbstractRepresentationToVtkDataset::deleteDataArray(const std::string &uuid)
@@ -85,10 +86,10 @@ void ResqmlAbstractRepresentationToVtkDataset::deleteDataArray(const std::string
 		switch (uuidToVtkDataArray[uuid]->getSupport())
 		{
 		case ResqmlPropertyToVtkDataArray::typeSupport::CELLS:
-			vtkData->GetCellData()->RemoveArray(uuidToVtkDataArray[uuid]->getVtkData()->GetName());
+			vtkData->GetPartition(0)->GetCellData()->RemoveArray(uuidToVtkDataArray[uuid]->getVtkData()->GetName());
 			break;
 		case ResqmlPropertyToVtkDataArray::typeSupport::POINTS:
-			vtkData->GetPointData()->RemoveArray(uuidToVtkDataArray[uuid]->getVtkData()->GetName());
+			vtkData->GetPartition(0)->GetPointData()->RemoveArray(uuidToVtkDataArray[uuid]->getVtkData()->GetName());
 			break;
 		default:
 			throw std::invalid_argument("The property is attached on a non supported topological element i.e. not cell, not point.");
@@ -96,7 +97,7 @@ void ResqmlAbstractRepresentationToVtkDataset::deleteDataArray(const std::string
 	}
 }
 
-vtkSmartPointer<vtkDataSet> ResqmlAbstractRepresentationToVtkDataset::getOutput() const
+vtkSmartPointer<vtkPartitionedDataSet> ResqmlAbstractRepresentationToVtkDataset::getOutput() const
 {
 	return vtkData;
 }

@@ -16,35 +16,37 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 -----------------------------------------------------------------------*/
-#ifndef __ResqmlPolylineToVtkPolyData_h
-#define __ResqmlPolylineToVtkPolyData_h
+#ifndef __ResqmlTriangulatedSetToVtkPartitionedDataSet_h
+#define __ResqmlTriangulatedSetToVtkPartitionedDataSet_h
+
+/** @brief	transform a resqml TriangulatedSetRepresentation representation to vtkPolyData
+ */
+
+// include system
+#include <unordered_map>
+#include <string>
 
 #include "ResqmlMapping/ResqmlAbstractRepresentationToVtkDataset.h"
 
 namespace RESQML2_NS
 {
-	class PolylineSetRepresentation;
+	class TriangulatedSetRepresentation;
 }
 
-/** @brief	The fespp polyline representation (set or simple)
- */
-
-class ResqmlPolylineToVtkPolyData : public ResqmlAbstractRepresentationToVtkDataset
+class ResqmlTriangulatedSetToVtkPartitionedDataSet : public ResqmlAbstractRepresentationToVtkDataset
 {
 public:
 	/**
-	 * Constructor
-	 */
-	ResqmlPolylineToVtkPolyData(RESQML2_NS::PolylineSetRepresentation *polyline, int proc_number = 1, int max_proc = 1);
-
+	* Constructor
+	*/
+	ResqmlTriangulatedSetToVtkPartitionedDataSet(RESQML2_NS::TriangulatedSetRepresentation *triangulated, int proc_number = 1, int max_proc = 1);
+	
 	/**
-	 * load vtkDataSet with resqml data
-	 */
+	* load vtkDataSet with resqml data
+	*/
 	void loadVtkObject();
 
-	std::string message;
-
 protected:
-	RESQML2_NS::PolylineSetRepresentation *resqmlData;
+	RESQML2_NS::TriangulatedSetRepresentation *resqmlData;
 };
 #endif

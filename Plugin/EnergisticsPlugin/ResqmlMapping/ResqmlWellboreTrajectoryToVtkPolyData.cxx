@@ -80,6 +80,6 @@ void ResqmlWellboreTrajectoryToVtkPolyData::loadVtkObject()
 
 	vtk_polydata->SetLines(setPolylineRepresentationLines);
 
-	this->vtkData = vtk_polydata;
+	this->vtkData->SetPartition(0, vtk_polydata);
 	this->vtkData->Modified();
 }

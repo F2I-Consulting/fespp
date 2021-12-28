@@ -38,6 +38,7 @@ vtkCxxSetObjectMacro(EnergisticsPlugin, Controller, vtkMultiProcessController);
 
 //----------------------------------------------------------------------------
 EnergisticsPlugin::EnergisticsPlugin() : FileNames({}),
+                                         FilesNames(vtkStringArray::New()),
                                          Controller(nullptr),
                                          MarkerOrientation(true),
                                          AssemblyTag(0),
@@ -56,7 +57,7 @@ EnergisticsPlugin::EnergisticsPlugin() : FileNames({}),
 //----------------------------------------------------------------------------
 EnergisticsPlugin::~EnergisticsPlugin()
 {
-   this->SetController(nullptr);
+  this->SetController(nullptr);
   delete this->repository;
 }
 
@@ -86,10 +87,14 @@ void EnergisticsPlugin::SetFileName(const char *fname)
 //----------------------------------------------------------------------------
 void EnergisticsPlugin::AddFileName(const char *fname)
 {
-  if (fname != nullptr)                                            //&& !this->FileNames.insert(fname).second)
+  if (fname != nullptr) //&& !this->FileNames.insert(fname).second)
   {
+    this->FilesNames->InsertNextValue(fname);
     this->repository->addFile(fname, 1);
+    this->dataAssembly = this->repository->getVtkPartionedDatasSetCollection()->GetDataAssembly();
+    this->AssemblyTag++;
     this->Modified();
+    this->Update();
   }
 }
 
@@ -120,59 +125,30 @@ int EnergisticsPlugin::GetNumberOfFileNames() const
   return this->FileNames.size();
 }
 
-/*****************************************
-  *  OLD => DELETE ?
-//----------------------------------------------------------------------------
-int vtkEPCReader::GetFilesListArrayStatus(const char *file)
+//------------------------------------------------------------------------------
+vtkStringArray *EnergisticsPlugin::GetAllFilesNames()
 {
-  return FilesList->ArrayIsEnabled(file);
+  return this->FilesNames;
 }
 
-//----------------------------------------------------------------------------
-int vtkEPCReader::GetNumberOfFilesListArrays()
+//------------------------------------------------------------------------------
+void EnergisticsPlugin::SetFiles(const std::string &file)
 {
-  return FilesList->GetNumberOfArrays();
 }
-
-//----------------------------------------------------------------------------
-const char *vtkEPCReader::GetFilesListArrayName(int index)
-{
-  return FilesList->GetArrayName(index);
-}
-
-//----------------------------------------------------------------------------
-void vtkEPCReader::SetFilesList(const char *file, int status)
-{
-  if (status)
-  {
-    if (strlen(file) != 0) {
-      std::string extension = vtksys::SystemTools::GetFilenameExtension(std::string(fileName));
-
-      // const std::string fileStr(file);
-      // FilesList->AddArray(file, status);
-      // const std::string extension = std::string(fileName).length() > 3
-      // 						  ? std::string(fileName).substr(std::string(fileName).length() - 3, 3)
-      // 						  : "";
-
-      if (extension == "epc")
-      {
-        repository.addEpcDocument(std::string(fileName))
-      }
-    }
-  }
-  //******* TODO ********
-  // status disable
-}
-*/
 
 //----------------------------------------------------------------------------
 bool EnergisticsPlugin::AddSelector(const char *selector)
 {
-  if (selector != nullptr && this->Selectors.insert(selector).second)
+  if (selector != nullptr && this->selectors.insert(selector).second)
   {
     auto node_id = this->dataAssembly->GetFirstNodeByPath(selector);
     this->repository->selectNodeId(node_id);
     this->Modified();
+    Modified();
+    Update();
+    UpdateDataObject();
+    UpdateInformation();
+    UpdateWholeExtent();
     return true;
   }
   return false;
@@ -181,9 +157,10 @@ bool EnergisticsPlugin::AddSelector(const char *selector)
 //----------------------------------------------------------------------------
 void EnergisticsPlugin::ClearSelectors()
 {
-  if (!this->Selectors.empty())
+  this->repository->clearSelection();
+  if (!this->selectors.empty())
   {
-    this->Selectors.clear();
+    this->selectors.clear();
     this->Modified();
   }
 }
@@ -191,7 +168,7 @@ void EnergisticsPlugin::ClearSelectors()
 //----------------------------------------------------------------------------
 int EnergisticsPlugin::GetNumberOfSelectors() const
 {
-  return this->Selectors.size();
+  return this->selectors.size();
 }
 
 //----------------------------------------------------------------------------
@@ -199,6 +176,12 @@ void EnergisticsPlugin::SetSelector(const char *selector)
 {
   this->ClearSelectors();
   this->AddSelector(selector);
+
+  Modified();
+  Update();
+  UpdateDataObject();
+  UpdateInformation();
+  UpdateWholeExtent();
 }
 
 //----------------------------------------------------------------------------
@@ -206,7 +189,7 @@ const char *EnergisticsPlugin::GetSelector(int index) const
 {
   if (index >= 0 && index < this->GetNumberOfSelectors())
   {
-    auto iter = std::next(this->Selectors.begin(), index);
+    auto iter = std::next(this->selectors.begin(), index);
     return iter->c_str();
   }
   return nullptr;
@@ -241,8 +224,7 @@ int EnergisticsPlugin::RequestData(vtkInformation *,
   vtkInformation *outInfo = outputVector->GetInformationObject(0);
   vtkPartitionedDataSetCollection *output = vtkPartitionedDataSetCollection::SafeDownCast(outInfo->Get(vtkPartitionedDataSetCollection::DATA_OBJECT()));
   output->DeepCopy(this->repository->getVtkPartionedDatasSetCollection());
-  this->dataAssembly = output->GetDataAssembly();
-  this->AssemblyTag = 1;
+
   return 1;
 }
 
@@ -253,7 +235,7 @@ void EnergisticsPlugin::PrintSelf(ostream &os, vtkIndent indent)
 }
 
 //----------------------------------------------------------------------------
-vtkDataAssembly* EnergisticsPlugin::GetAssembly()
+vtkDataAssembly *EnergisticsPlugin::GetAssembly()
 {
   return dataAssembly;
 }
