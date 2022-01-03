@@ -90,7 +90,7 @@ void EnergisticsPlugin::AddFileName(const char *fname)
   if (fname != nullptr) //&& !this->FileNames.insert(fname).second)
   {
     this->FilesNames->InsertNextValue(fname);
-    this->repository->addFile(fname, 1);
+    this->repository->addFile(fname);
     this->dataAssembly = this->repository->getVtkPartionedDatasSetCollection()->GetDataAssembly();
     this->AssemblyTag++;
     this->Modified();
@@ -198,13 +198,13 @@ const char *EnergisticsPlugin::GetSelector(int index) const
 //----------------------------------------------------------------------------
 void EnergisticsPlugin::setMarkerOrientation(bool orientation)
 {
-  /******* TODO ********/
+  this->repository->setMarkerOrientation(orientation);
 }
 
 //----------------------------------------------------------------------------
 void EnergisticsPlugin::setMarkerSize(int size)
 {
-  /******* TODO ********/
+  this->repository->setMarkerSize(size);
 }
 
 //----------------------------------------------------------------------------

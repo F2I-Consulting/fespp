@@ -16,8 +16,8 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 -----------------------------------------------------------------------*/
-#ifndef SRC_VTK_ResqmlWellboreMarkerToVtkPolyData_H_
-#define SRC_VTK_ResqmlWellboreMarkerToVtkPolyData_H_
+#ifndef SRC_VTK_ResqmlWellboreMarkerFrameToVtkPartitionedDataSet_H_
+#define SRC_VTK_ResqmlWellboreMarkerFrameToVtkPartitionedDataSet_H_
 
 #include "ResqmlMapping/ResqmlAbstractRepresentationToVtkDataset.h"
 
@@ -27,36 +27,35 @@ namespace RESQML2_NS
 	class AbstractValuesProperty;
 }
 
-class ResqmlWellboreMarkerToVtkPolyData : public ResqmlAbstractRepresentationToVtkDataset
+class ResqmlWellboreMarkerFrameToVtkPartitionedDataSet : public ResqmlAbstractRepresentationToVtkDataset
 {
 public:
 	/**
 	* Constructor
 	*/
-	ResqmlWellboreMarkerToVtkPolyData(RESQML2_NS::WellboreMarkerFrameRepresentation *marker, int MarkerIndex, int proc_number = 1, int max_proc = 1);
+	ResqmlWellboreMarkerFrameToVtkPartitionedDataSet(RESQML2_NS::WellboreMarkerFrameRepresentation *marker, bool orientation, int size, int proc_number = 1, int max_proc = 1);
 
 	
 	/**
 	* load vtkDataSet with resqml data
 	*/
-	void loadVtkObject();
+	void loadVtkObject(); 
 
 	void toggleMarkerOrientation(bool orientation);
 	void setMarkerSize(int newSize);
 
 
 protected:
-	resqml2::WellboreFrameRepresentation *resqmlData;
+	resqml2::WellboreMarkerFrameRepresentation *resqmlData;
 
 private:
 	void createDisk(size_t markerIndex);
 	void createSphere(size_t markerIndex);
-	size_t searchMarkerIndex();
-
-	size_t markerIndexInFrame;
 
 	bool orientation;
 	int size;
+
+	std::string current_index;
 };
-#endif /* SRC_VTK_ResqmlWellboreMarkerToVtkPolyData_H_ */
+#endif 
 

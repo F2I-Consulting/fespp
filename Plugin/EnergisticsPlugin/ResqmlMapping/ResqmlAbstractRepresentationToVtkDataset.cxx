@@ -34,7 +34,8 @@ ResqmlAbstractRepresentationToVtkDataset::ResqmlAbstractRepresentationToVtkDatas
 	: resqmlData(abstract_representation),
 	  vtkData(nullptr),
 	  procNumber(proc_number),
-	  maxProc(max_proc)
+	  maxProc(max_proc),
+	  uuid("")
 {
 	this->isHyperslabed = false;
 }

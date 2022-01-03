@@ -71,6 +71,10 @@ public:
 	 */
 	vtkSmartPointer<vtkPartitionedDataSet> getOutput() const;
 
+	/**
+	 * set uuid for verify
+	 */
+	void setUuid(const std::string &uuid) { this->uuid = uuid;}
 
 	uint64_t pointCount;
 	uint32_t iCellCount;
@@ -97,6 +101,8 @@ protected:
 
 	int procNumber;
 	int maxProc;*/
+
+	std::string uuid;
 
 	vtkSmartPointer<vtkPartitionedDataSet> vtkData;
 	std::unordered_map<std::string, class ResqmlPropertyToVtkDataArray *> uuidToVtkDataArray;

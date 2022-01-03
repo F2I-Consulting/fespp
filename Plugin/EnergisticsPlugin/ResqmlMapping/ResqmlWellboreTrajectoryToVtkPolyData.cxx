@@ -33,26 +33,32 @@ under the License.
 //----------------------------------------------------------------------------
 ResqmlWellboreTrajectoryToVtkPolyData::ResqmlWellboreTrajectoryToVtkPolyData(resqml2::WellboreTrajectoryRepresentation *wellbore, int proc_number, int max_proc)
 	: ResqmlAbstractRepresentationToVtkDataset(wellbore,
-											   proc_number,
-											   max_proc)
+											   proc_number - 1,
+											   max_proc - 1),
+	  resqmlData(wellbore)
 {
+	this->pointCount = wellbore->getXyzPointCountOfPatch(0);
+
+	this->vtkData = vtkSmartPointer<vtkPartitionedDataSet>::New();
+
+	this->loadVtkObject();
+
+	this->vtkData->Modified();
 }
 
 //----------------------------------------------------------------------------
 void ResqmlWellboreTrajectoryToVtkPolyData::loadVtkObject()
 {
-	auto *wellboreSetRepresentation = static_cast<resqml2::WellboreTrajectoryRepresentation *>(this->resqmlData);
-
 	// GEOMETRY
 	vtkSmartPointer<vtkPolyData> vtk_polydata = vtkSmartPointer<vtkPolyData>::New();
+
 	// POINT
-	const ULONG64 pointCount = wellboreSetRepresentation->getXyzPointCountOfPatch(0);
 	double *allXyzPoints = new double[pointCount * 3]; // Will be deleted by VTK
-	wellboreSetRepresentation->getXyzPointsOfAllPatchesInGlobalCrs(allXyzPoints);
+	this->resqmlData->getXyzPointsOfAllPatchesInGlobalCrs(allXyzPoints);
 	vtkSmartPointer<vtkPoints> vtkPts = vtkSmartPointer<vtkPoints>::New();
 
 	const size_t coordCount = pointCount * 3;
-	if (wellboreSetRepresentation->getLocalCrs(0)->isDepthOriented())
+	if (this->resqmlData->getLocalCrs(0)->isDepthOriented())
 	{
 		for (size_t zCoordIndex = 2; zCoordIndex < coordCount; zCoordIndex += 3)
 		{
