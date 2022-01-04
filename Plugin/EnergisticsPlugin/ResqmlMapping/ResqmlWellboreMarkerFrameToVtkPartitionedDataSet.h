@@ -49,8 +49,8 @@ protected:
 	resqml2::WellboreMarkerFrameRepresentation *resqmlData;
 
 private:
-	void createDisk(size_t markerIndex);
-	void createSphere(size_t markerIndex);
+	void createDisk(unsigned int markerIndex);
+	void createSphere(unsigned int markerIndex);
 
 	bool orientation;
 	int size;

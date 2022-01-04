@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.12.0)
+cmake_minimum_required(VERSION 3.14.0)
 
 # The NEW behavior for this policy is to set VERSION as documented by the project() command.
 cmake_policy(SET CMP0048 NEW)
@@ -19,19 +19,8 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}"
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}")
 set(BUILD_SHARED_LIBS ON)
 
-# Find ParaView. This will bring in ParaView's CMake API and imported targets.cmake_minimum_required(VERSION 3.14)
-set(ParaView_DIR "/home/cedric/ParaView/ParaView-v5.10.0-RC1/build")
-set(VTK_DIR "/home/cedric/ParaView/ParaView-v5.10.0-RC1/build")
-
-find_package(VTK COMPONENTS
-PythonUsed
-ParallelMPI
-PythonInterpreter
-WebCore
-WebGLExporter
-)
-
-find_package(ParaView REQUIRED)
+# Find ParaView. This will bring in ParaView's CMake API and imported targets.
+find_package(ParaView REQUIRED pqCore)
 
 # Scan the plugin file in order to set up internal data structures for building plugins
 set("_paraview_plugin_default_${CMAKE_PROJECT_NAME}" ON)
