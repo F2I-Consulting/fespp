@@ -36,7 +36,7 @@ under the License.
 //----------------------------------------------------------------------------
 ResqmlWellboreChannelToVtkPolyData::ResqmlWellboreChannelToVtkPolyData(resqml2::WellboreFrameRepresentation *frame, resqml2::AbstractValuesProperty *property, int proc_number, int max_proc)
 	: ResqmlAbstractRepresentationToVtkDataset(frame,
-											   proc_number,
+											   proc_number -1,
 											   max_proc)
 {
 	this->abstractProperty = property;

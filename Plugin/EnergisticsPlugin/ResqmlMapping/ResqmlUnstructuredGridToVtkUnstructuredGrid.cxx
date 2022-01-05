@@ -37,6 +37,8 @@ under the License.
 #include <vtkWedge.h>
 #include <vtkUnstructuredGrid.h>
 
+#include <vtkOutputWindow.h>
+
 // FESAPI
 #include <fesapi/resqml2/UnstructuredGridRepresentation.h>
 //#include <fesapi/resqml2/SubRepresentation.h>
@@ -49,7 +51,7 @@ under the License.
 ResqmlUnstructuredGridToVtkUnstructuredGrid::ResqmlUnstructuredGridToVtkUnstructuredGrid(RESQML2_NS::UnstructuredGridRepresentation *unstructuredGrid, int proc_number, int max_proc)
 	: ResqmlAbstractRepresentationToVtkDataset(unstructuredGrid,
 											   proc_number - 1,
-											   max_proc - 1),
+											   max_proc),
 	  resqmlData(unstructuredGrid)
 {
 	this->pointCount = unstructuredGrid->getXyzPointCountOfAllPatches();
@@ -65,7 +67,7 @@ ResqmlUnstructuredGridToVtkUnstructuredGrid::ResqmlUnstructuredGridToVtkUnstruct
 void ResqmlUnstructuredGridToVtkUnstructuredGrid::loadVtkObject()
 {
 	vtkSmartPointer<vtkUnstructuredGrid> vtk_unstructuredGrid = vtkSmartPointer<vtkUnstructuredGrid>::New();
-	// vtk_unstructuredGrid->Allocate(unstructuredGridRep->getCellCount());
+	vtk_unstructuredGrid->Allocate(this->resqmlData->getCellCount());
 
 	// POINTS
 	double *allXyzPoints = new double[this->pointCount * 3]; // Will be deleted by VTK;
@@ -105,6 +107,7 @@ void ResqmlUnstructuredGridToVtkUnstructuredGrid::loadVtkObject()
 	std::unique_ptr<unsigned char[]> cellFaceNormalOutwardlyDirected(new unsigned char[cumulativeFaceCountPerCell == nullptr
 																						   ? cellCount * this->resqmlData->getConstantFaceCountOfCells()
 																						   : cumulativeFaceCountPerCell[cellCount - 1]]);
+	
 	this->resqmlData->getCellFaceIsRightHanded(cellFaceNormalOutwardlyDirected.get());
 
 	auto maxCellIndex = (this->procNumber + 1) * cellCount / this->maxProc;
@@ -113,7 +116,9 @@ void ResqmlUnstructuredGridToVtkUnstructuredGrid::loadVtkObject()
 	{
 		bool isOptimizedCell = false;
 
+
 		const ULONG64 localFaceCount = this->resqmlData->getFaceCountOfCell(cellIndex);
+		
 		if (localFaceCount == 4)
 		{ // VTK_TETRA
 			cellVtkTetra(vtk_unstructuredGrid, this->resqmlData, cumulativeFaceCountPerCell, cellFaceNormalOutwardlyDirected.get(), cellIndex);
@@ -157,6 +162,7 @@ void ResqmlUnstructuredGridToVtkUnstructuredGrid::loadVtkObject()
 			vtk_unstructuredGrid->InsertNextCell(VTK_POLYHEDRON, idList);
 		}
 	}
+
 	this->resqmlData->unloadGeometry();
 
 	this->vtkData->SetPartition(0, vtk_unstructuredGrid);

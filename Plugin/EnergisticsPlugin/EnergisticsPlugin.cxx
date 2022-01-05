@@ -58,7 +58,7 @@ EnergisticsPlugin::EnergisticsPlugin() : FileNames({}),
 EnergisticsPlugin::~EnergisticsPlugin()
 {
   this->SetController(nullptr);
-  delete this->repository;
+//  delete this->repository;
 }
 
 //----------------------------------------------------------------------------

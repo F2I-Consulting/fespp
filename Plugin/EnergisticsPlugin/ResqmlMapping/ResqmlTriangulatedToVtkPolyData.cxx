@@ -38,7 +38,7 @@ under the License.
 ResqmlTriangulatedToVtkPolyData::ResqmlTriangulatedToVtkPolyData(RESQML2_NS::TriangulatedSetRepresentation *triangulated, int patch_index, int proc_number, int max_proc)
 	: ResqmlAbstractRepresentationToVtkDataset(triangulated,
 											   proc_number - 1,
-											   max_proc - 1),
+											   max_proc),
 	  resqmlData(triangulated),
 	  patch_index(patch_index)
 {

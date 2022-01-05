@@ -36,7 +36,7 @@ under the License.
 ResqmlTriangulatedSetToVtkPartitionedDataSet::ResqmlTriangulatedSetToVtkPartitionedDataSet(RESQML2_NS::TriangulatedSetRepresentation *triangulated, int proc_number, int max_proc)
 	: ResqmlAbstractRepresentationToVtkDataset(triangulated,
 											   proc_number - 1,
-											   max_proc - 1),
+											   max_proc),
 	  resqmlData(triangulated)
 {
 	this->vtkData = vtkSmartPointer<vtkPartitionedDataSet>::New();

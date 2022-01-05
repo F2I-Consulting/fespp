@@ -41,7 +41,7 @@ under the License.
 ResqmlIjkGridToVtkUnstructuredGrid::ResqmlIjkGridToVtkUnstructuredGrid(RESQML2_NS::AbstractIjkGridRepresentation *ijkGrid, int proc_number, int max_proc)
 	: ResqmlAbstractRepresentationToVtkDataset(ijkGrid,
 											   proc_number-1,
-											   max_proc-1),
+											   max_proc),
 	  resqmlData(ijkGrid)
 {
 	this->iCellCount = ijkGrid->getICellCount();
