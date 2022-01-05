@@ -673,7 +673,7 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::changeInvalid
     std::replace(text.begin(), text.end(), '(', '.');
     std::replace(text.begin(), text.end(), ')', '.');
     std::replace(text.begin(), text.end(), '+', '.');
-    return text;
+	return text;
 }
 
 vtkPartitionedDataSetCollection *ResqmlDataRepositoryToVtkPartitionedDataSetCollection::getVtkPartionedDatasSetCollection()
@@ -683,8 +683,8 @@ vtkPartitionedDataSetCollection *ResqmlDataRepositoryToVtkPartitionedDataSetColl
     {
         this->output->RemovePartitionedDataSet(index_partitioned);
     }
-    size_t index = 0;
-    for (auto &node_selection : this->current_selection)
+    unsigned int index = 0;
+    for (const int node_selection : this->current_selection)
     {
         ResqmlAbstractRepresentationToVtkDataset *rep = nullptr;
         if (this->nodeId_to_resqml.find(node_selection) != this->nodeId_to_resqml.end())
@@ -702,7 +702,7 @@ vtkPartitionedDataSetCollection *ResqmlDataRepositoryToVtkPartitionedDataSetColl
         }
     }
 
-    for (auto &old_selection : this->old_selection)
+    for (const int old_selection : this->old_selection)
     {
         if (this->nodeId_to_resqml.find(old_selection) != this->nodeId_to_resqml.end())
         {
@@ -714,11 +714,13 @@ vtkPartitionedDataSetCollection *ResqmlDataRepositoryToVtkPartitionedDataSetColl
     return this->output;
 }
 
-int ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchNodeByUuid(std::string uuid)
+int ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchNodeByUuid(const std::string& uuid)
 {
-    for (auto it = this->nodeId_to_uuid.begin(); it != nodeId_to_uuid.end(); ++it)
-        if (it->second == uuid)
-            return it->first;
+	for (const auto& it : this->nodeId_to_uuid) {
+		if (it.second == uuid) {
+			return it.first;
+		}
+	}
 
     return -1;
 }

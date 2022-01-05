@@ -105,7 +105,7 @@ private:
 	ResqmlAbstractRepresentationToVtkDataset *loadToVtk(std::string uuid, EntityType type);
 
 	std::string changeInvalidCharacter(std::string text);
-	int searchNodeByUuid(std::string uuid);
+	int searchNodeByUuid(const std::string& uuid);
 
 	vtkNew<vtkDataArraySelection> EntitySelection[NUMBER_OF_ENTITY_TYPES];
 
