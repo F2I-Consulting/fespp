@@ -146,7 +146,6 @@ protected:
 	~EnergisticsPlugin() final;
 
 private:
-	EnergisticsPlugin(const EnergisticsPlugin &);
 
 	/*****************************************
 	*  OLD => DELETE ?
@@ -164,9 +163,9 @@ private:
 
 	// treeview
 	std::set<std::string> selectors;
-	 int AssemblyTag;
+	int AssemblyTag;
 
-	 vtkDataAssembly* dataAssembly;
+	vtkDataAssembly* dataAssembly;
 
 	// Properties
 	bool MarkerOrientation;
@@ -175,6 +174,6 @@ private:
 	int RequestInformation(	vtkInformation* metadata, vtkInformationVector **, vtkInformationVector *) override;
 	int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
 
-	ResqmlDataRepositoryToVtkPartitionedDataSetCollection *repository;
+	ResqmlDataRepositoryToVtkPartitionedDataSetCollection* repository;
 };
 #endif

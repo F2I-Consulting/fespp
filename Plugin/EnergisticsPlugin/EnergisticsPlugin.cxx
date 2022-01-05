@@ -49,8 +49,6 @@ EnergisticsPlugin::EnergisticsPlugin() : FileNames({}),
 
   this->SetController(vtkMultiProcessController::GetGlobalController());
 
-  vtkMultiProcessController *controller = vtkMultiProcessController::GetGlobalController();
-
   this->repository = new ResqmlDataRepositoryToVtkPartitionedDataSetCollection(this->Controller->GetLocalProcessId(), this->Controller->GetNumberOfProcesses());
 }
 
@@ -66,11 +64,7 @@ void EnergisticsPlugin::SetFileName(const char *fname)
 {
   if (fname == nullptr)
   {
-    if (!this->FileNames.empty())
-    {
-      this->FileNames.clear();
-      this->Modified();
-    }
+	ClearFileNames();
     return;
   }
 
@@ -141,7 +135,7 @@ bool EnergisticsPlugin::AddSelector(const char *selector)
 {
   if (selector != nullptr && this->selectors.insert(selector).second)
   {
-    auto node_id = this->dataAssembly->GetFirstNodeByPath(selector);
+    int node_id = this->dataAssembly->GetFirstNodeByPath(selector);
     this->repository->selectNodeId(node_id);
     this->Modified();
     Modified();

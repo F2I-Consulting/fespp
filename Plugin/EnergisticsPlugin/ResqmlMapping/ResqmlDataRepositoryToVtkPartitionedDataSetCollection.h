@@ -46,7 +46,7 @@ class ResqmlDataRepositoryToVtkPartitionedDataSetCollection : public vtkPartitio
 {
 public:
 	ResqmlDataRepositoryToVtkPartitionedDataSetCollection(int proc_number, int max_proc);
-	~ResqmlDataRepositoryToVtkPartitionedDataSetCollection() final;
+	~ResqmlDataRepositoryToVtkPartitionedDataSetCollection() final = default;
 
 	// --------------- PART: TreeView ---------------------
 
@@ -83,10 +83,7 @@ public:
 	void selectNodeId(int node);
 	void clearSelection();
 
-protected:
 private:
-	ResqmlDataRepositoryToVtkPartitionedDataSetCollection(const ResqmlDataRepositoryToVtkPartitionedDataSetCollection &);
-
 	std::string searchFaultPolylines(const std::string &fileName);
 	std::string searchHorizonPolylines(const std::string &fileName);
 	std::string searchUnstructuredGrid(const std::string &fileName);
