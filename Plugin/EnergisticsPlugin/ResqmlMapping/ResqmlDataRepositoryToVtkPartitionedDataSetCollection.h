@@ -45,7 +45,7 @@ class ResqmlAbstractRepresentationToVtkDataset;
 class ResqmlDataRepositoryToVtkPartitionedDataSetCollection : public vtkPartitionedDataSetCollection
 {
 public:
-	ResqmlDataRepositoryToVtkPartitionedDataSetCollection(int proc_number, int max_proc);
+	ResqmlDataRepositoryToVtkPartitionedDataSetCollection();
 	~ResqmlDataRepositoryToVtkPartitionedDataSetCollection() final = default;
 
 	// --------------- PART: TreeView ---------------------
@@ -68,7 +68,7 @@ public:
 		NUMBER_OF_ENTITY_TYPES,
 	};
 
-	vtkDataAssembly *GetAssembly();
+	vtkDataAssembly *GetAssembly() { return output->GetDataAssembly(); }
 
 	//---------------------------------
 
@@ -104,15 +104,8 @@ private:
 	std::string changeInvalidCharacter(std::string text);
 	int searchNodeByUuid(const std::string& uuid);
 
-	vtkNew<vtkDataArraySelection> EntitySelection[NUMBER_OF_ENTITY_TYPES];
-
-	char *FileName; // pipename
-
 	bool markerOrientation;
 	int markerSize;
-
-	int proc_number;
-	int max_proc;
 
 	common::DataObjectRepository *repository;
 

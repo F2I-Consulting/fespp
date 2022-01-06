@@ -53,25 +53,22 @@ under the License.
 #include "ResqmlWellboreTrajectoryToVtkPolyData.h"
 #include "ResqmlWellboreMarkerFrameToVtkPartitionedDataSet.h"
 
-ResqmlDataRepositoryToVtkPartitionedDataSetCollection::ResqmlDataRepositoryToVtkPartitionedDataSetCollection(int proc_number, int max_proc)
-    : output(vtkSmartPointer<vtkPartitionedDataSetCollection>::New()),
-      repository(new common::DataObjectRepository()),
-      proc_number(proc_number),
-      max_proc(max_proc)
+ResqmlDataRepositoryToVtkPartitionedDataSetCollection::ResqmlDataRepositoryToVtkPartitionedDataSetCollection() : 
+	markerOrientation(false),
+	markerSize(10),
+	repository(new common::DataObjectRepository()),
+	output(vtkSmartPointer<vtkPartitionedDataSetCollection>::New()),
+	nodeId_to_uuid(),
+	nodeId_to_EntityType(),
+	nodeId_to_resqml(),
+	current_selection(),
+	old_selection()
 {
     auto assembly = vtkSmartPointer<vtkDataAssembly>::New();
     assembly->SetRootNodeName("data");
+	output->SetDataAssembly(assembly);
+
     nodeId_to_EntityType[0] = ResqmlDataRepositoryToVtkPartitionedDataSetCollection::EntityType::INTERPRETATION;
-    this->output->SetDataAssembly(assembly);
-
-    this->current_selection = {};
-    this->old_selection = {};
-}
-
-//----------------------------------------------------------------------------
-vtkDataAssembly *ResqmlDataRepositoryToVtkPartitionedDataSetCollection::GetAssembly()
-{
-    return output->GetDataAssembly();
 }
 
 //----------------------------------------------------------------------------

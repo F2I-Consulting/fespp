@@ -37,19 +37,19 @@ vtkStandardNewMacro(EnergisticsPlugin);
 vtkCxxSetObjectMacro(EnergisticsPlugin, Controller, vtkMultiProcessController);
 
 //----------------------------------------------------------------------------
-EnergisticsPlugin::EnergisticsPlugin() : FileNames({}),
-                                         FilesNames(vtkStringArray::New()),
-                                         Controller(nullptr),
-                                         MarkerOrientation(true),
-                                         AssemblyTag(0),
-                                         MarkerSize(10)
+EnergisticsPlugin::EnergisticsPlugin() :
+	FileNames(),
+	FilesNames(vtkStringArray::New()),
+	Controller(nullptr),
+	AssemblyTag(0),
+	MarkerOrientation(true),
+	MarkerSize(10),
+	repository(new ResqmlDataRepositoryToVtkPartitionedDataSetCollection())
 {
   SetNumberOfInputPorts(0);
   SetNumberOfOutputPorts(1);
 
   this->SetController(vtkMultiProcessController::GetGlobalController());
-
-  this->repository = new ResqmlDataRepositoryToVtkPartitionedDataSetCollection(this->Controller->GetLocalProcessId(), this->Controller->GetNumberOfProcesses());
 }
 
 //----------------------------------------------------------------------------

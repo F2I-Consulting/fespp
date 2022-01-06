@@ -147,6 +147,9 @@ protected:
 
 private:
 
+	int RequestInformation(vtkInformation* metadata, vtkInformationVector **, vtkInformationVector *) override;
+	int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
+
 	/*****************************************
 	*  OLD => DELETE ?
 	//  pipename
@@ -170,9 +173,6 @@ private:
 	// Properties
 	bool MarkerOrientation;
 	int MarkerSize;
-
-	int RequestInformation(	vtkInformation* metadata, vtkInformationVector **, vtkInformationVector *) override;
-	int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
 
 	ResqmlDataRepositoryToVtkPartitionedDataSetCollection* repository;
 };
