@@ -42,12 +42,11 @@ class ResqmlAbstractRepresentationToVtkDataset;
 /**
  * @brief	class description.
  */
-class ResqmlDataRepositoryToVtkPartitionedDataSetCollection : public vtkPartitionedDataSetCollection
+class ResqmlDataRepositoryToVtkPartitionedDataSetCollection 
 {
 public:
 	ResqmlDataRepositoryToVtkPartitionedDataSetCollection();
-	~ResqmlDataRepositoryToVtkPartitionedDataSetCollection() final = default;
-
+	~ResqmlDataRepositoryToVtkPartitionedDataSetCollection();
 	// --------------- PART: TreeView ---------------------
 
 	// different tab
@@ -72,7 +71,7 @@ public:
 
 	//---------------------------------
 
-	void addFile(const char *file);
+	std::string addFile(const char *file);
 
 	// Wellbore Options
 	void setMarkerOrientation(bool orientation) { markerOrientation = orientation; }

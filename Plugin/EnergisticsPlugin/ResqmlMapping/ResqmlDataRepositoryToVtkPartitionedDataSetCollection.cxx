@@ -72,7 +72,7 @@ ResqmlDataRepositoryToVtkPartitionedDataSetCollection::ResqmlDataRepositoryToVtk
 }
 
 //----------------------------------------------------------------------------
-void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::addFile(const char *fileName)
+std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::addFile(const char *fileName)
 {
     COMMON_NS::EpcDocument pck(fileName);
     const std::string resqmlResult = pck.deserializeInto(*repository);
@@ -103,10 +103,7 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::addFile(const char *
     // get TimeSeries
     message += searchTimeSeries(fileName);
 
-    if (!message.empty())
-    {
-        vtkErrorMacro(<< message.c_str());
-    }
+    return message;
 }
 
 std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchFaultPolylines(const std::string &fileName)
@@ -493,8 +490,7 @@ ResqmlAbstractRepresentationToVtkDataset *ResqmlDataRepositoryToVtkPartitionedDa
         }
         catch (const std::exception &e)
         {
-            vtkErrorMacro(<< "Error in ijkgrid load for uuid: " << e.what());
-            return nullptr;
+            throw std::string("Error in ijkgrid load for uuid: " + std::string(e.what()));
         }
         break;
     }
@@ -509,8 +505,7 @@ ResqmlAbstractRepresentationToVtkDataset *ResqmlDataRepositoryToVtkPartitionedDa
         }
         catch (const std::exception &e)
         {
-            vtkErrorMacro(<< "Error in grid 2D load for uuid: " << e.what());
-            return nullptr;
+            throw std::string("Error in grid 2D load for uuid: " + std::string(e.what()));
         }
         break;
     }
@@ -525,8 +520,7 @@ ResqmlAbstractRepresentationToVtkDataset *ResqmlDataRepositoryToVtkPartitionedDa
         }
         catch (const std::exception &e)
         {
-            vtkErrorMacro(<< "Error in triangulated load for uuid: " << e.what());
-            return nullptr;
+            throw std::string("Error in triangulated load for uuid: " + std::string(e.what()));
         }
         break;
     }
@@ -541,8 +535,7 @@ ResqmlAbstractRepresentationToVtkDataset *ResqmlDataRepositoryToVtkPartitionedDa
         }
         catch (const std::exception &e)
         {
-            vtkErrorMacro(<< "Error in polyline load for uuid: " << e.what());
-            return nullptr;
+            throw std::string("Error in polyline load for uuid: " + std::string(e.what()));
         }
         break;
     }
@@ -557,8 +550,7 @@ ResqmlAbstractRepresentationToVtkDataset *ResqmlDataRepositoryToVtkPartitionedDa
         }
         catch (const std::exception &e)
         {
-            vtkErrorMacro(<< "Error in unstructured grid load for uuid: " << e.what());
-            return nullptr;
+            throw std::string("Error in unstructured grid load for uuid: " + std::string(e.what()));
         }
         break;
     }
@@ -573,8 +565,7 @@ ResqmlAbstractRepresentationToVtkDataset *ResqmlDataRepositoryToVtkPartitionedDa
         }
         catch (const std::exception &e)
         {
-            vtkErrorMacro(<< "Error in wellbore trajectory load for uuid: " << e.what());
-            return nullptr;
+            throw std::string("Error in wellbore trajectory load for uuid: " + std::string(e.what()));
         }
         break;
     }
@@ -599,8 +590,7 @@ ResqmlAbstractRepresentationToVtkDataset *ResqmlDataRepositoryToVtkPartitionedDa
         }
         catch (const std::exception &e)
         {
-            vtkErrorMacro(<< "Error in wellbore marker frame load for uuid: " << e.what());
-            return nullptr;
+            throw std::string("Error in wellbore marker frame load for uuid: " + std::string(e.what()));
         }
         break;
     }
@@ -616,8 +606,7 @@ ResqmlAbstractRepresentationToVtkDataset *ResqmlDataRepositoryToVtkPartitionedDa
         }
         catch (const std::exception &e)
         {
-            vtkErrorMacro(<< "Error in wellbore marker load for uuid: " << e.what());
-            return nullptr;
+            throw std::string("Error in wellbore marker load for uuid: " + std::string(e.what()));
         }
         break;
     }
@@ -634,8 +623,7 @@ ResqmlAbstractRepresentationToVtkDataset *ResqmlDataRepositoryToVtkPartitionedDa
         }
         catch (const std::exception &e)
         {
-            vtkErrorMacro(<< "Error in property load for uuid: " << e.what());
-            return nullptr;
+            throw std::string("Error in property load for uuid: " + std::string(e.what()));
         }
         break;
     }

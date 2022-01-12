@@ -37,14 +37,13 @@ vtkStandardNewMacro(EnergisticsPlugin);
 vtkCxxSetObjectMacro(EnergisticsPlugin, Controller, vtkMultiProcessController);
 
 //----------------------------------------------------------------------------
-EnergisticsPlugin::EnergisticsPlugin() :
-	FileNames(),
-	FilesNames(vtkStringArray::New()),
-	Controller(nullptr),
-	AssemblyTag(0),
-	MarkerOrientation(true),
-	MarkerSize(10),
-	repository(new ResqmlDataRepositoryToVtkPartitionedDataSetCollection())
+EnergisticsPlugin::EnergisticsPlugin() : FileNames(),
+                                         FilesNames(vtkStringArray::New()),
+                                         Controller(nullptr),
+                                         AssemblyTag(0),
+                                         MarkerOrientation(true),
+                                         MarkerSize(10),
+                                         repository(new ResqmlDataRepositoryToVtkPartitionedDataSetCollection())
 {
   SetNumberOfInputPorts(0);
   SetNumberOfOutputPorts(1);
@@ -56,7 +55,7 @@ EnergisticsPlugin::EnergisticsPlugin() :
 EnergisticsPlugin::~EnergisticsPlugin()
 {
   this->SetController(nullptr);
-//  delete this->repository;
+  //delete this->repository;
 }
 
 //----------------------------------------------------------------------------
@@ -64,7 +63,7 @@ void EnergisticsPlugin::SetFileName(const char *fname)
 {
   if (fname == nullptr)
   {
-	ClearFileNames();
+    ClearFileNames();
     return;
   }
 
@@ -84,8 +83,21 @@ void EnergisticsPlugin::AddFileName(const char *fname)
   if (fname != nullptr) //&& !this->FileNames.insert(fname).second)
   {
     this->FilesNames->InsertNextValue(fname);
-    this->repository->addFile(fname);
-    this->dataAssembly = this->repository->getVtkPartionedDatasSetCollection()->GetDataAssembly();
+    std::string msg = this->repository->addFile(fname);
+    if (!msg.empty())
+    {
+      vtkWarningMacro(<< msg);
+    }
+
+    try
+    {
+      this->dataAssembly = this->repository->getVtkPartionedDatasSetCollection()->GetDataAssembly();
+    }
+    catch (const std::exception &e)
+    {
+      vtkErrorMacro(<< e.what());
+    }
+
     this->AssemblyTag++;
     this->Modified();
     this->Update();
@@ -217,7 +229,15 @@ int EnergisticsPlugin::RequestData(vtkInformation *,
 {
   vtkInformation *outInfo = outputVector->GetInformationObject(0);
   vtkPartitionedDataSetCollection *output = vtkPartitionedDataSetCollection::SafeDownCast(outInfo->Get(vtkPartitionedDataSetCollection::DATA_OBJECT()));
-  output->DeepCopy(this->repository->getVtkPartionedDatasSetCollection());
+
+  try
+  {
+    output->DeepCopy(this->repository->getVtkPartionedDatasSetCollection());
+  }
+  catch (const std::exception &e)
+  {
+    vtkErrorMacro(<< e.what());
+  }
 
   return 1;
 }

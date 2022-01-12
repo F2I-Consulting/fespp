@@ -40,7 +40,7 @@ under the License.
 //----------------------------------------------------------------------------
 ResqmlIjkGridToVtkUnstructuredGrid::ResqmlIjkGridToVtkUnstructuredGrid(RESQML2_NS::AbstractIjkGridRepresentation *ijkGrid, int proc_number, int max_proc)
 	: ResqmlAbstractRepresentationToVtkDataset(ijkGrid,
-											   proc_number-1,
+											   proc_number - 1,
 											   max_proc),
 	  resqmlData(ijkGrid)
 {
@@ -67,7 +67,7 @@ ResqmlIjkGridToVtkUnstructuredGrid::ResqmlIjkGridToVtkUnstructuredGrid(RESQML2_N
 	this->vtkData = vtkSmartPointer<vtkPartitionedDataSet>::New();
 
 	this->loadVtkObject();
-	
+
 	this->vtkData->Modified();
 }
 
@@ -95,7 +95,7 @@ void ResqmlIjkGridToVtkUnstructuredGrid::loadVtkObject()
 	// Create and set the list of points of the vtkUnstructuredGrid
 	vtkSmartPointer<vtkUnstructuredGrid> vtk_unstructuredGrid = vtkSmartPointer<vtkUnstructuredGrid>::New();
 
-	vtk_unstructuredGrid->SetPoints(createPoints(/*this->resqmlData*/));
+	vtk_unstructuredGrid->SetPoints(createPoints());
 
 	// Define hexahedron node ordering according to Paraview convention : https://lorensen.github.io/VTKExamples/site/VTKBook/05Chapter5/#Figure%205-3
 	std::array<unsigned int, 8> correspondingResqmlCornerId = {0, 1, 2, 3, 4, 5, 6, 7};
@@ -151,7 +151,7 @@ void ResqmlIjkGridToVtkUnstructuredGrid::loadVtkObject()
 
 	this->resqmlData->unloadSplitInformation();
 
-	this->vtkData->SetPartition(0,vtk_unstructuredGrid);
+	this->vtkData->SetPartition(0, vtk_unstructuredGrid);
 	this->vtkData->Modified();
 }
 
@@ -209,19 +209,16 @@ vtkSmartPointer<vtkPoints> ResqmlIjkGridToVtkUnstructuredGrid::createPoints()
 		std::unique_ptr<double[]> allXyzPoints(new double[this->pointCount * 3]);
 		this->resqmlData->getXyzPointsOfAllPatchesInGlobalCrs(allXyzPoints.get());
 		const size_t coordCount = this->pointCount * 3;
+
+		const double zIndice = this->resqmlData->getLocalCrs(0)->isDepthOriented() ? -1 : 1;
 		if (this->resqmlData->getLocalCrs(0)->isDepthOriented())
 		{
-			for (size_t i = 0; i < this->pointCount; ++i)
+			for (uint64_t pointIndex = 0; pointIndex < this->pointCount; ++pointIndex)
 			{
-				allXyzPoints[i * 3 + 2] *= -1;
+				auto idx = pointIndex * 3;
+				points->InsertNextPoint(allXyzPoints[idx], allXyzPoints[idx + 1], allXyzPoints[idx + 2] * zIndice);
 			}
 		}
-
-		vtkSmartPointer<vtkDoubleArray> vtkUnderlyingArray = vtkSmartPointer<vtkDoubleArray>::New();
-		vtkUnderlyingArray->SetNumberOfComponents(3);
-		// Take ownership of the underlying C array
-		vtkUnderlyingArray->SetArray(allXyzPoints.get(), coordCount, vtkAbstractArray::VTK_DATA_ARRAY_DELETE);
-		points->SetData(vtkUnderlyingArray);
 	}
 
 	return points;
