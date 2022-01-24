@@ -75,6 +75,7 @@ void ResqmlAbstractRepresentationToVtkDataset::addDataArray(const std::string &u
 			default:
 				throw std::invalid_argument("The property is attached on a non supported topological element i.e. not cell, not point.");
 			}
+			uuidToVtkDataArray[uuid] = fesppProperty;
 		}
 	}
 	this->vtkData->Modified();

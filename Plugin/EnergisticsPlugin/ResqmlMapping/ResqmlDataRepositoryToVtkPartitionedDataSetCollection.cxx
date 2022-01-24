@@ -666,13 +666,38 @@ vtkPartitionedDataSetCollection *ResqmlDataRepositoryToVtkPartitionedDataSetColl
         }
     }
 
-    for (const int old_selection : this->old_selection)
+
+    // delete property
+    for (const int selection : this->old_selection)
     {
-        if (this->nodeId_to_resqml.find(old_selection) != this->nodeId_to_resqml.end())
+        if (nodeId_to_EntityType[selection] == ResqmlDataRepositoryToVtkPartitionedDataSetCollection::EntityType::PROP)
         {
-            this->nodeId_to_resqml.erase(old_selection); // erase object
+            try
+            {
+                auto *assembly = this->output->GetDataAssembly();
+                const int node_parent = assembly->GetParent(searchNodeByUuid(nodeId_to_uuid[selection]));
+                if (this->nodeId_to_resqml.find(node_parent) != this->nodeId_to_resqml.end())
+                {
+                    ResqmlAbstractRepresentationToVtkDataset *rep = this->nodeId_to_resqml[node_parent];
+                    rep->deleteDataArray(nodeId_to_uuid[selection]);
+                }
+            }
+            catch (const std::exception &e)
+            {
+                throw std::string("Error in property load for uuid: " + std::string(e.what()));
+            }
         }
     }
+
+    //delete representation
+    for (const int selection : this->old_selection)
+    {
+        if (this->nodeId_to_resqml.find(selection) != this->nodeId_to_resqml.end())
+        {
+            this->nodeId_to_resqml.erase(selection); // erase object
+        }
+     }
+
 
     this->output->Modified();
     return this->output;
