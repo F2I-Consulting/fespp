@@ -57,7 +57,7 @@ void ResqmlPolylineToVtkPolyData::loadVtkObject()
 
 	// POINT
 	double *allXyzPoints = new double[this->pointCount * 3]; // Will be deleted by VTK
-	this->resqmlData->getXyzPointsOfPatch(0, allXyzPoints);
+	this->resqmlData->getXyzPointsOfPatchInGlobalCrs(0, allXyzPoints);
 
 	vtkSmartPointer<vtkPoints> vtkPts = vtkSmartPointer<vtkPoints>::New();
 

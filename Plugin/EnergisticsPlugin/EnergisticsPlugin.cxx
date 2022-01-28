@@ -18,10 +18,9 @@ under the License.
 -----------------------------------------------------------------------*/
 #include "EnergisticsPlugin.h"
 
-#include <algorithm>
-#include <assert.h>
+#include <exception>
+#include <iterator>
 
-#include <vtkDataArraySelection.h>
 #include <vtkIndent.h>
 #include <vtkInformation.h>
 #include <vtkInformationVector.h>
@@ -29,9 +28,6 @@ under the License.
 #include <vtkDataAssembly.h>
 #include <vtkObjectFactory.h>
 #include <vtkMultiProcessController.h>
-#include <vtkLogger.h>
-
-#include "ResqmlMapping/ResqmlDataRepositoryToVtkPartitionedDataSetCollection.h"
 
 vtkStandardNewMacro(EnergisticsPlugin);
 vtkCxxSetObjectMacro(EnergisticsPlugin, Controller, vtkMultiProcessController);
@@ -42,20 +38,12 @@ EnergisticsPlugin::EnergisticsPlugin() : FileNames(),
                                          Controller(nullptr),
                                          AssemblyTag(0),
                                          MarkerOrientation(true),
-                                         MarkerSize(10),
-                                         repository(new ResqmlDataRepositoryToVtkPartitionedDataSetCollection())
+                                         MarkerSize(10)
 {
   SetNumberOfInputPorts(0);
   SetNumberOfOutputPorts(1);
 
   this->SetController(vtkMultiProcessController::GetGlobalController());
-}
-
-//----------------------------------------------------------------------------
-EnergisticsPlugin::~EnergisticsPlugin()
-{
-  this->SetController(nullptr);
-  //delete this->repository;
 }
 
 //----------------------------------------------------------------------------
@@ -83,19 +71,10 @@ void EnergisticsPlugin::AddFileName(const char *fname)
   if (fname != nullptr) //&& !this->FileNames.insert(fname).second)
   {
     this->FilesNames->InsertNextValue(fname);
-    std::string msg = this->repository->addFile(fname);
+    std::string msg = this->repository.addFile(fname);
     if (!msg.empty())
     {
       vtkWarningMacro(<< msg);
-    }
-
-    try
-    {
-      this->dataAssembly = this->repository->getVtkPartionedDatasSetCollection()->GetDataAssembly();
-    }
-    catch (const std::exception &e)
-    {
-      vtkErrorMacro(<< e.what());
     }
 
     this->AssemblyTag++;
@@ -147,8 +126,8 @@ bool EnergisticsPlugin::AddSelector(const char *selector)
 {
   if (selector != nullptr && this->selectors.insert(selector).second)
   {
-    int node_id = this->dataAssembly->GetFirstNodeByPath(selector);
-    this->repository->selectNodeId(node_id);
+    int node_id = GetAssembly()->GetFirstNodeByPath(selector);
+    this->repository.selectNodeId(node_id);
     this->Modified();
     Modified();
     Update();
@@ -163,7 +142,7 @@ bool EnergisticsPlugin::AddSelector(const char *selector)
 //----------------------------------------------------------------------------
 void EnergisticsPlugin::ClearSelectors()
 {
-  this->repository->clearSelection();
+  this->repository.clearSelection();
   if (!this->selectors.empty())
   {
     this->selectors.clear();
@@ -204,22 +183,13 @@ const char *EnergisticsPlugin::GetSelector(int index) const
 //----------------------------------------------------------------------------
 void EnergisticsPlugin::setMarkerOrientation(bool orientation)
 {
-  this->repository->setMarkerOrientation(orientation);
+  this->repository.setMarkerOrientation(orientation);
 }
 
 //----------------------------------------------------------------------------
 void EnergisticsPlugin::setMarkerSize(int size)
 {
-  this->repository->setMarkerSize(size);
-}
-
-//----------------------------------------------------------------------------
-int EnergisticsPlugin::RequestInformation(
-    vtkInformation *metadata,
-    vtkInformationVector **,
-    vtkInformationVector *outputVector)
-{
-  return 1;
+  this->repository.setMarkerSize(size);
 }
 
 //----------------------------------------------------------------------------
@@ -232,7 +202,7 @@ int EnergisticsPlugin::RequestData(vtkInformation *,
 
   try
   {
-    output->DeepCopy(this->repository->getVtkPartionedDatasSetCollection());
+    output->DeepCopy(this->repository.getVtkPartionedDatasSetCollection());
   }
   catch (const std::exception &e)
   {
@@ -251,5 +221,12 @@ void EnergisticsPlugin::PrintSelf(ostream &os, vtkIndent indent)
 //----------------------------------------------------------------------------
 vtkDataAssembly *EnergisticsPlugin::GetAssembly()
 {
-  return dataAssembly;
+  try
+  {
+	return this->repository.getVtkPartionedDatasSetCollection()->GetDataAssembly();
+  }
+  catch (const std::exception &e)
+  {
+	vtkErrorMacro(<< e.what());
+  }
 }
