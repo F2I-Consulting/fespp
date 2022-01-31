@@ -42,5 +42,10 @@ On client side : File->Connect...  and then fill in the required fields.
 4. **Loading** of the **Fespp plugins** (Caution: on **client** and, only if you use MPI ParaView version, **server** sides!!!)
 	> Menu Tools->Manage plugins...
 	> and then select and Load libFespp.so
-5. You can now load a RESQML file (epc document)
+5. You can now load a RESQML™ file (epc document)
 	- via epc load manager (blue icon)
+
+# Credits
+FESAPI Product incorporates RESQML technology/standards provided by the Energistics Consortium, Inc.
+
+RESQML is a trademark or registered trademark of Energistics Consortium, Inc.
