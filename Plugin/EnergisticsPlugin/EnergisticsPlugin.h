@@ -21,17 +21,15 @@ under the License.
 
 // include system
 #include <string>
-#include <vector>
 #include <set>
 
-#include <vtkSmartPointer.h>
 #include <vtkPartitionedDataSetCollectionAlgorithm.h>
+#include <vtkSmartPointer.h>
 #include <vtkStringArray.h>
 
 #include "EnergisticsPluginModule.h"
 #include "ResqmlMapping/ResqmlDataRepositoryToVtkPartitionedDataSetCollection.h"
 
-class vtkDataArraySelection;
 class vtkDataAssembly;
 class vtkMultiProcessController;
 
@@ -143,19 +141,11 @@ public:
 
 protected:
 	EnergisticsPlugin();
-	~EnergisticsPlugin() final;
+	~EnergisticsPlugin() final { SetController(nullptr); }
 
 private:
 
-	int RequestInformation(vtkInformation* metadata, vtkInformationVector **, vtkInformationVector *) override;
-	int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
-
-	/*****************************************
-	*  OLD => DELETE ?
-	//  pipename
-	char *FileName;
-	vtkDataArraySelection *FilesList; // files loaded
-	*******************************************/
+	int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) final;
 
 	// files
 	std::set<std::string> FileNames;
@@ -168,12 +158,10 @@ private:
 	std::set<std::string> selectors;
 	int AssemblyTag;
 
-	vtkDataAssembly* dataAssembly;
-
 	// Properties
 	bool MarkerOrientation;
 	int MarkerSize;
 
-	ResqmlDataRepositoryToVtkPartitionedDataSetCollection* repository;
+	ResqmlDataRepositoryToVtkPartitionedDataSetCollection repository;
 };
 #endif

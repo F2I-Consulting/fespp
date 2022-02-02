@@ -37,6 +37,7 @@ namespace resqml2
 {
 	class AbstractRepresentation;
 }
+
 class ResqmlAbstractRepresentationToVtkDataset;
 
 /**

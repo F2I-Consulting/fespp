@@ -16,7 +16,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 -----------------------------------------------------------------------*/
-#include "ResqmlMapping/ResqmlDataRepositoryToVtkPartitionedDataSetCollection.h"
+#include "ResqmlDataRepositoryToVtkPartitionedDataSetCollection.h"
 
 #include <algorithm>
 #include <vector>
@@ -69,6 +69,14 @@ ResqmlDataRepositoryToVtkPartitionedDataSetCollection::ResqmlDataRepositoryToVtk
     output->SetDataAssembly(assembly);
 
     nodeId_to_EntityType[0] = ResqmlDataRepositoryToVtkPartitionedDataSetCollection::EntityType::INTERPRETATION;
+}
+
+
+ResqmlDataRepositoryToVtkPartitionedDataSetCollection::~ResqmlDataRepositoryToVtkPartitionedDataSetCollection() {
+	delete repository;
+	for (const auto& keyVal : nodeId_to_resqml) {
+		delete keyVal.second;
+	}
 }
 
 //----------------------------------------------------------------------------

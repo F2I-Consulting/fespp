@@ -29,13 +29,12 @@ under the License.
 #include <vtkHexahedron.h>
 #include <vtkUnstructuredGrid.h>
 
-// include F2i-consulting Energistics Standards API
+// include FESAPI
 #include <fesapi/resqml2/AbstractIjkGridRepresentation.h>
-//#include <fesapi/resqml2/SubRepresentation.h>
-#include <fesapi/resqml2/AbstractLocal3dCrs.h>
+#include <fesapi/resqml2/LocalDepth3dCrs.h>
 
-// include F2i-consulting Energistics Paraview Plugin
-#include "ResqmlMapping/ResqmlPropertyToVtkDataArray.h"
+// include FESPP
+#include "ResqmlPropertyToVtkDataArray.h"
 
 //----------------------------------------------------------------------------
 ResqmlIjkGridToVtkUnstructuredGrid::ResqmlIjkGridToVtkUnstructuredGrid(RESQML2_NS::AbstractIjkGridRepresentation *ijkGrid, int proc_number, int max_proc)
@@ -193,14 +192,18 @@ vtkSmartPointer<vtkPoints> ResqmlIjkGridToVtkUnstructuredGrid::createPoints()
 		for (uint32_t kInterface = initKInterfaceIndex; kInterface <= maxKInterfaceIndex; ++kInterface)
 		{
 			this->resqmlData->getXyzPointsOfKInterface(kInterface, allXyzPoints.get());
-			const double zIndice = this->resqmlData->getLocalCrs(0)->isDepthOriented() ? -1 : 1;
+			auto const* crs = this->resqmlData->getLocalCrs(0);
+			const double xOffset = crs->getOriginOrdinal1();
+			const double yOffset = crs->getOriginOrdinal2();
+			auto const* depthCrs = dynamic_cast<RESQML2_NS::LocalDepth3dCrs const*>(crs);
+			const double zOffset = depthCrs != nullptr ? depthCrs->getOriginDepthOrElevation() : 0;
+			const double zIndice = crs->isDepthOriented() ? -1 : 1;
 			for (uint64_t nodeIndex = 0; nodeIndex < kInterfaceNodeCount * 3; nodeIndex += 3)
 			{
-				points->InsertNextPoint(allXyzPoints[nodeIndex], allXyzPoints[nodeIndex + 1], allXyzPoints[nodeIndex + 2] * zIndice);
+				points->InsertNextPoint(allXyzPoints[nodeIndex] + xOffset, allXyzPoints[nodeIndex + 1] + yOffset, (allXyzPoints[nodeIndex + 2] + zOffset) * zIndice);
 			}
 		}
 	}
-
 	else
 	{
 		this->initKIndex = 0;
