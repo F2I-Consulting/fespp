@@ -106,7 +106,7 @@ void ResqmlWellboreChannelToVtkPolyData::loadVtkObject()
 	}
 	else
 	{
-		vtkOutputWindowDisplayText("Cannot show a log which is not discrete, categorical no continuous.");
+		vtkOutputWindowDisplayErrorText("Cannot show a log which is not discrete, categorical no continuous.\n");
 		return;
 	}
 

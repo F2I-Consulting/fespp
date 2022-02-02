@@ -132,7 +132,7 @@ namespace
 			return value * 1e-6 * 180 / vtkMath::Pi();
 		}
 
-		vtkOutputWindowDisplayErrorText("The uom of the dip of the marker is not recognized.");
+		vtkOutputWindowDisplayErrorText("The uom of the dip of the marker is not recognized.\n");
 		return std::numeric_limits<double>::quiet_NaN();
 	}
 }

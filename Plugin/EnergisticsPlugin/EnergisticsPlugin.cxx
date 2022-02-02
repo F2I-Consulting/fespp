@@ -206,7 +206,7 @@ int EnergisticsPlugin::RequestData(vtkInformation *,
   }
   catch (const std::exception &e)
   {
-    vtkErrorMacro(<< e.what());
+    vtkWarningMacro(<< e.what());
   }
 
   return 1;

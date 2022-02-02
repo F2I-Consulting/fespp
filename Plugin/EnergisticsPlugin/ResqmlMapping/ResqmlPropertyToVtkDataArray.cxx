@@ -68,7 +68,7 @@ ResqmlPropertyToVtkDataArray::ResqmlPropertyToVtkDataArray(resqml2::AbstractValu
 	// verify nbElement != 0
 	if (nbElement == 0)
 	{
-		vtkOutputWindowDisplayDebugText("property not supported...  (resqml2__IndexableElements: not cells or triangles or nodes)");
+		vtkOutputWindowDisplayErrorText("property not supported...  (resqml2__IndexableElements: not cells or triangles or nodes)\n");
 	}
 
 	unsigned int elementCountPerValue = valuesProperty->getElementCountPerValue();
@@ -101,7 +101,7 @@ ResqmlPropertyToVtkDataArray::ResqmlPropertyToVtkDataArray(resqml2::AbstractValu
 			}
 			else
 			{
-				vtkOutputWindowDisplayDebugText("error in : propertyValue->getDimensionsCountOfPatch (values different of 1 or 3)");
+				vtkOutputWindowDisplayErrorText("error in : propertyValue->getDimensionsCountOfPatch (values different of 1 or 3)\n");
 			}
 		}
 		cellDataFloat->SetName(name.c_str());
@@ -126,7 +126,7 @@ ResqmlPropertyToVtkDataArray::ResqmlPropertyToVtkDataArray(resqml2::AbstractValu
 			}
 			else
 			{
-				vtkOutputWindowDisplayDebugText("error in : propertyValue->getDimensionsCountOfPatch (values different of 1 or 3)");
+				vtkOutputWindowDisplayErrorText("error in : propertyValue->getDimensionsCountOfPatch (values different of 1 or 3)\n");
 			}
 		}
 		cellDataInt->SetName(name.c_str());
@@ -151,7 +151,7 @@ ResqmlPropertyToVtkDataArray::ResqmlPropertyToVtkDataArray(resqml2::AbstractValu
 			}
 			else
 			{
-				vtkOutputWindowDisplayDebugText("error in : propertyValue->getDimensionsCountOfPatch (values different of 1 or 3)");
+				vtkOutputWindowDisplayErrorText("error in : propertyValue->getDimensionsCountOfPatch (values different of 1 or 3)\n");
 			}
 		}
 		cellDataInt->SetName(name.c_str());
@@ -160,7 +160,7 @@ ResqmlPropertyToVtkDataArray::ResqmlPropertyToVtkDataArray(resqml2::AbstractValu
 	}
 	else
 	{
-		vtkOutputWindowDisplayDebugText("property not supported...  (hdfDatatypeEnum)");
+		vtkOutputWindowDisplayErrorText("property not supported...  (hdfDatatypeEnum)\n");
 	}
 }
 
@@ -185,7 +185,7 @@ ResqmlPropertyToVtkDataArray::ResqmlPropertyToVtkDataArray(resqml2::AbstractValu
 	// verify nbElement != 0
 	if (nbElement == 0)
 	{
-		vtkOutputWindowDisplayDebugText("property not supported...  (resqml2__IndexableElements: not cells or triangles or nodes)");
+		vtkOutputWindowDisplayErrorText("property not supported...  (resqml2__IndexableElements: not cells or triangles or nodes)\n");
 	}
 
 	unsigned int elementCountPerValue = valuesProperty->getElementCountPerValue();

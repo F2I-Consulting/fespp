@@ -49,43 +49,50 @@ ResqmlWellboreTrajectoryToVtkPolyData::ResqmlWellboreTrajectoryToVtkPolyData(res
 //----------------------------------------------------------------------------
 void ResqmlWellboreTrajectoryToVtkPolyData::loadVtkObject()
 {
-	// GEOMETRY
-	vtkSmartPointer<vtkPolyData> vtk_polydata = vtkSmartPointer<vtkPolyData>::New();
-
-	// POINT
-	double *allXyzPoints = new double[pointCount * 3]; // Will be deleted by VTK
-	this->resqmlData->getXyzPointsOfAllPatchesInGlobalCrs(allXyzPoints);
-	vtkSmartPointer<vtkPoints> vtkPts = vtkSmartPointer<vtkPoints>::New();
-
-	const size_t coordCount = pointCount * 3;
-	if (this->resqmlData->getLocalCrs(0)->isDepthOriented())
+	try
 	{
-		for (size_t zCoordIndex = 2; zCoordIndex < coordCount; zCoordIndex += 3)
+		// GEOMETRY
+		vtkSmartPointer<vtkPolyData> vtk_polydata = vtkSmartPointer<vtkPolyData>::New();
+
+		// POINT
+		double *allXyzPoints = new double[pointCount * 3]; // Will be deleted by VTK
+		this->resqmlData->getXyzPointsOfAllPatchesInGlobalCrs(allXyzPoints);
+		vtkSmartPointer<vtkPoints> vtkPts = vtkSmartPointer<vtkPoints>::New();
+
+		const size_t coordCount = pointCount * 3;
+		if (this->resqmlData->getLocalCrs(0)->isDepthOriented())
 		{
-			allXyzPoints[zCoordIndex] *= -1;
+			for (size_t zCoordIndex = 2; zCoordIndex < coordCount; zCoordIndex += 3)
+			{
+				allXyzPoints[zCoordIndex] *= -1;
+			}
 		}
+
+		vtkSmartPointer<vtkDoubleArray> vtkUnderlyingArray = vtkSmartPointer<vtkDoubleArray>::New();
+		vtkUnderlyingArray->SetNumberOfComponents(3);
+		// Take ownership of the underlying C array
+		vtkUnderlyingArray->SetArray(allXyzPoints, coordCount, vtkAbstractArray::VTK_DATA_ARRAY_DELETE);
+		vtkPts->SetData(vtkUnderlyingArray);
+		vtk_polydata->SetPoints(vtkPts);
+
+		// POLYLINE
+		vtkSmartPointer<vtkPolyLine> polylineRepresentation = vtkSmartPointer<vtkPolyLine>::New();
+		polylineRepresentation->GetPointIds()->SetNumberOfIds(pointCount);
+		for (unsigned int nodeIndex = 0; nodeIndex < pointCount; ++nodeIndex)
+		{
+			polylineRepresentation->GetPointIds()->SetId(nodeIndex, nodeIndex);
+		}
+
+		vtkSmartPointer<vtkCellArray> setPolylineRepresentationLines = vtkSmartPointer<vtkCellArray>::New();
+		setPolylineRepresentationLines->InsertNextCell(polylineRepresentation);
+
+		vtk_polydata->SetLines(setPolylineRepresentationLines);
+
+		this->vtkData->SetPartition(0, vtk_polydata);
+		this->vtkData->Modified();
 	}
-
-	vtkSmartPointer<vtkDoubleArray> vtkUnderlyingArray = vtkSmartPointer<vtkDoubleArray>::New();
-	vtkUnderlyingArray->SetNumberOfComponents(3);
-	// Take ownership of the underlying C array
-	vtkUnderlyingArray->SetArray(allXyzPoints, coordCount, vtkAbstractArray::VTK_DATA_ARRAY_DELETE);
-	vtkPts->SetData(vtkUnderlyingArray);
-	vtk_polydata->SetPoints(vtkPts);
-
-	// POLYLINE
-	vtkSmartPointer<vtkPolyLine> polylineRepresentation = vtkSmartPointer<vtkPolyLine>::New();
-	polylineRepresentation->GetPointIds()->SetNumberOfIds(pointCount);
-	for (unsigned int nodeIndex = 0; nodeIndex < pointCount; ++nodeIndex)
+	catch (const std::exception &e)
 	{
-		polylineRepresentation->GetPointIds()->SetId(nodeIndex, nodeIndex);
+		vtkOutputWindowDisplayErrorText("Error in load for wellbore trajectory\n");
 	}
-
-	vtkSmartPointer<vtkCellArray> setPolylineRepresentationLines = vtkSmartPointer<vtkCellArray>::New();
-	setPolylineRepresentationLines->InsertNextCell(polylineRepresentation);
-
-	vtk_polydata->SetLines(setPolylineRepresentationLines);
-
-	this->vtkData->SetPartition(0, vtk_polydata);
-	this->vtkData->Modified();
 }
