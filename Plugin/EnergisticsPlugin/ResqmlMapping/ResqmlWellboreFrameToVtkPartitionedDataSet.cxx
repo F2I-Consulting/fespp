@@ -60,7 +60,8 @@ void ResqmlWellboreFrameToVtkPartitionedDataSet::addChannel(std::string uuid, re
 	}
 	if (!exist)
 	{
-		this->list_channel.push_back(new ResqmlWellboreChannelToVtkPolyData(this->resqmlData, property, uuid));
+		auto frame = dynamic_cast<resqml2::WellboreFrameRepresentation *>(this->resqmlData);
+		this->list_channel.push_back(new ResqmlWellboreChannelToVtkPolyData(frame, property, uuid));
 		this->loadVtkObject();
 	}
 }

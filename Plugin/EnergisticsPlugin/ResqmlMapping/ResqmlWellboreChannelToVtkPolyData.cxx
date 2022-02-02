@@ -39,24 +39,25 @@ ResqmlWellboreChannelToVtkPolyData::ResqmlWellboreChannelToVtkPolyData(resqml2::
 											   max_proc),
 	  abstractProperty(property),
 	  uuid(uuid),
-	  title(property->getTitle())
+	  title(property->getTitle()),
+	  resqmlData(frame)
 {
+	this->vtkData = vtkSmartPointer<vtkPartitionedDataSet>::New();
 	this->loadVtkObject();
+	this->vtkData->Modified();
 }
 
 //----------------------------------------------------------------------------
 void ResqmlWellboreChannelToVtkPolyData::loadVtkObject()
 {
-	auto frame = dynamic_cast<resqml2::WellboreFrameRepresentation *>(this->resqmlData);
-
 	// We need to build first a polyline for the channel to support the vtk tube.
-	const ULONG64 pointCount = frame->getXyzPointCountOfPatch(0);
-	double *allXyzPoints = new double[pointCount * 3]; // Will be deleted by VTK
-	frame->getXyzPointsOfAllPatchesInGlobalCrs(allXyzPoints);
+	this->pointCount = this->resqmlData->getXyzPointCountOfPatch(0);
+	double *allXyzPoints = new double[this->pointCount * 3]; // Will be deleted by VTK
+	this->resqmlData->getXyzPointsOfAllPatchesInGlobalCrs(allXyzPoints);
 
 	vtkSmartPointer<vtkPoints> vtkPts = vtkSmartPointer<vtkPoints>::New();
 	const size_t coordCount = pointCount * 3;
-	if (frame->getLocalCrs(0)->isDepthOriented())
+	if (this->resqmlData->getLocalCrs(0)->isDepthOriented())
 	{
 		for (size_t zCoordIndex = 2; zCoordIndex < coordCount; zCoordIndex += 3)
 		{
