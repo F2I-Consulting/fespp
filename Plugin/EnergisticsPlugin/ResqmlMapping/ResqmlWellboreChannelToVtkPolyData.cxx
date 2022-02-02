@@ -32,14 +32,16 @@ under the License.
 
 // include F2i-consulting Energistics Paraview Plugin
 
-
 //----------------------------------------------------------------------------
-ResqmlWellboreChannelToVtkPolyData::ResqmlWellboreChannelToVtkPolyData(resqml2::WellboreFrameRepresentation *frame, resqml2::AbstractValuesProperty *property, int proc_number, int max_proc)
+ResqmlWellboreChannelToVtkPolyData::ResqmlWellboreChannelToVtkPolyData(resqml2::WellboreFrameRepresentation *frame, resqml2::AbstractValuesProperty *property, std::string uuid, int proc_number, int max_proc)
 	: ResqmlAbstractRepresentationToVtkDataset(frame,
-											   proc_number -1,
-											   max_proc)
+											   proc_number - 1,
+											   max_proc),
+	  abstractProperty(property),
+	  uuid(uuid),
+	  title(property->getTitle())
 {
-	this->abstractProperty = property;
+	this->loadVtkObject();
 }
 
 //----------------------------------------------------------------------------
@@ -52,10 +54,12 @@ void ResqmlWellboreChannelToVtkPolyData::loadVtkObject()
 	double *allXyzPoints = new double[pointCount * 3]; // Will be deleted by VTK
 	frame->getXyzPointsOfAllPatchesInGlobalCrs(allXyzPoints);
 
-		vtkSmartPointer<vtkPoints> vtkPts = vtkSmartPointer<vtkPoints>::New();
+	vtkSmartPointer<vtkPoints> vtkPts = vtkSmartPointer<vtkPoints>::New();
 	const size_t coordCount = pointCount * 3;
-	if (frame->getLocalCrs(0)->isDepthOriented()) {
-		for (size_t zCoordIndex = 2; zCoordIndex < coordCount; zCoordIndex += 3) {
+	if (frame->getLocalCrs(0)->isDepthOriented())
+	{
+		for (size_t zCoordIndex = 2; zCoordIndex < coordCount; zCoordIndex += 3)
+		{
 			allXyzPoints[zCoordIndex] *= -1;
 		}
 	}
@@ -116,6 +120,6 @@ void ResqmlWellboreChannelToVtkPolyData::loadVtkObject()
 	tubeFilter->SetVaryRadiusToVaryRadiusByScalar();
 	tubeFilter->Update();
 
-		this->vtkData->SetPartition(0, tubeFilter->GetOutput());
+	this->vtkData->SetPartition(0, tubeFilter->GetOutput());
 	this->vtkData->Modified();
 }

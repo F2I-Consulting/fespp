@@ -72,9 +72,9 @@ public:
 	vtkSmartPointer<vtkPartitionedDataSet> getOutput() const;
 
 	/**
-	 * set uuid for verify
+	 * get uuid for verify
 	 */
-	void setUuid(const std::string &uuid) { this->uuid = uuid;}
+	std::string getUuid() { return this->resqmlData->getUuid();}
 
 	uint64_t pointCount;
 	uint32_t iCellCount;
@@ -90,19 +90,6 @@ public:
 
 protected:
 	RESQML2_NS::AbstractRepresentation *resqmlData;
-/*	uint64_t pointCount;
-	uint32_t iCellCount;
-	uint32_t jCellCount;
-	uint32_t kCellCount;
-	uint32_t initKIndex;
-	uint32_t maxKIndex;
-
-	bool isHyperslabed;
-
-	int procNumber;
-	int maxProc;*/
-
-	std::string uuid;
 
 	vtkSmartPointer<vtkPartitionedDataSet> vtkData;
 	std::unordered_map<std::string, class ResqmlPropertyToVtkDataArray *> uuidToVtkDataArray;

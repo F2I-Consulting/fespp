@@ -33,17 +33,26 @@ public:
 	/**
 	 * Constructor
 	 */
-	ResqmlWellboreChannelToVtkPolyData(resqml2::WellboreFrameRepresentation *frame, resqml2::AbstractValuesProperty *property, int proc_number = 1, int max_proc = 1);
+	ResqmlWellboreChannelToVtkPolyData(resqml2::WellboreFrameRepresentation *frame, resqml2::AbstractValuesProperty *property, std::string uuid, int proc_number = 1, int max_proc = 1);
 
 	/**
 	 * load vtkDataSet with resqml data
 	 */
 	void loadVtkObject();
 
+	std::string getUuid() { return this->uuid; }
+	std::string getTitle() { return this->title; }
+
 protected:
 	resqml2::WellboreFrameRepresentation *resqmlData;
 
 private:
+	// attach to vtkPartitionedDataSet any channels
+	void attach();
+
 	resqml2::AbstractValuesProperty *abstractProperty;
+
+	std::string uuid;
+	std::string title;
 };
 #endif

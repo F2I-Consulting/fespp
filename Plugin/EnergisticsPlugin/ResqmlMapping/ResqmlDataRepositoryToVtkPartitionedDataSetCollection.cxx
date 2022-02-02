@@ -52,21 +52,21 @@ under the License.
 #include "ResqmlUnstructuredGridToVtkUnstructuredGrid.h"
 #include "ResqmlWellboreTrajectoryToVtkPolyData.h"
 #include "ResqmlWellboreMarkerFrameToVtkPartitionedDataSet.h"
+#include "ResqmlWellboreFrameToVtkPartitionedDataSet.h"
 
-ResqmlDataRepositoryToVtkPartitionedDataSetCollection::ResqmlDataRepositoryToVtkPartitionedDataSetCollection() : 
-	markerOrientation(false),
-	markerSize(10),
-	repository(new common::DataObjectRepository()),
-	output(vtkSmartPointer<vtkPartitionedDataSetCollection>::New()),
-	nodeId_to_uuid(),
-	nodeId_to_EntityType(),
-	nodeId_to_resqml(),
-	current_selection(),
-	old_selection()
+ResqmlDataRepositoryToVtkPartitionedDataSetCollection::ResqmlDataRepositoryToVtkPartitionedDataSetCollection() : markerOrientation(false),
+                                                                                                                 markerSize(10),
+                                                                                                                 repository(new common::DataObjectRepository()),
+                                                                                                                 output(vtkSmartPointer<vtkPartitionedDataSetCollection>::New()),
+                                                                                                                 nodeId_to_uuid(),
+                                                                                                                 nodeId_to_EntityType(),
+                                                                                                                 nodeId_to_resqml(),
+                                                                                                                 current_selection(),
+                                                                                                                 old_selection()
 {
     auto assembly = vtkSmartPointer<vtkDataAssembly>::New();
     assembly->SetRootNodeName("data");
-	output->SetDataAssembly(assembly);
+    output->SetDataAssembly(assembly);
 
     nodeId_to_EntityType[0] = ResqmlDataRepositoryToVtkPartitionedDataSetCollection::EntityType::INTERPRETATION;
 }
@@ -78,8 +78,9 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::addFile(const
     const std::string resqmlResult = pck.deserializeInto(*repository);
     pck.close();
 
-	std::string message;
-    if (!resqmlResult.empty()) {
+    std::string message;
+    if (!resqmlResult.empty())
+    {
         message += resqmlResult;
     }
 
@@ -112,11 +113,11 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchFaultPo
 
     try
     {
-        for (auto* polyline : repository->getFaultPolylineSetRepresentationSet())
+        for (auto *polyline : repository->getFaultPolylineSetRepresentationSet())
         {
             if (searchNodeByUuid(polyline->getUuid()) == -1)
             { // verify uuid exist in treeview
-                auto* representation = dynamic_cast<resqml2::AbstractRepresentation *>(polyline);
+                auto *representation = dynamic_cast<resqml2::AbstractRepresentation *>(polyline);
                 result = result + searchRepresentations(representation, ResqmlDataRepositoryToVtkPartitionedDataSetCollection::EntityType::POLYLINE_SET);
             }
         }
@@ -134,11 +135,11 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchHorizon
 
     try
     {
-        for (auto* polyline : repository->getHorizonPolylineSetRepresentationSet())
+        for (auto *polyline : repository->getHorizonPolylineSetRepresentationSet())
         {
             if (searchNodeByUuid(polyline->getUuid()) == -1)
             { // verify uuid exist in treeview
-                auto* representation = dynamic_cast<resqml2::AbstractRepresentation *>(polyline);
+                auto *representation = dynamic_cast<resqml2::AbstractRepresentation *>(polyline);
                 result = result + searchRepresentations(representation, ResqmlDataRepositoryToVtkPartitionedDataSetCollection::EntityType::POLYLINE_SET);
             }
         }
@@ -156,11 +157,11 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchUnstruc
 
     try
     {
-        for (auto* &unstructuredGrid : repository->getUnstructuredGridRepresentationSet())
+        for (auto *&unstructuredGrid : repository->getUnstructuredGridRepresentationSet())
         {
             if (searchNodeByUuid(unstructuredGrid->getUuid()) == -1)
             { // verify uuid exist in treeview
-                auto* representation = dynamic_cast<resqml2::AbstractRepresentation *>(unstructuredGrid);
+                auto *representation = dynamic_cast<resqml2::AbstractRepresentation *>(unstructuredGrid);
                 result = result + searchRepresentations(representation, ResqmlDataRepositoryToVtkPartitionedDataSetCollection::EntityType::UNSTRUC_GRID);
             }
         }
@@ -178,11 +179,11 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchFaultTr
 
     try
     {
-        for (auto* triangulated : repository->getFaultTriangulatedSetRepresentationSet())
+        for (auto *triangulated : repository->getFaultTriangulatedSetRepresentationSet())
         {
             if (searchNodeByUuid(triangulated->getUuid()) == -1)
             { // verify uuid exist in treeview
-                auto* representation = dynamic_cast<resqml2::AbstractRepresentation *>(triangulated);
+                auto *representation = dynamic_cast<resqml2::AbstractRepresentation *>(triangulated);
                 result = result + searchRepresentations(representation, ResqmlDataRepositoryToVtkPartitionedDataSetCollection::EntityType::TRIANGULATED_SET);
             }
         }
@@ -200,11 +201,11 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchHorizon
 
     try
     {
-        for (auto* triangulated : repository->getHorizonTriangulatedSetRepresentationSet())
+        for (auto *triangulated : repository->getHorizonTriangulatedSetRepresentationSet())
         {
             if (searchNodeByUuid(triangulated->getUuid()) == -1)
             { // verify uuid exist in treeview
-                auto* representation = dynamic_cast<resqml2::AbstractRepresentation *>(triangulated);
+                auto *representation = dynamic_cast<resqml2::AbstractRepresentation *>(triangulated);
                 result = result + searchRepresentations(representation, ResqmlDataRepositoryToVtkPartitionedDataSetCollection::EntityType::TRIANGULATED_SET);
             }
         }
@@ -222,11 +223,11 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchGrid2d(
 
     try
     {
-        for (auto* grid2D : repository->getHorizonGrid2dRepresentationSet())
+        for (auto *grid2D : repository->getHorizonGrid2dRepresentationSet())
         {
             if (searchNodeByUuid(grid2D->getUuid()) == -1)
             { // verify uuid exist in treeview
-                auto* representation = dynamic_cast<resqml2::AbstractRepresentation *>(grid2D);
+                auto *representation = dynamic_cast<resqml2::AbstractRepresentation *>(grid2D);
                 result = result + searchRepresentations(representation, ResqmlDataRepositoryToVtkPartitionedDataSetCollection::EntityType::GRID_2D);
             }
         }
@@ -244,11 +245,11 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchIjkGrid
 
     try
     {
-        for (auto* ijkGrid : repository->getIjkGridRepresentationSet())
+        for (auto *ijkGrid : repository->getIjkGridRepresentationSet())
         {
             if (searchNodeByUuid(ijkGrid->getUuid()) == -1)
             { // verify uuid exist in treeview
-                auto* representation = dynamic_cast<resqml2::AbstractRepresentation *>(ijkGrid);
+                auto *representation = dynamic_cast<resqml2::AbstractRepresentation *>(ijkGrid);
                 result = result + searchRepresentations(representation, ResqmlDataRepositoryToVtkPartitionedDataSetCollection::EntityType::IJK_GRID);
             }
         }
@@ -266,11 +267,11 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchSubRepr
 
     try
     {
-        for (auto* &subRepresentation : repository->getSubRepresentationSet())
+        for (auto *&subRepresentation : repository->getSubRepresentationSet())
         {
             if (searchNodeByUuid(subRepresentation->getUuid()) == -1)
             { // verify uuid exist in treeview
-                auto* representation = dynamic_cast<resqml2::AbstractRepresentation *>(subRepresentation);
+                auto *representation = dynamic_cast<resqml2::AbstractRepresentation *>(subRepresentation);
                 result = result + searchRepresentations(representation, ResqmlDataRepositoryToVtkPartitionedDataSetCollection::EntityType::SUB_REP);
             }
         }
@@ -309,7 +310,7 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchReprese
     }
     else
     {
-        const auto* interpretation = representation->getInterpretation();
+        const auto *interpretation = representation->getInterpretation();
         if (interpretation != nullptr)
         {
             std::string name_node = changeInvalidCharacter(interpretation->getXmlTag() + '.' + interpretation->getTitle());
@@ -327,7 +328,7 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchReprese
     }
 
     // property
-    for (const auto* property : representation->getValuesPropertySet())
+    for (const auto *property : representation->getValuesPropertySet())
     {
         int property_idNode = data_assembly->AddNode(changeInvalidCharacter(property->getXmlTag() + '.' + property->getTitle()).c_str(), idNode);
         nodeId_to_uuid[property_idNode] = property->getUuid();
@@ -344,7 +345,7 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchWellbor
 
     int idNode = 0; // 0 is root's id
 
-    for (const auto* wellboreTrajectory : repository->getWellboreTrajectoryRepresentationSet())
+    for (const auto *wellboreTrajectory : repository->getWellboreTrajectoryRepresentationSet())
     {
         if (searchNodeByUuid(wellboreTrajectory->getUuid()) == -1)
         { // verify uuid exist in treeview
@@ -370,7 +371,7 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchWellbor
             }
             else
             {
-                const auto* interpretation = wellboreTrajectory->getInterpretation();
+                const auto *interpretation = wellboreTrajectory->getInterpretation();
                 if (interpretation != nullptr)
                 {
                     idNode = data_assembly->AddNode(changeInvalidCharacter(interpretation->getXmlTag() + '.' + interpretation->getTitle()).c_str());
@@ -383,21 +384,21 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchWellbor
             }
         }
         // wellboreFrame
-        for (const auto* wellboreFrame : wellboreTrajectory->getWellboreFrameRepresentationSet())
+        for (const auto *wellboreFrame : wellboreTrajectory->getWellboreFrameRepresentationSet())
         {
             if (searchNodeByUuid(wellboreFrame->getUuid()) == -1)
             { // verify uuid exist in treeview
-                const auto* wellboreMarkerFrame = dynamic_cast<RESQML2_NS::WellboreMarkerFrameRepresentation const*>(wellboreFrame);
+                const auto *wellboreMarkerFrame = dynamic_cast<RESQML2_NS::WellboreMarkerFrameRepresentation const *>(wellboreFrame);
                 if (wellboreMarkerFrame == nullptr)
                 { // WellboreFrame
                     int frame_idNode = data_assembly->AddNode(changeInvalidCharacter(wellboreFrame->getXmlTag() + '.' + wellboreFrame->getTitle()).c_str(), idNode);
                     nodeId_to_uuid[frame_idNode] = wellboreFrame->getUuid();
-                    nodeId_to_EntityType[frame_idNode] = ResqmlDataRepositoryToVtkPartitionedDataSetCollection::EntityType::WELL_MARKER_FRAME;
-                    for (const auto* property : wellboreFrame->getValuesPropertySet())
+                    nodeId_to_EntityType[frame_idNode] = ResqmlDataRepositoryToVtkPartitionedDataSetCollection::EntityType::WELL_FRAME;
+                    for (const auto *property : wellboreFrame->getValuesPropertySet())
                     {
                         int property_idNode = data_assembly->AddNode(changeInvalidCharacter(property->getXmlTag() + '.' + property->getTitle()).c_str(), frame_idNode);
                         nodeId_to_uuid[property_idNode] = property->getUuid();
-                        nodeId_to_EntityType[property_idNode] = ResqmlDataRepositoryToVtkPartitionedDataSetCollection::EntityType::PROP;
+                        nodeId_to_EntityType[property_idNode] = ResqmlDataRepositoryToVtkPartitionedDataSetCollection::EntityType::WELL_CHANNEL;
                     }
                 }
                 else
@@ -405,7 +406,7 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchWellbor
                     int markerFrame_idNode = data_assembly->AddNode(changeInvalidCharacter(wellboreFrame->getXmlTag() + '.' + wellboreFrame->getTitle()).c_str(), idNode);
                     nodeId_to_uuid[markerFrame_idNode] = wellboreFrame->getUuid();
                     nodeId_to_EntityType[markerFrame_idNode] = ResqmlDataRepositoryToVtkPartitionedDataSetCollection::EntityType::WELL_MARKER_FRAME;
-                    for (const auto* wellboreMarker : wellboreMarkerFrame->getWellboreMarkerSet())
+                    for (const auto *wellboreMarker : wellboreMarkerFrame->getWellboreMarkerSet())
                     {
                         int marker_idNode = data_assembly->AddNode(changeInvalidCharacter(wellboreMarker->getXmlTag() + '.' + wellboreMarker->getTitle()).c_str(), markerFrame_idNode);
                         nodeId_to_uuid[marker_idNode] = wellboreMarker->getUuid();
@@ -436,7 +437,7 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchTimeSer
 
 void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::selectNodeId(int node)
 {
-    auto* assembly = this->output->GetDataAssembly();
+    auto *assembly = this->output->GetDataAssembly();
 
     this->selectNodeIdParent(node);
 
@@ -448,7 +449,7 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::selectNodeId(int nod
 
 void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::selectNodeIdParent(int node)
 {
-    auto* assembly = this->output->GetDataAssembly();
+    auto *assembly = this->output->GetDataAssembly();
 
     if (assembly->GetParent(node) != -1)
     {
@@ -459,7 +460,7 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::selectNodeIdParent(i
 }
 void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::selectNodeIdChildren(int node)
 {
-    auto* assembly = this->output->GetDataAssembly();
+    auto *assembly = this->output->GetDataAssembly();
 
     for (int index_child : assembly->GetChildNodes(node))
     {
@@ -483,8 +484,8 @@ ResqmlAbstractRepresentationToVtkDataset *ResqmlDataRepositoryToVtkPartitionedDa
     {
         try
         {
-            auto* ijkGrid = repository->getDataObjectByUuid<RESQML2_NS::AbstractIjkGridRepresentation>(uuid);
-            auto* rep = new ResqmlIjkGridToVtkUnstructuredGrid(ijkGrid);
+            auto *ijkGrid = repository->getDataObjectByUuid<RESQML2_NS::AbstractIjkGridRepresentation>(uuid);
+            auto *rep = new ResqmlIjkGridToVtkUnstructuredGrid(ijkGrid);
             nodeId_to_resqml[searchNodeByUuid(uuid)] = rep;
             return rep;
         }
@@ -498,8 +499,8 @@ ResqmlAbstractRepresentationToVtkDataset *ResqmlDataRepositoryToVtkPartitionedDa
     {
         try
         {
-            auto* grid2D = repository->getDataObjectByUuid<RESQML2_NS::Grid2dRepresentation>(uuid);
-            auto* rep = new ResqmlGrid2dToVtkPolyData(grid2D);
+            auto *grid2D = repository->getDataObjectByUuid<RESQML2_NS::Grid2dRepresentation>(uuid);
+            auto *rep = new ResqmlGrid2dToVtkPolyData(grid2D);
             nodeId_to_resqml[searchNodeByUuid(uuid)] = rep;
             return rep;
         }
@@ -513,8 +514,8 @@ ResqmlAbstractRepresentationToVtkDataset *ResqmlDataRepositoryToVtkPartitionedDa
     {
         try
         {
-            auto* triangles = repository->getDataObjectByUuid<RESQML2_NS::TriangulatedSetRepresentation>(uuid);
-            auto* rep = new ResqmlTriangulatedSetToVtkPartitionedDataSet(triangles);
+            auto *triangles = repository->getDataObjectByUuid<RESQML2_NS::TriangulatedSetRepresentation>(uuid);
+            auto *rep = new ResqmlTriangulatedSetToVtkPartitionedDataSet(triangles);
             nodeId_to_resqml[searchNodeByUuid(uuid)] = rep;
             return rep;
         }
@@ -528,8 +529,8 @@ ResqmlAbstractRepresentationToVtkDataset *ResqmlDataRepositoryToVtkPartitionedDa
     {
         try
         {
-            auto* polyline = repository->getDataObjectByUuid<RESQML2_NS::PolylineSetRepresentation>(uuid);
-            auto* rep = new ResqmlPolylineToVtkPolyData(polyline);
+            auto *polyline = repository->getDataObjectByUuid<RESQML2_NS::PolylineSetRepresentation>(uuid);
+            auto *rep = new ResqmlPolylineToVtkPolyData(polyline);
             nodeId_to_resqml[searchNodeByUuid(uuid)] = rep;
             return rep;
         }
@@ -543,8 +544,8 @@ ResqmlAbstractRepresentationToVtkDataset *ResqmlDataRepositoryToVtkPartitionedDa
     {
         try
         {
-            auto* unstruct = repository->getDataObjectByUuid<RESQML2_NS::UnstructuredGridRepresentation>(uuid);
-            auto* rep = new ResqmlUnstructuredGridToVtkUnstructuredGrid(unstruct);
+            auto *unstruct = repository->getDataObjectByUuid<RESQML2_NS::UnstructuredGridRepresentation>(uuid);
+            auto *rep = new ResqmlUnstructuredGridToVtkUnstructuredGrid(unstruct);
             nodeId_to_resqml[searchNodeByUuid(uuid)] = rep;
             return rep;
         }
@@ -556,11 +557,13 @@ ResqmlAbstractRepresentationToVtkDataset *ResqmlDataRepositoryToVtkPartitionedDa
     }
     case ResqmlDataRepositoryToVtkPartitionedDataSetCollection::EntityType::WELL_TRAJ:
     {
+        vtkOutputWindowDisplayText("WELL_TRAJ \n");
         try
         {
-            auto* wellbore_traj = repository->getDataObjectByUuid<RESQML2_NS::WellboreTrajectoryRepresentation>(uuid);
-            auto* rep = new ResqmlWellboreTrajectoryToVtkPolyData(wellbore_traj);
+            auto *wellbore_traj = repository->getDataObjectByUuid<RESQML2_NS::WellboreTrajectoryRepresentation>(uuid);
+            auto *rep = new ResqmlWellboreTrajectoryToVtkPolyData(wellbore_traj);
             nodeId_to_resqml[searchNodeByUuid(uuid)] = rep;
+            vtkOutputWindowDisplayText("WELL_TRAJ END\n");
             return rep;
         }
         catch (const std::exception &e)
@@ -571,21 +574,52 @@ ResqmlAbstractRepresentationToVtkDataset *ResqmlDataRepositoryToVtkPartitionedDa
     }
     case ResqmlDataRepositoryToVtkPartitionedDataSetCollection::EntityType::WELL_FRAME:
     {
-        /*
-               auto wellbore_traj = repository->getDataObjectByUuid<RESQML2_NS::WellboreTrajectoryRepresentation>(uuid);
-               auto rep = new ResqmlWellboreTrajectoryToVtkPolyData(wellbore_traj);
-               nodeId_to_resqml[searchNodeByUuid(uuid)] = rep;
-               return rep;
-               */
+        vtkOutputWindowDisplayText("WELL_FRAME\n");
+        auto wellbore_frame = repository->getDataObjectByUuid<RESQML2_NS::WellboreFrameRepresentation>(uuid);
+        auto rep = new ResqmlWellboreFrameToVtkPartitionedDataSet(wellbore_frame);
+        nodeId_to_resqml[searchNodeByUuid(uuid)] = rep;
+        vtkOutputWindowDisplayText("WELL_FRAME END\n");
+        return rep;
+        break;
+    }
+    case ResqmlDataRepositoryToVtkPartitionedDataSetCollection::EntityType::WELL_CHANNEL:
+    {
+        vtkOutputWindowDisplayText("WELL_CHANNEL\n");
+        try
+        {
+            auto *assembly = this->output->GetDataAssembly();
+            const int node_parent = assembly->GetParent(searchNodeByUuid(uuid));
+ 
+            if (nodeId_to_resqml[node_parent])
+            {
+                auto wellbore_frame = repository->getDataObjectByUuid<RESQML2_NS::WellboreFrameRepresentation>(nodeId_to_uuid[node_parent]);
+                for (auto *property : wellbore_frame->getValuesPropertySet())
+                {
+                    if (property->getUuid() == uuid)
+                    {
+                        auto *resqmlWellboreFrameToVtkPartitionedDataSet = dynamic_cast<ResqmlWellboreFrameToVtkPartitionedDataSet *>(nodeId_to_resqml[node_parent]);
+                        resqmlWellboreFrameToVtkPartitionedDataSet->addChannel(uuid, property);
+                    }
+                }
+            }
+            
+        }
+        catch (const std::exception &e)
+        {
+            throw std::string("Error in wellbore channel load for uuid: " + std::string(e.what()));
+        }
+        vtkOutputWindowDisplayText("WELL_CHANNEL END\n");
         break;
     }
     case ResqmlDataRepositoryToVtkPartitionedDataSetCollection::EntityType::WELL_MARKER_FRAME:
     {
+        vtkOutputWindowDisplayText("WELL_MARKER_FRAME\n");
         try
         {
-            auto* wellbore_marker_frame = repository->getDataObjectByUuid<RESQML2_NS::WellboreMarkerFrameRepresentation>(uuid);
-            auto* rep = new ResqmlWellboreMarkerFrameToVtkPartitionedDataSet(wellbore_marker_frame, this->markerOrientation, this->markerSize);
+            auto *wellbore_marker_frame = repository->getDataObjectByUuid<RESQML2_NS::WellboreMarkerFrameRepresentation>(uuid);
+            auto *rep = new ResqmlWellboreMarkerFrameToVtkPartitionedDataSet(wellbore_marker_frame, this->markerOrientation, this->markerSize);
             nodeId_to_resqml[searchNodeByUuid(uuid)] = rep;
+            vtkOutputWindowDisplayText("WELL_MARKER_FRAME END\n");
             return rep;
         }
         catch (const std::exception &e)
@@ -598,23 +632,28 @@ ResqmlAbstractRepresentationToVtkDataset *ResqmlDataRepositoryToVtkPartitionedDa
     {
         try
         {
-            auto* assembly = this->output->GetDataAssembly();
+            vtkOutputWindowDisplayText("WELL_MARKER\n");
+            auto *assembly = this->output->GetDataAssembly();
             const int node_parent = assembly->GetParent(searchNodeByUuid(uuid));
-            nodeId_to_resqml[node_parent]->setUuid(uuid);
-            auto* representation = dynamic_cast<ResqmlWellboreMarkerFrameToVtkPartitionedDataSet *>(nodeId_to_resqml[node_parent]);
-            representation->loadVtkObject();
+            if (nodeId_to_resqml[node_parent])
+            {
+                auto *resqmlWellboreMarkerFrameToVtkPartitionedDataSet = dynamic_cast<ResqmlWellboreMarkerFrameToVtkPartitionedDataSet *>(nodeId_to_resqml[node_parent]);
+                resqmlWellboreMarkerFrameToVtkPartitionedDataSet->addMarker(uuid);
+            }
         }
         catch (const std::exception &e)
         {
             throw std::string("Error in wellbore marker load for uuid: " + std::string(e.what()));
         }
+        vtkOutputWindowDisplayText("WELL_MARKER END\n");
         break;
     }
     case ResqmlDataRepositoryToVtkPartitionedDataSetCollection::EntityType::PROP:
     {
+        vtkOutputWindowDisplayText("PROP\n");
         try
         {
-            auto* assembly = this->output->GetDataAssembly();
+            auto *assembly = this->output->GetDataAssembly();
             const int node_parent = assembly->GetParent(searchNodeByUuid(uuid));
             if (nodeId_to_resqml[node_parent])
             {
@@ -625,6 +664,7 @@ ResqmlAbstractRepresentationToVtkDataset *ResqmlDataRepositoryToVtkPartitionedDa
         {
             throw std::string("Error in property load for uuid: " + std::string(e.what()));
         }
+        vtkOutputWindowDisplayText("PROP END\n");
         break;
     }
     }
@@ -637,7 +677,7 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::changeInvalid
     std::replace(text.begin(), text.end(), '(', '.');
     std::replace(text.begin(), text.end(), ')', '.');
     std::replace(text.begin(), text.end(), '+', '.');
-	return text;
+    return text;
 }
 
 vtkPartitionedDataSetCollection *ResqmlDataRepositoryToVtkPartitionedDataSetCollection::getVtkPartionedDatasSetCollection()
@@ -666,8 +706,7 @@ vtkPartitionedDataSetCollection *ResqmlDataRepositoryToVtkPartitionedDataSetColl
         }
     }
 
-
-    // delete property
+    // delete Property or Wellbore marker
     for (const int selection : this->old_selection)
     {
         if (nodeId_to_EntityType[selection] == ResqmlDataRepositoryToVtkPartitionedDataSetCollection::EntityType::PROP)
@@ -687,29 +726,47 @@ vtkPartitionedDataSetCollection *ResqmlDataRepositoryToVtkPartitionedDataSetColl
                 throw std::string("Error in property load for uuid: " + std::string(e.what()));
             }
         }
+        if (nodeId_to_EntityType[selection] == ResqmlDataRepositoryToVtkPartitionedDataSetCollection::EntityType::WELL_MARKER)
+        {
+            try
+            {
+                auto *assembly = this->output->GetDataAssembly();
+                const int node_parent = assembly->GetParent(searchNodeByUuid(nodeId_to_uuid[selection]));
+                if (this->nodeId_to_resqml.find(node_parent) != this->nodeId_to_resqml.end())
+                {
+                    ResqmlWellboreMarkerFrameToVtkPartitionedDataSet *rep = dynamic_cast<ResqmlWellboreMarkerFrameToVtkPartitionedDataSet *>(this->nodeId_to_resqml[node_parent]);
+                    rep->removeMarker(nodeId_to_uuid[selection]);
+                }
+            }
+            catch (const std::exception &e)
+            {
+                throw std::string("Error in property load for uuid: " + std::string(e.what()));
+            }
+        }
     }
 
-    //delete representation
+    // delete representation
     for (const int selection : this->old_selection)
     {
         if (this->nodeId_to_resqml.find(selection) != this->nodeId_to_resqml.end())
         {
             this->nodeId_to_resqml.erase(selection); // erase object
         }
-     }
-
+    }
 
     this->output->Modified();
     return this->output;
 }
 
-int ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchNodeByUuid(const std::string& uuid)
+int ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchNodeByUuid(const std::string &uuid)
 {
-	for (const auto& it : this->nodeId_to_uuid) {
-		if (it.second == uuid) {
-			return it.first;
-		}
-	}
+    for (const auto &it : this->nodeId_to_uuid)
+    {
+        if (it.second == uuid)
+        {
+            return it.first;
+        }
+    }
 
     return -1;
 }

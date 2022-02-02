@@ -16,10 +16,13 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 -----------------------------------------------------------------------*/
-#ifndef SRC_VTK_ResqmlWellboreMarkerFrameToVtkPartitionedDataSet_H_
-#define SRC_VTK_ResqmlWellboreMarkerFrameToVtkPartitionedDataSet_H_
+#ifndef _ResqmlWellboreMarkerFrameToVtkPartitionedDataSet_H_
+#define _ResqmlWellboreMarkerFrameToVtkPartitionedDataSet_H_
 
 #include "ResqmlMapping/ResqmlAbstractRepresentationToVtkDataset.h"
+#include "ResqmlMapping/ResqmlWellboreMarkerToVtkPolyData.h"
+
+#include <vector>
 
 namespace RESQML2_NS
 {
@@ -27,35 +30,34 @@ namespace RESQML2_NS
 	class AbstractValuesProperty;
 }
 
+class ResqmlWellboreMarkerToVtkPolyData;
+
 class ResqmlWellboreMarkerFrameToVtkPartitionedDataSet : public ResqmlAbstractRepresentationToVtkDataset
 {
 public:
 	/**
-	* Constructor
-	*/
+	 * Constructor
+	 */
 	ResqmlWellboreMarkerFrameToVtkPartitionedDataSet(RESQML2_NS::WellboreMarkerFrameRepresentation *marker, bool orientation, int size, int proc_number = 1, int max_proc = 1);
 
-	
 	/**
-	* load vtkDataSet with resqml data
-	*/
-	void loadVtkObject(); 
+	 * load vtkDataSet with resqml data
+	 */
+	void loadVtkObject();
 
 	void toggleMarkerOrientation(bool orientation);
 	void setMarkerSize(int newSize);
 
+	void addMarker(std::string marker_uuid);
+	void removeMarker(std::string marker_uuid);
 
 protected:
 	resqml2::WellboreMarkerFrameRepresentation *resqmlData;
 
 private:
-	void createDisk(unsigned int markerIndex);
-	void createSphere(unsigned int markerIndex);
-
 	bool orientation;
 	int size;
 
-	std::string current_index;
+	std::vector<ResqmlWellboreMarkerToVtkPolyData *> list_marker;
 };
-#endif 
-
+#endif
