@@ -319,6 +319,7 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchReprese
     }
     else
     {
+        /*
         const auto *interpretation = representation->getInterpretation();
         if (interpretation != nullptr)
         {
@@ -331,6 +332,7 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchReprese
                 nodeId_to_EntityType[idNode] = ResqmlDataRepositoryToVtkPartitionedDataSetCollection::EntityType::INTERPRETATION;
             }
         }
+        */
         idNode = data_assembly->AddNode(changeInvalidCharacter(representation->getXmlTag() + '.' + representation->getTitle()).c_str(), idNode);
         nodeId_to_uuid[idNode] = representation->getUuid();
         nodeId_to_EntityType[idNode] = type;
@@ -380,6 +382,7 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchWellbor
             }
             else
             {
+/*
                 const auto *interpretation = wellboreTrajectory->getInterpretation();
                 if (interpretation != nullptr)
                 {
@@ -387,6 +390,7 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchWellbor
                     nodeId_to_uuid[idNode] = interpretation->getUuid();
                     nodeId_to_EntityType[idNode] = ResqmlDataRepositoryToVtkPartitionedDataSetCollection::EntityType::INTERPRETATION;
                 }
+                */
                 idNode = data_assembly->AddNode(changeInvalidCharacter(wellboreTrajectory->getXmlTag() + '.' + wellboreTrajectory->getTitle()).c_str(), idNode);
                 nodeId_to_uuid[idNode] = wellboreTrajectory->getUuid();
                 nodeId_to_EntityType[idNode] = ResqmlDataRepositoryToVtkPartitionedDataSetCollection::EntityType::WELL_TRAJ;
