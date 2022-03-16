@@ -541,6 +541,7 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchWellbor
 std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchTimeSeries(const std::string &fileName)
 {
     std::string return_message = "";
+    return_message = return_message + output->GetDataAssembly()->SerializeToXML(new vtkIndent()) + "\n";
     std::vector<EML2_NS::TimeSeries *> timeSeries;
     try
     {
@@ -550,8 +551,70 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchTimeSer
     {
         return_message = return_message + "EXCEPTION in fesapi when calling getTimeSeriesSet with file: " + fileName + " : " + e.what();
     }
+
+    /****
+     *  change property parent to times serie parent
+     ****/
+    for (auto *timeSerie : timeSeries)
+    {
+        bool valid = true;
+        timeSerie->setTitle(changeInvalidCharacter(timeSerie->getXmlTag() + '.' + timeSerie->getTitle()));
+        // create temporary treeview (representing Times series)
+        auto treeView_time_serie = vtkSmartPointer<vtkDataAssembly>::New();
+        treeView_times_series->SetRootNodeName(timeSerie.getTitile().c_str());
+
+        // get properties link to Times series
+        try
+        {
+            auto propSeries = timeSerie->getPropertySet();
+        }
+        catch (const std::exception &e)
+        {
+            return_message = return_message + "EXCEPTION in fesapi when calling getPropertySet with file: " + fileName + " : " + e.what();
+        }
+
+        std::vector<std::string> property_name_set;
+        std::vector<std::string> property_uuid_set;
+        int node_parent = -1;
+        for (auto *prop : propSeries)
+        {
+            if (prop->getXmlTag() != "ContinuousPropertySeries")
+            {
+                auto node_id = (searchNodeByUuid(prop->getUuid());
+                // same node parent else not supported
+                if (node_parent == -1) {
+                    node_parent = assembly->GetParent(node_id);
+                } else if (node_parent == assembly->GetParent(node_id)){
+                    if (searchNodeByUuid(prop->getUuid()) == -1)
+                    {
+                        return_message = return_message + "The property " + prop->getUuid() + " is not supported and consequently cannot be associated to its time series.";
+                        continue;
+                    }
+                    if (prop->getTimeIndicesCount() > 1)
+                    {
+                        return_message = return_message + "The property " + prop->getUuid() + " correspond to more than one time index. It is not supported yet.";
+                        continue;
+                    }
+
+                    property_name_set.push_back(prop->getTitle());
+                    property_uuid_set.push_back(prop->getUuid());
+                } else {
+                    valid = false;
+                    return_message = return_message + "The properties of time series " + timeSerie->getUuid() + " aren't same parent and is not supported.";
+                }
+            }
+        }
+        if (valid) {
+            treeView_times_series->AddNodes(property_name_set);
+            for (auto uuid : property_uuid_set) {
+                output->GetDataAssembly()->RemoveAllDataSetIndices(uuid);
+            }
+            output->GetDataAssembly()->AddSubtree(node_parent, treeView_times_series);
+        }
+    }
+    
+    return_message = return_message + output->GetDataAssembly()->SerializeToXML(new vtkIndent()) + "\n";
     return return_message;
-    /******* TODO ********/
 }
 
 void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::selectNodeId(int node)
