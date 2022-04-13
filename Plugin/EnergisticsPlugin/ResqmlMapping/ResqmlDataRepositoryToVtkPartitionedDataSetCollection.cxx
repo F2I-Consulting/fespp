@@ -70,6 +70,7 @@ ResqmlDataRepositoryToVtkPartitionedDataSetCollection::ResqmlDataRepositoryToVtk
     auto assembly = vtkSmartPointer<vtkDataAssembly>::New();
     assembly->SetRootNodeName("data");
     output->SetDataAssembly(assembly);
+    times_step.clear();
 
     nodeId_to_EntityType[0] = ResqmlDataRepositoryToVtkPartitionedDataSetCollection::EntityType::INTERPRETATION;
 }
@@ -422,7 +423,7 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchReprese
     }
 
     std::list<std::string> name_to_sort;
-    std::map<std::string, std::string> mapping_title_to_uuid;
+    std::map<std::string, std::vector<std::string>> mapping_title_to_uuidSet;
     try
     {
         // property
@@ -430,21 +431,23 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchReprese
         {
             property->setTitle(changeInvalidCharacter(property->getXmlTag() + '.' + property->getTitle()));
 
-            result = result + property->getTitle() + " " + property->getUuid() + "\n";
             if (searchNodeByUuid(property->getUuid()) == -1)
             { // verify uuid exist in treeview
                 name_to_sort.push_back(property->getTitle());
-                mapping_title_to_uuid[property->getTitle()] = property->getUuid();
+                mapping_title_to_uuidSet[property->getTitle()].push_back(property->getUuid());
             }
         }
         name_to_sort.sort();
         for (auto const &name : name_to_sort)
         {
-            if (searchNodeByUuid(mapping_title_to_uuid[name]) == -1)
-            { // verify uuid exist in treeview
-                int property_idNode = data_assembly->AddNode(name.c_str(), idNode);
-                nodeId_to_uuid[property_idNode] = mapping_title_to_uuid[name];
-                nodeId_to_EntityType[property_idNode] = ResqmlDataRepositoryToVtkPartitionedDataSetCollection::EntityType::PROP;
+            for (std::string uuid : mapping_title_to_uuidSet[name])
+            {
+                if (searchNodeByUuid(uuid) == -1)
+                { // verify uuid exist in treeview
+                    int property_idNode = data_assembly->AddNode(name.c_str(), idNode);
+                    nodeId_to_uuid[property_idNode] = uuid;
+                    nodeId_to_EntityType[property_idNode] = ResqmlDataRepositoryToVtkPartitionedDataSetCollection::EntityType::PROP;
+                }
             }
         }
     }
@@ -546,22 +549,8 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchWellbor
 
 std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchTimeSeries(const std::string &fileName)
 {
+    times_step.clear();
 
-    /*
-
-    Suite point avec Philippe !!
-
-    une timeSeries n'est rien d'autre que des indexes associés à des timestamp.
-
-    Dans le treeView changer le nom timeSeries.nom par timeSeries.xmlTag_propriété.Title_propriété
-
-    Attention!! pour la même timeSeries il peut y avoir plusieurs kind et il faut dissocier les 2 kind dans le treeView
-    ex: kind = length et un autre kind = weight
-    !!! Donc l'id d'un node n'est plus uuid seul mais uuid+kind !!!
-
-    rajouter la possibilité des discreteProperty
-
-    */
     std::string return_message = "";
     auto assembly = output->GetDataAssembly();
     std::vector<EML2_NS::TimeSeries *> timeSeries;
@@ -616,8 +605,8 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchTimeSer
                                 continue;
                             }
                             property_name_to_node_set[prop->getTitle()].push_back(node_id);
-                            // property_node_set.push_back(node_id);
-                            times_step.push_back(prop->getTimeSeries()->getTimestamp(prop->getTimeIndexStart()));
+                            times_step.push_back(prop->getTimeIndexStart());
+                            timeSeries_uuid_to_properties_uuid[timeSerie->getUuid()][prop->getTimeIndexStart()] = prop->getUuid();
                         }
                         else
                         {
@@ -895,7 +884,7 @@ ResqmlAbstractRepresentationToVtkDataset *ResqmlDataRepositoryToVtkPartitionedDa
             const int node_parent = assembly->GetParent(searchNodeByUuid(uuid));
             if (nodeId_to_resqml[node_parent])
             {
-                nodeId_to_resqml[node_parent]->addDataArray(uuid);
+                nodeId_to_resqml[node_parent]->addDataArray(timeSeries_uuid_to_properties_uuid[uuid][time]);
             }
         }
         catch (const std::exception &e)
@@ -919,12 +908,15 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::changeInvalid
 
 vtkPartitionedDataSetCollection *ResqmlDataRepositoryToVtkPartitionedDataSetCollection::getVtkPartionedDatasSetCollection(const double time)
 {
-
+    // initialization the output (VtkPartitionedDatasSetCollection)
     for (unsigned int index_partitioned = 0; index_partitioned < this->output->GetNumberOfPartitionedDataSets(); index_partitioned++)
     {
         this->output->RemovePartitionedDataSet(index_partitioned);
     }
-    unsigned int index = 0;
+
+    unsigned int index = 0; // index for PartionedDatasSet
+
+    // foreach selection node
     for (const int node_selection : this->current_selection)
     {
         ResqmlAbstractRepresentationToVtkDataset *rep = nullptr;

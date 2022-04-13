@@ -206,14 +206,17 @@ int EnergisticsPlugin::RequestData(vtkInformation *,
 
   outInfo->Remove(vtkStreamingDemandDrivenPipeline::TIME_STEPS());
   std::vector<double> times = this->repository.getTimes();
-  const auto [min, max] = std::minmax_element(begin(times), end(times));
-  outInfo->Set(vtkStreamingDemandDrivenPipeline::TIME_STEPS(), &times[0], times.size());
-  static double timeRange[] = {*min, *max};
-  outInfo->Set(vtkStreamingDemandDrivenPipeline::TIME_RANGE(), timeRange, 2);
+  double requestedTimeStep = 0;
+  if (!times.empty())
+  {
+    const auto [min, max] = std::minmax_element(begin(times), end(times));
+    outInfo->Set(vtkStreamingDemandDrivenPipeline::TIME_STEPS(), &times[0], times.size());
+    static double timeRange[] = {*min, *max};
+    outInfo->Set(vtkStreamingDemandDrivenPipeline::TIME_RANGE(), timeRange, 2);
 
-  // current timeStep value
-  double requestedTimeStep = outInfo->Get(vtkStreamingDemandDrivenPipeline::UPDATE_TIME_STEP());
-
+    // current timeStep value
+    requestedTimeStep = outInfo->Get(vtkStreamingDemandDrivenPipeline::UPDATE_TIME_STEP());
+  }
   try
   {
     output->DeepCopy(this->repository.getVtkPartionedDatasSetCollection(requestedTimeStep));

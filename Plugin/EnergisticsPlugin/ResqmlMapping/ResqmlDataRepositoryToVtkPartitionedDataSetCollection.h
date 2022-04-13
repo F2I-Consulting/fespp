@@ -119,10 +119,13 @@ private:
 	std::map<int, EntityType> nodeId_to_EntityType;								// index of VtkDataAssembly to entity type
 	std::map<int, ResqmlAbstractRepresentationToVtkDataset *> nodeId_to_resqml; // index of VtkDataAssembly to ResqmlAbstractRepresentationToVtkDataset
 
+	std::map<std::string, std::map<double, std::string>> timeSeries_uuid_to_properties_uuid;									
+
 	std::set<int> current_selection;
 	std::set<int> old_selection;
 
 	// time step values
 	std::vector<double> times_step;
+
 };
 #endif
