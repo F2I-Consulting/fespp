@@ -20,6 +20,7 @@ under the License.
 
 #include <exception>
 #include <iterator>
+#include <algorithm>
 
 #include <vtkIndent.h>
 #include <vtkInformation.h>
@@ -28,6 +29,8 @@ under the License.
 #include <vtkDataAssembly.h>
 #include <vtkObjectFactory.h>
 #include <vtkMultiProcessController.h>
+#include <vtkStreamingDemandDrivenPipeline.h>
+#include <vtkDataObject.h>
 
 vtkStandardNewMacro(EnergisticsPlugin);
 vtkCxxSetObjectMacro(EnergisticsPlugin, Controller, vtkMultiProcessController);
@@ -197,12 +200,23 @@ int EnergisticsPlugin::RequestData(vtkInformation *,
                                    vtkInformationVector **,
                                    vtkInformationVector *outputVector)
 {
+
   vtkInformation *outInfo = outputVector->GetInformationObject(0);
   vtkPartitionedDataSetCollection *output = vtkPartitionedDataSetCollection::SafeDownCast(outInfo->Get(vtkPartitionedDataSetCollection::DATA_OBJECT()));
 
+  outInfo->Remove(vtkStreamingDemandDrivenPipeline::TIME_STEPS());
+  std::vector<double> times = this->repository.getTimes();
+  const auto [min, max] = std::minmax_element(begin(times), end(times));
+  outInfo->Set(vtkStreamingDemandDrivenPipeline::TIME_STEPS(), &times[0], times.size());
+  static double timeRange[] = {*min, *max};
+  outInfo->Set(vtkStreamingDemandDrivenPipeline::TIME_RANGE(), timeRange, 2);
+
+  // current timeStep value
+  double requestedTimeStep = outInfo->Get(vtkStreamingDemandDrivenPipeline::UPDATE_TIME_STEP());
+
   try
   {
-    output->DeepCopy(this->repository.getVtkPartionedDatasSetCollection());
+    output->DeepCopy(this->repository.getVtkPartionedDatasSetCollection(requestedTimeStep));
   }
   catch (const std::exception &e)
   {
@@ -223,10 +237,10 @@ vtkDataAssembly *EnergisticsPlugin::GetAssembly()
 {
   try
   {
-	return this->repository.getVtkPartionedDatasSetCollection()->GetDataAssembly();
+    return this->repository.GetAssembly();
   }
   catch (const std::exception &e)
   {
-	vtkErrorMacro(<< e.what());
+    vtkErrorMacro(<< e.what());
   }
 }

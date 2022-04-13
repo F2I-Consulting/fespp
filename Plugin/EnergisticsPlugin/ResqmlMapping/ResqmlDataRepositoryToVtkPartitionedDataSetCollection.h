@@ -80,7 +80,9 @@ public:
 	void setMarkerOrientation(bool orientation) { markerOrientation = orientation; }
 	void setMarkerSize(int size) { markerSize = size; }
 
-	vtkPartitionedDataSetCollection *getVtkPartionedDatasSetCollection();
+	vtkPartitionedDataSetCollection *getVtkPartionedDatasSetCollection(const double time);
+
+	std::vector<double> getTimes() { return times_step; }
 
 	void selectNodeId(int node);
 	void clearSelection();
@@ -101,7 +103,7 @@ private:
 	void selectNodeIdParent(int node);
 	void selectNodeIdChildren(int node);
 
-	ResqmlAbstractRepresentationToVtkDataset *loadToVtk(std::string uuid, EntityType type);
+	ResqmlAbstractRepresentationToVtkDataset *loadToVtk(std::string uuid, EntityType type, double time);
 
 	std::string changeInvalidCharacter(std::string text);
 	int searchNodeByUuid(const std::string& uuid);
@@ -119,5 +121,8 @@ private:
 
 	std::set<int> current_selection;
 	std::set<int> old_selection;
+
+	// time step values
+	std::vector<double> times_step;
 };
 #endif

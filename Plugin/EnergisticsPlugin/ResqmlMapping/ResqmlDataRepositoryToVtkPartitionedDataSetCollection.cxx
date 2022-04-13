@@ -42,6 +42,8 @@ under the License.
 #include <fesapi/resqml2/WellboreMarker.h>
 #include <fesapi/resqml2/WellboreTrajectoryRepresentation.h>
 #include <fesapi/resqml2/AbstractFeatureInterpretation.h>
+#include <fesapi/resqml2/ContinuousProperty.h>
+#include <fesapi/resqml2/DiscreteProperty.h>
 #include <fesapi/common/EpcDocument.h>
 #include <fesapi/common/AbstractObject.h>
 
@@ -387,6 +389,7 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchSubRepr
 
 std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchRepresentations(resqml2::AbstractRepresentation *representation, EntityType type)
 {
+    std::string result = "";
     vtkDataAssembly *data_assembly = output->GetDataAssembly();
 
     int idNode = 0; // 0 is root's id
@@ -426,6 +429,8 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchReprese
         for (auto *property : representation->getValuesPropertySet())
         {
             property->setTitle(changeInvalidCharacter(property->getXmlTag() + '.' + property->getTitle()));
+
+            result = result + property->getTitle() + " " + property->getUuid() + "\n";
             if (searchNodeByUuid(property->getUuid()) == -1)
             { // verify uuid exist in treeview
                 name_to_sort.push_back(property->getTitle());
@@ -447,7 +452,7 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchReprese
     {
         return "EXCEPTION in fesapi when calling getValuesPropertySet with representation uuid: " + nodeId_to_uuid[idNode] + " : " + e.what() + ".\n";
     }
-    return "";
+    return result;
 }
 
 std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchWellboreTrajectory(const std::string &fileName)
@@ -541,9 +546,24 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchWellbor
 
 std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchTimeSeries(const std::string &fileName)
 {
+
+    /*
+
+    Suite point avec Philippe !!
+
+    une timeSeries n'est rien d'autre que des indexes associés à des timestamp.
+
+    Dans le treeView changer le nom timeSeries.nom par timeSeries.xmlTag_propriété.Title_propriété
+
+    Attention!! pour la même timeSeries il peut y avoir plusieurs kind et il faut dissocier les 2 kind dans le treeView
+    ex: kind = length et un autre kind = weight
+    !!! Donc l'id d'un node n'est plus uuid seul mais uuid+kind !!!
+
+    rajouter la possibilité des discreteProperty
+
+    */
     std::string return_message = "";
     auto assembly = output->GetDataAssembly();
-    return_message = return_message + assembly->SerializeToXML(vtkIndent()) + "\n";
     std::vector<EML2_NS::TimeSeries *> timeSeries;
     try
     {
@@ -560,8 +580,6 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchTimeSer
     for (auto *timeSerie : timeSeries)
     {
         bool valid = true;
-        // create temporary treeview (representing Times series)
-        timeSerie->setTitle(changeInvalidCharacter(timeSerie->getXmlTag() + '.' + timeSerie->getTitle()));
 
         // get properties link to Times series
         try
@@ -569,18 +587,16 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchTimeSer
             auto propSeries = timeSerie->getPropertySet();
 
             std::vector<std::string> property_name_set;
-            std::vector<int> property_node_set;
+            std::map<std::string, std::vector<int>> property_name_to_node_set;
             int node_parent = -1;
             for (auto *prop : propSeries)
             {
-                return_message = return_message + prop->getXmlTag() + "\n";
-                if (prop->getXmlTag() == "ContinuousProperty")
+                if (prop->getXmlTag() == RESQML2_NS::ContinuousProperty::XML_TAG ||
+                    prop->getXmlTag() == RESQML2_NS::DiscreteProperty::XML_TAG)
                 {
                     auto node_id = (searchNodeByUuid(prop->getUuid()));
-                    return_message = return_message + "NODE : " + std::to_string(node_id) + "\n";
                     if (node_id == -1)
                     {
-                        return_message = return_message + prop->getXmlTag() + "\n";
                         return_message = return_message + "The property " + prop->getUuid() + " is not supported and consequently cannot be associated to its time series.\n";
                         continue;
                     }
@@ -599,8 +615,9 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchTimeSer
                                 return_message = return_message + "The property " + prop->getUuid() + " correspond to more than one time index. It is not supported yet.\n";
                                 continue;
                             }
-
-                            property_node_set.push_back(node_id);
+                            property_name_to_node_set[prop->getTitle()].push_back(node_id);
+                            // property_node_set.push_back(node_id);
+                            times_step.push_back(prop->getTimeSeries()->getTimestamp(prop->getTimeIndexStart()));
                         }
                         else
                         {
@@ -612,18 +629,27 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchTimeSer
             }
             if (valid)
             {
-                for (auto node : property_node_set)
-                {
-                    return_message = return_message + "remove NODE : " + std::to_string(node) + "\n";
-                    output->GetDataAssembly()->RemoveNode(node);
-                    nodeId_to_EntityType.erase(node);
-                    nodeId_to_resqml.erase(node);
-                    nodeId_to_uuid.erase(node);
-                }
-                auto times_serie_node_id = output->GetDataAssembly()->AddNode(timeSerie->getTitle().c_str(), node_parent);
+                // erase duplicate Index
+                sort(times_step.begin(), times_step.end());
+                times_step.erase(unique(times_step.begin(), times_step.end()), times_step.end());
 
-                nodeId_to_EntityType[times_serie_node_id] = ResqmlDataRepositoryToVtkPartitionedDataSetCollection::EntityType::TIMES_SERIE;
-                nodeId_to_uuid[times_serie_node_id] = timeSerie->getUuid();
+                for (const auto &myPair : property_name_to_node_set)
+                {
+                    std::vector<int> property_node_set = myPair.second;
+
+                    for (auto node : property_node_set)
+                    {
+                        output->GetDataAssembly()->RemoveNode(node);
+                        nodeId_to_EntityType.erase(node);
+                        nodeId_to_resqml.erase(node);
+                        nodeId_to_uuid.erase(node);
+                    }
+                    std::string name = changeInvalidCharacter(timeSerie->getXmlTag() + '.' + myPair.first);
+                    auto times_serie_node_id = output->GetDataAssembly()->AddNode(name.c_str(), node_parent);
+
+                    nodeId_to_EntityType[times_serie_node_id] = ResqmlDataRepositoryToVtkPartitionedDataSetCollection::EntityType::TIMES_SERIE;
+                    nodeId_to_uuid[times_serie_node_id] = timeSerie->getUuid();
+                }
             }
         }
         catch (const std::exception &e)
@@ -632,7 +658,6 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchTimeSer
         }
     }
 
-    return_message = return_message + assembly->SerializeToXML(vtkIndent()) + "\n";
     return return_message;
 }
 
@@ -677,7 +702,7 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::clearSelection()
     this->current_selection.clear();
 }
 
-ResqmlAbstractRepresentationToVtkDataset *ResqmlDataRepositoryToVtkPartitionedDataSetCollection::loadToVtk(std::string uuid, EntityType entity)
+ResqmlAbstractRepresentationToVtkDataset *ResqmlDataRepositoryToVtkPartitionedDataSetCollection::loadToVtk(std::string uuid, EntityType entity, double time)
 {
     switch (entity)
     {
@@ -862,6 +887,23 @@ ResqmlAbstractRepresentationToVtkDataset *ResqmlDataRepositoryToVtkPartitionedDa
         }
         break;
     }
+    case ResqmlDataRepositoryToVtkPartitionedDataSetCollection::EntityType::TIMES_SERIE:
+    {
+        try
+        {
+            auto *assembly = this->output->GetDataAssembly();
+            const int node_parent = assembly->GetParent(searchNodeByUuid(uuid));
+            if (nodeId_to_resqml[node_parent])
+            {
+                nodeId_to_resqml[node_parent]->addDataArray(uuid);
+            }
+        }
+        catch (const std::exception &e)
+        {
+            vtkOutputWindowDisplayErrorText(("Error in property load for uuid: " + uuid + "\n").c_str());
+        }
+        break;
+    }
     }
     return nullptr;
 }
@@ -875,7 +917,7 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::changeInvalid
     return text;
 }
 
-vtkPartitionedDataSetCollection *ResqmlDataRepositoryToVtkPartitionedDataSetCollection::getVtkPartionedDatasSetCollection()
+vtkPartitionedDataSetCollection *ResqmlDataRepositoryToVtkPartitionedDataSetCollection::getVtkPartionedDatasSetCollection(const double time)
 {
 
     for (unsigned int index_partitioned = 0; index_partitioned < this->output->GetNumberOfPartitionedDataSets(); index_partitioned++)
@@ -892,7 +934,7 @@ vtkPartitionedDataSetCollection *ResqmlDataRepositoryToVtkPartitionedDataSetColl
         }
         else
         {
-            rep = loadToVtk(nodeId_to_uuid[node_selection], nodeId_to_EntityType[node_selection]);
+            rep = loadToVtk(nodeId_to_uuid[node_selection], nodeId_to_EntityType[node_selection], time);
         }
         if (rep)
         {
