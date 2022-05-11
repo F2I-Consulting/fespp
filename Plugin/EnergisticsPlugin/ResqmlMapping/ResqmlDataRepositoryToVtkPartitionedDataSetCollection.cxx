@@ -606,7 +606,7 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchTimeSer
                             }
                             property_name_to_node_set[prop->getTitle()].push_back(node_id);
                             times_step.push_back(prop->getTimeIndexStart());
-                            timeSeries_uuid_to_properties_uuid[timeSerie->getUuid()][prop->getTimeIndexStart()] = prop->getUuid();
+                            timeSeries_uuid_and_title_to_index_and_properties_uuid[timeSerie->getUuid()][changeInvalidCharacter(timeSerie->getXmlTag() + '.' + prop->getTitle())][prop->getTimeIndexStart()] = prop->getUuid();
                         }
                         else
                         {
@@ -637,7 +637,8 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchTimeSer
                     auto times_serie_node_id = output->GetDataAssembly()->AddNode(name.c_str(), node_parent);
 
                     nodeId_to_EntityType[times_serie_node_id] = ResqmlDataRepositoryToVtkPartitionedDataSetCollection::EntityType::TIMES_SERIE;
-                    nodeId_to_uuid[times_serie_node_id] = timeSerie->getUuid();
+                    // for selection add node name to timeserie uuid
+                    nodeId_to_uuid[times_serie_node_id] = timeSerie->getUuid()+name;
                 }
             }
         }
@@ -880,11 +881,15 @@ ResqmlAbstractRepresentationToVtkDataset *ResqmlDataRepositoryToVtkPartitionedDa
     {
         try
         {
+            // decompose uuid by Timeserie uuid + node name
+            std::string ts_uuid = uuid.substr (0, 36); 
+            std::string node_name = uuid.substr (36); 
+
             auto *assembly = this->output->GetDataAssembly();
             const int node_parent = assembly->GetParent(searchNodeByUuid(uuid));
             if (nodeId_to_resqml[node_parent])
             {
-                nodeId_to_resqml[node_parent]->addDataArray(timeSeries_uuid_to_properties_uuid[uuid][time]);
+                nodeId_to_resqml[node_parent]->addDataArray(timeSeries_uuid_and_title_to_index_and_properties_uuid[ts_uuid][node_name][time]);
             }
         }
         catch (const std::exception &e)
