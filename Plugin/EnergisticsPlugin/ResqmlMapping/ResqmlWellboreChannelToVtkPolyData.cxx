@@ -30,8 +30,6 @@ under the License.
 #include <fesapi/resqml2/AbstractValuesProperty.h>
 #include <fesapi/resqml2/AbstractLocal3dCrs.h>
 
-// include F2i-consulting Energistics Paraview Plugin
-
 //----------------------------------------------------------------------------
 ResqmlWellboreChannelToVtkPolyData::ResqmlWellboreChannelToVtkPolyData(resqml2::WellboreFrameRepresentation *frame, resqml2::AbstractValuesProperty *property, std::string uuid, int proc_number, int max_proc)
 	: ResqmlAbstractRepresentationToVtkDataset(frame,

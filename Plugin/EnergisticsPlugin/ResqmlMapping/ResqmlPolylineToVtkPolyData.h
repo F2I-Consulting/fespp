@@ -40,9 +40,7 @@ public:
 	/**
 	 * load vtkDataSet with resqml data
 	 */
-	void loadVtkObject();
-
-	std::string message;
+	void loadVtkObject() final;
 
 protected:
 	RESQML2_NS::PolylineSetRepresentation *resqmlData;

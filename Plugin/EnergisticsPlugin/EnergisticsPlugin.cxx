@@ -209,9 +209,9 @@ int EnergisticsPlugin::RequestData(vtkInformation *,
   double requestedTimeStep = 0;
   if (!times.empty())
   {
-    const auto [min, max] = std::minmax_element(begin(times), end(times));
+    std::pair<std::vector<double>::iterator, std::vector<double>::iterator> minmax = std::minmax_element(begin(times), end(times));
     outInfo->Set(vtkStreamingDemandDrivenPipeline::TIME_STEPS(), &times[0], times.size());
-    static double timeRange[] = {*min, *max};
+    static double timeRange[] = { *minmax.first, *minmax.second };
     outInfo->Set(vtkStreamingDemandDrivenPipeline::TIME_RANGE(), timeRange, 2);
 
     // current timeStep value

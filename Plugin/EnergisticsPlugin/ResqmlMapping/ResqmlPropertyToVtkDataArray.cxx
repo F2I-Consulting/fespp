@@ -185,13 +185,13 @@ ResqmlPropertyToVtkDataArray::ResqmlPropertyToVtkDataArray(resqml2::AbstractValu
 	// verify nbElement != 0
 	if (nbElement == 0)
 	{
-		vtkOutputWindowDisplayErrorText("property not supported...  (resqml2__IndexableElements: not cells or triangles or nodes)\n");
+		throw std::invalid_argument("Property indexable element must be points or cells and must contain at least one of this element.");
 	}
 
 	unsigned int elementCountPerValue = valuesProperty->getElementCountPerValue();
 	if (elementCountPerValue > 1)
 	{
-		cerr << "does not support vectorial property yet" << endl;
+		throw std::invalid_argument("Does not support vectorial property yet");
 	}
 
 	const std::string name = valuesProperty->getTitle();
@@ -221,7 +221,7 @@ ResqmlPropertyToVtkDataArray::ResqmlPropertyToVtkDataArray(resqml2::AbstractValu
 	}
 	else
 	{
-		cerr << "does not support property which are not discrete or categorical or continuous yet" << endl;
+		throw std::invalid_argument("does not support property which are not discrete or categorical or continuous yet");
 	}
 }
 

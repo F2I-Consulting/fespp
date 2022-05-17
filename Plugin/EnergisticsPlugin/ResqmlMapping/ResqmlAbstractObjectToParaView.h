@@ -30,8 +30,8 @@ namespace COMMON_NS
 class ResqmlAbstractObjectToParaView
 {
 public:
-  ResqmlAbstractObjectToParaView(COMMON_NS::AbstractObject *resqmlObject);
-  ~ResqmlAbstractObjectToParaView();
+  ResqmlAbstractObjectToParaView(COMMON_NS::AbstractObject *resqmlObject) : resqmlObject(resqmlObject) {}
+  ~ResqmlAbstractObjectToParaView() = default;
 
   COMMON_NS::AbstractObject *getResqmlObject() { return resqmlObject; }
 

@@ -55,6 +55,7 @@ ResqmlUnstructuredGridToVtkUnstructuredGrid::ResqmlUnstructuredGridToVtkUnstruct
 	  resqmlData(unstructuredGrid)
 {
 	this->pointCount = unstructuredGrid->getXyzPointCountOfAllPatches();
+	this->iCellCount = unstructuredGrid->getCellCount();
 
 	this->vtkData = vtkSmartPointer<vtkPartitionedDataSet>::New();
 

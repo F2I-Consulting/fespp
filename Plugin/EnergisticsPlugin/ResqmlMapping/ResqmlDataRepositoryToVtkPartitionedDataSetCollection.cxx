@@ -705,9 +705,9 @@ ResqmlAbstractRepresentationToVtkDataset *ResqmlDataRepositoryToVtkPartitionedDa
             nodeId_to_resqml[searchNodeByUuid(uuid)] = rep;
             return rep;
         }
-        catch (const std::exception &)
+        catch (const std::exception& e)
         {
-            vtkOutputWindowDisplayErrorText(("Error in ijkgrid load for uuid: " + uuid).c_str());
+            vtkOutputWindowDisplayErrorText(("Error in ijkgrid load for uuid: " + uuid + "\n" + e.what()).c_str());
         }
         break;
     }
@@ -720,9 +720,9 @@ ResqmlAbstractRepresentationToVtkDataset *ResqmlDataRepositoryToVtkPartitionedDa
             nodeId_to_resqml[searchNodeByUuid(uuid)] = rep;
             return rep;
         }
-        catch (const std::exception &)
+        catch (const std::exception& e)
         {
-            vtkOutputWindowDisplayErrorText(("Error in grid 2D load for uuid: " + uuid + "\n").c_str());
+            vtkOutputWindowDisplayErrorText(("Error in grid 2D load for uuid: " + uuid + "\n" + e.what()).c_str());
         }
         break;
     }
@@ -735,9 +735,9 @@ ResqmlAbstractRepresentationToVtkDataset *ResqmlDataRepositoryToVtkPartitionedDa
             nodeId_to_resqml[searchNodeByUuid(uuid)] = rep;
             return rep;
         }
-        catch (const std::exception &)
+        catch (const std::exception& e)
         {
-            vtkOutputWindowDisplayErrorText(("Error in triangulated load for uuid: " + uuid + "\n").c_str());
+            vtkOutputWindowDisplayErrorText(("Error in triangulated load for uuid: " + uuid + "\n" + e.what()).c_str());
         }
         break;
     }
@@ -750,9 +750,9 @@ ResqmlAbstractRepresentationToVtkDataset *ResqmlDataRepositoryToVtkPartitionedDa
             nodeId_to_resqml[searchNodeByUuid(uuid)] = rep;
             return rep;
         }
-        catch (const std::exception &)
+        catch (const std::exception& e)
         {
-            vtkOutputWindowDisplayErrorText(("Error in polyline load for uuid: " + uuid + "\n").c_str());
+            vtkOutputWindowDisplayErrorText(("Error in polyline load for uuid: " + uuid + "\n" + e.what()).c_str());
         }
         break;
     }
@@ -765,9 +765,9 @@ ResqmlAbstractRepresentationToVtkDataset *ResqmlDataRepositoryToVtkPartitionedDa
             nodeId_to_resqml[searchNodeByUuid(uuid)] = rep;
             return rep;
         }
-        catch (const std::exception &)
+        catch (const std::exception& e)
         {
-            vtkOutputWindowDisplayErrorText(("Error in unstructured grid load for uuid: " + uuid + "\n").c_str());
+            vtkOutputWindowDisplayErrorText(("Error in unstructured grid load for uuid: " + uuid + "\n" + e.what()).c_str());
         }
         break;
     }
@@ -780,9 +780,9 @@ ResqmlAbstractRepresentationToVtkDataset *ResqmlDataRepositoryToVtkPartitionedDa
             nodeId_to_resqml[searchNodeByUuid(uuid)] = rep;
             return rep;
         }
-        catch (const std::exception &)
+        catch (const std::exception& e)
         {
-            vtkOutputWindowDisplayErrorText(("Error in wellbore trajectory load for uuid: " + uuid + "\n").c_str());
+            vtkOutputWindowDisplayErrorText(("Error in wellbore trajectory load for uuid: " + uuid + "\n" + e.what()).c_str());
         }
         break;
     }
@@ -795,9 +795,9 @@ ResqmlAbstractRepresentationToVtkDataset *ResqmlDataRepositoryToVtkPartitionedDa
             nodeId_to_resqml[searchNodeByUuid(uuid)] = rep;
             return rep;
         }
-        catch (const std::exception &)
+        catch (const std::exception& e)
         {
-            vtkOutputWindowDisplayErrorText(("Error in wellbore frame load for uuid: " + uuid + "\n").c_str());
+            vtkOutputWindowDisplayErrorText(("Error in wellbore frame load for uuid: " + uuid + "\n" + e.what()).c_str());
         }
         break;
     }
@@ -821,9 +821,9 @@ ResqmlAbstractRepresentationToVtkDataset *ResqmlDataRepositoryToVtkPartitionedDa
                 }
             }
         }
-        catch (const std::exception &)
+        catch (const std::exception& e)
         {
-            vtkOutputWindowDisplayErrorText(("Error in wellbore channel load for uuid: " + uuid + "\n").c_str());
+            vtkOutputWindowDisplayErrorText(("Error in wellbore channel load for uuid: " + uuid + "\n" + e.what()).c_str());
         }
         break;
     }
@@ -836,9 +836,9 @@ ResqmlAbstractRepresentationToVtkDataset *ResqmlDataRepositoryToVtkPartitionedDa
             nodeId_to_resqml[searchNodeByUuid(uuid)] = rep;
             return rep;
         }
-        catch (const std::exception &)
+        catch (const std::exception& e)
         {
-            vtkOutputWindowDisplayErrorText(("Error in wellbore marker frame load for uuid: " + uuid + "\n").c_str());
+            vtkOutputWindowDisplayErrorText(("Error in wellbore marker frame load for uuid: " + uuid + "\n" + e.what()).c_str());
         }
         break;
     }
@@ -854,9 +854,9 @@ ResqmlAbstractRepresentationToVtkDataset *ResqmlDataRepositoryToVtkPartitionedDa
                 resqmlWellboreMarkerFrameToVtkPartitionedDataSet->addMarker(uuid);
             }
         }
-        catch (const std::exception &)
+        catch (const std::exception& e)
         {
-            vtkOutputWindowDisplayErrorText(("Error in wellbore marker load for uuid: " + uuid + "\n").c_str());
+            vtkOutputWindowDisplayErrorText(("Error in wellbore marker load for uuid: " + uuid + "\n" + e.what()).c_str());
         }
         break;
     }
@@ -871,9 +871,9 @@ ResqmlAbstractRepresentationToVtkDataset *ResqmlDataRepositoryToVtkPartitionedDa
                 nodeId_to_resqml[node_parent]->addDataArray(uuid);
             }
         }
-        catch (const std::exception &)
+        catch (const std::exception& e)
         {
-            vtkOutputWindowDisplayErrorText(("Error in property load for uuid: " + uuid + "\n").c_str());
+            vtkOutputWindowDisplayErrorText(("Error in property load for uuid: " + uuid + "\n" + e.what()).c_str());
         }
         break;
     }
@@ -892,9 +892,9 @@ ResqmlAbstractRepresentationToVtkDataset *ResqmlDataRepositoryToVtkPartitionedDa
                 nodeId_to_resqml[node_parent]->addDataArray(timeSeries_uuid_and_title_to_index_and_properties_uuid[ts_uuid][node_name][time]);
             }
         }
-        catch (const std::exception &e)
+        catch (const std::exception& e)
         {
-            vtkOutputWindowDisplayErrorText(("Error in property load for uuid: " + uuid + "\n").c_str());
+            vtkOutputWindowDisplayErrorText(("Error in property load for uuid: " + uuid + "\n" + e.what()).c_str());
         }
         break;
     }
@@ -955,9 +955,9 @@ vtkPartitionedDataSetCollection *ResqmlDataRepositoryToVtkPartitionedDataSetColl
                     rep->deleteDataArray(nodeId_to_uuid[selection]);
                 }
             }
-            catch (const std::exception &)
+            catch (const std::exception& e)
             {
-                vtkOutputWindowDisplayErrorText(("Error in property load for uuid: " + nodeId_to_uuid[selection] + "\n").c_str());
+                vtkOutputWindowDisplayErrorText(("Error in property load for uuid: " + nodeId_to_uuid[selection] + "\n" + e.what()).c_str());
             }
         }
         if (nodeId_to_EntityType[selection] == ResqmlDataRepositoryToVtkPartitionedDataSetCollection::EntityType::WELL_MARKER)
@@ -972,9 +972,9 @@ vtkPartitionedDataSetCollection *ResqmlDataRepositoryToVtkPartitionedDataSetColl
                     rep->removeMarker(nodeId_to_uuid[selection]);
                 }
             }
-            catch (const std::exception &)
+            catch (const std::exception& e)
             {
-                vtkOutputWindowDisplayErrorText(("Error in property load for uuid: " + nodeId_to_uuid[selection] + "\n").c_str());
+                vtkOutputWindowDisplayErrorText(("Error in property load for uuid: " + nodeId_to_uuid[selection] + "\n" + e.what()).c_str());
             }
         }
     }

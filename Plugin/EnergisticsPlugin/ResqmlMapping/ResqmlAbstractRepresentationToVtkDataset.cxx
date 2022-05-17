@@ -30,13 +30,19 @@ under the License.
 #include "ResqmlMapping/ResqmlPropertyToVtkDataArray.h"
 
 //----------------------------------------------------------------------------
-ResqmlAbstractRepresentationToVtkDataset::ResqmlAbstractRepresentationToVtkDataset(RESQML2_NS::AbstractRepresentation *abstract_representation, int proc_number, int max_proc)
-	: resqmlData(abstract_representation),
-	  vtkData(nullptr),
-	  procNumber(proc_number),
-	  maxProc(max_proc)
+ResqmlAbstractRepresentationToVtkDataset::ResqmlAbstractRepresentationToVtkDataset(RESQML2_NS::AbstractRepresentation *abstract_representation, int proc_number, int max_proc) :
+	pointCount(0),
+	iCellCount(0),
+	jCellCount(1),
+	kCellCount(1),
+	initKIndex(0),
+	maxKIndex(0),
+	isHyperslabed(false),
+	procNumber(proc_number),
+	maxProc(max_proc),
+	resqmlData(abstract_representation),
+	vtkData(nullptr)
 {
-	this->isHyperslabed = false;
 }
 
 void ResqmlAbstractRepresentationToVtkDataset::addDataArray(const std::string &uuid)
@@ -46,23 +52,17 @@ void ResqmlAbstractRepresentationToVtkDataset::addDataArray(const std::string &u
 	{
 		if (property->getUuid() == uuid)
 		{
-			ResqmlPropertyToVtkDataArray *fesppProperty = nullptr;
-			if (isHyperslabed)
-			{
-				fesppProperty = new ResqmlPropertyToVtkDataArray(property,
-																 this->iCellCount * this->jCellCount * (this->maxKIndex - this->initKIndex),
-																 this->pointCount,
-																 this->iCellCount,
-																 this->jCellCount,
-																 this->maxKIndex - this->initKIndex,
-																 this->initKIndex);
-			}
-			else
-			{
-				fesppProperty = new ResqmlPropertyToVtkDataArray(property,
-																 this->iCellCount * this->jCellCount * this->kCellCount,
-																 this->pointCount);
-			}
+			ResqmlPropertyToVtkDataArray* fesppProperty = isHyperslabed
+				? new ResqmlPropertyToVtkDataArray(property,
+					this->iCellCount * this->jCellCount * (this->maxKIndex - this->initKIndex),
+					this->pointCount,
+					this->iCellCount,
+					this->jCellCount,
+					this->maxKIndex - this->initKIndex,
+					this->initKIndex)
+				: new ResqmlPropertyToVtkDataArray(property,
+					this->iCellCount * this->jCellCount * this->kCellCount,
+					this->pointCount);
 			switch (fesppProperty->getSupport())
 			{
 			case ResqmlPropertyToVtkDataArray::typeSupport::CELLS:
@@ -96,9 +96,4 @@ void ResqmlAbstractRepresentationToVtkDataset::deleteDataArray(const std::string
 			throw std::invalid_argument("The property is attached on a non supported topological element i.e. not cell, not point.");
 		}
 	}
-}
-
-vtkSmartPointer<vtkPartitionedDataSet> ResqmlAbstractRepresentationToVtkDataset::getOutput() const
-{
-	return vtkData;
 }

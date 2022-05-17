@@ -85,15 +85,14 @@ void ResqmlPolylineToVtkPolyData::loadVtkObject()
 	std::unique_ptr<unsigned int[]> countNodePolylineInPatch(new unsigned int[countPolyline]);
 	this->resqmlData->getNodeCountPerPolylineInPatch(0, countNodePolylineInPatch.get());
 
-	unsigned int idPoint = 0;
+	vtkIdType idPoint = 0;
 	for (unsigned int polylineIndex = 0; polylineIndex < countPolyline; ++polylineIndex)
 	{
 		vtkSmartPointer<vtkPolyLine> polylineRepresentation = vtkSmartPointer<vtkPolyLine>::New();
 		polylineRepresentation->GetPointIds()->SetNumberOfIds(countNodePolylineInPatch[polylineIndex]);
 		for (unsigned int line = 0; line < countNodePolylineInPatch[polylineIndex]; ++line)
 		{
-			polylineRepresentation->GetPointIds()->SetId(line, idPoint);
-			idPoint++;
+			polylineRepresentation->GetPointIds()->SetId(line, idPoint++);
 		}
 		setPolylineRepresentationLines->InsertNextCell(polylineRepresentation);
 		vtk_polydata->SetLines(setPolylineRepresentationLines);
