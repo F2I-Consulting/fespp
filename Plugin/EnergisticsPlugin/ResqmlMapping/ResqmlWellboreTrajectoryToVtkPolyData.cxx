@@ -91,7 +91,7 @@ void ResqmlWellboreTrajectoryToVtkPolyData::loadVtkObject()
 		this->vtkData->SetPartition(0, vtk_polydata);
 		this->vtkData->Modified();
 	}
-	catch (const std::exception &e)
+	catch (const std::exception &)
 	{
 		vtkOutputWindowDisplayErrorText("Error in load for wellbore trajectory\n");
 	}
