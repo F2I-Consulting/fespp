@@ -144,7 +144,6 @@ protected:
 	~EnergisticsPlugin() final { SetController(nullptr); }
 
 private:
-
 	int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) final;
 
 	// files
