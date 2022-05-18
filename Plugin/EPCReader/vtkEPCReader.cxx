@@ -332,7 +332,7 @@ void vtkEPCReader::RequestDataEpcDocument(vtkInformationVector *outputVector)
 	{
 		try
 		{
-			output->DeepCopy(epcDocumentSet->getVisualization());
+			output->ShallowCopy(epcDocumentSet->getVisualization());
 		}
 		catch (const std::exception &e)
 		{
@@ -349,7 +349,7 @@ void vtkEPCReader::RequestDataEtpDocument(vtkInformationVector *outputVector)
 	vtkMultiBlockDataSet *output = vtkMultiBlockDataSet::SafeDownCast(outInfo->Get(vtkMultiBlockDataSet::DATA_OBJECT()));
 	if (loadedFile)
 	{
-		output->DeepCopy(etpDocument->getVisualization());
+		output->ShallowCopy(etpDocument->getVisualization());
 	}
 }
 #endif

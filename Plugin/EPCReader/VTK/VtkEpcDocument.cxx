@@ -39,7 +39,6 @@ under the License.
 #include <fesapi/resqml2/SubRepresentation.h>
 #include <fesapi/resqml2/AbstractIjkGridRepresentation.h>
 #include <fesapi/resqml2/UnstructuredGridRepresentation.h>
-#include <fesapi/resqml2/SubRepresentation.h>
 #include <fesapi/resqml2/WellboreMarker.h>
 #include <fesapi/resqml2/WellboreMarkerFrameRepresentation.h>
 #include <fesapi/resqml2/WellboreTrajectoryRepresentation.h>
