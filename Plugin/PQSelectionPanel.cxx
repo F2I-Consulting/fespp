@@ -482,6 +482,7 @@ void PQSelectionPanel::addFileName(const std::string & fileName) {
 				ts_timestamp_to_uuid[name_to_uuid[vtkEpcCommon->getName()]][vtkEpcCommon->getTimestamp()] =
 						vtkEpcCommon->getUuid();
 			}
+			updateTimeSeries(vtkEpcCommon->getUuid(), true);
 		}
 		treeWidget->sortItems(0, Qt::SortOrder::AscendingOrder);
 	}
