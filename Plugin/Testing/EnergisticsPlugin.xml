@@ -9,25 +9,76 @@
 	<pqevent object="pqClientMainWindow/MainControlsToolbar/actionOpenData" command="activate" arguments="" />
 	<pqevent object="pqClientMainWindow/FileOpenDialog" command="filesSelected" arguments="$PARAVIEW_DATA_ROOT/ExternalData/Fespp/Testing/Data/EPCReader/testingPackageCpp.epc" />
   
-	<!-- Pause for loading data -->
-	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/scrollArea/qt_scrollarea_viewport/scrollAreaWidgetContents/PropertiesFrame/ProxyPanel/AssemblySelectors/tabWidget/qt_tabwidget_stackedwidget/hierarchyTab/hierarchy/1pqHeaderView0" command="pause" arguments="5016" />
+	<!-- resize renderview -->
+	<pqevent object="pqClientMainWindow/menubar" command="activate" arguments="menuTools"/>
+	<pqevent object="pqClientMainWindow/menubar/menuTools" command="activate" arguments="actionTesting_Window_Size"/>
+	<pqevent object="pqClientMainWindow/menubar" command="activate" arguments="menuTools"/>
+	<pqevent object="pqClientMainWindow/menubar/menuTools" command="activate" arguments="actionTesting_Window_Size_Custom"/>
+	<pqevent object="pqClientMainWindow/pqLockViewSizeCustomDialog/Width" command="set_string" arguments="3"/>
+	<pqevent object="pqClientMainWindow/pqLockViewSizeCustomDialog/Width" command="set_string" arguments="30"/>
+	<pqevent object="pqClientMainWindow/pqLockViewSizeCustomDialog/Width" command="set_string" arguments="300"/>
+	<pqevent object="pqClientMainWindow/pqLockViewSizeCustomDialog/Height" command="set_string" arguments="3"/>
+	<pqevent object="pqClientMainWindow/pqLockViewSizeCustomDialog/Height" command="set_string" arguments="30"/>
+	<pqevent object="pqClientMainWindow/pqLockViewSizeCustomDialog/Height" command="set_string" arguments="300"/>
+	<pqevent object="pqClientMainWindow/pqLockViewSizeCustomDialog/ButtonBox/1QPushButton2" command="activate" arguments=""/>
+	<pqevent object="pqClientMainWindow/pqLockViewSizeCustomDialog/ButtonBox/1QPushButton0" command="activate" arguments=""/>
 
-	<!-- Sort treeview (ascending) -->
-	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/scrollArea/qt_scrollarea_viewport/scrollAreaWidgetContents/PropertiesFrame/ProxyPanel/AssemblySelectors/tabWidget/qt_tabwidget_stackedwidget/hierarchyTab/hierarchy/1pqHeaderView1" command="mousePress" arguments="1,1,0,0,0,0" />
-	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/scrollArea/qt_scrollarea_viewport/scrollAreaWidgetContents/PropertiesFrame/ProxyPanel/AssemblySelectors/tabWidget/qt_tabwidget_stackedwidget/hierarchyTab/hierarchy/1pqHeaderView1" command="mouseRelease" arguments="1,0,0,0,0,0" />
-	<pqevent object="TreeViewCheckMenu" command="activate" arguments="Sort (ascending)" />
-	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/scrollArea/qt_scrollarea_viewport/scrollAreaWidgetContents/PropertiesFrame/ProxyPanel/AssemblySelectors/tabWidget/qt_tabwidget_stackedwidget/hierarchyTab/hierarchy" command="setCurrent" arguments="0.0" />
 
-	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/scrollArea/qt_scrollarea_viewport/scrollAreaWidgetContents/PropertiesFrame/ProxyPanel/AssemblySelectors/tabWidget/qt_tabwidget_stackedwidget/hierarchyTab/hierarchy/1pqHeaderView0" command="mousePress" arguments="1,1,0,0,0,0" />
-	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/scrollArea/qt_scrollarea_viewport/scrollAreaWidgetContents/PropertiesFrame/ProxyPanel/AssemblySelectors/tabWidget/qt_tabwidget_stackedwidget/hierarchyTab/hierarchy/1pqHeaderView0" command="mouseRelease" arguments="1,0,0,0,0,0" />
-	<pqevent object="TreeViewCheckMenu" command="activate" arguments="Sort (ascending)" />
-	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/scrollArea/qt_scrollarea_viewport/scrollAreaWidgetContents/PropertiesFrame/ProxyPanel/AssemblySelectors/tabWidget/qt_tabwidget_stackedwidget/hierarchyTab/hierarchy" command="setCurrent" arguments="0.0" />
+	<!--
+		IJK grid explicit geometry and property
+	-->
 
-	<!-- IJK grid explicit geometry and property -->
-	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/scrollArea/qt_scrollarea_viewport/scrollAreaWidgetContents/PropertiesFrame/ProxyPanel/AssemblySelectors/tabWidget/qt_tabwidget_stackedwidget/hierarchyTab/hierarchy" command="setCheckState" arguments="0.0.0.0.3.0.0.0,2" />
-	<pqevent object="pqClientMainWindow/representationToolbar/displayRepresentation/comboBox" command="activated" arguments="Surface With Edges" />
-	<pqevent object="pqClientMainWindow/variableToolbar/displayColor/Variables" command="activated" arguments="Two faulted sugar cubes other cellIndex" />
-	<pqevent object="pqClientMainWindow/cameraToolbar/actionResetCamera" command="activate" arguments="" />
-	<pqcompareview object="pqClientMainWindow/centralwidget/MultiViewWidget/CoreWidget/qt_tabwidget_stackedwidget/MultiViewWidget1/Container/Frame.0/CentralWidgetFrame/Viewport" baseline="$PARAVIEW_DATA_ROOT/ExternalData/Plugins/Fespp/Testing/Data/EPCReader/Baseline/TwoFaultedSugarCubesExplicitCellIndexProp.png" threshold="0" width="300" height="300" />
+	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/scrollArea/qt_scrollarea_viewport/scrollAreaWidgetContents/PropertiesFrame/ProxyPanel/AssemblySelectors/tabWidget/qt_tabwidget_stackedwidget/hierarchyTab/hierarchy" command="setCheckState" arguments="0.0.11.0.4.0,2"/>
+	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/Accept" command="activate" arguments=""/>
+	<pqevent object="pqClientMainWindow/variableToolbar/displayColor/Variables" command="activated" arguments="DiscreteProperty.Two_faulted_sugar_cubes_other_cellIndex"/>
+  	<pqevent object="pqClientMainWindow/cameraToolbar/actionResetCamera" command="activate" arguments=""/>
+	<pqcompareview object="pqClientMainWindow/centralwidget/MultiViewWidget/CoreWidget/qt_tabwidget_stackedwidget/MultiViewWidget1/Container/Frame.0/CentralWidgetFrame/Viewport" baseline="$PARAVIEW_DATA_ROOT/ExternalData/Fespp/Testing/Data/EPCReader/Baseline/DiscreteProperty.Two_Faulted_sugar_cubes_other_cellIndex.png" threshold="0" />
+	<pqevent object="pqClientMainWindow/variableToolbar/displayColor/Variables" command="activated" arguments="Solid Color"/>
+	<pqevent object="pqClientMainWindow/representationToolbar/displayRepresentation/comboBox" command="activated" arguments="Wireframe"/>
+	<pqcompareview object="pqClientMainWindow/centralwidget/MultiViewWidget/CoreWidget/qt_tabwidget_stackedwidget/MultiViewWidget1/Container/Frame.0/CentralWidgetFrame/Viewport" baseline="$PARAVIEW_DATA_ROOT/ExternalData/Fespp/Testing/Data/EPCReader/Baseline/DiscreteProperty.IjkGridRepresentation.Two_faulted_sugar_cube_.parametric_geometry_wireframe.png" threshold="0" />
+	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/scrollArea/qt_scrollarea_viewport/scrollAreaWidgetContents/PropertiesFrame/ProxyPanel/AssemblySelectors/tabWidget/qt_tabwidget_stackedwidget/hierarchyTab/hierarchy" command="setCheckState" arguments="0.0.11.0.4.0,0"/>
+	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/Accept" command="activate" arguments=""/>
+
+  	<!-- 
+	  Polyline set geometry 
+	-->
+
+ 	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/scrollArea/qt_scrollarea_viewport/scrollAreaWidgetContents/PropertiesFrame/ProxyPanel/AssemblySelectors/tabWidget/qt_tabwidget_stackedwidget/hierarchyTab/hierarchy" command="setCheckState" arguments="0.0.12.0,2"/>
+	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/Accept" command="activate" arguments=""/>
+	<pqcompareview object="pqClientMainWindow/centralwidget/MultiViewWidget/CoreWidget/qt_tabwidget_stackedwidget/MultiViewWidget1/Container/Frame.0/CentralWidgetFrame/Viewport" baseline="$PARAVIEW_DATA_ROOT/ExternalData/Fespp/Testing/Data/EPCReader/Baseline/PolylineSetRepresentation.Fault1_Interp1_PolylineRep.png" threshold="0" />
+ 	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/scrollArea/qt_scrollarea_viewport/scrollAreaWidgetContents/PropertiesFrame/ProxyPanel/AssemblySelectors/tabWidget/qt_tabwidget_stackedwidget/hierarchyTab/hierarchy" command="setCheckState" arguments="0.0.12.0,0"/>
+	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/Accept" command="activate" arguments=""/>
+
+	<!-- 
+		Triangulation geometry 
+	-->
+
+ 	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/scrollArea/qt_scrollarea_viewport/scrollAreaWidgetContents/PropertiesFrame/ProxyPanel/AssemblySelectors/tabWidget/qt_tabwidget_stackedwidget/hierarchyTab/hierarchy" command="setCheckState" arguments="0.0.13.0,2"/>
+	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/Accept" command="activate" arguments=""/>
+	<pqcompareview object="pqClientMainWindow/centralwidget/MultiViewWidget/CoreWidget/qt_tabwidget_stackedwidget/MultiViewWidget1/Container/Frame.0/CentralWidgetFrame/Viewport" baseline="$PARAVIEW_DATA_ROOT/ExternalData/Fespp/Testing/Data/EPCReader/Baseline/TriangulatedSetRepresentation.Fault1_Interp1_TriRep.png" threshold="0" />
+ 	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/scrollArea/qt_scrollarea_viewport/scrollAreaWidgetContents/PropertiesFrame/ProxyPanel/AssemblySelectors/tabWidget/qt_tabwidget_stackedwidget/hierarchyTab/hierarchy" command="setCheckState" arguments="0.0.13.0,0"/>
+	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/Accept" command="activate" arguments=""/>
+     
+ 	<!-- 
+		Unstructured grid geometry 
+	-->
+
+	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/scrollArea/qt_scrollarea_viewport/scrollAreaWidgetContents/PropertiesFrame/ProxyPanel/AssemblySelectors/tabWidget/qt_tabwidget_stackedwidget/hierarchyTab/hierarchy" command="setCheckState" arguments="0.0.17.0,2"/>
+	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/Accept" command="activate" arguments=""/>
+	<pqevent object="pqClientMainWindow/cameraToolbar/actionPositiveX" command="activate" arguments="" />
+	<pqcompareview object="pqClientMainWindow/centralwidget/MultiViewWidget/CoreWidget/qt_tabwidget_stackedwidget/MultiViewWidget1/Container/Frame.0/CentralWidgetFrame/Viewport" baseline="$PARAVIEW_DATA_ROOT/ExternalData/Fespp/Testing/Data/EPCReader/Baseline/UnstructuredGridRepresentation.One_tetrahedron_._prism_grid_PositionPositiveX.png" threshold="0" />
+	<pqevent object="pqClientMainWindow/cameraToolbar/actionNegativeX" command="activate" arguments="" />
+	<pqcompareview object="pqClientMainWindow/centralwidget/MultiViewWidget/CoreWidget/qt_tabwidget_stackedwidget/MultiViewWidget1/Container/Frame.0/CentralWidgetFrame/Viewport" baseline="$PARAVIEW_DATA_ROOT/ExternalData/Fespp/Testing/Data/EPCReader/Baseline/UnstructuredGridRepresentation.One_tetrahedron_._prism_grid_PositionNegativeX.png" threshold="0" />
+	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/scrollArea/qt_scrollarea_viewport/scrollAreaWidgetContents/PropertiesFrame/ProxyPanel/AssemblySelectors/tabWidget/qt_tabwidget_stackedwidget/hierarchyTab/hierarchy" command="setCheckState" arguments="0.0.17.0,0"/>
+	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/Accept" command="activate" arguments=""/>
   
+    <!--
+		2d grid
+	-->
+	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/scrollArea/qt_scrollarea_viewport/scrollAreaWidgetContents/PropertiesFrame/ProxyPanel/AssemblySelectors/tabWidget/qt_tabwidget_stackedwidget/hierarchyTab/hierarchy" command="setCheckState" arguments="0.0.0.0.1.0,2"/>
+	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/Accept" command="activate" arguments=""/>
+	<pqcompareview object="pqClientMainWindow/centralwidget/MultiViewWidget/CoreWidget/qt_tabwidget_stackedwidget/MultiViewWidget1/Container/Frame.0/CentralWidgetFrame/Viewport" baseline="$PARAVIEW_DATA_ROOT/ExternalData/Fespp/Testing/Data/EPCReader/Baseline/Grid2dRepresentation.Horizon1_Interp1_Grid2dRep.png" threshold="0" />
+ 	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/scrollArea/qt_scrollarea_viewport/scrollAreaWidgetContents/PropertiesFrame/ProxyPanel/AssemblySelectors/tabWidget/qt_tabwidget_stackedwidget/hierarchyTab/hierarchy" command="setCheckState" arguments="0.0.0.0.1.0,0"/>
+	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/Accept" command="activate" arguments=""/>
+
 </pqevents>
