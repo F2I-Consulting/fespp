@@ -31,13 +31,6 @@ under the License.
 
 //----------------------------------------------------------------------------
 ResqmlAbstractRepresentationToVtkDataset::ResqmlAbstractRepresentationToVtkDataset(RESQML2_NS::AbstractRepresentation *abstract_representation, int proc_number, int max_proc) :
-	pointCount(0),
-	iCellCount(0),
-	jCellCount(1),
-	kCellCount(1),
-	initKIndex(0),
-	maxKIndex(0),
-	isHyperslabed(false),
 	procNumber(proc_number),
 	maxProc(max_proc),
 	resqmlData(abstract_representation),
@@ -47,37 +40,39 @@ ResqmlAbstractRepresentationToVtkDataset::ResqmlAbstractRepresentationToVtkDatas
 
 void ResqmlAbstractRepresentationToVtkDataset::addDataArray(const std::string &uuid)
 {
-	std::vector<RESQML2_NS::AbstractValuesProperty *> valuesPropertySet = this->resqmlData->getValuesPropertySet();
-	for (auto &property : valuesPropertySet)
+	std::vector<RESQML2_NS::AbstractValuesProperty*> valuesPropertySet = this->resqmlData->getValuesPropertySet();
+	std::vector<RESQML2_NS::AbstractValuesProperty*>::iterator it = std::find_if(valuesPropertySet.begin(), valuesPropertySet.end(),
+		[&uuid](RESQML2_NS::AbstractValuesProperty const* property) { return property->getUuid() == uuid; });
+	if (it != std::end(valuesPropertySet))
 	{
-		if (property->getUuid() == uuid)
+		ResqmlPropertyToVtkDataArray* fesppProperty = isHyperslabed
+			? new ResqmlPropertyToVtkDataArray(*it,
+				this->iCellCount * this->jCellCount * (this->maxKIndex - this->initKIndex),
+				this->pointCount,
+				this->iCellCount,
+				this->jCellCount,
+				this->maxKIndex - this->initKIndex,
+				this->initKIndex)
+			: new ResqmlPropertyToVtkDataArray(*it,
+				this->iCellCount * this->jCellCount * this->kCellCount,
+				this->pointCount);
+		switch (fesppProperty->getSupport())
 		{
-			ResqmlPropertyToVtkDataArray* fesppProperty = isHyperslabed
-				? new ResqmlPropertyToVtkDataArray(property,
-					this->iCellCount * this->jCellCount * (this->maxKIndex - this->initKIndex),
-					this->pointCount,
-					this->iCellCount,
-					this->jCellCount,
-					this->maxKIndex - this->initKIndex,
-					this->initKIndex)
-				: new ResqmlPropertyToVtkDataArray(property,
-					this->iCellCount * this->jCellCount * this->kCellCount,
-					this->pointCount);
-			switch (fesppProperty->getSupport())
-			{
-			case ResqmlPropertyToVtkDataArray::typeSupport::CELLS:
-				this->vtkData->GetPartition(0)->GetCellData()->AddArray(fesppProperty->getVtkData());
-				break;
-			case ResqmlPropertyToVtkDataArray::typeSupport::POINTS:
-				this->vtkData->GetPartition(0)->GetPointData()->AddArray(fesppProperty->getVtkData());
-				break;
-			default:
-				throw std::invalid_argument("The property is attached on a non supported topological element i.e. not cell, not point.");
-			}
-			uuidToVtkDataArray[uuid] = fesppProperty;
+		case ResqmlPropertyToVtkDataArray::typeSupport::CELLS:
+			this->vtkData->GetPartition(0)->GetCellData()->AddArray(fesppProperty->getVtkData());
+			break;
+		case ResqmlPropertyToVtkDataArray::typeSupport::POINTS:
+			this->vtkData->GetPartition(0)->GetPointData()->AddArray(fesppProperty->getVtkData());
+			break;
+		default:
+			throw std::invalid_argument("The property " + uuid + " is attached on a non supported topological element i.e. not cell, not point.");
 		}
+		uuidToVtkDataArray[uuid] = fesppProperty;
+		this->vtkData->Modified();
 	}
-	this->vtkData->Modified();
+	else {
+		throw std::invalid_argument("The property " + uuid + "cannot be added since it is not contained in the representation " + resqmlData->getUuid());
+	}
 }
 
 void ResqmlAbstractRepresentationToVtkDataset::deleteDataArray(const std::string &uuid)
@@ -95,5 +90,9 @@ void ResqmlAbstractRepresentationToVtkDataset::deleteDataArray(const std::string
 		default:
 			throw std::invalid_argument("The property is attached on a non supported topological element i.e. not cell, not point.");
 		}
+
+		// Cleaning
+		delete uuidToVtkDataArray[uuid];
+		uuidToVtkDataArray.erase(uuid);
 	}
 }
