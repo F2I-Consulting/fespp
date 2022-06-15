@@ -80,7 +80,7 @@ public:
 	void setMarkerOrientation(bool orientation) { markerOrientation = orientation; }
 	void setMarkerSize(int size) { markerSize = size; }
 
-	vtkPartitionedDataSetCollection *getVtkPartionedDatasSetCollection(const double time);
+	vtkPartitionedDataSetCollection *getVtkPartitionedDatasSetCollection(const double time);
 
 	std::vector<double> getTimes() { return times_step; }
 

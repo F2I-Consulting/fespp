@@ -219,7 +219,7 @@ int EnergisticsPlugin::RequestData(vtkInformation *,
   }
   try
   {
-    output->DeepCopy(this->repository.getVtkPartionedDatasSetCollection(requestedTimeStep));
+    output->DeepCopy(this->repository.getVtkPartitionedDatasSetCollection(requestedTimeStep));
   }
   catch (const std::exception &e)
   {
