@@ -108,9 +108,9 @@ void ResqmlIjkGridToVtkUnstructuredGrid::loadVtkObject()
 
 	const uint64_t cellCount = this->resqmlData->getCellCount();
 	std::unique_ptr<bool[]> enabledCells(new bool[cellCount]);
-	if (this->resqmlData->hasEnabledCellInformation())
+	if (this->resqmlData->hasCellGeometryIsDefinedFlags())
 	{
-		this->resqmlData->getEnabledCells(enabledCells.get());
+		this->resqmlData->getCellGeometryIsDefinedFlags(enabledCells.get());
 	}
 	else
 	{

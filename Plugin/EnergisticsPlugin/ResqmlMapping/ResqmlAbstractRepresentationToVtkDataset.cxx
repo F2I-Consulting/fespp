@@ -30,32 +30,32 @@ under the License.
 #include "ResqmlMapping/ResqmlPropertyToVtkDataArray.h"
 
 //----------------------------------------------------------------------------
-ResqmlAbstractRepresentationToVtkDataset::ResqmlAbstractRepresentationToVtkDataset(RESQML2_NS::AbstractRepresentation *abstract_representation, int proc_number, int max_proc) :
-	procNumber(proc_number),
-	maxProc(max_proc),
-	resqmlData(abstract_representation),
-	vtkData(nullptr)
+ResqmlAbstractRepresentationToVtkDataset::ResqmlAbstractRepresentationToVtkDataset(RESQML2_NS::AbstractRepresentation *abstract_representation, int proc_number, int max_proc) : procNumber(proc_number),
+																																												 maxProc(max_proc),
+																																												 resqmlData(abstract_representation),
+																																												 vtkData(nullptr)
 {
 }
 
 void ResqmlAbstractRepresentationToVtkDataset::addDataArray(const std::string &uuid)
 {
-	std::vector<RESQML2_NS::AbstractValuesProperty*> valuesPropertySet = this->resqmlData->getValuesPropertySet();
-	std::vector<RESQML2_NS::AbstractValuesProperty*>::iterator it = std::find_if(valuesPropertySet.begin(), valuesPropertySet.end(),
-		[&uuid](RESQML2_NS::AbstractValuesProperty const* property) { return property->getUuid() == uuid; });
+	std::vector<RESQML2_NS::AbstractValuesProperty *> valuesPropertySet = this->resqmlData->getValuesPropertySet();
+	std::vector<RESQML2_NS::AbstractValuesProperty *>::iterator it = std::find_if(valuesPropertySet.begin(), valuesPropertySet.end(),
+																				  [&uuid](RESQML2_NS::AbstractValuesProperty const *property)
+																				  { return property->getUuid() == uuid; });
 	if (it != std::end(valuesPropertySet))
 	{
-		ResqmlPropertyToVtkDataArray* fesppProperty = isHyperslabed
-			? new ResqmlPropertyToVtkDataArray(*it,
-				this->iCellCount * this->jCellCount * (this->maxKIndex - this->initKIndex),
-				this->pointCount,
-				this->iCellCount,
-				this->jCellCount,
-				this->maxKIndex - this->initKIndex,
-				this->initKIndex)
-			: new ResqmlPropertyToVtkDataArray(*it,
-				this->iCellCount * this->jCellCount * this->kCellCount,
-				this->pointCount);
+		ResqmlPropertyToVtkDataArray *fesppProperty = isHyperslabed
+														  ? new ResqmlPropertyToVtkDataArray(*it,
+																							 this->iCellCount * this->jCellCount * (this->maxKIndex - this->initKIndex),
+																							 this->pointCount,
+																							 this->iCellCount,
+																							 this->jCellCount,
+																							 this->maxKIndex - this->initKIndex,
+																							 this->initKIndex)
+														  : new ResqmlPropertyToVtkDataArray(*it,
+																							 this->iCellCount * this->jCellCount * this->kCellCount,
+																							 this->pointCount);
 		switch (fesppProperty->getSupport())
 		{
 		case ResqmlPropertyToVtkDataArray::typeSupport::CELLS:
@@ -70,7 +70,8 @@ void ResqmlAbstractRepresentationToVtkDataset::addDataArray(const std::string &u
 		uuidToVtkDataArray[uuid] = fesppProperty;
 		this->vtkData->Modified();
 	}
-	else {
+	else
+	{
 		throw std::invalid_argument("The property " + uuid + "cannot be added since it is not contained in the representation " + resqmlData->getUuid());
 	}
 }
@@ -94,5 +95,9 @@ void ResqmlAbstractRepresentationToVtkDataset::deleteDataArray(const std::string
 		// Cleaning
 		delete uuidToVtkDataArray[uuid];
 		uuidToVtkDataArray.erase(uuid);
+	}
+	else
+	{
+		throw std::invalid_argument("The property " + uuid + "cannot be deleted from representation " + resqmlData->getUuid() + " since it has never been added");
 	}
 }

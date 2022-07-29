@@ -41,14 +41,21 @@ public:
 	 */
 	void loadVtkObject();
 
-	void toggleMarkerOrientation(bool orientation);
-	void setMarkerSize(int newSize);
+	/**
+	 * @brief modify orientation & size + representation reload
+	 *
+	 * @param orientation
+	 * @param size
+	 */
+	void displayOption(bool orientation, int size);
 
 	/**
 	 * get uuid for verify
 	 */
 	std::string getUuid() { return this->uuid; }
 	std::string getTitle() { return this->title; }
+	bool getMarkerOrientation() { return this->orientation; }
+	int getMarkerSize() { return this->size; }
 
 protected:
 	resqml2::WellboreMarkerFrameRepresentation *resqmlData;

@@ -187,12 +187,22 @@ const char *EnergisticsPlugin::GetSelector(int index) const
 void EnergisticsPlugin::setMarkerOrientation(bool orientation)
 {
   this->repository.setMarkerOrientation(orientation);
+  this->Modified();
+  this->Update();
+  this->UpdateDataObject();
+  this->UpdateInformation();
+  this->UpdateWholeExtent();
 }
 
 //----------------------------------------------------------------------------
 void EnergisticsPlugin::setMarkerSize(int size)
 {
   this->repository.setMarkerSize(size);
+  this->Modified();
+  this->Update();
+  this->UpdateDataObject();
+  this->UpdateInformation();
+  this->UpdateWholeExtent();
 }
 
 //----------------------------------------------------------------------------
@@ -211,7 +221,7 @@ int EnergisticsPlugin::RequestData(vtkInformation *,
   {
     std::pair<std::vector<double>::iterator, std::vector<double>::iterator> minmax = std::minmax_element(begin(times), end(times));
     outInfo->Set(vtkStreamingDemandDrivenPipeline::TIME_STEPS(), &times[0], times.size());
-    static double timeRange[] = { *minmax.first, *minmax.second };
+    static double timeRange[] = {*minmax.first, *minmax.second};
     outInfo->Set(vtkStreamingDemandDrivenPipeline::TIME_RANGE(), timeRange, 2);
 
     // current timeStep value

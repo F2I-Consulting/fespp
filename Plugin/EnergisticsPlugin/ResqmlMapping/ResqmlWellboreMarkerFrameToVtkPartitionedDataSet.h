@@ -38,17 +38,14 @@ public:
 	/**
 	 * Constructor
 	 */
-	ResqmlWellboreMarkerFrameToVtkPartitionedDataSet(RESQML2_NS::WellboreMarkerFrameRepresentation *marker, bool orientation, int size, int proc_number = 1, int max_proc = 1);
+	ResqmlWellboreMarkerFrameToVtkPartitionedDataSet(RESQML2_NS::WellboreMarkerFrameRepresentation *marker, int proc_number = 1, int max_proc = 1);
 
 	/**
 	 * load vtkDataSet with resqml data
 	 */
 	void loadVtkObject();
 
-	void toggleMarkerOrientation(bool orientation);
-	void setMarkerSize(int newSize);
-
-	void addMarker(std::string marker_uuid);
+	void addMarker(std::string marker_uuid, bool orientation, int size);
 	void removeMarker(std::string marker_uuid);
 
 protected:

@@ -77,8 +77,8 @@ public:
 	std::string addFile(const char *file);
 
 	// Wellbore Options
-	void setMarkerOrientation(bool orientation) { markerOrientation = orientation; }
-	void setMarkerSize(int size) { markerSize = size; }
+	void setMarkerOrientation(bool orientation);
+	void setMarkerSize(int size);
 
 	vtkPartitionedDataSetCollection *getVtkPartitionedDatasSetCollection(const double time);
 

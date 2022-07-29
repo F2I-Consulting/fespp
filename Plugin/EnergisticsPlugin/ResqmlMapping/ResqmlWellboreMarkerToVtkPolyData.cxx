@@ -87,15 +87,12 @@ void ResqmlWellboreMarkerToVtkPolyData::loadVtkObject()
 }
 
 //----------------------------------------------------------------------------
-void ResqmlWellboreMarkerToVtkPolyData::toggleMarkerOrientation(bool orient)
+void ResqmlWellboreMarkerToVtkPolyData::displayOption(bool orientation, int size)
 {
-	orientation = orient;
-}
-
-//----------------------------------------------------------------------------
-void ResqmlWellboreMarkerToVtkPolyData::setMarkerSize(int new_size)
-{
-	size = new_size;
+	this->orientation = orientation;
+	this->size = size;
+	this->vtkData = vtkSmartPointer<vtkPartitionedDataSet>::New();
+	this->loadVtkObject();
 }
 
 namespace
@@ -148,7 +145,7 @@ void ResqmlWellboreMarkerToVtkPolyData::createDisk(unsigned int markerIndex)
 	// initialize a disk
 	vtkSmartPointer<vtkDiskSource> diskSource = vtkSmartPointer<vtkDiskSource>::New();
 	diskSource->SetInnerRadius(0);
-	diskSource->SetOuterRadius(size);
+	diskSource->SetOuterRadius(this->size);
 	diskSource->Update();
 
 	vtkPolydata = diskSource->GetOutput();

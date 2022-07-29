@@ -502,7 +502,7 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchWellbor
                                 }
                                 */
                 wellboreTrajectory->setTitle(changeInvalidCharacter(wellboreTrajectory->getXmlTag() + '.' + wellboreTrajectory->getTitle()));
-                idNode = data_assembly->AddNode(wellboreTrajectory->getTitle().c_str(), idNode);
+                idNode = data_assembly->AddNode(wellboreTrajectory->getTitle().c_str(), 0 /* add to root*/);
                 nodeId_to_uuid[idNode] = wellboreTrajectory->getUuid();
                 nodeId_to_EntityType[idNode] = ResqmlDataRepositoryToVtkPartitionedDataSetCollection::EntityType::WELL_TRAJ;
             }
@@ -516,7 +516,7 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchWellbor
                 if (wellboreMarkerFrame == nullptr)
                 { // WellboreFrame
                     wellboreFrame->setTitle(changeInvalidCharacter(wellboreFrame->getXmlTag() + '.' + wellboreFrame->getTitle()));
-                    int frame_idNode = data_assembly->AddNode(wellboreFrame->getTitle().c_str(), idNode);
+                    int frame_idNode = data_assembly->AddNode(wellboreFrame->getTitle().c_str(), 0 /* add to root*/);
                     nodeId_to_uuid[frame_idNode] = wellboreFrame->getUuid();
                     nodeId_to_EntityType[frame_idNode] = ResqmlDataRepositoryToVtkPartitionedDataSetCollection::EntityType::WELL_FRAME;
                     for (auto *property : wellboreFrame->getValuesPropertySet())
@@ -530,7 +530,7 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchWellbor
                 else
                 { // WellboreMarkerFrame
                     wellboreFrame->setTitle(changeInvalidCharacter(wellboreFrame->getXmlTag() + '.' + wellboreFrame->getTitle()));
-                    int markerFrame_idNode = data_assembly->AddNode(wellboreFrame->getTitle().c_str(), idNode);
+                    int markerFrame_idNode = data_assembly->AddNode(wellboreFrame->getTitle().c_str(), 0 /* add to root*/);
                     nodeId_to_uuid[markerFrame_idNode] = wellboreFrame->getUuid();
                     nodeId_to_EntityType[markerFrame_idNode] = ResqmlDataRepositoryToVtkPartitionedDataSetCollection::EntityType::WELL_MARKER_FRAME;
                     for (auto *wellboreMarker : wellboreMarkerFrame->getWellboreMarkerSet())
@@ -661,7 +661,6 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::selectNodeId(int nod
     this->old_selection.erase(node);
 
     this->selectNodeIdChildren(node);
-
 }
 
 void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::selectNodeIdParent(int node)
@@ -833,7 +832,7 @@ ResqmlAbstractRepresentationToVtkDataset *ResqmlDataRepositoryToVtkPartitionedDa
         try
         {
             auto *wellbore_marker_frame = repository->getDataObjectByUuid<RESQML2_NS::WellboreMarkerFrameRepresentation>(uuid);
-            auto *rep = new ResqmlWellboreMarkerFrameToVtkPartitionedDataSet(wellbore_marker_frame, this->markerOrientation, this->markerSize);
+            auto *rep = new ResqmlWellboreMarkerFrameToVtkPartitionedDataSet(wellbore_marker_frame);
             nodeId_to_resqml[searchNodeByUuid(uuid)] = rep;
             return rep;
         }
@@ -852,7 +851,7 @@ ResqmlAbstractRepresentationToVtkDataset *ResqmlDataRepositoryToVtkPartitionedDa
             if (nodeId_to_resqml[node_parent])
             {
                 auto *resqmlWellboreMarkerFrameToVtkPartitionedDataSet = dynamic_cast<ResqmlWellboreMarkerFrameToVtkPartitionedDataSet *>(nodeId_to_resqml[node_parent]);
-                resqmlWellboreMarkerFrameToVtkPartitionedDataSet->addMarker(uuid);
+                resqmlWellboreMarkerFrameToVtkPartitionedDataSet->addMarker(uuid, markerOrientation, markerSize);
             }
         }
         catch (const std::exception &e)
@@ -922,25 +921,6 @@ vtkPartitionedDataSetCollection *ResqmlDataRepositoryToVtkPartitionedDataSetColl
 
     unsigned int index = 0; // index for PartionedDatasSet
 
-    // foreach selection node
-    for (const int node_selection : this->current_selection)
-    {
-        ResqmlAbstractRepresentationToVtkDataset *rep = nullptr;
-        if (this->nodeId_to_resqml.find(node_selection) != this->nodeId_to_resqml.end())
-        {
-            rep = this->nodeId_to_resqml[node_selection];
-        }
-        else
-        {
-            rep = loadToVtk(nodeId_to_uuid[node_selection], nodeId_to_EntityType[node_selection], time);
-        }
-        if (rep)
-        {
-            this->output->SetPartitionedDataSet(index, rep->getOutput());
-            this->output->GetMetaData(index++)->Set(vtkCompositeDataSet::NAME(), this->output->GetDataAssembly()->GetNodeName(node_selection));
-        }
-    }
-
     // delete Property or Wellbore marker
     for (const int selection : this->old_selection)
     {
@@ -987,6 +967,25 @@ vtkPartitionedDataSetCollection *ResqmlDataRepositoryToVtkPartitionedDataSetColl
         }
     }
 
+    // foreach selection node
+    for (const int node_selection : this->current_selection)
+    {
+        ResqmlAbstractRepresentationToVtkDataset *rep = nullptr;
+        if (this->nodeId_to_resqml.find(node_selection) != this->nodeId_to_resqml.end())
+        {
+            rep = this->nodeId_to_resqml[node_selection];
+        }
+        else
+        {
+            rep = loadToVtk(nodeId_to_uuid[node_selection], nodeId_to_EntityType[node_selection], time);
+        }
+        if (rep)
+        {
+            this->output->SetPartitionedDataSet(index, rep->getOutput());
+            this->output->GetMetaData(index++)->Set(vtkCompositeDataSet::NAME(), this->output->GetDataAssembly()->GetNodeName(node_selection));
+        }
+    }
+
     this->output->Modified();
     return this->output;
 }
@@ -1002,4 +1001,14 @@ int ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchNodeByUuid(cons
     }
 
     return -1;
+}
+
+void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::setMarkerOrientation(bool orientation)
+{
+    markerOrientation = orientation;
+}
+
+void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::setMarkerSize(int size)
+{
+    markerSize = size;
 }
