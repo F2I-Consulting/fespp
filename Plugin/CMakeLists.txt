@@ -18,27 +18,36 @@ set (FESAPI_LIBRARY_DEBUG FESAPI_LIBRARY_DEBUG-NOTFOUND CACHE FILEPATH "Path to 
 set (WITH_ETP OFF CACHE BOOL "Only if FESAPI build with ETP support... for building Fespp with ETP support.")
 
 if (WITH_ETP)
-	message ("WARNING: ETP support only if FESAPI build with ETP support")
+	find_package(Boost 1.66.0 REQUIRED system)
+	find_package( Threads )
 
-	# -- Boost DEPENDENCY --
-	set (BOOST_INCLUDE_DIR BOOST_INCLUDE_DIR-NOTFOUND CACHE PATH "Path to the directory which contains the BOOST header files")
-	if (NOT IS_DIRECTORY ${BOOST_INCLUDE_DIR})
-		message(WARNING "The BOOST include dir (BOOST_INCLUDE_DIR variable) does not look to be a valid directory. Please modify it.")
+	#FETPAPI
+	set (FETPAPI_INCLUDE_DIR FETPAPI_INCLUDE_DIR-NOTFOUND CACHE PATH "Path to the directory which contains the FETPAPI header files")
+	if (NOT IS_DIRECTORY ${FETPAPI_INCLUDE_DIR})
+		message(WARNING "The FETPAPI include dir (FETPAPI_INCLUDE_DIR variable) does not look to be a valid directory. Please modify it.")
 	endif ()
-	set (BOOST_SYSTEM_LIBRARY BOOST_SYSTEM_LIBRARY-NOTFOUND CACHE FILEPATH "Path to the file which contains the Boost system static library release")
-	if (NOT EXISTS ${BOOST_SYSTEM_LIBRARY})
-		message(WARNING "The BOOST library (BOOST_SYSTEM_LIBRARY variable) does not look to be a valid file. Please modify it.")
-	endif ()	
-	
-	# -- avro DEPENDENCY --
+	set (FETPAPI_LIBRARY_RELEASE FETPAPI_LIBRARY_RELEASE-NOTFOUND CACHE FILEPATH "Path to the file which contains the FETPAPI library release")
+	if (NOT EXISTS ${FETPAPI_LIBRARY_RELEASE})
+		message(WARNING "The FETPAPI library (FETPAPI_LIBRARY_RELEASE variable) does not look to be a valid file. Please modify it.")
+	endif ()
+	set (FETPAPI_LIBRARY_DEBUG FETPAPI_LIBRARY_DEBUG-NOTFOUND CACHE FILEPATH "Path to the file which contains the FETPAPI library DEBUG")
+	if (NOT EXISTS ${FETPAPI_LIBRARY_DEBUG})
+		message(WARNING "The FETPAPI library (FETPAPI_LIBRARY_DEBUG variable) does not look to be a valid file. Please modify it.")
+	endif ()
+
+	#AVRO
 	set (AVRO_INCLUDE_DIR AVRO_INCLUDE_DIR-NOTFOUND CACHE PATH "Path to the directory which contains the avro header files")
 	if (NOT IS_DIRECTORY ${AVRO_INCLUDE_DIR})
-		message(WARNING "The Avro include dir (AVRO_INCLUDE_DIR variable) does not look to be a valid directory. Please modify it.")
+		message(SEND_ERROR "The Avro include dir (AVRO_INCLUDE_DIR variable) does not look to be a valid directory. Please modify it.")
 	endif ()
 	set (AVRO_LIBRARY_RELEASE AVRO_LIBRARY_RELEASE-NOTFOUND CACHE FILEPATH "Path to the file which contains the avro library release")
 	if (NOT EXISTS ${AVRO_LIBRARY_RELEASE})
 		message(WARNING "The avro library (AVRO_LIBRARY_RELEASE variable) does not look to be a valid file. Please modify it.")
-	endif ()	
+	endif ()
+	set (AVRO_LIBRARY_DEBUG AVRO_LIBRARY_DEBUG-NOTFOUND CACHE FILEPATH "Path to the file which contains the AVRO library DEBUG")
+	if (NOT EXISTS ${AVRO_LIBRARY_DEBUG})
+		message(WARNING "The AVRO library (AVRO_LIBRARY_DEBUG variable) does not look to be a valid file. Please modify it.")
+	endif ()
 endif (WITH_ETP)
 
 # -----------------------------------------------------------------------------

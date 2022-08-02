@@ -27,6 +27,34 @@ if (WITH_ETP)
 		WITH_ETP
 		BOOST_ALL_NO_LIB
 	)
+	if (NOT Boost_USE_STATIC_LIBS)
+		# https://www.boost.org/doc/libs/1_75_0/libs/log/doc/html/log/rationale/namespace_mangling.html
+		vtk_module_definitions(EnergisticsPlugin PRIVATE BOOST_LOG_DYN_LINK)
+	endif ()
+	
+	if (WIN32)
+		#FROM https://stackoverflow.com/a/40217291
+		macro(get_WIN32_WINNT version)
+			if(CMAKE_SYSTEM_VERSION)
+				set(ver ${CMAKE_SYSTEM_VERSION})
+				string(REGEX MATCH "^([0-9]+).([0-9])" ver ${ver})
+				string(REGEX MATCH "^([0-9]+)" verMajor ${ver})
+				# Check for Windows 10, b/c we'll need to convert to hex 'A'.
+				if("${verMajor}" MATCHES "10")
+					set(verMajor "A")
+					string(REGEX REPLACE "^([0-9]+)" ${verMajor} ver ${ver})
+				endif()
+				# Remove all remaining '.' characters.
+				string(REPLACE "." "" ver ${ver})
+				# Prepend each digit with a zero.
+				string(REGEX REPLACE "([0-9A-Z])" "0\\1" ver ${ver})
+				set(${version} "0x${ver}")
+			endif()
+		endmacro()
+
+		get_WIN32_WINNT(ver)
+		vtk_module_definitions(EnergisticsPlugin PRIVATE _WIN32_WINNT=${ver})
+	endif (WIN32)
 endif (WITH_ETP)
 
 # ============================================================================
@@ -35,7 +63,7 @@ endif (WITH_ETP)
 message (STATUS "test: ${FESAPI_INCLUDE}")
 vtk_module_include(EnergisticsPlugin PRIVATE ${FESAPI_INCLUDE})
 if (WITH_ETP)
-	vtk_module_include(EnergisticsPlugin PRIVATE ${AVRO_INCLUDE_DIR} ${BOOST_INCLUDE_DIR})
+	vtk_module_include(EnergisticsPlugin PRIVATE ${FETPAPI_INCLUDE} ${AVRO_INCLUDE_DIR} ${Boost_INCLUDE_DIR})
 endif (WITH_ETP)
 
 # ============================================================================
@@ -50,6 +78,10 @@ if (WIN32)
 	else ()
 		message(ERROR "No FESAPI library has been set.")
 	endif ()
+	
+	if (WITH_ETP)
+		vtk_module_link (EnergisticsPlugin PRIVATE bcrypt.lib)
+	endif (WITH_ETP)
 elseif (UNIX)	
 	if (CMAKE_BUILD_TYPE STREQUAL "Debug")
 		vtk_module_link(EnergisticsPlugin PRIVATE ${FESAPI_LIBRARY_DEBUG})
@@ -58,8 +90,8 @@ elseif (UNIX)
 	endif()
 endif (WIN32)
 	
-if (EXISTS ${AVRO_LIBRARY_RELEASE})
-	vtk_module_link (EnergisticsPlugin PRIVATE ${AVRO_LIBRARY_RELEASE})
+if (EXISTS ${FETPAPI_LIBRARY_RELEASE})
+	vtk_module_link (EnergisticsPlugin PRIVATE ${FETPAPI_LIBRARY_RELEASE} ${AVRO_LIBRARY_RELEASE} ${Boost_SYSTEM_LIBRARY} ${CMAKE_THREAD_LIBS_INIT})
 endif()
 
 # ============================================================================

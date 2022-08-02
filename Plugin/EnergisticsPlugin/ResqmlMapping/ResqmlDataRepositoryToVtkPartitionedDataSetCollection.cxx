@@ -88,14 +88,8 @@ ResqmlDataRepositoryToVtkPartitionedDataSetCollection::~ResqmlDataRepositoryToVt
 std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::addFile(const char *fileName)
 {
     COMMON_NS::EpcDocument pck(fileName);
-    const std::string resqmlResult = pck.deserializeInto(*repository);
+    std::string message = pck.deserializeInto(*repository);
     pck.close();
-
-    std::string message;
-    if (!resqmlResult.empty())
-    {
-        message += resqmlResult;
-    }
 
     // create vtkDataAssembly: create treeView in property panel
     // get grid2D
@@ -130,7 +124,7 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchFaultPo
 
     try
     {
-        for (auto *polyline : repository->getFaultPolylineSetRepresentationSet())
+        for (auto const *polyline : repository->getFaultPolylineSetRepresentationSet())
         {
             if (searchNodeByUuid(polyline->getUuid()) == -1)
             { // verify uuid exist in treeview
@@ -163,7 +157,7 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchHorizon
 
     try
     {
-        for (auto *polyline : repository->getHorizonPolylineSetRepresentationSet())
+        for (auto const *polyline : repository->getHorizonPolylineSetRepresentationSet())
         {
             if (searchNodeByUuid(polyline->getUuid()) == -1)
             { // verify uuid exist in treeview
@@ -196,7 +190,7 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchUnstruc
 
     try
     {
-        for (auto *unstructuredGrid : repository->getUnstructuredGridRepresentationSet())
+        for (auto const *unstructuredGrid : repository->getUnstructuredGridRepresentationSet())
         {
             if (searchNodeByUuid(unstructuredGrid->getUuid()) == -1)
             { // verify uuid exist in treeview
@@ -229,7 +223,7 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchFaultTr
 
     try
     {
-        for (auto *triangulated : repository->getFaultTriangulatedSetRepresentationSet())
+        for (auto const *triangulated : repository->getFaultTriangulatedSetRepresentationSet())
         {
             if (searchNodeByUuid(triangulated->getUuid()) == -1)
             { // verify uuid exist in treeview
@@ -262,7 +256,7 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchHorizon
 
     try
     {
-        for (auto *triangulated : repository->getHorizonTriangulatedSetRepresentationSet())
+        for (auto const *triangulated : repository->getHorizonTriangulatedSetRepresentationSet())
         {
             if (searchNodeByUuid(triangulated->getUuid()) == -1)
             { // verify uuid exist in treeview
@@ -295,7 +289,7 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchGrid2d(
 
     try
     {
-        for (auto *grid2D : repository->getHorizonGrid2dRepresentationSet())
+        for (auto const *grid2D : repository->getHorizonGrid2dRepresentationSet())
         {
             if (searchNodeByUuid(grid2D->getUuid()) == -1)
             { // verify uuid exist in treeview
@@ -329,7 +323,7 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchIjkGrid
 
     try
     {
-        for (auto *ijkGrid : repository->getIjkGridRepresentationSet())
+        for (auto const *ijkGrid : repository->getIjkGridRepresentationSet())
         {
             if (searchNodeByUuid(ijkGrid->getUuid()) == -1)
             { // verify uuid exist in treeview
@@ -363,7 +357,7 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchSubRepr
 
     try
     {
-        for (auto *subRepresentation : repository->getSubRepresentationSet())
+        for (auto const *subRepresentation : repository->getSubRepresentationSet())
         {
             if (searchNodeByUuid(subRepresentation->getUuid()) == -1)
             { // verify uuid exist in treeview
@@ -440,7 +434,7 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchReprese
         name_to_sort.sort();
         for (auto const &name : name_to_sort)
         {
-            for (std::string uuid : mapping_title_to_uuidSet[name])
+            for (const std::string& uuid : mapping_title_to_uuidSet[name])
             {
                 if (searchNodeByUuid(uuid) == -1)
                 { // verify uuid exist in treeview
@@ -552,7 +546,7 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchTimeSer
     times_step.clear();
 
     std::string return_message = "";
-    auto assembly = output->GetDataAssembly();
+    auto* assembly = output->GetDataAssembly();
     std::vector<EML2_NS::TimeSeries *> timeSeries;
     try
     {
@@ -566,7 +560,7 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchTimeSer
     /****
      *  change property parent to times serie parent
      ****/
-    for (auto *timeSerie : timeSeries)
+    for (auto const *timeSerie : timeSeries)
     {
         bool valid = true;
 
@@ -578,7 +572,7 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchTimeSer
             std::vector<std::string> property_name_set;
             std::map<std::string, std::vector<int>> property_name_to_node_set;
             int node_parent = -1;
-            for (auto *prop : propSeries)
+            for (auto const *prop : propSeries)
             {
                 if (prop->getXmlTag() == RESQML2_NS::ContinuousProperty::XML_TAG ||
                     prop->getXmlTag() == RESQML2_NS::DiscreteProperty::XML_TAG)
@@ -653,8 +647,6 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchTimeSer
 
 void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::selectNodeId(int node)
 {
-    auto *assembly = this->output->GetDataAssembly();
-
     this->selectNodeIdParent(node);
 
     this->current_selection.insert(node);
@@ -665,7 +657,7 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::selectNodeId(int nod
 
 void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::selectNodeIdParent(int node)
 {
-    auto *assembly = this->output->GetDataAssembly();
+    auto const *assembly = this->output->GetDataAssembly();
 
     if (assembly->GetParent(node) != -1)
     {
@@ -676,7 +668,7 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::selectNodeIdParent(i
 }
 void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::selectNodeIdChildren(int node)
 {
-    auto *assembly = this->output->GetDataAssembly();
+    auto const *assembly = this->output->GetDataAssembly();
 
     for (int index_child : assembly->GetChildNodes(node))
     {
@@ -805,7 +797,7 @@ ResqmlAbstractRepresentationToVtkDataset *ResqmlDataRepositoryToVtkPartitionedDa
     {
         try
         {
-            auto *assembly = this->output->GetDataAssembly();
+            auto const *assembly = this->output->GetDataAssembly();
             const int node_parent = assembly->GetParent(searchNodeByUuid(uuid));
 
             if (nodeId_to_resqml[node_parent])
@@ -846,7 +838,7 @@ ResqmlAbstractRepresentationToVtkDataset *ResqmlDataRepositoryToVtkPartitionedDa
     {
         try
         {
-            auto *assembly = this->output->GetDataAssembly();
+            auto const *assembly = this->output->GetDataAssembly();
             const int node_parent = assembly->GetParent(searchNodeByUuid(uuid));
             if (nodeId_to_resqml[node_parent])
             {
@@ -864,7 +856,7 @@ ResqmlAbstractRepresentationToVtkDataset *ResqmlDataRepositoryToVtkPartitionedDa
     {
         try
         {
-            auto *assembly = this->output->GetDataAssembly();
+            auto const *assembly = this->output->GetDataAssembly();
             const int node_parent = assembly->GetParent(searchNodeByUuid(uuid));
             if (nodeId_to_resqml[node_parent])
             {
@@ -885,7 +877,7 @@ ResqmlAbstractRepresentationToVtkDataset *ResqmlDataRepositoryToVtkPartitionedDa
             std::string ts_uuid = uuid.substr(0, 36);
             std::string node_name = uuid.substr(36);
 
-            auto *assembly = this->output->GetDataAssembly();
+            auto const *assembly = this->output->GetDataAssembly();
             const int node_parent = assembly->GetParent(searchNodeByUuid(uuid));
             if (nodeId_to_resqml[node_parent])
             {
@@ -928,7 +920,7 @@ vtkPartitionedDataSetCollection *ResqmlDataRepositoryToVtkPartitionedDataSetColl
         {
             try
             {
-                auto *assembly = this->output->GetDataAssembly();
+                auto const *assembly = this->output->GetDataAssembly();
                 const int node_parent = assembly->GetParent(searchNodeByUuid(nodeId_to_uuid[selection]));
                 if (this->nodeId_to_resqml.find(node_parent) != this->nodeId_to_resqml.end())
                 {
@@ -945,7 +937,7 @@ vtkPartitionedDataSetCollection *ResqmlDataRepositoryToVtkPartitionedDataSetColl
         {
             try
             {
-                auto *assembly = this->output->GetDataAssembly();
+                auto const *assembly = this->output->GetDataAssembly();
                 const int node_parent = assembly->GetParent(searchNodeByUuid(nodeId_to_uuid[selection]));
                 if (this->nodeId_to_resqml.find(node_parent) != this->nodeId_to_resqml.end())
                 {
