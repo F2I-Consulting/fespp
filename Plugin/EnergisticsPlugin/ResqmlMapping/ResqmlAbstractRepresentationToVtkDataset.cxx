@@ -30,7 +30,9 @@ under the License.
 #include "ResqmlMapping/ResqmlPropertyToVtkDataArray.h"
 
 //----------------------------------------------------------------------------
-ResqmlAbstractRepresentationToVtkDataset::ResqmlAbstractRepresentationToVtkDataset(RESQML2_NS::AbstractRepresentation *abstract_representation, int proc_number, int max_proc) : procNumber(proc_number),
+ResqmlAbstractRepresentationToVtkDataset::ResqmlAbstractRepresentationToVtkDataset(RESQML2_NS::AbstractRepresentation *abstract_representation, int proc_number, int max_proc, bool subrep) : 
+	subrep(subrep),
+	procNumber(proc_number),
 																																												 maxProc(max_proc),
 																																												 resqmlData(abstract_representation),
 																																												 vtkData(nullptr)
@@ -39,7 +41,8 @@ ResqmlAbstractRepresentationToVtkDataset::ResqmlAbstractRepresentationToVtkDatas
 
 void ResqmlAbstractRepresentationToVtkDataset::addDataArray(const std::string &uuid)
 {
-	std::vector<RESQML2_NS::AbstractValuesProperty *> valuesPropertySet = this->resqmlData->getValuesPropertySet();
+	vtkOutputWindowDisplayWarningText(std::to_string(subrep).c_str());
+	std::vector<RESQML2_NS::AbstractValuesProperty *> valuesPropertySet = subrep?this->resqmlSubData->getValuesPropertySet():this->resqmlData->getValuesPropertySet();
 	std::vector<RESQML2_NS::AbstractValuesProperty *>::iterator it = std::find_if(valuesPropertySet.begin(), valuesPropertySet.end(),
 																				  [&uuid](RESQML2_NS::AbstractValuesProperty const *property)
 																				  { return property->getUuid() == uuid; });
@@ -72,7 +75,7 @@ void ResqmlAbstractRepresentationToVtkDataset::addDataArray(const std::string &u
 	}
 	else
 	{
-		throw std::invalid_argument("The property " + uuid + "cannot be added since it is not contained in the representation " + resqmlData->getUuid());
+		throw std::invalid_argument("The property " + uuid + "cannot be added since it is not contained in the representation " + (subrep ? this->resqmlSubData->getUuid() : this->resqmlData->getUuid()));
 	}
 }
 

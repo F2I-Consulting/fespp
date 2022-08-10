@@ -43,7 +43,7 @@ class ResqmlAbstractRepresentationToVtkDataset;
 /**
  * @brief	class description.
  */
-class ResqmlDataRepositoryToVtkPartitionedDataSetCollection 
+class ResqmlDataRepositoryToVtkPartitionedDataSetCollection
 {
 public:
 	ResqmlDataRepositoryToVtkPartitionedDataSetCollection();
@@ -53,20 +53,20 @@ public:
 	// different tab
 	enum EntityType
 	{
-		WELL_TRAJ,
-		WELL_MARKER,
-		WELL_MARKER_FRAME,
-		WELL_FRAME,
-		WELL_CHANNEL,
-		POLYLINE_SET,
-		TRIANGULATED_SET,
-		GRID_2D,
-		IJK_GRID,
-		UNSTRUC_GRID,
-		SUB_REP,
-		PROP,
-		INTERPRETATION,
-		TIMES_SERIE,
+		WELL_TRAJ,		   // 0
+		WELL_MARKER,	   // 1
+		WELL_MARKER_FRAME, // 2
+		WELL_FRAME,		   // 3
+		WELL_CHANNEL,	   // 4
+		POLYLINE_SET,	   // 5
+		TRIANGULATED_SET,  // 6
+		GRID_2D,		   // 7
+		IJK_GRID,		   // 8
+		UNSTRUC_GRID,	   // 9
+		SUB_REP,		   // 10
+		PROP,			   // 11
+		INTERPRETATION,	   // 12
+		TIMES_SERIE,	   // 13
 		NUMBER_OF_ENTITY_TYPES,
 	};
 
@@ -88,17 +88,20 @@ public:
 	void clearSelection();
 
 private:
-	std::string searchFaultPolylines(const std::string &fileName);
-	std::string searchHorizonPolylines(const std::string &fileName);
+	int addNodeGroup(std::string name, int idNode); // return: idNode for the groupName
+
+	std::string searchPolylines(const std::string &fileName);
 	std::string searchUnstructuredGrid(const std::string &fileName);
-	std::string searchFaultTriangulated(const std::string &fileName);
-	std::string searchHorizonTriangulated(const std::string &fileName);
+	std::string searchTriangulated(const std::string &fileName);
 	std::string searchGrid2d(const std::string &fileName);
 	std::string searchIjkGrid(const std::string &fileName);
 	std::string searchWellboreTrajectory(const std::string &fileName);
-	std::string searchSubRepresentation(const std::string &fileName);
+	std::string searchRepresentations(resqml2::AbstractRepresentation *representation, EntityType type, int idNode = 0 /* 0 is root's id*/);
+
+	std::string searchSubRepresentation(resqml2::AbstractRepresentation *representation, vtkDataAssembly *assembly, int node_parent);
 	std::string searchTimeSeries(const std::string &fileName);
-	std::string searchRepresentations(resqml2::AbstractRepresentation *representation, EntityType type);
+
+	std::string searchProperties(resqml2::AbstractRepresentation *representation, vtkDataAssembly *assembly, int node_parent);
 
 	void selectNodeIdParent(int node);
 	void selectNodeIdChildren(int node);
@@ -106,7 +109,7 @@ private:
 	ResqmlAbstractRepresentationToVtkDataset *loadToVtk(std::string uuid, EntityType type, double time);
 
 	std::string changeInvalidCharacter(std::string text);
-	int searchNodeByUuid(const std::string& uuid);
+	int searchNodeByUuid(const std::string &uuid);
 
 	bool markerOrientation;
 	int markerSize;
@@ -119,14 +122,13 @@ private:
 	std::map<int, EntityType> nodeId_to_EntityType;								// index of VtkDataAssembly to entity type
 	std::map<int, ResqmlAbstractRepresentationToVtkDataset *> nodeId_to_resqml; // index of VtkDataAssembly to ResqmlAbstractRepresentationToVtkDataset
 
-    //\/          uuid             title            index        prop_uuid
-	std::map<std::string, std::map<std::string, std::map<double, std::string>>> timeSeries_uuid_and_title_to_index_and_properties_uuid;									
+	//\/          uuid             title            index        prop_uuid
+	std::map<std::string, std::map<std::string, std::map<double, std::string>>> timeSeries_uuid_and_title_to_index_and_properties_uuid;
 
 	std::set<int> current_selection;
 	std::set<int> old_selection;
 
 	// time step values
 	std::vector<double> times_step;
-
 };
 #endif

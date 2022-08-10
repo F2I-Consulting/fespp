@@ -52,7 +52,7 @@ public:
 	void AddFileName(const char *fname);
 	void ClearFileNames();
 	const char *GetFileName(int index) const;
-	int GetNumberOfFileNames() const;
+	size_t GetNumberOfFileNames() const;
 	///@}
 
 	/**

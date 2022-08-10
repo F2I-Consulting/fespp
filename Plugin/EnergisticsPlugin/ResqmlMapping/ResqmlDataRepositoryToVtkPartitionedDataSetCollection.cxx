@@ -22,6 +22,7 @@ under the License.
 #include <vector>
 #include <set>
 #include <list>
+#include <regex>
 
 // VTK includes
 #include <vtkPartitionedDataSetCollection.h>
@@ -49,6 +50,7 @@ under the License.
 
 #include "ResqmlAbstractRepresentationToVtkDataset.h"
 #include "ResqmlIjkGridToVtkUnstructuredGrid.h"
+#include "ResqmlIjkGridSubRepToVtkUnstructuredGrid.h"
 #include "ResqmlGrid2dToVtkPolyData.h"
 #include "ResqmlPolylineToVtkPolyData.h"
 #include "ResqmlTriangulatedSetToVtkPartitionedDataSet.h"
@@ -92,86 +94,45 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::addFile(const
     pck.close();
 
     // create vtkDataAssembly: create treeView in property panel
-    // get grid2D
+    // get grid2D + subrepresentation + property
     message += searchGrid2d(fileName);
-    // get ijkGrid
+    // get ijkGrid + subrepresentation + property
     message += searchIjkGrid(fileName);
-    // get polylines
-    message += searchFaultPolylines(fileName);
-    message += searchHorizonPolylines(fileName);
-    // get triangulated
-    message += searchFaultTriangulated(fileName);
-    message += searchHorizonTriangulated(fileName);
-    // get unstructuredGrid
+    // get polylines + subrepresentation + property
+    message += searchPolylines(fileName);
+    // get triangulated + subrepresentation + property
+    message += searchTriangulated(fileName);
+    // get unstructuredGrid + subrepresentation + property
     message += searchUnstructuredGrid(fileName);
-    // get WellboreTrajectory
+    // get WellboreTrajectory + subrepresentation + property
     message += searchWellboreTrajectory(fileName);
 
-    // get subRepresentation
-    message += searchSubRepresentation(fileName);
     // get TimeSeries
     message += searchTimeSeries(fileName);
 
     return message;
 }
 
-std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchFaultPolylines(const std::string &fileName)
+std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchPolylines(const std::string &fileName)
 {
     std::string result;
 
-    std::list<std::string> name_to_sort;
-    std::map<std::string, std::string> mapping_title_to_uuid;
-
     try
     {
-        for (auto const *polyline : repository->getFaultPolylineSetRepresentationSet())
+        auto polylineSetSet = repository->getAllPolylineSetRepresentationSet();
+        std::sort(polylineSetSet.begin(), polylineSetSet.end(),
+                  [](const RESQML2_NS::PolylineSetRepresentation *a, const RESQML2_NS::PolylineSetRepresentation *b) -> bool
+                  {
+                      return a->getTitle().compare(b->getTitle()) < 0;
+                  });
+        for (auto const *polylineSet : polylineSetSet)
         {
-            if (searchNodeByUuid(polyline->getUuid()) == -1)
+            // add full represnetation
+            if (searchNodeByUuid(polylineSet->getUuid()) == -1)
             { // verify uuid exist in treeview
-                name_to_sort.push_back(polyline->getTitle());
-                mapping_title_to_uuid[polyline->getTitle()] = polyline->getUuid();
-            }
-        }
-        name_to_sort.sort();
-        for (const auto &name : name_to_sort)
-        {
-            if (searchNodeByUuid(mapping_title_to_uuid[name]) == -1)
-            { // verify uuid exist in treeview
-                auto *representation = repository->getDataObjectByUuid<resqml2::AbstractRepresentation>(mapping_title_to_uuid[name]);
-                result = result + searchRepresentations(representation, ResqmlDataRepositoryToVtkPartitionedDataSetCollection::EntityType::POLYLINE_SET);
-            }
-        }
-    }
-    catch (const std::exception &e)
-    {
-        return "EXCEPTION in fesapi when calling getFaultPolylineSetRepresentationSet with file: " + fileName + " : " + e.what();
-    }
-    return result;
-}
-
-std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchHorizonPolylines(const std::string &fileName)
-{
-    std::string result;
-    std::list<std::string> name_to_sort;
-    std::map<std::string, std::string> mapping_title_to_uuid;
-
-    try
-    {
-        for (auto const *polyline : repository->getHorizonPolylineSetRepresentationSet())
-        {
-            if (searchNodeByUuid(polyline->getUuid()) == -1)
-            { // verify uuid exist in treeview
-                name_to_sort.push_back(polyline->getTitle());
-                mapping_title_to_uuid[polyline->getTitle()] = polyline->getUuid();
-            }
-        }
-        name_to_sort.sort();
-        for (const auto &name : name_to_sort)
-        {
-            if (searchNodeByUuid(mapping_title_to_uuid[name]) == -1)
-            { // verify uuid exist in treeview
-                auto *representation = repository->getDataObjectByUuid<resqml2::AbstractRepresentation>(mapping_title_to_uuid[name]);
-                result = result + searchRepresentations(representation, ResqmlDataRepositoryToVtkPartitionedDataSetCollection::EntityType::POLYLINE_SET);
+                result += searchRepresentations(
+                    repository->getDataObjectByUuid<resqml2::AbstractRepresentation>(polylineSet->getUuid()),
+                    ResqmlDataRepositoryToVtkPartitionedDataSetCollection::EntityType::POLYLINE_SET);
             }
         }
     }
@@ -185,26 +146,22 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchHorizon
 std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchUnstructuredGrid(const std::string &fileName)
 {
     std::string result;
-    std::list<std::string> name_to_sort;
-    std::map<std::string, std::string> mapping_title_to_uuid;
 
     try
     {
-        for (auto const *unstructuredGrid : repository->getUnstructuredGridRepresentationSet())
+        auto unstructuredGridSet = repository->getUnstructuredGridRepresentationSet();
+        std::sort(unstructuredGridSet.begin(), unstructuredGridSet.end(),
+                  [](const RESQML2_NS::UnstructuredGridRepresentation *a, const RESQML2_NS::UnstructuredGridRepresentation *b) -> bool
+                  {
+                      return a->getTitle().compare(b->getTitle()) < 0;
+                  });
+        for (auto const *unstructuredGrid : unstructuredGridSet)
         {
             if (searchNodeByUuid(unstructuredGrid->getUuid()) == -1)
             { // verify uuid exist in treeview
-                name_to_sort.push_back(unstructuredGrid->getTitle());
-                mapping_title_to_uuid[unstructuredGrid->getTitle()] = unstructuredGrid->getUuid();
-            }
-        }
-        name_to_sort.sort();
-        for (const auto &name : name_to_sort)
-        {
-            if (searchNodeByUuid(mapping_title_to_uuid[name]) == -1)
-            { // verify uuid exist in treeview
-                auto *representation = repository->getDataObjectByUuid<resqml2::AbstractRepresentation>(mapping_title_to_uuid[name]);
-                result = result + searchRepresentations(representation, ResqmlDataRepositoryToVtkPartitionedDataSetCollection::EntityType::UNSTRUC_GRID);
+                result += searchRepresentations(
+                    repository->getDataObjectByUuid<resqml2::AbstractRepresentation>(unstructuredGrid->getUuid()),
+                    ResqmlDataRepositoryToVtkPartitionedDataSetCollection::EntityType::UNSTRUC_GRID);
             }
         }
     }
@@ -215,62 +172,25 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchUnstruc
     return result;
 }
 
-std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchFaultTriangulated(const std::string &fileName)
+std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchTriangulated(const std::string &fileName)
 {
     std::string result;
-    std::list<std::string> name_to_sort;
-    std::map<std::string, std::string> mapping_title_to_uuid;
 
     try
     {
-        for (auto const *triangulated : repository->getFaultTriangulatedSetRepresentationSet())
+        auto triangulatedSet = repository->getAllTriangulatedSetRepresentationSet();
+        std::sort(triangulatedSet.begin(), triangulatedSet.end(),
+                  [](const RESQML2_NS::TriangulatedSetRepresentation *a, const RESQML2_NS::TriangulatedSetRepresentation *b) -> bool
+                  {
+                      return a->getTitle().compare(b->getTitle()) < 0;
+                  });
+        for (auto const *triangulated : triangulatedSet)
         {
             if (searchNodeByUuid(triangulated->getUuid()) == -1)
             { // verify uuid exist in treeview
-                name_to_sort.push_back(triangulated->getTitle());
-                mapping_title_to_uuid[triangulated->getTitle()] = triangulated->getUuid();
-            }
-        }
-        name_to_sort.sort();
-        for (const auto &name : name_to_sort)
-        {
-            if (searchNodeByUuid(mapping_title_to_uuid[name]) == -1)
-            { // verify uuid exist in treeview
-                auto *representation = repository->getDataObjectByUuid<resqml2::AbstractRepresentation>(mapping_title_to_uuid[name]);
-                result = result + searchRepresentations(representation, ResqmlDataRepositoryToVtkPartitionedDataSetCollection::EntityType::TRIANGULATED_SET);
-            }
-        }
-    }
-    catch (const std::exception &e)
-    {
-        return "EXCEPTION in fesapi when calling getFaultTriangulatedSetRepresentationSet with file: " + fileName + " : " + e.what();
-    }
-    return result;
-}
-
-std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchHorizonTriangulated(const std::string &fileName)
-{
-    std::string result;
-    std::list<std::string> name_to_sort;
-    std::map<std::string, std::string> mapping_title_to_uuid;
-
-    try
-    {
-        for (auto const *triangulated : repository->getHorizonTriangulatedSetRepresentationSet())
-        {
-            if (searchNodeByUuid(triangulated->getUuid()) == -1)
-            { // verify uuid exist in treeview
-                name_to_sort.push_back(triangulated->getTitle());
-                mapping_title_to_uuid[triangulated->getTitle()] = triangulated->getUuid();
-            }
-        }
-        name_to_sort.sort();
-        for (const auto &name : name_to_sort)
-        {
-            if (searchNodeByUuid(mapping_title_to_uuid[name]) == -1)
-            { // verify uuid exist in treeview
-                auto *representation = repository->getDataObjectByUuid<resqml2::AbstractRepresentation>(mapping_title_to_uuid[name]);
-                result = result + searchRepresentations(representation, ResqmlDataRepositoryToVtkPartitionedDataSetCollection::EntityType::TRIANGULATED_SET);
+                result += searchRepresentations(
+                    repository->getDataObjectByUuid<resqml2::AbstractRepresentation>(triangulated->getUuid()),
+                    ResqmlDataRepositoryToVtkPartitionedDataSetCollection::EntityType::TRIANGULATED_SET);
             }
         }
     }
@@ -284,26 +204,22 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchHorizon
 std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchGrid2d(const std::string &fileName)
 {
     std::string result;
-    std::list<std::string> name_to_sort;
-    std::map<std::string, std::string> mapping_title_to_uuid;
 
     try
     {
-        for (auto const *grid2D : repository->getHorizonGrid2dRepresentationSet())
+        auto grid2DSet = repository->getHorizonGrid2dRepresentationSet();
+        std::sort(grid2DSet.begin(), grid2DSet.end(),
+                  [](const RESQML2_NS::Grid2dRepresentation *a, const RESQML2_NS::Grid2dRepresentation *b) -> bool
+                  {
+                      return a->getTitle().compare(b->getTitle()) < 0;
+                  });
+        for (auto const *grid2D : grid2DSet)
         {
             if (searchNodeByUuid(grid2D->getUuid()) == -1)
-            { // verify uuid exist in treeview
-                name_to_sort.push_back(grid2D->getTitle());
-                mapping_title_to_uuid[grid2D->getTitle()] = grid2D->getUuid();
-            }
-        }
-        name_to_sort.sort();
-        for (const auto &name : name_to_sort)
-        {
-            if (searchNodeByUuid(mapping_title_to_uuid[name]) == -1)
-            { // verify uuid exist in treeview
-                auto *representation = repository->getDataObjectByUuid<resqml2::AbstractRepresentation>(mapping_title_to_uuid[name]);
-                result = result + searchRepresentations(representation, ResqmlDataRepositoryToVtkPartitionedDataSetCollection::EntityType::GRID_2D);
+            { // verify uuid exist in treeview (generally when we load another epcfile in same repository)
+                result += searchRepresentations(
+                    repository->getDataObjectByUuid<resqml2::AbstractRepresentation>(grid2D->getUuid()),
+                    ResqmlDataRepositoryToVtkPartitionedDataSetCollection::EntityType::GRID_2D);
             }
         }
     }
@@ -318,26 +234,21 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchIjkGrid
 {
     std::string result;
 
-    std::list<std::string> name_to_sort;
-    std::map<std::string, std::string> mapping_title_to_uuid;
-
     try
     {
-        for (auto const *ijkGrid : repository->getIjkGridRepresentationSet())
+        auto ijkGridSet = repository->getIjkGridRepresentationSet();
+        std::sort(ijkGridSet.begin(), ijkGridSet.end(),
+                  [](const RESQML2_NS::AbstractIjkGridRepresentation *a, const RESQML2_NS::AbstractIjkGridRepresentation *b) -> bool
+                  {
+                      return a->getTitle().compare(b->getTitle()) < 0;
+                  });
+        for (auto const *ijkGrid : ijkGridSet)
         {
             if (searchNodeByUuid(ijkGrid->getUuid()) == -1)
-            { // verify uuid exist in treeview
-                name_to_sort.push_back(ijkGrid->getTitle());
-                mapping_title_to_uuid[ijkGrid->getTitle()] = ijkGrid->getUuid();
-            }
-        }
-        name_to_sort.sort();
-        for (auto const &name : name_to_sort)
-        {
-            if (searchNodeByUuid(mapping_title_to_uuid[name]) == -1)
-            { // verify uuid exist in treeview
-                auto *representation = repository->getDataObjectByUuid<resqml2::AbstractRepresentation>(mapping_title_to_uuid[name]);
-                result = result + searchRepresentations(representation, ResqmlDataRepositoryToVtkPartitionedDataSetCollection::EntityType::IJK_GRID);
+            { // verify uuid exist in treeview (generally when we load another epcfile in same repository)
+                result += searchRepresentations(
+                    repository->getDataObjectByUuid<resqml2::AbstractRepresentation>(ijkGrid->getUuid()),
+                    ResqmlDataRepositoryToVtkPartitionedDataSetCollection::EntityType::IJK_GRID);
             }
         }
     }
@@ -348,46 +259,11 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchIjkGrid
     return result;
 }
 
-std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchSubRepresentation(const std::string &fileName)
-{
-    std::string result;
-
-    std::list<std::string> name_to_sort;
-    std::map<std::string, std::string> mapping_title_to_uuid;
-
-    try
-    {
-        for (auto const *subRepresentation : repository->getSubRepresentationSet())
-        {
-            if (searchNodeByUuid(subRepresentation->getUuid()) == -1)
-            { // verify uuid exist in treeview
-                name_to_sort.push_back(subRepresentation->getTitle());
-                mapping_title_to_uuid[subRepresentation->getTitle()] = subRepresentation->getUuid();
-            }
-        }
-        name_to_sort.sort();
-        for (auto const &name : name_to_sort)
-        {
-            if (searchNodeByUuid(mapping_title_to_uuid[name]) == -1)
-            { // verify uuid exist in treeview
-                auto *representation = repository->getDataObjectByUuid<resqml2::AbstractRepresentation>(mapping_title_to_uuid[name]);
-                result = result + searchRepresentations(representation, ResqmlDataRepositoryToVtkPartitionedDataSetCollection::EntityType::SUB_REP);
-            }
-        }
-    }
-    catch (const std::exception &e)
-    {
-        return "EXCEPTION in fesapi when calling getSubRepresentationSet with file: " + fileName + " : " + e.what() + ".\n";
-    }
-    return result;
-}
-
-std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchRepresentations(resqml2::AbstractRepresentation *representation, EntityType type)
+std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchRepresentations(resqml2::AbstractRepresentation *representation, EntityType type, int idNode)
 {
     std::string result = "";
     vtkDataAssembly *data_assembly = output->GetDataAssembly();
-
-    int idNode = 0; // 0 is root's id
+    //idNode = addNodeGroup(representation->getXmlTag(), idNode);
 
     if (representation->isPartial())
     {
@@ -410,46 +286,102 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchReprese
     }
     else
     {
-        representation->setTitle(changeInvalidCharacter(representation->getXmlTag() + '.' + representation->getTitle()));
+        representation->setTitle(changeInvalidCharacter(representation->getXmlTag() + "_" + representation->getTitle()));
         idNode = data_assembly->AddNode(representation->getTitle().c_str(), idNode);
         nodeId_to_uuid[idNode] = representation->getUuid();
         nodeId_to_EntityType[idNode] = type;
     }
 
-    std::list<std::string> name_to_sort;
-    std::map<std::string, std::vector<std::string>> mapping_title_to_uuidSet;
-    try
+    // add sub representation with properties (only for ijkGrid)
+    if (dynamic_cast<RESQML2_NS::AbstractIjkGridRepresentation*>(representation) != nullptr)
     {
-        // property
-        for (auto *property : representation->getValuesPropertySet())
-        {
-            property->setTitle(changeInvalidCharacter(property->getXmlTag() + '.' + property->getTitle()));
+        result += searchSubRepresentation(representation, data_assembly, idNode);
+    }
 
-            if (searchNodeByUuid(property->getUuid()) == -1)
-            { // verify uuid exist in treeview
-                name_to_sort.push_back(property->getTitle());
-                mapping_title_to_uuidSet[property->getTitle()].push_back(property->getUuid());
+    // add properties representation
+    result += searchProperties(representation, data_assembly, idNode);
+
+    return result;
+}
+
+int ResqmlDataRepositoryToVtkPartitionedDataSetCollection::addNodeGroup(std::string name, int idNode)
+{
+    if (idNode == 0) { // root
+        vtkDataAssembly* data_assembly = output->GetDataAssembly();
+
+        for (std::map<int, std::string>::iterator it = nodeId_to_uuid.begin(); it != nodeId_to_uuid.end(); ++it)
+        {
+            if (name == it->second)
+            {
+                return it->first;
             }
         }
-        name_to_sort.sort();
-        for (auto const &name : name_to_sort)
+
+        idNode = data_assembly->AddNode(name.c_str(), 0);
+        nodeId_to_uuid[idNode] = name;
+    }
+    return idNode;
+}
+
+std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchSubRepresentation(resqml2::AbstractRepresentation *representation, vtkDataAssembly *data_assembly, int node_parent)
+{
+    std::string result;
+
+    try
+    {
+        auto subRepresentationSet = representation->getSubRepresentationSet();
+        std::sort(subRepresentationSet.begin(), subRepresentationSet.end(),
+                  [](const RESQML2_NS::SubRepresentation *a, const RESQML2_NS::SubRepresentation *b) -> bool
+                  {
+                      return a->getTitle().compare(b->getTitle()) < 0;
+                  });
+        for (auto const *subRepresentation : subRepresentationSet)
         {
-            for (const std::string& uuid : mapping_title_to_uuidSet[name])
-            {
-                if (searchNodeByUuid(uuid) == -1)
-                { // verify uuid exist in treeview
-                    int property_idNode = data_assembly->AddNode(name.c_str(), idNode);
-                    nodeId_to_uuid[property_idNode] = uuid;
-                    nodeId_to_EntityType[property_idNode] = ResqmlDataRepositoryToVtkPartitionedDataSetCollection::EntityType::PROP;
-                }
+            if (searchNodeByUuid(subRepresentation->getUuid()) == -1)
+            { // verify uuid exist in treeview
+                auto absRepresentation = repository->getDataObjectByUuid<resqml2::AbstractRepresentation>(subRepresentation->getUuid());
+                absRepresentation->setTitle(changeInvalidCharacter(representation->getTitle() + "-" + subRepresentation->getTitle()));
+                result += searchRepresentations(
+                    absRepresentation,
+                    ResqmlDataRepositoryToVtkPartitionedDataSetCollection::EntityType::SUB_REP, data_assembly->GetParent(node_parent));
             }
         }
     }
     catch (const std::exception &e)
     {
-        return "EXCEPTION in fesapi when calling getValuesPropertySet with representation uuid: " + nodeId_to_uuid[idNode] + " : " + e.what() + ".\n";
+        return "EXCEPTION in fesapi when calling getSubRepresentationSet for uuid : " + representation->getUuid() + " : " + e.what() + ".\n";
     }
     return result;
+}
+
+std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchProperties(resqml2::AbstractRepresentation *representation, vtkDataAssembly *data_assembly, int node_parent)
+{
+    try
+    {
+        auto valuesPropertySet = representation->getValuesPropertySet();
+        std::sort(valuesPropertySet.begin(), valuesPropertySet.end(),
+                  [](const RESQML2_NS::AbstractValuesProperty *a, const RESQML2_NS::AbstractValuesProperty *b) -> bool
+                  {
+                      return a->getTitle().compare(b->getTitle()) < 0;
+                  });
+        // property
+        for (auto *property : valuesPropertySet)
+        {
+            property->setTitle(changeInvalidCharacter(property->getXmlTag() + '.' + property->getTitle()));
+
+            if (searchNodeByUuid(property->getUuid()) == -1)
+            { // verify uuid exist in treeview
+                int property_idNode = data_assembly->AddNode(property->getTitle().c_str(), node_parent);
+                nodeId_to_uuid[property_idNode] = property->getUuid();
+                nodeId_to_EntityType[property_idNode] = ResqmlDataRepositoryToVtkPartitionedDataSetCollection::EntityType::PROP;
+            }
+        }
+    }
+    catch (const std::exception &e)
+    {
+        return "EXCEPTION in fesapi when calling getValuesPropertySet with representation uuid: " + nodeId_to_uuid[node_parent] + " : " + e.what() + ".\n";
+    }
+    return "";
 }
 
 std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchWellboreTrajectory(const std::string &fileName)
@@ -486,15 +418,6 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchWellbor
             }
             else
             {
-                /*
-                                const auto *interpretation = wellboreTrajectory->getInterpretation();
-                                if (interpretation != nullptr)
-                                {
-                                    idNode = data_assembly->AddNode(changeInvalidCharacter(interpretation->getXmlTag() + '.' + interpretation->getTitle()).c_str());
-                                    nodeId_to_uuid[idNode] = interpretation->getUuid();
-                                    nodeId_to_EntityType[idNode] = ResqmlDataRepositoryToVtkPartitionedDataSetCollection::EntityType::INTERPRETATION;
-                                }
-                                */
                 wellboreTrajectory->setTitle(changeInvalidCharacter(wellboreTrajectory->getXmlTag() + '.' + wellboreTrajectory->getTitle()));
                 idNode = data_assembly->AddNode(wellboreTrajectory->getTitle().c_str(), 0 /* add to root*/);
                 nodeId_to_uuid[idNode] = wellboreTrajectory->getUuid();
@@ -546,7 +469,7 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchTimeSer
     times_step.clear();
 
     std::string return_message = "";
-    auto* assembly = output->GetDataAssembly();
+    auto *assembly = output->GetDataAssembly();
     std::vector<EML2_NS::TimeSeries *> timeSeries;
     try
     {
@@ -590,7 +513,6 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchTimeSer
                         {
                             node_parent = assembly->GetParent(node_id);
                         }
-
                         if (node_parent == assembly->GetParent(node_id))
                         {
                             if (prop->getTimeIndicesCount() > 1)
@@ -686,189 +608,98 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::clearSelection()
 
 ResqmlAbstractRepresentationToVtkDataset *ResqmlDataRepositoryToVtkPartitionedDataSetCollection::loadToVtk(std::string uuid, EntityType entity, double time)
 {
+
+    COMMON_NS::AbstractObject *const result = repository->getDataObjectByUuid(uuid);
+
+    if (result == nullptr)
+    {
+        return nullptr;
+    }
+    try
+    {
+        if (dynamic_cast<RESQML2_NS::AbstractIjkGridRepresentation *>(result) != nullptr)
+        {
+            auto *rep = new ResqmlIjkGridToVtkUnstructuredGrid(static_cast<RESQML2_NS::AbstractIjkGridRepresentation *>(result));
+            nodeId_to_resqml[searchNodeByUuid(uuid)] = rep;
+            return rep;
+        }
+        else if (dynamic_cast<RESQML2_NS::Grid2dRepresentation *>(result) != nullptr)
+        {
+            auto *rep = new ResqmlGrid2dToVtkPolyData(static_cast<RESQML2_NS::Grid2dRepresentation *>(result));
+            nodeId_to_resqml[searchNodeByUuid(uuid)] = rep;
+            return rep;
+        }
+        else if (dynamic_cast<RESQML2_NS::TriangulatedSetRepresentation *>(result) != nullptr)
+        {
+            auto *rep = new ResqmlTriangulatedSetToVtkPartitionedDataSet(static_cast<RESQML2_NS::TriangulatedSetRepresentation *>(result));
+            nodeId_to_resqml[searchNodeByUuid(uuid)] = rep;
+            return rep;
+        }
+        else if (dynamic_cast<RESQML2_NS::PolylineSetRepresentation *>(result) != nullptr)
+        {
+            auto *rep = new ResqmlPolylineToVtkPolyData(static_cast<RESQML2_NS::PolylineSetRepresentation *>(result));
+            nodeId_to_resqml[searchNodeByUuid(uuid)] = rep;
+            return rep;
+        }
+        else if (dynamic_cast<RESQML2_NS::UnstructuredGridRepresentation *>(result) != nullptr)
+        {
+            auto *rep = new ResqmlUnstructuredGridToVtkUnstructuredGrid(static_cast<RESQML2_NS::UnstructuredGridRepresentation *>(result));
+            nodeId_to_resqml[searchNodeByUuid(uuid)] = rep;
+            return rep;
+        }
+        else if (dynamic_cast<RESQML2_NS::SubRepresentation*>(result) != nullptr)
+        {
+            vtkOutputWindowDisplayWarningText(("subRep " + std::to_string(searchNodeByUuid(uuid)) + " -> " + uuid).c_str());
+            auto* subrep = new ResqmlIjkGridSubRepToVtkUnstructuredGrid(static_cast<RESQML2_NS::SubRepresentation*>(result));
+            nodeId_to_resqml[searchNodeByUuid(uuid)] = subrep;
+            return subrep;
+        }
+        else if (dynamic_cast<RESQML2_NS::WellboreTrajectoryRepresentation *>(result) != nullptr)
+        {
+            auto *rep = new ResqmlWellboreTrajectoryToVtkPolyData(static_cast<RESQML2_NS::WellboreTrajectoryRepresentation *>(result));
+            nodeId_to_resqml[searchNodeByUuid(uuid)] = rep;
+            return rep;
+        }
+        else if (dynamic_cast<RESQML2_NS::WellboreMarkerFrameRepresentation *>(result) != nullptr)
+        {
+            auto *rep = new ResqmlWellboreMarkerFrameToVtkPartitionedDataSet(static_cast<RESQML2_NS::WellboreMarkerFrameRepresentation *>(result));
+            nodeId_to_resqml[searchNodeByUuid(uuid)] = rep;
+            return rep;
+        }
+        else if (dynamic_cast<RESQML2_NS::WellboreFrameRepresentation *>(result) != nullptr)
+        {
+            auto *rep = new ResqmlWellboreFrameToVtkPartitionedDataSet(static_cast<RESQML2_NS::WellboreFrameRepresentation *>(result));
+            nodeId_to_resqml[searchNodeByUuid(uuid)] = rep;
+            return rep;
+        }
+        else if (dynamic_cast<RESQML2_NS::WellboreMarker *>(result) != nullptr)
+        {
+            auto const *assembly = this->output->GetDataAssembly();
+            const int node_parent = assembly->GetParent(searchNodeByUuid(uuid));
+            static_cast<ResqmlWellboreMarkerFrameToVtkPartitionedDataSet *>(nodeId_to_resqml[node_parent])->addMarker(uuid, markerOrientation, markerSize);
+        }
+        else if (dynamic_cast<RESQML2_NS::AbstractValuesProperty *>(result) != nullptr)
+        {
+            auto const *assembly = this->output->GetDataAssembly();
+            const int node_parent = assembly->GetParent(searchNodeByUuid(uuid));
+            if (dynamic_cast<ResqmlWellboreFrameToVtkPartitionedDataSet *>(nodeId_to_resqml[node_parent]) != nullptr)
+            {
+                static_cast<ResqmlWellboreFrameToVtkPartitionedDataSet *>(nodeId_to_resqml[node_parent])->addChannel(uuid, static_cast<resqml2::AbstractValuesProperty *>(result));
+            }
+            else
+            {
+                vtkOutputWindowDisplayWarningText(("parent property " + std::to_string(node_parent) + " -> " + nodeId_to_uuid[node_parent]).c_str());
+                static_cast<ResqmlAbstractRepresentationToVtkDataset *>(nodeId_to_resqml[node_parent])->addDataArray(uuid);
+            }
+        }
+    }
+    catch (const std::exception &e)
+    {
+        vtkOutputWindowDisplayErrorText(("Error when rendering uuid: " + uuid + "\n" + e.what()).c_str());
+    }
+
     switch (entity)
     {
-    case ResqmlDataRepositoryToVtkPartitionedDataSetCollection::EntityType::IJK_GRID:
-    {
-        try
-        {
-            auto *ijkGrid = repository->getDataObjectByUuid<RESQML2_NS::AbstractIjkGridRepresentation>(uuid);
-            auto *rep = new ResqmlIjkGridToVtkUnstructuredGrid(ijkGrid);
-            nodeId_to_resqml[searchNodeByUuid(uuid)] = rep;
-            return rep;
-        }
-        catch (const std::exception &e)
-        {
-            vtkOutputWindowDisplayErrorText(("Error in ijkgrid load for uuid: " + uuid + "\n" + e.what()).c_str());
-        }
-        break;
-    }
-    case ResqmlDataRepositoryToVtkPartitionedDataSetCollection::EntityType::GRID_2D:
-    {
-        try
-        {
-            auto *grid2D = repository->getDataObjectByUuid<RESQML2_NS::Grid2dRepresentation>(uuid);
-            auto *rep = new ResqmlGrid2dToVtkPolyData(grid2D);
-            nodeId_to_resqml[searchNodeByUuid(uuid)] = rep;
-            return rep;
-        }
-        catch (const std::exception &e)
-        {
-            vtkOutputWindowDisplayErrorText(("Error in grid 2D load for uuid: " + uuid + "\n" + e.what()).c_str());
-        }
-        break;
-    }
-    case ResqmlDataRepositoryToVtkPartitionedDataSetCollection::EntityType::TRIANGULATED_SET:
-    {
-        try
-        {
-            auto *triangles = repository->getDataObjectByUuid<RESQML2_NS::TriangulatedSetRepresentation>(uuid);
-            auto *rep = new ResqmlTriangulatedSetToVtkPartitionedDataSet(triangles);
-            nodeId_to_resqml[searchNodeByUuid(uuid)] = rep;
-            return rep;
-        }
-        catch (const std::exception &e)
-        {
-            vtkOutputWindowDisplayErrorText(("Error in triangulated load for uuid: " + uuid + "\n" + e.what()).c_str());
-        }
-        break;
-    }
-    case ResqmlDataRepositoryToVtkPartitionedDataSetCollection::EntityType::POLYLINE_SET:
-    {
-        try
-        {
-            auto *polyline = repository->getDataObjectByUuid<RESQML2_NS::PolylineSetRepresentation>(uuid);
-            auto *rep = new ResqmlPolylineToVtkPolyData(polyline);
-            nodeId_to_resqml[searchNodeByUuid(uuid)] = rep;
-            return rep;
-        }
-        catch (const std::exception &e)
-        {
-            vtkOutputWindowDisplayErrorText(("Error in polyline load for uuid: " + uuid + "\n" + e.what()).c_str());
-        }
-        break;
-    }
-    case ResqmlDataRepositoryToVtkPartitionedDataSetCollection::EntityType::UNSTRUC_GRID:
-    {
-        try
-        {
-            auto *unstruct = repository->getDataObjectByUuid<RESQML2_NS::UnstructuredGridRepresentation>(uuid);
-            auto *rep = new ResqmlUnstructuredGridToVtkUnstructuredGrid(unstruct);
-            nodeId_to_resqml[searchNodeByUuid(uuid)] = rep;
-            return rep;
-        }
-        catch (const std::exception &e)
-        {
-            vtkOutputWindowDisplayErrorText(("Error in unstructured grid load for uuid: " + uuid + "\n" + e.what()).c_str());
-        }
-        break;
-    }
-    case ResqmlDataRepositoryToVtkPartitionedDataSetCollection::EntityType::WELL_TRAJ:
-    {
-        try
-        {
-            auto *wellbore_traj = repository->getDataObjectByUuid<RESQML2_NS::WellboreTrajectoryRepresentation>(uuid);
-            auto *rep = new ResqmlWellboreTrajectoryToVtkPolyData(wellbore_traj);
-            nodeId_to_resqml[searchNodeByUuid(uuid)] = rep;
-            return rep;
-        }
-        catch (const std::exception &e)
-        {
-            vtkOutputWindowDisplayErrorText(("Error in wellbore trajectory load for uuid: " + uuid + "\n" + e.what()).c_str());
-        }
-        break;
-    }
-    case ResqmlDataRepositoryToVtkPartitionedDataSetCollection::EntityType::WELL_FRAME:
-    {
-        try
-        {
-            auto wellbore_frame = repository->getDataObjectByUuid<RESQML2_NS::WellboreFrameRepresentation>(uuid);
-            auto rep = new ResqmlWellboreFrameToVtkPartitionedDataSet(wellbore_frame);
-            nodeId_to_resqml[searchNodeByUuid(uuid)] = rep;
-            return rep;
-        }
-        catch (const std::exception &e)
-        {
-            vtkOutputWindowDisplayErrorText(("Error in wellbore frame load for uuid: " + uuid + "\n" + e.what()).c_str());
-        }
-        break;
-    }
-    case ResqmlDataRepositoryToVtkPartitionedDataSetCollection::EntityType::WELL_CHANNEL:
-    {
-        try
-        {
-            auto const *assembly = this->output->GetDataAssembly();
-            const int node_parent = assembly->GetParent(searchNodeByUuid(uuid));
-
-            if (nodeId_to_resqml[node_parent])
-            {
-                auto wellbore_frame = repository->getDataObjectByUuid<RESQML2_NS::WellboreFrameRepresentation>(nodeId_to_uuid[node_parent]);
-                for (auto *property : wellbore_frame->getValuesPropertySet())
-                {
-                    if (property->getUuid() == uuid)
-                    {
-                        auto *resqmlWellboreFrameToVtkPartitionedDataSet = dynamic_cast<ResqmlWellboreFrameToVtkPartitionedDataSet *>(nodeId_to_resqml[node_parent]);
-                        resqmlWellboreFrameToVtkPartitionedDataSet->addChannel(uuid, property);
-                    }
-                }
-            }
-        }
-        catch (const std::exception &e)
-        {
-            vtkOutputWindowDisplayErrorText(("Error in wellbore channel load for uuid: " + uuid + "\n" + e.what()).c_str());
-        }
-        break;
-    }
-    case ResqmlDataRepositoryToVtkPartitionedDataSetCollection::EntityType::WELL_MARKER_FRAME:
-    {
-        try
-        {
-            auto *wellbore_marker_frame = repository->getDataObjectByUuid<RESQML2_NS::WellboreMarkerFrameRepresentation>(uuid);
-            auto *rep = new ResqmlWellboreMarkerFrameToVtkPartitionedDataSet(wellbore_marker_frame);
-            nodeId_to_resqml[searchNodeByUuid(uuid)] = rep;
-            return rep;
-        }
-        catch (const std::exception &e)
-        {
-            vtkOutputWindowDisplayErrorText(("Error in wellbore marker frame load for uuid: " + uuid + "\n" + e.what()).c_str());
-        }
-        break;
-    }
-    case ResqmlDataRepositoryToVtkPartitionedDataSetCollection::EntityType::WELL_MARKER:
-    {
-        try
-        {
-            auto const *assembly = this->output->GetDataAssembly();
-            const int node_parent = assembly->GetParent(searchNodeByUuid(uuid));
-            if (nodeId_to_resqml[node_parent])
-            {
-                auto *resqmlWellboreMarkerFrameToVtkPartitionedDataSet = dynamic_cast<ResqmlWellboreMarkerFrameToVtkPartitionedDataSet *>(nodeId_to_resqml[node_parent]);
-                resqmlWellboreMarkerFrameToVtkPartitionedDataSet->addMarker(uuid, markerOrientation, markerSize);
-            }
-        }
-        catch (const std::exception &e)
-        {
-            vtkOutputWindowDisplayErrorText(("Error in wellbore marker load for uuid: " + uuid + "\n" + e.what()).c_str());
-        }
-        break;
-    }
-    case ResqmlDataRepositoryToVtkPartitionedDataSetCollection::EntityType::PROP:
-    {
-        try
-        {
-            auto const *assembly = this->output->GetDataAssembly();
-            const int node_parent = assembly->GetParent(searchNodeByUuid(uuid));
-            if (nodeId_to_resqml[node_parent])
-            {
-                nodeId_to_resqml[node_parent]->addDataArray(uuid);
-            }
-        }
-        catch (const std::exception &e)
-        {
-            vtkOutputWindowDisplayErrorText(("Error in property load for uuid: " + uuid + "\n" + e.what()).c_str());
-        }
-        break;
-    }
     case ResqmlDataRepositoryToVtkPartitionedDataSetCollection::EntityType::TIMES_SERIE:
     {
         try
@@ -896,11 +727,9 @@ ResqmlAbstractRepresentationToVtkDataset *ResqmlDataRepositoryToVtkPartitionedDa
 
 std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::changeInvalidCharacter(std::string text)
 {
-    std::replace(text.begin(), text.end(), ' ', '_');
-    std::replace(text.begin(), text.end(), '(', '.');
-    std::replace(text.begin(), text.end(), ')', '.');
-    std::replace(text.begin(), text.end(), '+', '.');
-    return text;
+    std::regex vowel_re("[^a-zA-Z0-9_.-]");
+    
+    return std::regex_replace(text, vowel_re, ".");
 }
 
 vtkPartitionedDataSetCollection *ResqmlDataRepositoryToVtkPartitionedDataSetCollection::getVtkPartitionedDatasSetCollection(const double time)

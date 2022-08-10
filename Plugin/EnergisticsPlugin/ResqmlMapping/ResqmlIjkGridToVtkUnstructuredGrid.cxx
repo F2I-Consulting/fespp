@@ -37,10 +37,11 @@ under the License.
 #include "ResqmlPropertyToVtkDataArray.h"
 
 //----------------------------------------------------------------------------
-ResqmlIjkGridToVtkUnstructuredGrid::ResqmlIjkGridToVtkUnstructuredGrid(RESQML2_NS::AbstractIjkGridRepresentation *ijkGrid, int proc_number, int max_proc)
+ResqmlIjkGridToVtkUnstructuredGrid::ResqmlIjkGridToVtkUnstructuredGrid(RESQML2_NS::AbstractIjkGridRepresentation *ijkGrid, int proc_number, int max_proc, bool subrep)
 	: ResqmlAbstractRepresentationToVtkDataset(ijkGrid,
 											   proc_number - 1,
-											   max_proc),
+											   max_proc,
+		subrep),
 	  resqmlData(ijkGrid)
 {
 	this->iCellCount = ijkGrid->getICellCount();
@@ -65,9 +66,11 @@ ResqmlIjkGridToVtkUnstructuredGrid::ResqmlIjkGridToVtkUnstructuredGrid(RESQML2_N
 
 	this->vtkData = vtkSmartPointer<vtkPartitionedDataSet>::New();
 
-	this->loadVtkObject();
-
-	this->vtkData->Modified();
+	if (!subrep)
+	{
+		this->loadVtkObject();
+		this->vtkData->Modified();
+	}
 }
 
 //----------------------------------------------------------------------------
@@ -192,10 +195,10 @@ vtkSmartPointer<vtkPoints> ResqmlIjkGridToVtkUnstructuredGrid::createPoints()
 		for (uint32_t kInterface = initKInterfaceIndex; kInterface <= maxKInterfaceIndex; ++kInterface)
 		{
 			this->resqmlData->getXyzPointsOfKInterface(kInterface, allXyzPoints.get());
-			auto const* crs = this->resqmlData->getLocalCrs(0);
+			auto const *crs = this->resqmlData->getLocalCrs(0);
 			const double xOffset = crs->getOriginOrdinal1();
 			const double yOffset = crs->getOriginOrdinal2();
-			auto const* depthCrs = dynamic_cast<RESQML2_NS::LocalDepth3dCrs const*>(crs);
+			auto const *depthCrs = dynamic_cast<RESQML2_NS::LocalDepth3dCrs const *>(crs);
 			const double zOffset = depthCrs != nullptr ? depthCrs->getOriginDepthOrElevation() : 0;
 			const double zIndice = crs->isDepthOriented() ? -1 : 1;
 			for (uint64_t nodeIndex = 0; nodeIndex < kInterfaceNodeCount * 3; nodeIndex += 3)

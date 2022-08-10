@@ -108,7 +108,7 @@ const char *EnergisticsPlugin::GetFileName(int index) const
 }
 
 //----------------------------------------------------------------------------
-int EnergisticsPlugin::GetNumberOfFileNames() const
+size_t EnergisticsPlugin::GetNumberOfFileNames() const
 {
   return this->FileNames.size();
 }

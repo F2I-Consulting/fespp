@@ -197,7 +197,15 @@ ResqmlPropertyToVtkDataArray::ResqmlPropertyToVtkDataArray(resqml2::AbstractValu
 	const std::string name = valuesProperty->getTitle();
 	if (valuesProperty->getXmlTag() == resqml2::ContinuousProperty::XML_TAG)
 	{
-		double *valuesDoubleSet = new double[nbElement * elementCountPerValue]; // deleted by VTK data vtkSmartPointer
+		// defensive code
+		const unsigned int totalHDFElementcount = nbElement * elementCountPerValue;
+		if (totalHDFElementcount != valuesProperty->getValuesCountOfPatch(0)) 
+		{
+			throw std::invalid_argument("Property values count of hdfDataset \"" + std::to_string(valuesProperty->getValuesCountOfPatch(0))
+				+ "\" does not match the indexable element count in the supporting representation\"" + std::to_string(totalHDFElementcount) + "\"");
+		}
+
+		double *valuesDoubleSet = new double[totalHDFElementcount]; // deleted by VTK data vtkSmartPointer
 		static_cast<resqml2::ContinuousProperty *>(valuesProperty)->getDoubleValuesOfPatch(0, valuesDoubleSet);
 
 		vtkSmartPointer<vtkDoubleArray> cellDataDouble = vtkSmartPointer<vtkDoubleArray>::New();

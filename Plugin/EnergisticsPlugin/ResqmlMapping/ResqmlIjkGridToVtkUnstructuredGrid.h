@@ -27,7 +27,7 @@ under the License.
 #include <string>
 
 // include VTK
-#include <vtkSmartPointer.h> 
+#include <vtkSmartPointer.h>
 #include <vtkPoints.h>
 
 #include "ResqmlMapping/ResqmlAbstractRepresentationToVtkDataset.h"
@@ -41,13 +41,13 @@ class ResqmlIjkGridToVtkUnstructuredGrid : public ResqmlAbstractRepresentationTo
 {
 public:
 	/**
-	* Constructor
-	*/
-	ResqmlIjkGridToVtkUnstructuredGrid(RESQML2_NS::AbstractIjkGridRepresentation * ijkGrid, int proc_number = 1, int max_proc = 1);
+	 * Constructor
+	 */
+	ResqmlIjkGridToVtkUnstructuredGrid(RESQML2_NS::AbstractIjkGridRepresentation *ijkGrid, int proc_number = 1, int max_proc = 1, bool subrep = false);
 
 	/**
-	* load vtkDataSet with resqml data
-	*/
+	 * load vtkDataSet with resqml data
+	 */
 	void loadVtkObject();
 
 	std::string message;
@@ -55,18 +55,16 @@ public:
 protected:
 	RESQML2_NS::AbstractIjkGridRepresentation *resqmlData;
 
-private:
 	/**
-	* Create the VTK points from the RESQML points of the RESQML IJK grid representation.
-	*/
+	 * Create the VTK points from the RESQML points of the RESQML IJK grid representation.
+	 */
 	vtkSmartPointer<vtkPoints> createPoints(/* RESQML2_NS::AbstractIjkGridRepresentation *ijkGrid */);
 
 	/**
-	* method : checkHyperslabingCapacity
-	* variable : ijkGridRepresentation
-	* check if an ijkgrid is Hyperslabed
-	*/	
+	 * method : checkHyperslabingCapacity
+	 * variable : ijkGridRepresentation
+	 * check if an ijkgrid is Hyperslabed
+	 */
 	void checkHyperslabingCapacity(RESQML2_NS::AbstractIjkGridRepresentation *ijkGrid);
-
 };
 #endif
