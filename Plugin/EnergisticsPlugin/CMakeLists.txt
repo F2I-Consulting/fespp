@@ -60,10 +60,9 @@ endif (WITH_ETP)
 # ============================================================================
 # External include
 # ============================================================================
-message (STATUS "test: ${FESAPI_INCLUDE}")
-vtk_module_include(EnergisticsPlugin PRIVATE ${FESAPI_INCLUDE})
+vtk_module_include(EnergisticsPlugin PRIVATE ${FESAPI_INCLUDE_DIR})
 if (WITH_ETP)
-	vtk_module_include(EnergisticsPlugin PRIVATE ${FETPAPI_INCLUDE} ${AVRO_INCLUDE_DIR} ${Boost_INCLUDE_DIR})
+	vtk_module_include(EnergisticsPlugin PRIVATE ${FETPAPI_INCLUDE_DIR} ${AVRO_INCLUDE_DIR} ${Boost_INCLUDE_DIR})
 endif (WITH_ETP)
 
 # ============================================================================

@@ -90,13 +90,11 @@ void ResqmlIjkGridToVtkUnstructuredGrid::checkHyperslabingCapacity(RESQML2_NS::A
 }
 
 //----------------------------------------------------------------------------
+// Create and set the list of hexahedra of the vtkUnstructuredGrid based on the list of points already set
 void ResqmlIjkGridToVtkUnstructuredGrid::loadVtkObject()
 {
-	this->resqmlData->loadSplitInformation();
-
 	// Create and set the list of points of the vtkUnstructuredGrid
 	vtkSmartPointer<vtkUnstructuredGrid> vtk_unstructuredGrid = vtkSmartPointer<vtkUnstructuredGrid>::New();
-
 	vtk_unstructuredGrid->SetPoints(createPoints());
 
 	// Define hexahedron node ordering according to Paraview convention : https://lorensen.github.io/VTKExamples/site/VTKBook/05Chapter5/#Figure%205-3
@@ -106,9 +104,7 @@ void ResqmlIjkGridToVtkUnstructuredGrid::loadVtkObject()
 		correspondingResqmlCornerId = {4, 5, 6, 7, 0, 1, 2, 3};
 	}
 
-	// Create and set the list of hexahedra of the vtkUnstructuredGrid based on the list of points already set
-	uint64_t cellIndex = 0;
-
+	// Check which cells have no geometry
 	const uint64_t cellCount = this->resqmlData->getCellCount();
 	std::unique_ptr<bool[]> enabledCells(new bool[cellCount]);
 	if (this->resqmlData->hasCellGeometryIsDefinedFlags())
@@ -122,35 +118,33 @@ void ResqmlIjkGridToVtkUnstructuredGrid::loadVtkObject()
 
 	const uint64_t translatePoint = this->resqmlData->getXyzPointCountOfKInterface() * this->initKIndex;
 
+	uint64_t cellIndex = 0;
 	vtk_unstructuredGrid->Allocate(this->iCellCount * this->jCellCount);
+	this->resqmlData->loadSplitInformation();
 	for (uint32_t vtkKCellIndex = this->initKIndex; vtkKCellIndex < this->maxKIndex; ++vtkKCellIndex)
 	{
 		for (uint32_t vtkJCellIndex = 0; vtkJCellIndex < this->jCellCount; ++vtkJCellIndex)
 		{
 			for (uint32_t vtkICellIndex = 0; vtkICellIndex < this->iCellCount; ++vtkICellIndex)
 			{
-				if (enabledCells[cellIndex])
+				vtkSmartPointer<vtkCell> cell;
+				if (enabledCells[cellIndex++])
 				{
-					vtkSmartPointer<vtkHexahedron> hex = vtkSmartPointer<vtkHexahedron>::New();
-
+					cell = vtkSmartPointer<vtkHexahedron>::New();
 					for (uint8_t cornerId = 0; cornerId < 8; ++cornerId)
 					{
-						uint64_t pointIndex = this->resqmlData->getXyzPointIndexFromCellCorner(vtkICellIndex, vtkJCellIndex, vtkKCellIndex, correspondingResqmlCornerId[cornerId]);
-						hex->GetPointIds()->SetId(cornerId, pointIndex - translatePoint);
+						cell->GetPointIds()->SetId(cornerId,
+							resqmlData->getXyzPointIndexFromCellCorner(vtkICellIndex, vtkJCellIndex, vtkKCellIndex, correspondingResqmlCornerId[cornerId]) - translatePoint);
 					}
-
-					vtk_unstructuredGrid->InsertNextCell(hex->GetCellType(), hex->GetPointIds());
 				}
 				else
 				{
-					vtkSmartPointer<vtkEmptyCell> emptyCell = vtkSmartPointer<vtkEmptyCell>::New();
-					vtk_unstructuredGrid->InsertNextCell(emptyCell->GetCellType(), emptyCell->GetPointIds());
+					cell = vtkSmartPointer<vtkEmptyCell>::New();
 				}
-				++cellIndex;
+				vtk_unstructuredGrid->InsertNextCell(cell->GetCellType(), cell->GetPointIds());
 			}
 		}
 	}
-
 	this->resqmlData->unloadSplitInformation();
 
 	this->vtkData->SetPartition(0, vtk_unstructuredGrid);

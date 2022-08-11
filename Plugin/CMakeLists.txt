@@ -11,7 +11,7 @@ endif (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
 # DEPENDENCIES
 # -----------------------------------------------------------------------------
 
-set (FESAPI_INCLUDE FESAPI_INCLUDE-NOTFOUND CACHE PATH "Path to the directory which contains the FESAPI header files")
+set (FESAPI_INCLUDE_DIR FESAPI_INCLUDE_DIR-NOTFOUND CACHE PATH "Path to the directory which contains the FESAPI header files")
 set (FESAPI_LIBRARY_RELEASE FESAPI_LIBRARY_RELEASE-NOTFOUND CACHE FILEPATH "Path to the FESAPI release library")
 set (FESAPI_LIBRARY_DEBUG FESAPI_LIBRARY_DEBUG-NOTFOUND CACHE FILEPATH "Path to the FESAPI debug library")
 
