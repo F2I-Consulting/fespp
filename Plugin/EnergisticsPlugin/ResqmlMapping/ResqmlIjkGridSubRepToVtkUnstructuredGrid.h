@@ -22,7 +22,7 @@ under the License.
 /** @brief	transform a resqml ijkGrid Subrepresentation to vtkUnstructuredGrid
  */
 
-#include "ResqmlMapping/ResqmlIjkGridToVtkUnstructuredGrid.h"
+#include "ResqmlIjkGridToVtkUnstructuredGrid.h"
 
 namespace RESQML2_NS
 {

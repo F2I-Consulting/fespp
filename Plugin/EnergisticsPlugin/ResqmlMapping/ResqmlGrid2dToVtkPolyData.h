@@ -30,7 +30,7 @@ under the License.
 #include <vtkSmartPointer.h> 
 #include <vtkPolyData.h>
 
-#include "ResqmlMapping/ResqmlAbstractRepresentationToVtkDataset.h"
+#include "ResqmlAbstractRepresentationToVtkDataset.h"
 
 namespace RESQML2_NS
 {

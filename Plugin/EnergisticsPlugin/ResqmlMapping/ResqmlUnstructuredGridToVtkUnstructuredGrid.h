@@ -23,7 +23,7 @@ under the License.
 #include <vtkSmartPointer.h>
 #include <vtkUnstructuredGrid.h>
 
-#include "ResqmlMapping/ResqmlAbstractRepresentationToVtkDataset.h"
+#include "ResqmlAbstractRepresentationToVtkDataset.h"
 
 class VtkProperty;
 

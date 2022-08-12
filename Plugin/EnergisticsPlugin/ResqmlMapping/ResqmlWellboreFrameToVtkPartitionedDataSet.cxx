@@ -16,7 +16,9 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 -----------------------------------------------------------------------*/
-#include "ResqmlMapping/ResqmlWellboreFrameToVtkPartitionedDataSet.h"
+#include "ResqmlWellboreFrameToVtkPartitionedDataSet.h"
+
+#include <algorithm>
 
 #include <vtkInformation.h>
 
@@ -24,7 +26,7 @@ under the License.
 #include <fesapi/resqml2/AbstractValuesProperty.h>
 
 // include F2i-consulting Energistics Paraview Plugin
-#include "ResqmlMapping/ResqmlWellboreChannelToVtkPolyData.h"
+#include "ResqmlWellboreChannelToVtkPolyData.h"
 
 //----------------------------------------------------------------------------
 ResqmlWellboreFrameToVtkPartitionedDataSet::ResqmlWellboreFrameToVtkPartitionedDataSet(resqml2::WellboreFrameRepresentation *frame, int proc_number, int max_proc)
@@ -48,17 +50,9 @@ void ResqmlWellboreFrameToVtkPartitionedDataSet::loadVtkObject()
 }
 
 //----------------------------------------------------------------------------
-void ResqmlWellboreFrameToVtkPartitionedDataSet::addChannel(std::string uuid, resqml2::AbstractValuesProperty *property)
+void ResqmlWellboreFrameToVtkPartitionedDataSet::addChannel(const std::string &uuid, resqml2::AbstractValuesProperty *property)
 {
-	bool exist = false;
-	for (int idx = 0; idx < this->list_channel.size(); ++idx)
-	{
-		if (this->list_channel[idx]->getUuid() == uuid)
-		{
-			exist = true;
-		}
-	}
-	if (!exist)
+	if (std::find_if(list_channel.begin(), list_channel.end(), [uuid](ResqmlWellboreChannelToVtkPolyData const *channel) { return channel->getUuid() == uuid; }) == list_channel.end())
 	{
 		auto frame = dynamic_cast<resqml2::WellboreFrameRepresentation *>(this->resqmlData);
 		this->list_channel.push_back(new ResqmlWellboreChannelToVtkPolyData(frame, property, uuid));
@@ -67,19 +61,10 @@ void ResqmlWellboreFrameToVtkPartitionedDataSet::addChannel(std::string uuid, re
 }
 
 //----------------------------------------------------------------------------
-void ResqmlWellboreFrameToVtkPartitionedDataSet::removeChannel(std::string uuid)
+void ResqmlWellboreFrameToVtkPartitionedDataSet::removeChannel(const std::string &uuid)
 {
-	for (auto it = this->list_channel.begin(); it != this->list_channel.end();)
-	{
-		ResqmlWellboreChannelToVtkPolyData *channel = *it;
-		if (channel->getUuid() == uuid)
-		{
-			it = this->list_channel.erase(it);
-		}
-		else
-		{
-			++it;
-		}
-	}
+	list_channel.erase(
+		std::remove_if(list_channel.begin(), list_channel.end(), [uuid](ResqmlWellboreChannelToVtkPolyData const *channel) { return channel->getUuid() == uuid; }),
+		list_channel.end());
 	this->loadVtkObject();
 }

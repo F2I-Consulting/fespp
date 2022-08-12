@@ -19,7 +19,7 @@ under the License.
 #ifndef __ResqmlPolylineToVtkPolyData_h
 #define __ResqmlPolylineToVtkPolyData_h
 
-#include "ResqmlMapping/ResqmlAbstractRepresentationToVtkDataset.h"
+#include "ResqmlAbstractRepresentationToVtkDataset.h"
 
 namespace RESQML2_NS
 {

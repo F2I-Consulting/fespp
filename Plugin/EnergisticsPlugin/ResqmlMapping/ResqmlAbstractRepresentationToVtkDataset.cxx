@@ -35,9 +35,10 @@ under the License.
 ResqmlAbstractRepresentationToVtkDataset::ResqmlAbstractRepresentationToVtkDataset(RESQML2_NS::AbstractRepresentation *abstract_representation, int proc_number, int max_proc, bool subrep) : 
 	subrep(subrep),
 	procNumber(proc_number),
-																																												 maxProc(max_proc),
-																																												 resqmlData(abstract_representation),
-																																												 vtkData(nullptr)
+	maxProc(max_proc),
+	resqmlData(abstract_representation),
+	vtkData(nullptr),
+	uuidToVtkDataArray()
 {
 }
 
@@ -85,9 +86,10 @@ void ResqmlAbstractRepresentationToVtkDataset::addDataArray(const std::string &u
 
 void ResqmlAbstractRepresentationToVtkDataset::deleteDataArray(const std::string &uuid)
 {
-	if (uuidToVtkDataArray[uuid] != nullptr)
+	ResqmlPropertyToVtkDataArray* vtkDataArray = uuidToVtkDataArray[uuid];
+	if (vtkDataArray != nullptr)
 	{
-		char* dataArrayName = uuidToVtkDataArray[uuid]->getVtkData()->GetName();
+		char* dataArrayName = vtkDataArray->getVtkData()->GetName();
 		if (vtkData->GetPartition(0)->GetCellData()->HasArray(dataArrayName)) {
 			vtkData->GetPartition(0)->GetCellData()->RemoveArray(dataArrayName);
 		}
@@ -96,7 +98,7 @@ void ResqmlAbstractRepresentationToVtkDataset::deleteDataArray(const std::string
 		}
 
 		// Cleaning
-		delete uuidToVtkDataArray[uuid];
+		delete vtkDataArray;
 		uuidToVtkDataArray.erase(uuid);
 	}
 	else

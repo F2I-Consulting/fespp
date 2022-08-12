@@ -19,8 +19,8 @@ under the License.
 #ifndef _ResqmlWellboreMarkerFrameToVtkPartitionedDataSet_H_
 #define _ResqmlWellboreMarkerFrameToVtkPartitionedDataSet_H_
 
-#include "ResqmlMapping/ResqmlAbstractRepresentationToVtkDataset.h"
-#include "ResqmlMapping/ResqmlWellboreMarkerToVtkPolyData.h"
+#include "ResqmlAbstractRepresentationToVtkDataset.h"
+#include "ResqmlWellboreMarkerToVtkPolyData.h"
 
 #include <vector>
 

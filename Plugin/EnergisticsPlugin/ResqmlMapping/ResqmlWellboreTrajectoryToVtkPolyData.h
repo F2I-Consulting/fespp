@@ -19,7 +19,7 @@ under the License.
 #ifndef __ResqmlWellboreTrajectoryToVtkPolyData_h
 #define __ResqmlWellboreTrajectoryToVtkPolyData_h
 
-#include "ResqmlMapping/ResqmlAbstractRepresentationToVtkDataset.h"
+#include "ResqmlAbstractRepresentationToVtkDataset.h"
 
 namespace resqml2
 {

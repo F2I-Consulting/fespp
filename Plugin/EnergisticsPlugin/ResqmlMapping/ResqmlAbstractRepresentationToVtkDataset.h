@@ -29,7 +29,7 @@ under the License.
 // include F2i-consulting Energistics Standards API
 #include <fesapi/resqml2/AbstractRepresentation.h>
 
-/** @brief	transform a resqml abstract representation to vtkDataSet
+/** @brief	transform a RESQML abstract representation to vtkDataSet
  */
 class ResqmlAbstractRepresentationToVtkDataset
 {

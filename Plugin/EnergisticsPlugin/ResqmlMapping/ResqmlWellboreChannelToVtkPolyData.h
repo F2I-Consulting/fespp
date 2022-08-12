@@ -21,7 +21,7 @@ under the License.
 
 #include "ResqmlMapping/ResqmlAbstractRepresentationToVtkDataset.h"
 
-namespace resqml2
+namespace RESQML2_NS
 {
 	class WellboreFrameRepresentation;
 	class AbstractValuesProperty;
@@ -33,24 +33,21 @@ public:
 	/**
 	 * Constructor
 	 */
-	ResqmlWellboreChannelToVtkPolyData(resqml2::WellboreFrameRepresentation *frame, resqml2::AbstractValuesProperty *property, std::string uuid, int proc_number = 1, int max_proc = 1);
+	ResqmlWellboreChannelToVtkPolyData(RESQML2_NS::WellboreFrameRepresentation *frame, RESQML2_NS::AbstractValuesProperty *property, const std::string &uuid, int proc_number = 1, int max_proc = 1);
 
 	/**
 	 * load vtkDataSet with resqml data
 	 */
 	void loadVtkObject();
 
-	std::string getUuid() { return this->uuid; }
-	std::string getTitle() { return this->title; }
+	std::string getUuid() const { return this->uuid; }
+	std::string getTitle() const { return this->title; }
 
 protected:
-	resqml2::WellboreFrameRepresentation *resqmlData;
+	RESQML2_NS::WellboreFrameRepresentation *resqmlData;
 
 private:
-	// attach to vtkPartitionedDataSet any channels
-	void attach();
-
-	resqml2::AbstractValuesProperty *abstractProperty;
+	RESQML2_NS::AbstractValuesProperty *abstractProperty;
 
 	std::string uuid;
 	std::string title;

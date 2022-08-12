@@ -26,7 +26,7 @@ under the License.
 #include <unordered_map>
 #include <string>
 
-#include "ResqmlMapping/ResqmlAbstractRepresentationToVtkDataset.h"
+#include "ResqmlAbstractRepresentationToVtkDataset.h"
 
 namespace RESQML2_NS
 {
