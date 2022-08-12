@@ -20,11 +20,12 @@ under the License.
 #define __ResqmlPropertyToVtkDataArray_h
 
 // include VTK library
-#include <vtkMath.h>
 #include <vtkSmartPointer.h>
 #include <vtkDataArray.h>
 
-namespace resqml2
+#include <fesapi/nsDefinitions.h>
+
+namespace RESQML2_NS
 {
 	class AbstractValuesProperty;
 }
@@ -35,17 +36,10 @@ namespace resqml2
 class ResqmlPropertyToVtkDataArray
 {
 public:
-	enum typeSupport
-	{
-		UNKNOW = -1,
-		POINTS = 0,
-		CELLS = 1
-	};
-
 	/**
 	 * Constructor for multi-processor
 	 */
-	ResqmlPropertyToVtkDataArray(resqml2::AbstractValuesProperty *resqmlProperty,
+	ResqmlPropertyToVtkDataArray(RESQML2_NS::AbstractValuesProperty const *resqmlProperty,
 								 uint32_t cellCount,
 								 uint64_t pointCount,
 								 uint32_t iCellCount,
@@ -56,21 +50,15 @@ public:
 	/**
 	 * Constructor
 	 */
-	ResqmlPropertyToVtkDataArray(resqml2::AbstractValuesProperty *resqmlProperty, 
+	ResqmlPropertyToVtkDataArray(RESQML2_NS::AbstractValuesProperty const *resqmlProperty,
 	long cellCount, 
 	long pointCount);
 
-	~ResqmlPropertyToVtkDataArray();
-
-	unsigned int getSupport() { return support; }
+	~ResqmlPropertyToVtkDataArray() = default;
 
 	vtkSmartPointer<vtkDataArray> getVtkData() { return dataArray; }
 
 private:
-	void setTypeSupport(resqml2::AbstractValuesProperty *resqmlProperty);
-
-	typeSupport support;
-
 	vtkSmartPointer<vtkDataArray> dataArray;
 };
 #endif

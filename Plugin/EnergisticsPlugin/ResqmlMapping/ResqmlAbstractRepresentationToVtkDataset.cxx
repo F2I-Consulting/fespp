@@ -18,6 +18,8 @@ under the License.
 -----------------------------------------------------------------------*/
 #include "ResqmlMapping/ResqmlAbstractRepresentationToVtkDataset.h"
 
+#include <algorithm>
+
 // include VTK library
 #include <vtkPointData.h>
 #include <vtkCellData.h>
@@ -48,23 +50,25 @@ void ResqmlAbstractRepresentationToVtkDataset::addDataArray(const std::string &u
 																				  { return property->getUuid() == uuid; });
 	if (it != std::end(valuesPropertySet))
 	{
+		auto const* const resqmlProp = *it;
 		ResqmlPropertyToVtkDataArray *fesppProperty = isHyperslabed
-														  ? new ResqmlPropertyToVtkDataArray(*it,
+														  ? new ResqmlPropertyToVtkDataArray(resqmlProp,
 																							 this->iCellCount * this->jCellCount * (this->maxKIndex - this->initKIndex),
 																							 this->pointCount,
 																							 this->iCellCount,
 																							 this->jCellCount,
 																							 this->maxKIndex - this->initKIndex,
 																							 this->initKIndex)
-														  : new ResqmlPropertyToVtkDataArray(*it,
+														  : new ResqmlPropertyToVtkDataArray(resqmlProp,
 																							 this->iCellCount * this->jCellCount * this->kCellCount,
 																							 this->pointCount);
-		switch (fesppProperty->getSupport())
+		switch (resqmlProp->getAttachmentKind())
 		{
-		case ResqmlPropertyToVtkDataArray::typeSupport::CELLS:
+		case gsoap_eml2_3::resqml22__IndexableElement::cells:
+		case gsoap_eml2_3::resqml22__IndexableElement::triangles:
 			this->vtkData->GetPartition(0)->GetCellData()->AddArray(fesppProperty->getVtkData());
 			break;
-		case ResqmlPropertyToVtkDataArray::typeSupport::POINTS:
+		case gsoap_eml2_3::resqml22__IndexableElement::nodes:
 			this->vtkData->GetPartition(0)->GetPointData()->AddArray(fesppProperty->getVtkData());
 			break;
 		default:
@@ -83,16 +87,12 @@ void ResqmlAbstractRepresentationToVtkDataset::deleteDataArray(const std::string
 {
 	if (uuidToVtkDataArray[uuid] != nullptr)
 	{
-		switch (uuidToVtkDataArray[uuid]->getSupport())
-		{
-		case ResqmlPropertyToVtkDataArray::typeSupport::CELLS:
-			vtkData->GetPartition(0)->GetCellData()->RemoveArray(uuidToVtkDataArray[uuid]->getVtkData()->GetName());
-			break;
-		case ResqmlPropertyToVtkDataArray::typeSupport::POINTS:
-			vtkData->GetPartition(0)->GetPointData()->RemoveArray(uuidToVtkDataArray[uuid]->getVtkData()->GetName());
-			break;
-		default:
-			throw std::invalid_argument("The property is attached on a non supported topological element i.e. not cell, not point.");
+		char* dataArrayName = uuidToVtkDataArray[uuid]->getVtkData()->GetName();
+		if (vtkData->GetPartition(0)->GetCellData()->HasArray(dataArrayName)) {
+			vtkData->GetPartition(0)->GetCellData()->RemoveArray(dataArrayName);
+		}
+		if (vtkData->GetPartition(0)->GetPointData()->HasArray(dataArrayName)) {
+			vtkData->GetPartition(0)->GetPointData()->RemoveArray(dataArrayName);
 		}
 
 		// Cleaning
