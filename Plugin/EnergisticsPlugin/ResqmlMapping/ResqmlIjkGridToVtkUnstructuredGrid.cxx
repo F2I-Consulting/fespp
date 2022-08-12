@@ -211,13 +211,9 @@ vtkSmartPointer<vtkPoints> ResqmlIjkGridToVtkUnstructuredGrid::createPoints()
 		const size_t coordCount = this->pointCount * 3;
 
 		const double zIndice = this->resqmlData->getLocalCrs(0)->isDepthOriented() ? -1 : 1;
-		if (this->resqmlData->getLocalCrs(0)->isDepthOriented())
+		for (uint64_t pointIndex = 0; pointIndex < coordCount; pointIndex += 3)
 		{
-			for (uint64_t pointIndex = 0; pointIndex < this->pointCount; ++pointIndex)
-			{
-				auto idx = pointIndex * 3;
-				points->InsertNextPoint(allXyzPoints[idx], allXyzPoints[idx + 1], allXyzPoints[idx + 2] * zIndice);
-			}
+			points->InsertNextPoint(allXyzPoints[pointIndex], allXyzPoints[pointIndex + 1], -allXyzPoints[pointIndex + 2] * zIndice);
 		}
 	}
 
