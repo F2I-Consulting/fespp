@@ -45,10 +45,19 @@ under the License.
 #include <fesapi/resqml2/AbstractFeatureInterpretation.h>
 #include <fesapi/resqml2/ContinuousProperty.h>
 #include <fesapi/resqml2/DiscreteProperty.h>
-#include <fesapi/common/EpcDocument.h>
-#include <fesapi/common/AbstractObject.h>
 
-#include "ResqmlAbstractRepresentationToVtkDataset.h"
+#ifdef WITH_ETP
+	#include <thread>
+
+	#include <fetpapi/etp/fesapi/FesapiHdfProxy.h>
+
+	#include "../etp/FesppCoreProtocolHandlers.h"
+	#include "../etp/FesppDiscoveryProtocolHandlers.h"
+	#include "../etp/FesppStoreProtocolHandlers.h"
+#else
+	#include <fesapi/common/EpcDocument.h>
+#endif
+
 #include "ResqmlIjkGridToVtkUnstructuredGrid.h"
 #include "ResqmlIjkGridSubRepToVtkUnstructuredGrid.h"
 #include "ResqmlGrid2dToVtkPolyData.h"
@@ -89,9 +98,28 @@ ResqmlDataRepositoryToVtkPartitionedDataSetCollection::~ResqmlDataRepositoryToVt
 //----------------------------------------------------------------------------
 std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::addFile(const char *fileName)
 {
-    COMMON_NS::EpcDocument pck(fileName);
-    std::string message = pck.deserializeInto(*repository);
-    pck.close();
+#ifdef WITH_ETP
+	boost::uuids::random_generator gen;
+	ETP_NS::InitializationParameters initializationParams(gen(), "127.0.0.1", 9002);
+
+	session = ETP_NS::ClientSessionLaunchers::createWsClientSession(&initializationParams, "/", "Basic Zm9vOmJhcg==");
+	session->setCoreProtocolHandlers(std::make_shared<FesppCoreProtocolHandlers>(session.get(), repository));
+	session->setDiscoveryProtocolHandlers(std::make_shared<FesppDiscoveryProtocolHandlers>(session.get(), repository));
+	auto storeHandlers = std::make_shared<FesppStoreProtocolHandlers>(session.get(), repository);
+	session->setStoreProtocolHandlers(storeHandlers);
+	session->setDataArrayProtocolHandlers(std::make_shared<ETP_NS::DataArrayHandlers>(session.get()));
+
+	repository->setHdfProxyFactory(new ETP_NS::FesapiHdfProxyFactory(session.get()));
+
+	std::thread sessionThread(&ETP_NS::PlainClientSession::run, session);
+	sessionThread.detach();
+	while (!storeHandlers->isDone()) {}
+	std::string message;
+#else
+	COMMON_NS::EpcDocument pck(fileName);
+	std::string message = pck.deserializeInto(*repository);
+	pck.close();
+#endif
 
     // create vtkDataAssembly: create treeView in property panel
     // get grid2D + subrepresentation + property

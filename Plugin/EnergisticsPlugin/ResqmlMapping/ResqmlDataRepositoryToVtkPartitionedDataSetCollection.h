@@ -28,6 +28,10 @@ under the License.
 #include <vtkPartitionedDataSetCollection.h>
 #include <vtkMultiProcessController.h>
 
+#ifdef WITH_ETP
+#include <fetpapi/etp/ClientSessionLaunchers.h>
+#endif
+
 namespace common
 {
 	class DataObjectRepository;
@@ -130,5 +134,9 @@ private:
 
 	// time step values
 	std::vector<double> times_step;
+#ifdef WITH_ETP
+	std::shared_ptr<ETP_NS::PlainClientSession> session;
+#endif
+
 };
 #endif
