@@ -677,7 +677,6 @@ ResqmlAbstractRepresentationToVtkDataset *ResqmlDataRepositoryToVtkPartitionedDa
         }
         else if (dynamic_cast<RESQML2_NS::SubRepresentation*>(result) != nullptr)
         {
-            vtkOutputWindowDisplayWarningText(("subRep " + std::to_string(searchNodeByUuid(uuid)) + " -> " + uuid).c_str());
             auto* subrep = new ResqmlIjkGridSubRepToVtkUnstructuredGrid(static_cast<RESQML2_NS::SubRepresentation*>(result));
             nodeId_to_resqml[searchNodeByUuid(uuid)] = subrep;
             return subrep;
@@ -716,7 +715,6 @@ ResqmlAbstractRepresentationToVtkDataset *ResqmlDataRepositoryToVtkPartitionedDa
             }
             else
             {
-                vtkOutputWindowDisplayWarningText(("parent property " + std::to_string(node_parent) + " -> " + nodeId_to_uuid[node_parent]).c_str());
                 static_cast<ResqmlAbstractRepresentationToVtkDataset *>(nodeId_to_resqml[node_parent])->addDataArray(uuid);
             }
         }

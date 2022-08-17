@@ -27,16 +27,17 @@ under the License.
 
 // include F2i-consulting Energistics Standards API
 #include <fesapi/resqml2/AbstractValuesProperty.h>
+#include <fesapi/resqml2/SubRepresentation.h>
 
 // include F2i-consulting Energistics Paraview Plugin
 #include "ResqmlMapping/ResqmlPropertyToVtkDataArray.h"
 
 //----------------------------------------------------------------------------
-ResqmlAbstractRepresentationToVtkDataset::ResqmlAbstractRepresentationToVtkDataset(RESQML2_NS::AbstractRepresentation *abstract_representation, int proc_number, int max_proc, bool subrep) : 
-	subrep(subrep),
+ResqmlAbstractRepresentationToVtkDataset::ResqmlAbstractRepresentationToVtkDataset(RESQML2_NS::AbstractRepresentation *abstract_representation, int proc_number, int max_proc, RESQML2_NS::SubRepresentation* abstract_sub_representation):
 	procNumber(proc_number),
 	maxProc(max_proc),
 	resqmlData(abstract_representation),
+	resqmlSubData(abstract_sub_representation),
 	vtkData(nullptr),
 	uuidToVtkDataArray()
 {
@@ -44,8 +45,7 @@ ResqmlAbstractRepresentationToVtkDataset::ResqmlAbstractRepresentationToVtkDatas
 
 void ResqmlAbstractRepresentationToVtkDataset::addDataArray(const std::string &uuid)
 {
-	vtkOutputWindowDisplayWarningText(std::to_string(subrep).c_str());
-	std::vector<RESQML2_NS::AbstractValuesProperty *> valuesPropertySet = subrep?this->resqmlSubData->getValuesPropertySet():this->resqmlData->getValuesPropertySet();
+	std::vector<RESQML2_NS::AbstractValuesProperty *> valuesPropertySet = this->resqmlSubData?this->resqmlSubData->getValuesPropertySet():this->resqmlData->getValuesPropertySet();
 	std::vector<RESQML2_NS::AbstractValuesProperty *>::iterator it = std::find_if(valuesPropertySet.begin(), valuesPropertySet.end(),
 																				  [&uuid](RESQML2_NS::AbstractValuesProperty const *property)
 																				  { return property->getUuid() == uuid; });
@@ -80,7 +80,7 @@ void ResqmlAbstractRepresentationToVtkDataset::addDataArray(const std::string &u
 	}
 	else
 	{
-		throw std::invalid_argument("The property " + uuid + "cannot be added since it is not contained in the representation " + (subrep ? this->resqmlSubData->getUuid() : this->resqmlData->getUuid()));
+		throw std::invalid_argument("The property " + uuid + "cannot be added since it is not contained in the representation " + (this->resqmlSubData ? this->resqmlSubData->getUuid() : this->resqmlData->getUuid()));
 	}
 }
 

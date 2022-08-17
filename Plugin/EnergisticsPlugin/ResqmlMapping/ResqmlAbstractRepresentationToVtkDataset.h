@@ -37,7 +37,7 @@ public:
 	/**
 	 * Constructor
 	 */
-	ResqmlAbstractRepresentationToVtkDataset(RESQML2_NS::AbstractRepresentation *abstract_representation, int proc_number = 1, int max_proc = 1, bool subrep = false);
+	ResqmlAbstractRepresentationToVtkDataset(RESQML2_NS::AbstractRepresentation *abstract_representation, int proc_number = 1, int max_proc = 1, RESQML2_NS::SubRepresentation* abstract_sub_representation = nullptr);
 
 	/**
 	 * Destructor
@@ -74,13 +74,12 @@ protected:
 	uint32_t maxKIndex = 0;
 
 	bool isHyperslabed = false;
-	bool subrep = false;
 
 	int procNumber;
 	int maxProc;
 
 	RESQML2_NS::AbstractRepresentation const* resqmlData;
-	RESQML2_NS::AbstractRepresentation const* resqmlSubData;
+	RESQML2_NS::SubRepresentation const* resqmlSubData;
 
 	vtkSmartPointer<vtkPartitionedDataSet> vtkData;
 	std::unordered_map<std::string, class ResqmlPropertyToVtkDataArray *> uuidToVtkDataArray;

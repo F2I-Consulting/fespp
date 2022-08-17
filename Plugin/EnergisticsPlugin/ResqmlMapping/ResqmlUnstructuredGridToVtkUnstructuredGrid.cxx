@@ -37,8 +37,6 @@ under the License.
 #include <vtkWedge.h>
 #include <vtkUnstructuredGrid.h>
 
-#include <vtkOutputWindow.h>
-
 // FESAPI
 #include <fesapi/resqml2/UnstructuredGridRepresentation.h>
 //#include <fesapi/resqml2/SubRepresentation.h>

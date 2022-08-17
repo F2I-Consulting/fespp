@@ -42,7 +42,7 @@ ResqmlIjkGridSubRepToVtkUnstructuredGrid::ResqmlIjkGridSubRepToVtkUnstructuredGr
 	: ResqmlIjkGridToVtkUnstructuredGrid(dynamic_cast<RESQML2_NS::AbstractIjkGridRepresentation*>(subRep->getSupportingRepresentation(0)),
 		proc_number,
 		max_proc,
-		true),
+		subRep),
 	resqmlSubData(subRep)
 {
 	this->loadVtkObject();
