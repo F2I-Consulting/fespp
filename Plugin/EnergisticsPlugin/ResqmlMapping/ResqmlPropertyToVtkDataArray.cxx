@@ -43,7 +43,8 @@ ResqmlPropertyToVtkDataArray::ResqmlPropertyToVtkDataArray(RESQML2_NS::AbstractV
 														   uint32_t iCellCount,
 														   uint32_t jCellCount,
 														   uint32_t kCellCount,
-														   uint32_t initKIndex)
+														   uint32_t initKIndex,
+															int patch_index)
 {
 	int nbElement = 0;
 
@@ -77,13 +78,13 @@ ResqmlPropertyToVtkDataArray::ResqmlPropertyToVtkDataArray(RESQML2_NS::AbstractV
 		vtkSmartPointer<vtkFloatArray> cellDataFloat = vtkSmartPointer<vtkFloatArray>::New();
 		cellDataFloat->Allocate(nbElement);
 		float *valuesFloatSet = new float[nbElement]; // deleted by VTK cellData vtkSmartPointer
-		if (valuesProperty->getDimensionsCountOfPatch(0) == 3)
+		if (valuesProperty->getDimensionsCountOfPatch(patch_index) == 3)
 		{
-			valuesProperty->getFloatValuesOf3dPatch(0, valuesFloatSet, iCellCount, jCellCount, kCellCount, 0, 0, initKIndex);
+			valuesProperty->getFloatValuesOf3dPatch(patch_index, valuesFloatSet, iCellCount, jCellCount, kCellCount, 0, 0, initKIndex);
 		}
-		else if (valuesProperty->getDimensionsCountOfPatch(0) == 1)
+		else if (valuesProperty->getDimensionsCountOfPatch(patch_index) == 1)
 		{
-			valuesProperty->getFloatValuesOfPatch(0, valuesFloatSet, &numValuesInEachDimension, &offsetInEachDimension, 1);
+			valuesProperty->getFloatValuesOfPatch(patch_index, valuesFloatSet, &numValuesInEachDimension, &offsetInEachDimension, 1);
 		}
 		else
 		{
@@ -98,13 +99,13 @@ ResqmlPropertyToVtkDataArray::ResqmlPropertyToVtkDataArray(RESQML2_NS::AbstractV
 		vtkSmartPointer<vtkIntArray> cellDataInt = vtkSmartPointer<vtkIntArray>::New();
 		cellDataInt->Allocate(nbElement);
 		int *valuesIntSet = new int[nbElement]; // deleted by VTK cellData vtkSmartPointer
-		if (valuesProperty->getDimensionsCountOfPatch(0) == 3)
+		if (valuesProperty->getDimensionsCountOfPatch(patch_index) == 3)
 		{
-			valuesProperty->getIntValuesOf3dPatch(0, valuesIntSet, iCellCount, jCellCount, kCellCount, 0, 0, initKIndex);
+			valuesProperty->getIntValuesOf3dPatch(patch_index, valuesIntSet, iCellCount, jCellCount, kCellCount, 0, 0, initKIndex);
 		}
 		else if (valuesProperty->getDimensionsCountOfPatch(0) == 1)
 		{
-			valuesProperty->getIntValuesOfPatch(0, valuesIntSet, &numValuesInEachDimension, &offsetInEachDimension, 1);
+			valuesProperty->getIntValuesOfPatch(patch_index, valuesIntSet, &numValuesInEachDimension, &offsetInEachDimension, 1);
 		}
 		else
 		{
@@ -119,13 +120,13 @@ ResqmlPropertyToVtkDataArray::ResqmlPropertyToVtkDataArray(RESQML2_NS::AbstractV
 		vtkSmartPointer<vtkIntArray> cellDataInt = vtkSmartPointer<vtkIntArray>::New();
 		cellDataInt->Allocate(nbElement);
 		int *valuesIntSet = new int[nbElement]; // deleted by VTK cellData vtkSmartPointer
-		if (valuesProperty->getDimensionsCountOfPatch(0) == 3)
+		if (valuesProperty->getDimensionsCountOfPatch(patch_index) == 3)
 		{
-			valuesProperty->getIntValuesOf3dPatch(0, valuesIntSet, iCellCount, jCellCount, kCellCount, 0, 0, initKIndex);
+			valuesProperty->getIntValuesOf3dPatch(patch_index, valuesIntSet, iCellCount, jCellCount, kCellCount, 0, 0, initKIndex);
 		}
-		else if (valuesProperty->getDimensionsCountOfPatch(0) == 1)
+		else if (valuesProperty->getDimensionsCountOfPatch(patch_index) == 1)
 		{
-			valuesProperty->getIntValuesOfPatch(0, valuesIntSet, &numValuesInEachDimension, &offsetInEachDimension, 1);
+			valuesProperty->getIntValuesOfPatch(patch_index, valuesIntSet, &numValuesInEachDimension, &offsetInEachDimension, 1);
 		}
 		else
 		{
@@ -144,7 +145,8 @@ ResqmlPropertyToVtkDataArray::ResqmlPropertyToVtkDataArray(RESQML2_NS::AbstractV
 // -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 ResqmlPropertyToVtkDataArray::ResqmlPropertyToVtkDataArray(resqml2::AbstractValuesProperty const *valuesProperty,
 														   long cellCount,
-														   long pointCount)
+														   long pointCount,
+															int patch_index)
 {
 	int nbElement = 0;
 
@@ -174,14 +176,14 @@ ResqmlPropertyToVtkDataArray::ResqmlPropertyToVtkDataArray(resqml2::AbstractValu
 	{
 		// defensive code
 		const unsigned int totalHDFElementcount = nbElement * elementCountPerValue;
-		if (totalHDFElementcount != valuesProperty->getValuesCountOfPatch(0)) 
+		if (totalHDFElementcount != valuesProperty->getValuesCountOfPatch(patch_index))
 		{
-			throw std::invalid_argument("Property values count of hdfDataset \"" + std::to_string(valuesProperty->getValuesCountOfPatch(0))
+			throw std::invalid_argument("Property values count of hdfDataset \"" + std::to_string(valuesProperty->getValuesCountOfPatch(patch_index))
 				+ "\" does not match the indexable element count in the supporting representation\"" + std::to_string(totalHDFElementcount) + "\"");
 		}
 
 		double *valuesDoubleSet = new double[totalHDFElementcount]; // deleted by VTK data vtkSmartPointer
-		valuesProperty->getDoubleValuesOfPatch(0, valuesDoubleSet);
+		valuesProperty->getDoubleValuesOfPatch(patch_index, valuesDoubleSet);
 
 		vtkSmartPointer<vtkDoubleArray> cellDataDouble = vtkSmartPointer<vtkDoubleArray>::New();
 		cellDataDouble->Allocate(nbElement * elementCountPerValue);
@@ -194,7 +196,7 @@ ResqmlPropertyToVtkDataArray::ResqmlPropertyToVtkDataArray(resqml2::AbstractValu
 			  static_cast<resqml2::CategoricalProperty const *>(valuesProperty)->getStringLookup() != nullptr))
 	{
 		int *values = new int[nbElement * elementCountPerValue]; // deleted by VTK data vtkSmartPointer
-		valuesProperty->getIntValuesOfPatch(0, values);
+		valuesProperty->getIntValuesOfPatch(patch_index, values);
 
 		vtkSmartPointer<vtkIntArray> cellDataInt = vtkSmartPointer<vtkIntArray>::New();
 		cellDataInt->Allocate(nbElement * elementCountPerValue);

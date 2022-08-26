@@ -52,7 +52,7 @@ public:
 	/**
 	 * add a resqml property to vtkDataSet
 	 */
-	void addDataArray(const std::string &uuid);
+	void addDataArray(const std::string &uuid, int patch_index = 0);
 
 	/**
 	 * remove a resqml property to vtkDataSet

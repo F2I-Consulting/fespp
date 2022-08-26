@@ -27,6 +27,8 @@ under the License.
 // include F2i-consulting Energistics Standards API
 #include <fesapi/resqml2/TriangulatedSetRepresentation.h>
 #include <fesapi/resqml2/AbstractLocal3dCrs.h>
+#include <fesapi/resqml2/AbstractValuesProperty.h>
+#include <fesapi/resqml2/SubRepresentation.h>
 
 // include F2i-consulting Energistics Paraview Plugin
 #include "ResqmlMapping/ResqmlPropertyToVtkDataArray.h"
@@ -40,6 +42,7 @@ ResqmlTriangulatedSetToVtkPartitionedDataSet::ResqmlTriangulatedSetToVtkPartitio
 	  resqmlData(triangulated)
 {
 	this->vtkData = vtkSmartPointer<vtkPartitionedDataSet>::New();
+	this->pointCount = resqmlData->getXyzPointCountOfAllPatches();
 	this->loadVtkObject();
 	this->vtkData->Modified();
 }
@@ -59,8 +62,27 @@ void ResqmlTriangulatedSetToVtkPartitionedDataSet::loadVtkObject()
 		auto rep = new ResqmlTriangulatedToVtkPolyData(this->resqmlData, patchIndex, this->procNumber, this->maxProc);
 		partition->SetPartition(patchIndex, rep->getOutput()->GetPartitionAsDataObject(0));
 		partition->GetMetaData(patchIndex)->Set(vtkCompositeDataSet::NAME(), sstm.str().c_str());
+		patchIndex_to_ResqmlTriangulated[patchIndex] = rep;
 	}
 
 	this->vtkData = partition;
 	this->vtkData->Modified();
+}
+
+void ResqmlTriangulatedSetToVtkPartitionedDataSet::addDataArray(const std::string& uuid)
+{
+	vtkSmartPointer<vtkPartitionedDataSet> partition = vtkSmartPointer<vtkPartitionedDataSet>::New();
+
+	for (auto map : patchIndex_to_ResqmlTriangulated)
+	{
+		std::stringstream sstm;
+		sstm << "Patch " << map.first;
+
+		map.second->addDataArray(uuid);
+		partition->SetPartition(map.first, map.second->getOutput()->GetPartitionAsDataObject(0));
+		partition->GetMetaData(map.first)->Set(vtkCompositeDataSet::NAME(), sstm.str().c_str());
+	}
+	this->vtkData = partition;
+	this->vtkData->Modified();
+
 }

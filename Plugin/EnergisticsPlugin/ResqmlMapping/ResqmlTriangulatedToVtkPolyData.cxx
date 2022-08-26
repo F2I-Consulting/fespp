@@ -81,7 +81,7 @@ void ResqmlTriangulatedToVtkPolyData::loadVtkObject()
 	vtkSmartPointer<vtkCellArray> triangulatedRepresentationTriangles = vtkSmartPointer<vtkCellArray>::New();
 	std::unique_ptr<unsigned int[]> triangleIndices(new unsigned int[this->resqmlData->getTriangleCountOfPatch(this->patch_index) * 3]);
 	this->resqmlData->getTriangleNodeIndicesOfPatch(this->patch_index, triangleIndices.get());
-	for (unsigned int p = 0; p < this->resqmlData->getTriangleCountOfPatch(0); ++p)
+	for (unsigned int p = 0; p < this->resqmlData->getTriangleCountOfPatch(this->patch_index); ++p)
 	{
 		vtkSmartPointer<vtkTriangle> triangulatedRepresentationTriangle = vtkSmartPointer<vtkTriangle>::New();
 		triangulatedRepresentationTriangle->GetPointIds()->SetId(0, triangleIndices[p * 3]);

@@ -43,7 +43,7 @@ ResqmlAbstractRepresentationToVtkDataset::ResqmlAbstractRepresentationToVtkDatas
 {
 }
 
-void ResqmlAbstractRepresentationToVtkDataset::addDataArray(const std::string &uuid)
+void ResqmlAbstractRepresentationToVtkDataset::addDataArray(const std::string &uuid, int patch_index)
 {
 	std::vector<RESQML2_NS::AbstractValuesProperty *> valuesPropertySet = this->resqmlSubData?this->resqmlSubData->getValuesPropertySet():this->resqmlData->getValuesPropertySet();
 	std::vector<RESQML2_NS::AbstractValuesProperty *>::iterator it = std::find_if(valuesPropertySet.begin(), valuesPropertySet.end(),
@@ -52,17 +52,22 @@ void ResqmlAbstractRepresentationToVtkDataset::addDataArray(const std::string &u
 	if (it != std::end(valuesPropertySet))
 	{
 		auto const* const resqmlProp = *it;
-		ResqmlPropertyToVtkDataArray *fesppProperty = isHyperslabed
-														  ? new ResqmlPropertyToVtkDataArray(resqmlProp,
-																							 this->iCellCount * this->jCellCount * (this->maxKIndex - this->initKIndex),
-																							 this->pointCount,
-																							 this->iCellCount,
-																							 this->jCellCount,
-																							 this->maxKIndex - this->initKIndex,
-																							 this->initKIndex)
-														  : new ResqmlPropertyToVtkDataArray(resqmlProp,
-																							 this->iCellCount * this->jCellCount * this->kCellCount,
-																							 this->pointCount);
+			ResqmlPropertyToVtkDataArray* fesppProperty = resqmlSubData?new ResqmlPropertyToVtkDataArray(resqmlProp,
+					this->resqmlSubData->getElementCountOfPatch(0),
+					this->pointCount,
+				patch_index): (isHyperslabed
+				? new ResqmlPropertyToVtkDataArray(resqmlProp,
+					this->iCellCount * this->jCellCount * (this->maxKIndex - this->initKIndex),
+					this->pointCount,
+					this->iCellCount,
+					this->jCellCount,
+					this->maxKIndex - this->initKIndex,
+					this->initKIndex,
+					patch_index)
+				: new ResqmlPropertyToVtkDataArray(resqmlProp,
+					this->iCellCount * this->jCellCount * this->kCellCount,
+					this->pointCount,
+					patch_index));
 		switch (resqmlProp->getAttachmentKind())
 		{
 		case gsoap_eml2_3::resqml22__IndexableElement::cells:

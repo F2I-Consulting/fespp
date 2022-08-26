@@ -45,14 +45,16 @@ public:
 								 uint32_t iCellCount,
 								 uint32_t jCellCount,
 								 uint32_t kCellCount,
-								 uint32_t initKIndex);
+								 uint32_t initKIndex,
+		int patch_index);
 
 	/**
 	 * Constructor
 	 */
 	ResqmlPropertyToVtkDataArray(RESQML2_NS::AbstractValuesProperty const *resqmlProperty,
 	long cellCount, 
-	long pointCount);
+	long pointCount,
+		int patch_index);
 
 	~ResqmlPropertyToVtkDataArray() = default;
 

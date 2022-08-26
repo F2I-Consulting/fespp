@@ -28,6 +28,8 @@ under the License.
 
 #include "ResqmlAbstractRepresentationToVtkDataset.h"
 
+class ResqmlTriangulatedToVtkPolyData;
+
 namespace RESQML2_NS
 {
 	class TriangulatedSetRepresentation;
@@ -46,7 +48,15 @@ public:
 	*/
 	void loadVtkObject();
 
+
+	/**
+	 * add a resqml property to vtkDataSet
+	 */
+	void addDataArray(const std::string& uuid);
+
 protected:
 	RESQML2_NS::TriangulatedSetRepresentation *resqmlData;
+
+	std::map<int, ResqmlTriangulatedToVtkPolyData*> patchIndex_to_ResqmlTriangulated;									// index of VtkDataAssembly to Resqml uuid
 };
 #endif
