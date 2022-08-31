@@ -74,16 +74,7 @@ void EnergisticsPlugin::AddFileName(const char *fname)
   if (fname != nullptr) //&& !this->FileNames.insert(fname).second)
   {
     this->FilesNames->InsertNextValue(fname);
-    std::string msg = this->repository.addFile(fname);
-    if (!msg.empty())
-    {
-      vtkWarningMacro(<< msg);
-    }
-
-    this->AssemblyTag++;
-    this->Modified();
-    this->Update();
-  }
+   }
 }
 
 //----------------------------------------------------------------------------
@@ -122,6 +113,17 @@ vtkStringArray *EnergisticsPlugin::GetAllFilesNames()
 //------------------------------------------------------------------------------
 void EnergisticsPlugin::SetFiles(const std::string &file)
 {
+    if (file != "0") {
+        std::string msg = this->repository.addFile(file.c_str());
+        if (!msg.empty())
+        {
+            vtkWarningMacro(<< msg);
+        }
+
+        this->AssemblyTag++;
+        this->Modified();
+        this->Update();
+    }
 }
 
 //----------------------------------------------------------------------------

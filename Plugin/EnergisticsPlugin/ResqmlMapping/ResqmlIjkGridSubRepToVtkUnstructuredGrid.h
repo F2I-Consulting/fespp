@@ -22,14 +22,16 @@ under the License.
 /** @brief	transform a resqml ijkGrid Subrepresentation to vtkUnstructuredGrid
  */
 
-#include "ResqmlIjkGridToVtkUnstructuredGrid.h"
+#include "ResqmlAbstractRepresentationToVtkDataset.h"
 
 namespace RESQML2_NS
 {
 	class SubRepresentation;
 }
 
-class ResqmlIjkGridSubRepToVtkUnstructuredGrid : public ResqmlIjkGridToVtkUnstructuredGrid
+class ResqmlIjkGridToVtkUnstructuredGrid;
+
+class ResqmlIjkGridSubRepToVtkUnstructuredGrid : public ResqmlAbstractRepresentationToVtkDataset
 {
 public:
 	/**
@@ -43,7 +45,9 @@ public:
 	void loadVtkObject();
 
 protected:
-	RESQML2_NS::SubRepresentation* resqmlSubData;
+	RESQML2_NS::SubRepresentation* resqmlData;
+
+	ResqmlIjkGridToVtkUnstructuredGrid* mapperIjkGrid;
 
 };
 #endif

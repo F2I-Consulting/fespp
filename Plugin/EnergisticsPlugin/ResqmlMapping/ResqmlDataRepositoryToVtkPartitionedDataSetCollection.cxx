@@ -645,65 +645,50 @@ ResqmlAbstractRepresentationToVtkDataset *ResqmlDataRepositoryToVtkPartitionedDa
     }
     try
     {
+        ResqmlAbstractRepresentationToVtkDataset* rep = nullptr;
         if (dynamic_cast<RESQML2_NS::AbstractIjkGridRepresentation *>(result) != nullptr)
         {
-            auto *rep = new ResqmlIjkGridToVtkUnstructuredGrid(static_cast<RESQML2_NS::AbstractIjkGridRepresentation *>(result));
-            nodeId_to_resqml[searchNodeByUuid(uuid)] = rep;
-            return rep;
+            rep = new ResqmlIjkGridToVtkUnstructuredGrid(static_cast<RESQML2_NS::AbstractIjkGridRepresentation *>(result));
         }
         else if (dynamic_cast<RESQML2_NS::Grid2dRepresentation *>(result) != nullptr)
         {
-            auto *rep = new ResqmlGrid2dToVtkPolyData(static_cast<RESQML2_NS::Grid2dRepresentation *>(result));
-            nodeId_to_resqml[searchNodeByUuid(uuid)] = rep;
-            return rep;
+            rep = new ResqmlGrid2dToVtkPolyData(static_cast<RESQML2_NS::Grid2dRepresentation *>(result));
         }
         else if (dynamic_cast<RESQML2_NS::TriangulatedSetRepresentation *>(result) != nullptr)
         {
-            auto *rep = new ResqmlTriangulatedSetToVtkPartitionedDataSet(static_cast<RESQML2_NS::TriangulatedSetRepresentation *>(result));
-            nodeId_to_resqml[searchNodeByUuid(uuid)] = rep;
-            return rep;
+            rep  = new ResqmlTriangulatedSetToVtkPartitionedDataSet(static_cast<RESQML2_NS::TriangulatedSetRepresentation *>(result));
         }
         else if (dynamic_cast<RESQML2_NS::PolylineSetRepresentation *>(result) != nullptr)
         {
-            auto *rep = new ResqmlPolylineToVtkPolyData(static_cast<RESQML2_NS::PolylineSetRepresentation *>(result));
-            nodeId_to_resqml[searchNodeByUuid(uuid)] = rep;
-            return rep;
+            rep  = new ResqmlPolylineToVtkPolyData(static_cast<RESQML2_NS::PolylineSetRepresentation *>(result));
         }
         else if (dynamic_cast<RESQML2_NS::UnstructuredGridRepresentation *>(result) != nullptr)
         {
-            auto *rep = new ResqmlUnstructuredGridToVtkUnstructuredGrid(static_cast<RESQML2_NS::UnstructuredGridRepresentation *>(result));
-            nodeId_to_resqml[searchNodeByUuid(uuid)] = rep;
-            return rep;
+            rep  = new ResqmlUnstructuredGridToVtkUnstructuredGrid(static_cast<RESQML2_NS::UnstructuredGridRepresentation *>(result));
         }
         else if (dynamic_cast<RESQML2_NS::SubRepresentation*>(result) != nullptr)
         {
-            auto* subrep = new ResqmlIjkGridSubRepToVtkUnstructuredGrid(static_cast<RESQML2_NS::SubRepresentation*>(result));
-            nodeId_to_resqml[searchNodeByUuid(uuid)] = subrep;
-            return subrep;
+            rep = new ResqmlIjkGridSubRepToVtkUnstructuredGrid(static_cast<RESQML2_NS::SubRepresentation*>(result));
         }
         else if (dynamic_cast<RESQML2_NS::WellboreTrajectoryRepresentation *>(result) != nullptr)
         {
-            auto *rep = new ResqmlWellboreTrajectoryToVtkPolyData(static_cast<RESQML2_NS::WellboreTrajectoryRepresentation *>(result));
-            nodeId_to_resqml[searchNodeByUuid(uuid)] = rep;
-            return rep;
+            rep  = new ResqmlWellboreTrajectoryToVtkPolyData(static_cast<RESQML2_NS::WellboreTrajectoryRepresentation *>(result));
         }
         else if (dynamic_cast<RESQML2_NS::WellboreMarkerFrameRepresentation *>(result) != nullptr)
         {
-            auto *rep = new ResqmlWellboreMarkerFrameToVtkPartitionedDataSet(static_cast<RESQML2_NS::WellboreMarkerFrameRepresentation *>(result));
-            nodeId_to_resqml[searchNodeByUuid(uuid)] = rep;
-            return rep;
+            rep  = new ResqmlWellboreMarkerFrameToVtkPartitionedDataSet(static_cast<RESQML2_NS::WellboreMarkerFrameRepresentation *>(result));
         }
         else if (dynamic_cast<RESQML2_NS::WellboreFrameRepresentation *>(result) != nullptr)
         {
-            auto *rep = new ResqmlWellboreFrameToVtkPartitionedDataSet(static_cast<RESQML2_NS::WellboreFrameRepresentation *>(result));
-            nodeId_to_resqml[searchNodeByUuid(uuid)] = rep;
-            return rep;
-        }
+            rep  = new ResqmlWellboreFrameToVtkPartitionedDataSet(static_cast<RESQML2_NS::WellboreFrameRepresentation *>(result));
+         }
+        // add return rep ??
         else if (dynamic_cast<RESQML2_NS::WellboreMarker *>(result) != nullptr)
         {
             auto const *assembly = this->output->GetDataAssembly();
             const int node_parent = assembly->GetParent(searchNodeByUuid(uuid));
             static_cast<ResqmlWellboreMarkerFrameToVtkPartitionedDataSet *>(nodeId_to_resqml[node_parent])->addMarker(uuid, markerOrientation, markerSize);
+            return nullptr;
         }
         else if (dynamic_cast<RESQML2_NS::AbstractValuesProperty *>(result) != nullptr)
         {
@@ -713,11 +698,19 @@ ResqmlAbstractRepresentationToVtkDataset *ResqmlDataRepositoryToVtkPartitionedDa
             {
                 static_cast<ResqmlWellboreFrameToVtkPartitionedDataSet *>(nodeId_to_resqml[node_parent])->addChannel(uuid, static_cast<resqml2::AbstractValuesProperty *>(result));
             }
-            else
+            else if (dynamic_cast<ResqmlTriangulatedSetToVtkPartitionedDataSet*>(nodeId_to_resqml[node_parent]) != nullptr)
+            {
+                static_cast<ResqmlTriangulatedSetToVtkPartitionedDataSet*>(nodeId_to_resqml[node_parent])->addDataArray(uuid);
+            } 
+            else 
             {
                 static_cast<ResqmlAbstractRepresentationToVtkDataset *>(nodeId_to_resqml[node_parent])->addDataArray(uuid);
             }
+            return nullptr;
         }
+        nodeId_to_resqml[searchNodeByUuid(uuid)] = rep;
+        rep->loadVtkObject();
+        return rep;
     }
     catch (const std::exception &e)
     {

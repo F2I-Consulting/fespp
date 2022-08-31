@@ -42,7 +42,7 @@ ResqmlTriangulatedToVtkPolyData::ResqmlTriangulatedToVtkPolyData(RESQML2_NS::Tri
 	  resqmlData(triangulated),
 	  patch_index(patch_index)
 {
-	this->pointCount = triangulated->getXyzPointCountOfAllPatches();
+	this->pointCount = triangulated->getXyzPointCountOfPatch(patch_index);
 
 	this->vtkData = vtkSmartPointer<vtkPartitionedDataSet>::New();
 
@@ -57,7 +57,7 @@ void ResqmlTriangulatedToVtkPolyData::loadVtkObject()
 	vtkSmartPointer<vtkPolyData> vtk_polydata = vtkSmartPointer<vtkPolyData>::New();
 
 	double *allXyzPoints = new double[this->pointCount * 3]; // Will be deleted by VTK
-	this->resqmlData->getXyzPointsOfAllPatchesInGlobalCrs(allXyzPoints);
+	this->resqmlData->getXyzPointsOfPatchInGlobalCrs(this->patch_index, allXyzPoints);
 
 	vtkSmartPointer<vtkPoints> vtkPts = vtkSmartPointer<vtkPoints>::New();
 

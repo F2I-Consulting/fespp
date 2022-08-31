@@ -37,11 +37,10 @@ under the License.
 #include "ResqmlPropertyToVtkDataArray.h"
 
 //----------------------------------------------------------------------------
-ResqmlIjkGridToVtkUnstructuredGrid::ResqmlIjkGridToVtkUnstructuredGrid(RESQML2_NS::AbstractIjkGridRepresentation *ijkGrid, int proc_number, int max_proc, RESQML2_NS::SubRepresentation* ijkGridSubRep)
+ResqmlIjkGridToVtkUnstructuredGrid::ResqmlIjkGridToVtkUnstructuredGrid(RESQML2_NS::AbstractIjkGridRepresentation *ijkGrid, int proc_number, int max_proc)
 	: ResqmlAbstractRepresentationToVtkDataset(ijkGrid,
 											   proc_number - 1,
-											   max_proc,
-											   ijkGridSubRep),
+											   max_proc),
 	  resqmlData(ijkGrid)
 {
 	this->iCellCount = ijkGrid->getICellCount();
@@ -66,11 +65,6 @@ ResqmlIjkGridToVtkUnstructuredGrid::ResqmlIjkGridToVtkUnstructuredGrid(RESQML2_N
 
 	this->vtkData = vtkSmartPointer<vtkPartitionedDataSet>::New();
 
-	if (!this->resqmlSubData)
-	{
-		this->loadVtkObject();
-		this->vtkData->Modified();
-	}
 }
 
 //----------------------------------------------------------------------------

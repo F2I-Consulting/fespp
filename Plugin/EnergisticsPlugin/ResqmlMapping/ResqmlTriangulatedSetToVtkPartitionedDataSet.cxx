@@ -78,7 +78,7 @@ void ResqmlTriangulatedSetToVtkPartitionedDataSet::addDataArray(const std::strin
 		std::stringstream sstm;
 		sstm << "Patch " << map.first;
 
-		map.second->addDataArray(uuid);
+		map.second->addDataArray(uuid, map.first);
 		partition->SetPartition(map.first, map.second->getOutput()->GetPartitionAsDataObject(0));
 		partition->GetMetaData(map.first)->Set(vtkCompositeDataSet::NAME(), sstm.str().c_str());
 	}

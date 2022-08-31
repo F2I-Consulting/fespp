@@ -18,12 +18,12 @@
 			<StringVectorProperty command="GetAllFilesNames" information_only="1" name="FilesNameInfo">
 				<StringArrayHelper />
 			</StringVectorProperty>
-			<StringVectorProperty name="Files" command="SetFiles" number_of_elements="1" default_values="0" label="all files loaded">
-				<StringListDomain name="FilesList">
+			<StringVectorProperty name="Files" command="SetFiles" number_of_elements="1" repeat_command="1" label="all files loaded">
+				<ArraySelectionDomain  name="FilesList">
 					<RequiredProperties>
 						<Property function="FilesNameInfo" name="FilesNameInfo" />
 					</RequiredProperties>
-				</StringListDomain>
+				</ArraySelectionDomain>
 				<Documentation>List files loaded...</Documentation>
 			</StringVectorProperty>
 			<!-- TimeStepValues for Time series -->

@@ -37,7 +37,7 @@ public:
 	/**
 	 * Constructor
 	 */
-	ResqmlAbstractRepresentationToVtkDataset(RESQML2_NS::AbstractRepresentation *abstract_representation, int proc_number = 1, int max_proc = 1, RESQML2_NS::SubRepresentation* abstract_sub_representation = nullptr);
+	ResqmlAbstractRepresentationToVtkDataset(RESQML2_NS::AbstractRepresentation *abstract_representation, int proc_number = 1, int max_proc = 1);
 
 	/**
 	 * Destructor
@@ -67,7 +67,7 @@ public:
 protected:
 
 	uint64_t pointCount = 0;
-	uint32_t iCellCount = 0;
+	uint32_t iCellCount = 0; // = cellcount if not ijkGrid
 	uint32_t jCellCount = 1;
 	uint32_t kCellCount = 1;
 	uint32_t initKIndex = 0;
@@ -79,7 +79,6 @@ protected:
 	int maxProc;
 
 	RESQML2_NS::AbstractRepresentation const* resqmlData;
-	RESQML2_NS::SubRepresentation const* resqmlSubData;
 
 	vtkSmartPointer<vtkPartitionedDataSet> vtkData;
 	std::unordered_map<std::string, class ResqmlPropertyToVtkDataArray *> uuidToVtkDataArray;
