@@ -19,11 +19,10 @@ under the License.
 #ifndef __ResqmlTriangulatedToVtkPolyData_h
 #define __ResqmlTriangulatedToVtkPolyData_h
 
-/** @brief	transform a resqml TriangulatedSetRepresentation representation to vtkPolyData
+/** @brief	transform a RESQML TriangulatedSetRepresentation representation to vtkPolyData
  */
 
 // include system
-#include <unordered_map>
 #include <string>
 
 #include "ResqmlMapping/ResqmlAbstractRepresentationToVtkDataset.h"
@@ -42,11 +41,17 @@ public:
 	ResqmlTriangulatedToVtkPolyData(RESQML2_NS::TriangulatedSetRepresentation *triangulated, int patch_index, int proc_number = 1, int max_proc = 1);
 	
 	/**
-	* load vtkDataSet with resqml data
+	* load vtkDataSet with RESQML data
 	*/
 	void loadVtkObject();
 
 protected:
+
+	/**
+	* Get the node count of all patches which are before than the current patch index
+	*/
+	unsigned int getPreviousPatchesNodeCount() const;
+
 	RESQML2_NS::TriangulatedSetRepresentation *resqmlData;
 	int patch_index;
 };

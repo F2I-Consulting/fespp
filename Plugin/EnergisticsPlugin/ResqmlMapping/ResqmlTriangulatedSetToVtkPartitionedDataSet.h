@@ -19,11 +19,11 @@ under the License.
 #ifndef __ResqmlTriangulatedSetToVtkPartitionedDataSet_h
 #define __ResqmlTriangulatedSetToVtkPartitionedDataSet_h
 
-/** @brief	transform a resqml TriangulatedSetRepresentation representation to vtkPolyData
+/** @brief	transform a RESQML TriangulatedSetRepresentation representation to vtkPolyData
  */
 
 // include system
-#include <unordered_map>
+#include <map>
 #include <string>
 
 #include "ResqmlAbstractRepresentationToVtkDataset.h"
@@ -44,19 +44,18 @@ public:
 	ResqmlTriangulatedSetToVtkPartitionedDataSet(RESQML2_NS::TriangulatedSetRepresentation *triangulated, int proc_number = 1, int max_proc = 1);
 	
 	/**
-	* load vtkDataSet with resqml data
+	* load vtkDataSet with RESQML data
 	*/
 	void loadVtkObject();
 
-
 	/**
-	 * add a resqml property to vtkDataSet
+	 * add a RESQML property to vtkDataSet
 	 */
 	void addDataArray(const std::string& uuid);
 
 protected:
 	RESQML2_NS::TriangulatedSetRepresentation *resqmlData;
 
-	std::map<int, ResqmlTriangulatedToVtkPolyData*> patchIndex_to_ResqmlTriangulated;									// index of VtkDataAssembly to Resqml uuid
+	std::map<int, ResqmlTriangulatedToVtkPolyData*> patchIndex_to_ResqmlTriangulated;									// index of VtkDataAssembly to RESQML UUID
 };
 #endif

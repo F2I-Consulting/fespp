@@ -47,8 +47,18 @@ ResqmlTriangulatedToVtkPolyData::ResqmlTriangulatedToVtkPolyData(RESQML2_NS::Tri
 	this->vtkData = vtkSmartPointer<vtkPartitionedDataSet>::New();
 
 	this->loadVtkObject();
+}
 
-	this->vtkData->Modified();
+unsigned int ResqmlTriangulatedToVtkPolyData::getPreviousPatchesNodeCount() const
+{
+	unsigned int result = 0;
+
+	for (unsigned int previousPatchIndex = 0; previousPatchIndex < patch_index; ++previousPatchIndex)
+	{
+		result += resqmlData->getXyzPointCountOfPatch(previousPatchIndex);
+	}
+
+	return result;
 }
 
 //----------------------------------------------------------------------------
@@ -78,15 +88,16 @@ void ResqmlTriangulatedToVtkPolyData::loadVtkObject()
 	vtk_polydata->SetPoints(vtkPts);
 
 	// CELLS
+	const size_t previousPatchesNodeCount = getPreviousPatchesNodeCount();
 	vtkSmartPointer<vtkCellArray> triangulatedRepresentationTriangles = vtkSmartPointer<vtkCellArray>::New();
 	std::unique_ptr<unsigned int[]> triangleIndices(new unsigned int[this->resqmlData->getTriangleCountOfPatch(this->patch_index) * 3]);
 	this->resqmlData->getTriangleNodeIndicesOfPatch(this->patch_index, triangleIndices.get());
 	for (unsigned int p = 0; p < this->resqmlData->getTriangleCountOfPatch(this->patch_index); ++p)
 	{
 		vtkSmartPointer<vtkTriangle> triangulatedRepresentationTriangle = vtkSmartPointer<vtkTriangle>::New();
-		triangulatedRepresentationTriangle->GetPointIds()->SetId(0, triangleIndices[p * 3]);
-		triangulatedRepresentationTriangle->GetPointIds()->SetId(1, triangleIndices[p * 3 + 1]);
-		triangulatedRepresentationTriangle->GetPointIds()->SetId(2, triangleIndices[p * 3 + 2]);
+		triangulatedRepresentationTriangle->GetPointIds()->SetId(0, triangleIndices[p * 3] - previousPatchesNodeCount);
+		triangulatedRepresentationTriangle->GetPointIds()->SetId(1, triangleIndices[p * 3 + 1] - previousPatchesNodeCount);
+		triangulatedRepresentationTriangle->GetPointIds()->SetId(2, triangleIndices[p * 3 + 2] - previousPatchesNodeCount);
 		triangulatedRepresentationTriangles->InsertNextCell(triangulatedRepresentationTriangle);
 	}
 	vtk_polydata->SetPolys(triangulatedRepresentationTriangles);

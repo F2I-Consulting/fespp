@@ -56,12 +56,9 @@ void ResqmlTriangulatedSetToVtkPartitionedDataSet::loadVtkObject()
 
 	for (unsigned int patchIndex = 0; patchIndex < patchCount; ++patchIndex)
 	{
-			std::stringstream sstm;
-			sstm << "Patch " << patchIndex;
-
 		auto rep = new ResqmlTriangulatedToVtkPolyData(this->resqmlData, patchIndex, this->procNumber, this->maxProc);
 		partition->SetPartition(patchIndex, rep->getOutput()->GetPartitionAsDataObject(0));
-		partition->GetMetaData(patchIndex)->Set(vtkCompositeDataSet::NAME(), sstm.str().c_str());
+		partition->GetMetaData(patchIndex)->Set(vtkCompositeDataSet::NAME(), ("Patch " + std::to_string(patchIndex)).c_str());
 		patchIndex_to_ResqmlTriangulated[patchIndex] = rep;
 	}
 
@@ -73,15 +70,13 @@ void ResqmlTriangulatedSetToVtkPartitionedDataSet::addDataArray(const std::strin
 {
 	vtkSmartPointer<vtkPartitionedDataSet> partition = vtkSmartPointer<vtkPartitionedDataSet>::New();
 
-	for (auto map : patchIndex_to_ResqmlTriangulated)
+	for (auto& map : patchIndex_to_ResqmlTriangulated)
 	{
-		std::stringstream sstm;
-		sstm << "Patch " << map.first;
-
 		map.second->addDataArray(uuid, map.first);
 		partition->SetPartition(map.first, map.second->getOutput()->GetPartitionAsDataObject(0));
-		partition->GetMetaData(map.first)->Set(vtkCompositeDataSet::NAME(), sstm.str().c_str());
+		partition->GetMetaData(map.first)->Set(vtkCompositeDataSet::NAME(), ("Patch " + std::to_string(map.first)).c_str());
 	}
+
 	this->vtkData = partition;
 	this->vtkData->Modified();
 
