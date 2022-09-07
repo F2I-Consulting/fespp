@@ -643,9 +643,9 @@ ResqmlAbstractRepresentationToVtkDataset *ResqmlDataRepositoryToVtkPartitionedDa
     {
         return nullptr;
     }
+    ResqmlAbstractRepresentationToVtkDataset* rep = nullptr;
     try
     {
-        ResqmlAbstractRepresentationToVtkDataset* rep = nullptr;
         if (dynamic_cast<RESQML2_NS::AbstractIjkGridRepresentation *>(result) != nullptr)
         {
             rep = new ResqmlIjkGridToVtkUnstructuredGrid(static_cast<RESQML2_NS::AbstractIjkGridRepresentation *>(result));
@@ -708,13 +708,22 @@ ResqmlAbstractRepresentationToVtkDataset *ResqmlDataRepositoryToVtkPartitionedDa
             }
             return nullptr;
         }
+
+    }
+    catch (const std::exception& e)
+    {
+        vtkOutputWindowDisplayErrorText(("Error when initialize uuid: " + uuid + "\n" + e.what()).c_str());
+        return nullptr;
+    }
+    try {
         nodeId_to_resqml[searchNodeByUuid(uuid)] = rep;
         rep->loadVtkObject();
         return rep;
     }
-    catch (const std::exception &e)
+    catch (const std::exception& e)
     {
         vtkOutputWindowDisplayErrorText(("Error when rendering uuid: " + uuid + "\n" + e.what()).c_str());
+        return nullptr;
     }
 
     switch (entity)

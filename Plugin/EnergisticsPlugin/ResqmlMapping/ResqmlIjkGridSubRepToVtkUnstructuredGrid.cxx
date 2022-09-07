@@ -47,9 +47,11 @@ ResqmlIjkGridSubRepToVtkUnstructuredGrid::ResqmlIjkGridSubRepToVtkUnstructuredGr
 	resqmlData(subRep)
 {
 	this->iCellCount = subRep->getElementCountOfPatch(0);
-	this->pointCount = subRep->getXyzPointCountOfAllPatches();
+	//this->pointCount = subRep->getXyzPointCountOfAllPatches();
+	this->pointCount = subRep->getSupportingRepresentation(0)->getXyzPointCountOfAllPatches();
 
 	this->mapperIjkGrid = new ResqmlIjkGridToVtkUnstructuredGrid(dynamic_cast<RESQML2_NS::AbstractIjkGridRepresentation*>(subRep->getSupportingRepresentation(0)), proc_number, max_proc);
+	this->vtkData = vtkSmartPointer<vtkPartitionedDataSet>::New();
 }
 
 //----------------------------------------------------------------------------
@@ -57,8 +59,6 @@ void ResqmlIjkGridSubRepToVtkUnstructuredGrid::loadVtkObject()
 {
 	auto* supportingGrid = dynamic_cast<RESQML2_NS::AbstractIjkGridRepresentation*>(this->resqmlData->getSupportingRepresentation(0));
 	if (supportingGrid != nullptr) {
-		supportingGrid->loadSplitInformation();
-
 		// Create and set the list of points of the vtkUnstructuredGrid
 		vtkSmartPointer<vtkUnstructuredGrid> vtk_unstructuredGrid = vtkSmartPointer<vtkUnstructuredGrid>::New();
 
@@ -71,12 +71,18 @@ void ResqmlIjkGridSubRepToVtkUnstructuredGrid::loadVtkObject()
 			correspondingResqmlCornerId = { 4, 5, 6, 7, 0, 1, 2, 3 };
 		}
 
+		supportingGrid->loadSplitInformation();
+
 		// Create and set the list of hexahedra of the vtkUnstructuredGrid based on the list of points already set
 		uint64_t cellIndex = 0;
 
 		uint64_t elementCountOfPatch = this->resqmlData->getElementCountOfPatch(0);
 		std::unique_ptr<uint64_t[]> elementIndices(new uint64_t[elementCountOfPatch]);
 		resqmlData->getElementIndicesOfPatch(0, 0, elementIndices.get());
+
+		iCellCount = supportingGrid->getICellCount();
+		jCellCount = supportingGrid->getJCellCount();
+		kCellCount = supportingGrid->getKCellCount();
 
 		initKIndex = 0;
 		maxKIndex = kCellCount;
@@ -102,7 +108,6 @@ void ResqmlIjkGridSubRepToVtkUnstructuredGrid::loadVtkObject()
 		}
 
 		supportingGrid->unloadSplitInformation();
-
 		this->vtkData->SetPartition(0, vtk_unstructuredGrid);
 		this->vtkData->Modified();
 	}
