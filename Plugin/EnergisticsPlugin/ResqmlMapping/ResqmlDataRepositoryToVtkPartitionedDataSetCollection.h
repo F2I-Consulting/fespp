@@ -78,7 +78,11 @@ public:
 
 	//---------------------------------
 
+	// for EPC reader
 	std::string addFile(const char *file);
+
+	// for ETP connection
+	std::string connect(const std::string ip_connection, int port_connection,const std::string auth_connection);
 
 	// Wellbore Options
 	void setMarkerOrientation(bool orientation);

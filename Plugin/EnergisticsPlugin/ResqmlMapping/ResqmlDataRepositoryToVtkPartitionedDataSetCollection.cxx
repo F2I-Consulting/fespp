@@ -96,11 +96,18 @@ ResqmlDataRepositoryToVtkPartitionedDataSetCollection::~ResqmlDataRepositoryToVt
 }
 
 //----------------------------------------------------------------------------
+std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::connect(const std::string ip_connection, int port_connection,const std::string auth_connection)
+{
+    vtkOutputWindowDisplayWarningText(("connection with paramater: " + ip_connection + std::to_string(port_connection) + auth_connection+"\n").c_str());
+    return "success";
+}
+
+//----------------------------------------------------------------------------
 std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::addFile(const char *fileName)
 {
 #ifdef WITH_ETP
 	boost::uuids::random_generator gen;
-	ETP_NS::InitializationParameters initializationParams(gen(), "127.0.0.1", 9002);
+	ETP_NS::InitializationParameters initializationParams(gen(), "51.210.100.205", 9002);
 
 	session = ETP_NS::ClientSessionLaunchers::createWsClientSession(&initializationParams, "/", "Basic Zm9vOmJhcg==");
 	session->setCoreProtocolHandlers(std::make_shared<FesppCoreProtocolHandlers>(session.get(), repository));

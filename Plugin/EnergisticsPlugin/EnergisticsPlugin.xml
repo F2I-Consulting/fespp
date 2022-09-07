@@ -58,6 +58,90 @@
 				<Property name="MarkerSize" />
 			</PropertyGroup>
 		</SourceProxy>
+		    <!-- ==================================================================== -->
+		<SourceProxy name="EnergisticsPluginSource" class="EnergisticsPluginSource" label="ETP1.2 Store">
+			<Documentation short_help="A reader for an Energistics standard data format used by	various geosciences applications.">A reader for an Energistics standard data format used by	various geosciences applications. The underlying format uses OPC to store XML documents and links to an HDF5 file which stores the numerical data arrays into HDF5 datasets.</Documentation>
+			<Hints>
+				<PipelineIcon name="CINEMA_MARK" />
+			</Hints>
+			<StringVectorProperty command="setIpConnection"
+                            default_values="51.210.100.205"
+                            name="IpConnection"
+                            number_of_elements="1"
+                            panel_visibility="default">
+		        <Documentation>This property specifies the string used to describe
+        		the ip.</Documentation>
+				    <Hints>
+      <OmitFromLoadAllVariables />
+    </Hints>
+      		</StringVectorProperty>
+			<IntVectorProperty name="PortConnection" 
+				command="setPortConnection" 
+				number_of_elements="1" 
+				default_values="9002">
+				<Hints>
+      				<OmitFromLoadAllVariables />
+    			</Hints>
+			</IntVectorProperty>
+			<StringVectorProperty command="setAuthConnection"
+            	default_values="Basic Zm9vOmJhcg=="
+            	name="AuthConnection"
+            	number_of_elements="1"
+            	panel_visibility="default">
+		        <Documentation>This property specifies the string used to describe
+        		the authorization.</Documentation>
+				<Hints>
+      				<OmitFromLoadAllVariables />
+    			</Hints>
+      		</StringVectorProperty>
+			
+			<IntVectorProperty name="Confirm" 
+				command="setConfirmConnection" 
+				number_of_elements="1" 
+				label="Confirm connection parameters"
+				default_values="0">
+				<BooleanDomain name="bool" />
+			</IntVectorProperty>
+
+			<PropertyGroup label="ETP Connection">
+				<Property name="IpConnection" />
+				<Property name="PortConnection" />
+				<Property name="AuthConnection" />
+				<Property name="Confirm" />
+			</PropertyGroup>
+			<!-- TimeStepValues for Time series -->
+			<DoubleVectorProperty information_only="1" name="TimestepValues" repeatable="1">
+				<TimeStepsInformationHelper />
+			</DoubleVectorProperty>
+			<!-- treeView Selection -->
+			<IntVectorProperty name="AssemblyTag" command="GetAssemblyTag" information_only="1">
+				<Documentation> This is simply an int that changes whenever a new assembly is built by the reader. This can be used to determine if the assembly should be fetched from the reader whenever the reader is updated.</Documentation>
+			</IntVectorProperty>
+			<StringVectorProperty name="AssemblySelectors" command="AddSelector" clean_command="ClearSelectors" repeat_command="1" number_of_elements_per_command="1" panel_widget="data_assembly_editor">
+				<DataAssemblyDomain name="data_assembly">
+					<RequiredProperties>
+						<Property function="Tag" name="AssemblyTag" />
+					</RequiredProperties>
+				</DataAssemblyDomain>
+				<Documentation>  Specify the selectors for the data assembly chosen using **Assembly**  to choose the blocks to extract from the input dataset.</Documentation>
+				<Hints>
+					<!-- AssemblyTag == 0 implies there's no assembly in the file, in which case, we want to hide this widget entirely -->
+					<PropertyWidgetDecorator type="GenericDecorator" mode="visibility" property="AssemblyTag" value="0" inverse="1" />
+				</Hints>
+			</StringVectorProperty>
+			<!-- Wellbore marker properties: -->
+			<!-- enable/disable Marker orientation -->
+			<IntVectorProperty name="MarkerOrientation" command="setMarkerOrientation" number_of_elements="1" default_values="1">
+				<BooleanDomain name="bool" />
+			</IntVectorProperty>
+			<!-- marker size -->
+			<IntVectorProperty name="MarkerSize" command="setMarkerSize" number_of_elements="1" default_values="10">
+</IntVectorProperty>
+			<PropertyGroup label="Wellbore marker">
+				<Property name="MarkerOrientation" />
+				<Property name="MarkerSize" />
+			</PropertyGroup>
+		</SourceProxy>
 	</ProxyGroup>
 	<!-- End Reader -->
 </ServerManagerConfiguration>

@@ -1,5 +1,6 @@
 set(classes
-  EnergisticsPlugin)
+  EnergisticsPlugin
+  EnergisticsPluginSource)
 
 FILE (GLOB FESPP_MAPPING_SOURCES ResqmlMapping/*.cxx)
 FILE (GLOB FESPP_MAPPING_HEADERS ResqmlMapping/*.h)
