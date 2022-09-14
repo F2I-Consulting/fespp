@@ -82,6 +82,9 @@ void EnergisticsPluginSource::setAuthConnection(char* auth_connection)
 void EnergisticsPluginSource::confirmConnectionClicked()
 {
         this->repository.connect(this->IpConnection, this->PortConnection, this->AuthConnection);
+        this->AssemblyTag++;
+        this->Modified();
+        this->Update();
 }
 
 //----------------------------------------------------------------------------
