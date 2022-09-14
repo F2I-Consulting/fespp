@@ -98,6 +98,8 @@ public:
 private:
 	int addNodeGroup(std::string name, int idNode); // return: idNode for the groupName
 
+	std::string buildDataAssemblyFromDataObjectRepo(const char *fileName);
+
 	std::string searchPolylines(const std::string &fileName);
 	std::string searchUnstructuredGrid(const std::string &fileName);
 	std::string searchTriangulated(const std::string &fileName);

@@ -31,7 +31,6 @@ under the License.
 #include <vtkMultiProcessController.h>
 #include <vtkStreamingDemandDrivenPipeline.h>
 #include <vtkDataObject.h>
-#include <vtkSMPVRepresentationProxy.h>
 
 vtkStandardNewMacro(EnergisticsPluginSource);
 

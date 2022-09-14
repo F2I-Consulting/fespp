@@ -54,9 +54,8 @@ under the License.
 	#include "../etp/FesppCoreProtocolHandlers.h"
 	#include "../etp/FesppDiscoveryProtocolHandlers.h"
 	#include "../etp/FesppStoreProtocolHandlers.h"
-#else
-	#include <fesapi/common/EpcDocument.h>
 #endif
+#include <fesapi/common/EpcDocument.h>
 
 #include "ResqmlIjkGridToVtkUnstructuredGrid.h"
 #include "ResqmlIjkGridSubRepToVtkUnstructuredGrid.h"
@@ -98,18 +97,11 @@ ResqmlDataRepositoryToVtkPartitionedDataSetCollection::~ResqmlDataRepositoryToVt
 //----------------------------------------------------------------------------
 std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::connect(const std::string ip_connection, int port_connection,const std::string auth_connection)
 {
-    vtkOutputWindowDisplayWarningText(("connection with paramater: " + ip_connection + std::to_string(port_connection) + auth_connection+"\n").c_str());
-    return "success";
-}
-
-//----------------------------------------------------------------------------
-std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::addFile(const char *fileName)
-{
 #ifdef WITH_ETP
 	boost::uuids::random_generator gen;
-	ETP_NS::InitializationParameters initializationParams(gen(), "51.210.100.205", 9002);
+	ETP_NS::InitializationParameters initializationParams(gen(), ip_connection, port_connection);
 
-	session = ETP_NS::ClientSessionLaunchers::createWsClientSession(&initializationParams, "/", "Basic Zm9vOmJhcg==");
+	session = ETP_NS::ClientSessionLaunchers::createWsClientSession(&initializationParams, "/", auth_connection);
 	session->setCoreProtocolHandlers(std::make_shared<FesppCoreProtocolHandlers>(session.get(), repository));
 	session->setDiscoveryProtocolHandlers(std::make_shared<FesppDiscoveryProtocolHandlers>(session.get(), repository));
 	auto storeHandlers = std::make_shared<FesppStoreProtocolHandlers>(session.get(), repository);
@@ -121,31 +113,44 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::addFile(const
 	std::thread sessionThread(&ETP_NS::PlainClientSession::run, session);
 	sessionThread.detach();
 	while (!storeHandlers->isDone()) {}
-	std::string message;
-#else
+#endif
+    vtkOutputWindowDisplayWarningText(("connection with paramater: " + ip_connection + std::to_string(port_connection) + auth_connection+"\n").c_str());
+    return buildDataAssemblyFromDataObjectRepo("");
+}
+
+//----------------------------------------------------------------------------
+std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::addFile(const char *fileName)
+{
 	COMMON_NS::EpcDocument pck(fileName);
 	std::string message = pck.deserializeInto(*repository);
 	pck.close();
-#endif
 
-    // create vtkDataAssembly: create treeView in property panel
-    // get grid2D + subrepresentation + property
-    message += searchGrid2d(fileName);
-    // get ijkGrid + subrepresentation + property
-    message += searchIjkGrid(fileName);
-    // get polylines + subrepresentation + property
-    message += searchPolylines(fileName);
-    // get triangulated + subrepresentation + property
-    message += searchTriangulated(fileName);
-    // get unstructuredGrid + subrepresentation + property
-    message += searchUnstructuredGrid(fileName);
-    // get WellboreTrajectory + subrepresentation + property
-    message += searchWellboreTrajectory(fileName);
+	message += buildDataAssemblyFromDataObjectRepo(fileName);
+	return message;
+}
 
-    // get TimeSeries
-    message += searchTimeSeries(fileName);
+std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::buildDataAssemblyFromDataObjectRepo(const char *fileName)
+{
+	std::string message;
 
-    return message;
+	// create vtkDataAssembly: create treeView in property panel
+	// get grid2D + subrepresentation + property
+	message += searchGrid2d(fileName);
+	// get ijkGrid + subrepresentation + property
+	message += searchIjkGrid(fileName);
+	// get polylines + subrepresentation + property
+	message += searchPolylines(fileName);
+	// get triangulated + subrepresentation + property
+	message += searchTriangulated(fileName);
+	// get unstructuredGrid + subrepresentation + property
+	message += searchUnstructuredGrid(fileName);
+	// get WellboreTrajectory + subrepresentation + property
+	message += searchWellboreTrajectory(fileName);
+
+	// get TimeSeries
+	message += searchTimeSeries(fileName);
+
+	return message;
 }
 
 std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchPolylines(const std::string &fileName)
