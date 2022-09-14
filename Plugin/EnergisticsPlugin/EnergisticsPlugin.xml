@@ -95,19 +95,16 @@
     			</Hints>
       		</StringVectorProperty>
 			
-			<IntVectorProperty name="Confirm" 
-				command="setConfirmConnection" 
-				number_of_elements="1" 
-				label="Confirm connection parameters"
-				default_values="0">
-				<BooleanDomain name="bool" />
-			</IntVectorProperty>
+			<Property
+   				name="Connect"
+   				command="confirmConnectionClicked">
+			</Property>
 
 			<PropertyGroup label="ETP Connection">
 				<Property name="IpConnection" />
 				<Property name="PortConnection" />
 				<Property name="AuthConnection" />
-				<Property name="Confirm" />
+				<Property name="Connect" />
 			</PropertyGroup>
 			<!-- TimeStepValues for Time series -->
 			<DoubleVectorProperty information_only="1" name="TimestepValues" repeatable="1">

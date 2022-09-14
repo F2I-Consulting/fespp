@@ -64,7 +64,6 @@ int EnergisticsPluginSource::RequestInformation(vtkInformation* vtkNotUsed(reque
 void EnergisticsPluginSource::setIpConnection(char * ip_connection)
 {
     this->IpConnection = std::string(ip_connection);
-    setConfirmConnection(false);
 }
 
 
@@ -72,25 +71,18 @@ void EnergisticsPluginSource::setIpConnection(char * ip_connection)
 void EnergisticsPluginSource::setPortConnection(int port_connection)
 {
     this->PortConnection = port_connection;
-    setConfirmConnection(false);
 }
 
 //----------------------------------------------------------------------------
 void EnergisticsPluginSource::setAuthConnection(char* auth_connection)
 {
     this->AuthConnection = std::string(auth_connection);
-    setConfirmConnection(false);
-    
 }
 
 //----------------------------------------------------------------------------
-void EnergisticsPluginSource::setConfirmConnection(bool confirm)
+void EnergisticsPluginSource::confirmConnectionClicked()
 {
-    this->Confirm = confirm;
-    if (confirm)
-    {
         this->repository.connect(this->IpConnection, this->PortConnection, this->AuthConnection);
-    }
 }
 
 //----------------------------------------------------------------------------
@@ -182,8 +174,6 @@ int EnergisticsPluginSource::RequestData(vtkInformation *,
 
     auto outInfo = outputVector->GetInformationObject(0);
     auto output = vtkPartitionedDataSetCollection::GetData(outInfo);
-  //vtkInformation *outInfo = outputVector->GetInformationObject(0);
-  //vtkPartitionedDataSetCollection *output = vtkPartitionedDataSetCollection::SafeDownCast(outInfo->Get(vtkPartitionedDataSetCollection::DATA_OBJECT()));
     
   outInfo->Remove(vtkStreamingDemandDrivenPipeline::TIME_STEPS());
   std::vector<double> times = this->repository.getTimes();

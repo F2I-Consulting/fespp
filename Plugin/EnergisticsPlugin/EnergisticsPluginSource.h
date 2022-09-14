@@ -66,7 +66,7 @@ public:
 	void setAuthConnection(char* auth_connection);
 	///@}
 
-	void setConfirmConnection(bool confirmation);
+	void confirmConnectionClicked();
 
 	///@{
 	/**
@@ -136,7 +136,6 @@ private:
 	std::string IpConnection;
 	int PortConnection;
 	std::string AuthConnection;
-	bool Confirm;
 
 	// treeview
 	std::set<std::string> selectors;
