@@ -149,6 +149,9 @@ private:
 	// files
 	std::set<std::string> FileNames;
 	vtkSmartPointer<vtkStringArray> FilesNames;
+	std::set<std::string> FileNamesLoaded;
+
+	std::set<std::string> selectorNotLoaded; // load state, load selector before files :(
 
 	// multi-processor
 	vtkMultiProcessController *Controller;

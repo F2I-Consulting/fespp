@@ -71,10 +71,10 @@ void EnergisticsPlugin::SetFileName(const char *fname)
 //----------------------------------------------------------------------------
 void EnergisticsPlugin::AddFileName(const char *fname)
 {
-  if (fname != nullptr) //&& !this->FileNames.insert(fname).second)
+  if (fname != nullptr) 
   {
-    this->FilesNames->InsertNextValue(fname);
-   }
+          this->FilesNames->InsertNextValue(fname);
+  }
 }
 
 //----------------------------------------------------------------------------
@@ -107,39 +107,66 @@ size_t EnergisticsPlugin::GetNumberOfFileNames() const
 //------------------------------------------------------------------------------
 vtkStringArray *EnergisticsPlugin::GetAllFilesNames()
 {
-  return this->FilesNames;
+    if (this->FilesNames->GetNumberOfValues() > 0)
+    {
+        for (auto index = 0; index < this->FilesNames->GetNumberOfValues(); index++) {
+            auto file_property = this->FilesNames->GetValue(index);
+            auto search = this->FileNamesLoaded.find(file_property); 
+            if (search == this->FileNamesLoaded.end()) {
+                std::string msg = this->repository.addFile(file_property.c_str());
+                this->FileNamesLoaded.insert(file_property);
+                // add selector
+                for (auto selector : selectorNotLoaded)
+                {
+                    if (AddSelector(selector.c_str()))
+                    {
+                        selectorNotLoaded.erase(selector);
+                    }
+                }
+                if (!msg.empty())
+                {
+                    vtkWarningMacro(<< msg);
+                }
+
+                this->AssemblyTag++;
+                this->Modified();
+                this->Update();
+            }
+        }
+    }
+    return this->FilesNames;
 }
 
 //------------------------------------------------------------------------------
 void EnergisticsPlugin::SetFiles(const std::string &file)
 {
     if (file != "0") {
-        std::string msg = this->repository.addFile(file.c_str());
-        if (!msg.empty())
-        {
-            vtkWarningMacro(<< msg);
-        }
-
-        this->AssemblyTag++;
-        this->Modified();
-        this->Update();
+             this->FilesNames->InsertNextValue(file);
     }
 }
 
 //----------------------------------------------------------------------------
 bool EnergisticsPlugin::AddSelector(const char *selector)
 {
-  if (selector != nullptr && this->selectors.insert(selector).second)
+  if (selector != nullptr)
   {
     int node_id = GetAssembly()->GetFirstNodeByPath(selector);
-    this->repository.selectNodeId(node_id);
-    this->Modified();
-    Modified();
-    Update();
-    UpdateDataObject();
-    UpdateInformation();
-    UpdateWholeExtent();
-    return true;
+    
+    if (node_id == -1)
+    {
+        selectorNotLoaded.insert(std::string(selector));
+    }
+    else
+    {
+        this->repository.selectNodeId(node_id);
+        this->Modified();
+        Modified();
+        Update();
+        UpdateDataObject();
+        UpdateInformation();
+        UpdateWholeExtent();
+        return true;
+    }
   }
   return false;
 }
@@ -212,10 +239,12 @@ int EnergisticsPlugin::RequestData(vtkInformation *,
                                    vtkInformationVector **,
                                    vtkInformationVector *outputVector)
 {
-
+    auto outInfo = outputVector->GetInformationObject(0);
+    auto output = vtkPartitionedDataSetCollection::GetData(outInfo);
+    /*
   vtkInformation *outInfo = outputVector->GetInformationObject(0);
   vtkPartitionedDataSetCollection *output = vtkPartitionedDataSetCollection::SafeDownCast(outInfo->Get(vtkPartitionedDataSetCollection::DATA_OBJECT()));
-
+  */
   outInfo->Remove(vtkStreamingDemandDrivenPipeline::TIME_STEPS());
   std::vector<double> times = this->repository.getTimes();
   double requestedTimeStep = 0;
