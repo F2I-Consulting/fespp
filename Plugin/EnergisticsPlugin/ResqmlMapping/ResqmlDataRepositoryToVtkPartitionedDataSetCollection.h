@@ -53,27 +53,6 @@ public:
 	ResqmlDataRepositoryToVtkPartitionedDataSetCollection();
 	~ResqmlDataRepositoryToVtkPartitionedDataSetCollection();
 	// --------------- PART: TreeView ---------------------
-
-	// different tab
-	enum EntityType
-	{
-		WELL_TRAJ,		   // 0
-		WELL_MARKER,	   // 1
-		WELL_MARKER_FRAME, // 2
-		WELL_FRAME,		   // 3
-		WELL_CHANNEL,	   // 4
-		POLYLINE_SET,	   // 5
-		TRIANGULATED_SET,  // 6
-		GRID_2D,		   // 7
-		IJK_GRID,		   // 8
-		UNSTRUC_GRID,	   // 9
-		SUB_REP,		   // 10
-		PROP,			   // 11
-		INTERPRETATION,	   // 12
-		TIMES_SERIE,	   // 13
-		NUMBER_OF_ENTITY_TYPES,
-	};
-
 	vtkDataAssembly *GetAssembly() { return output->GetDataAssembly(); }
 
 	//---------------------------------
@@ -106,7 +85,7 @@ private:
 	std::string searchGrid2d(const std::string &fileName);
 	std::string searchIjkGrid(const std::string &fileName);
 	std::string searchWellboreTrajectory(const std::string &fileName);
-	std::string searchRepresentations(resqml2::AbstractRepresentation *representation, EntityType type, int idNode = 0 /* 0 is root's id*/);
+	std::string searchRepresentations(resqml2::AbstractRepresentation *representation, int idNode = 0 /* 0 is root's id*/);
 
 	std::string searchSubRepresentation(resqml2::AbstractRepresentation *representation, vtkDataAssembly *assembly, int node_parent);
 	std::string searchTimeSeries(const std::string &fileName);
@@ -116,7 +95,7 @@ private:
 	void selectNodeIdParent(int node);
 	void selectNodeIdChildren(int node);
 
-	ResqmlAbstractRepresentationToVtkDataset *loadToVtk(std::string uuid, EntityType type, double time);
+	ResqmlAbstractRepresentationToVtkDataset *loadToVtk(std::string uuid, double time);
 
 	std::string changeInvalidCharacter(std::string text);
 	int searchNodeByUuid(const std::string &uuid);
@@ -129,7 +108,6 @@ private:
 	vtkSmartPointer<vtkPartitionedDataSetCollection> output;
 
 	std::map<int, std::string> nodeId_to_uuid;									// index of VtkDataAssembly to Resqml uuid
-	std::map<int, EntityType> nodeId_to_EntityType;								// index of VtkDataAssembly to entity type
 	std::map<int, ResqmlAbstractRepresentationToVtkDataset *> nodeId_to_resqml; // index of VtkDataAssembly to ResqmlAbstractRepresentationToVtkDataset
 
 	//\/          uuid             title            index        prop_uuid

@@ -241,31 +241,28 @@ int EnergisticsPlugin::RequestData(vtkInformation *,
 {
     auto outInfo = outputVector->GetInformationObject(0);
     auto output = vtkPartitionedDataSetCollection::GetData(outInfo);
-    /*
-  vtkInformation *outInfo = outputVector->GetInformationObject(0);
-  vtkPartitionedDataSetCollection *output = vtkPartitionedDataSetCollection::SafeDownCast(outInfo->Get(vtkPartitionedDataSetCollection::DATA_OBJECT()));
-  */
-  outInfo->Remove(vtkStreamingDemandDrivenPipeline::TIME_STEPS());
-  std::vector<double> times = this->repository.getTimes();
-  double requestedTimeStep = 0;
-  if (!times.empty())
-  {
-    std::pair<std::vector<double>::iterator, std::vector<double>::iterator> minmax = std::minmax_element(begin(times), end(times));
-    outInfo->Set(vtkStreamingDemandDrivenPipeline::TIME_STEPS(), &times[0], times.size());
-    static double timeRange[] = {*minmax.first, *minmax.second};
-    outInfo->Set(vtkStreamingDemandDrivenPipeline::TIME_RANGE(), timeRange, 2);
+  
+    outInfo->Remove(vtkStreamingDemandDrivenPipeline::TIME_STEPS());
+    std::vector<double> times = this->repository.getTimes();
+    double requestedTimeStep = 0;
+    if (!times.empty())
+    {
+        std::pair<std::vector<double>::iterator, std::vector<double>::iterator> minmax = std::minmax_element(begin(times), end(times));
+        outInfo->Set(vtkStreamingDemandDrivenPipeline::TIME_STEPS(), &times[0], times.size());
+        static double timeRange[] = {*minmax.first, *minmax.second};
+        outInfo->Set(vtkStreamingDemandDrivenPipeline::TIME_RANGE(), timeRange, 2);
 
-    // current timeStep value
-    requestedTimeStep = outInfo->Get(vtkStreamingDemandDrivenPipeline::UPDATE_TIME_STEP());
-  }
-  try
-  {
-    output->DeepCopy(this->repository.getVtkPartitionedDatasSetCollection(requestedTimeStep));
-  }
-  catch (const std::exception &e)
-  {
-    vtkWarningMacro(<< e.what());
-  }
+        // current timeStep value
+        requestedTimeStep = outInfo->Get(vtkStreamingDemandDrivenPipeline::UPDATE_TIME_STEP());
+    }
+    try
+    {
+        output->DeepCopy(this->repository.getVtkPartitionedDatasSetCollection(requestedTimeStep));
+    } 
+    catch (const std::exception &e)
+    {
+        vtkWarningMacro(<< e.what());
+    }
 
   return 1;
 }

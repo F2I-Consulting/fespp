@@ -16,10 +16,10 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 -----------------------------------------------------------------------*/
-#ifndef __ResqmlGrid2dToVtkPolyData__h__
-#define __ResqmlGrid2dToVtkPolyData__h__
+#ifndef __ResqmlGrid2dToVtkStructuredGrid__h__
+#define __ResqmlGrid2dToVtkStructuredGrid__h__
 
-/** @brief	transform a resqml Grid2D representation to vtkPolydata
+/** @brief	transform a resqml Grid2D representation to VtkStructuredGrid
  */
 
 // include system
@@ -28,7 +28,7 @@ under the License.
 
 // include VTK
 #include <vtkSmartPointer.h> 
-#include <vtkPolyData.h>
+#include <vtkStructuredGrid.h>
 
 #include "ResqmlAbstractRepresentationToVtkDataset.h"
 
@@ -37,12 +37,12 @@ namespace RESQML2_NS
 	class Grid2dRepresentation;
 }
 
-class ResqmlGrid2dToVtkPolyData : public ResqmlAbstractRepresentationToVtkDataset {
+class ResqmlGrid2dToVtkStructuredGrid : public ResqmlAbstractRepresentationToVtkDataset {
 public:
 	/**
 	* Constructor
 	*/
-	ResqmlGrid2dToVtkPolyData(RESQML2_NS::Grid2dRepresentation * grid2D, int proc_number = 1, int max_proc = 1);
+	ResqmlGrid2dToVtkStructuredGrid(RESQML2_NS::Grid2dRepresentation * grid2D, int proc_number = 1, int max_proc = 1);
 
 	/**
 	* load vtkDataSet with resqml data

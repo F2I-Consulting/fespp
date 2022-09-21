@@ -35,22 +35,20 @@ under the License.
 #include <fesapi/resqml2/LocalDepth3dCrs.h>
 
 // include FESPP
-#include "ResqmlPropertyToVtkDataArray.h"
 #include "ResqmlIjkGridToVtkUnstructuredGrid.h"
 
 
 //----------------------------------------------------------------------------
-ResqmlIjkGridSubRepToVtkUnstructuredGrid::ResqmlIjkGridSubRepToVtkUnstructuredGrid(RESQML2_NS::SubRepresentation* subRep, int proc_number, int max_proc)
+ResqmlIjkGridSubRepToVtkUnstructuredGrid::ResqmlIjkGridSubRepToVtkUnstructuredGrid(RESQML2_NS::SubRepresentation* subRep, ResqmlIjkGridToVtkUnstructuredGrid* support, int proc_number, int max_proc)
 	: ResqmlAbstractRepresentationToVtkDataset(subRep,
 		proc_number - 1,
 		max_proc),
-	resqmlData(subRep)
+	resqmlData(subRep),
+	mapperIjkGrid(support)
 {
 	this->iCellCount = subRep->getElementCountOfPatch(0);
-	//this->pointCount = subRep->getXyzPointCountOfAllPatches();
 	this->pointCount = subRep->getSupportingRepresentation(0)->getXyzPointCountOfAllPatches();
 
-	this->mapperIjkGrid = new ResqmlIjkGridToVtkUnstructuredGrid(dynamic_cast<RESQML2_NS::AbstractIjkGridRepresentation*>(subRep->getSupportingRepresentation(0)), proc_number, max_proc);
 	this->vtkData = vtkSmartPointer<vtkPartitionedDataSet>::New();
 }
 

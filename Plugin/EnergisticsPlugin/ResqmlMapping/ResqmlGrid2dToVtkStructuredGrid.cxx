@@ -16,7 +16,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 -----------------------------------------------------------------------*/
-#include "ResqmlMapping/ResqmlGrid2dToVtkPolyData.h"
+#include "ResqmlMapping/ResqmlGrid2dToVtkStructuredGrid.h"
 
 // include VTK library
 #include <vtkSmartPointer.h>
@@ -31,7 +31,7 @@ under the License.
 #include "ResqmlMapping/ResqmlPropertyToVtkDataArray.h"
 
 //----------------------------------------------------------------------------
-ResqmlGrid2dToVtkPolyData::ResqmlGrid2dToVtkPolyData(RESQML2_NS::Grid2dRepresentation *grid2D, int proc_number, int max_proc)
+ResqmlGrid2dToVtkStructuredGrid::ResqmlGrid2dToVtkStructuredGrid(RESQML2_NS::Grid2dRepresentation *grid2D, int proc_number, int max_proc)
 	: ResqmlAbstractRepresentationToVtkDataset(grid2D,
 											   proc_number - 1,
 											   max_proc),
@@ -47,9 +47,9 @@ ResqmlGrid2dToVtkPolyData::ResqmlGrid2dToVtkPolyData(RESQML2_NS::Grid2dRepresent
 }
 
 //----------------------------------------------------------------------------
-void ResqmlGrid2dToVtkPolyData::loadVtkObject()
+void ResqmlGrid2dToVtkStructuredGrid::loadVtkObject()
 {
-	vtkSmartPointer<vtkPolyData> vtkPolydata = vtkSmartPointer<vtkPolyData>::New();
+	vtkSmartPointer<vtkStructuredGrid> structuredGrid = vtkSmartPointer<vtkStructuredGrid>::New();
 
 	const double originX = this->resqmlData->getXOriginInGlobalCrs();
 	const double originY = this->resqmlData->getYOriginInGlobalCrs();
@@ -61,6 +61,7 @@ void ResqmlGrid2dToVtkPolyData::loadVtkObject()
 	const ULONG64 nbNodeI = this->resqmlData->getNodeCountAlongIAxis();
 	const ULONG64 nbNodeJ = this->resqmlData->getNodeCountAlongJAxis();
 
+	structuredGrid->SetDimensions(nbNodeI, nbNodeJ, 1);
 	// POINT
 	this->pointCount = nbNodeI * nbNodeJ;
 
@@ -74,20 +75,20 @@ void ResqmlGrid2dToVtkPolyData::loadVtkObject()
 		for (ULONG64 i = 0; i < nbNodeI; ++i)
 		{
 			const size_t ptId = i + j * nbNodeI;
-			if (!isnan(z[ptId]))
-			{
+			//if (!isnan(z[ptId]))
+			//{
 				vtkIdType pid = points->InsertNextPoint(
 					originX + i * XIOffset + j * XJOffset,
 					originY + i * YIOffset + j * YJOffset,
 					z[ptId] * zIndice);
-				vertices->InsertNextCell(1, &pid);
-			}
+				//vertices->InsertNextCell(1, &pid);
+			//}
 		}
 	}
 
-	vtkPolydata->SetPoints(points);
-	vtkPolydata->SetVerts(vertices);
+	structuredGrid->SetPoints(points);
+	//structuredGrid->SetVerts(vertices);
 
-	this->vtkData->SetPartition(0,vtkPolydata);
+	this->vtkData->SetPartition(0, structuredGrid);
 	this->vtkData->Modified();
 }
