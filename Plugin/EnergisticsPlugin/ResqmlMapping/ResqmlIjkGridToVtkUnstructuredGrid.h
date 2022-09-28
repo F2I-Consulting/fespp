@@ -42,25 +42,28 @@ public:
 	/**
 	 * Constructor
 	 */
-	ResqmlIjkGridToVtkUnstructuredGrid(RESQML2_NS::AbstractIjkGridRepresentation *ijkGrid, int proc_number = 1, int max_proc = 1/*, RESQML2_NS::SubRepresentation* ijkGridSubRep = nullptr*/);
+	ResqmlIjkGridToVtkUnstructuredGrid(RESQML2_NS::AbstractIjkGridRepresentation *ijkGrid, int proc_number = 1, int max_proc = 1 /*, RESQML2_NS::SubRepresentation* ijkGridSubRep = nullptr*/);
 
 	/**
 	 * load vtkDataSet with resqml data
 	 */
 	void loadVtkObject();
-	
-	/** TODO
+
+	/**
 	 * Create the VTK points from the RESQML points of the RESQML IJK grid representation.
 	 */
 	vtkSmartPointer<vtkPoints> createPoints(/* RESQML2_NS::AbstractIjkGridRepresentation *ijkGrid */);
 
+	/**
+	 *	Return The vtkPoints
+	 */
+	vtkSmartPointer<vtkPoints> getVtkPoints();
 
 	std::string message;
 
 protected:
 	RESQML2_NS::AbstractIjkGridRepresentation *resqmlData;
 
-	
 	/**
 	 * method : checkHyperslabingCapacity
 	 * variable : ijkGridRepresentation

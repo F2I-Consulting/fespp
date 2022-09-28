@@ -64,7 +64,6 @@ ResqmlIjkGridToVtkUnstructuredGrid::ResqmlIjkGridToVtkUnstructuredGrid(RESQML2_N
 	}
 
 	this->vtkData = vtkSmartPointer<vtkPartitionedDataSet>::New();
-
 }
 
 //----------------------------------------------------------------------------
@@ -128,7 +127,7 @@ void ResqmlIjkGridToVtkUnstructuredGrid::loadVtkObject()
 					for (uint8_t cornerId = 0; cornerId < 8; ++cornerId)
 					{
 						cell->GetPointIds()->SetId(cornerId,
-							resqmlData->getXyzPointIndexFromCellCorner(vtkICellIndex, vtkJCellIndex, vtkKCellIndex, correspondingResqmlCornerId[cornerId]) - translatePoint);
+												   resqmlData->getXyzPointIndexFromCellCorner(vtkICellIndex, vtkJCellIndex, vtkKCellIndex, correspondingResqmlCornerId[cornerId]) - translatePoint);
 					}
 				}
 				else
@@ -143,6 +142,19 @@ void ResqmlIjkGridToVtkUnstructuredGrid::loadVtkObject()
 
 	this->vtkData->SetPartition(0, vtk_unstructuredGrid);
 	this->vtkData->Modified();
+}
+
+vtkSmartPointer<vtkPoints> ResqmlIjkGridToVtkUnstructuredGrid::getVtkPoints()
+{
+	if (this->vtkData->GetNumberOfPartitions() > 0)
+	{
+		vtkUnstructuredGrid *vtk_unstructuredGrid = dynamic_cast<vtkUnstructuredGrid *>(this->vtkData->GetPartition(0));
+		if (vtk_unstructuredGrid != nullptr)
+		{
+			return vtk_unstructuredGrid->GetPoints();
+		}
+	}
+	return createPoints();
 }
 
 //----------------------------------------------------------------------------

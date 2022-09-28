@@ -37,14 +37,13 @@ under the License.
 // include FESPP
 #include "ResqmlIjkGridToVtkUnstructuredGrid.h"
 
-
 //----------------------------------------------------------------------------
-ResqmlIjkGridSubRepToVtkUnstructuredGrid::ResqmlIjkGridSubRepToVtkUnstructuredGrid(RESQML2_NS::SubRepresentation* subRep, ResqmlIjkGridToVtkUnstructuredGrid* support, int proc_number, int max_proc)
+ResqmlIjkGridSubRepToVtkUnstructuredGrid::ResqmlIjkGridSubRepToVtkUnstructuredGrid(RESQML2_NS::SubRepresentation *subRep, ResqmlIjkGridToVtkUnstructuredGrid *support, int proc_number, int max_proc)
 	: ResqmlAbstractRepresentationToVtkDataset(subRep,
-		proc_number - 1,
-		max_proc),
-	resqmlData(subRep),
-	mapperIjkGrid(support)
+											   proc_number - 1,
+											   max_proc),
+	  resqmlData(subRep),
+	  mapperIjkGrid(support)
 {
 	this->iCellCount = subRep->getElementCountOfPatch(0);
 	this->pointCount = subRep->getSupportingRepresentation(0)->getXyzPointCountOfAllPatches();
@@ -55,18 +54,19 @@ ResqmlIjkGridSubRepToVtkUnstructuredGrid::ResqmlIjkGridSubRepToVtkUnstructuredGr
 //----------------------------------------------------------------------------
 void ResqmlIjkGridSubRepToVtkUnstructuredGrid::loadVtkObject()
 {
-	auto* supportingGrid = dynamic_cast<RESQML2_NS::AbstractIjkGridRepresentation*>(this->resqmlData->getSupportingRepresentation(0));
-	if (supportingGrid != nullptr) {
+	auto *supportingGrid = dynamic_cast<RESQML2_NS::AbstractIjkGridRepresentation *>(this->resqmlData->getSupportingRepresentation(0));
+	if (supportingGrid != nullptr)
+	{
 		// Create and set the list of points of the vtkUnstructuredGrid
 		vtkSmartPointer<vtkUnstructuredGrid> vtk_unstructuredGrid = vtkSmartPointer<vtkUnstructuredGrid>::New();
 
-		vtk_unstructuredGrid->SetPoints(this->mapperIjkGrid->createPoints());
+		vtk_unstructuredGrid->SetPoints(this->mapperIjkGrid->getVtkPoints() /*createPoints()*/);
 
 		// Define hexahedron node ordering according to Paraview convention : https://lorensen.github.io/VTKExamples/site/VTKBook/05Chapter5/#Figure%205-3
-		std::array<unsigned int, 8> correspondingResqmlCornerId = { 0, 1, 2, 3, 4, 5, 6, 7 };
+		std::array<unsigned int, 8> correspondingResqmlCornerId = {0, 1, 2, 3, 4, 5, 6, 7};
 		if (supportingGrid->isRightHanded())
 		{
-			correspondingResqmlCornerId = { 4, 5, 6, 7, 0, 1, 2, 3 };
+			correspondingResqmlCornerId = {4, 5, 6, 7, 0, 1, 2, 3};
 		}
 
 		supportingGrid->loadSplitInformation();
@@ -87,15 +87,20 @@ void ResqmlIjkGridSubRepToVtkUnstructuredGrid::loadVtkObject()
 
 		size_t indice = 0;
 
-		for (uint32_t vtkKCellIndex = initKIndex; vtkKCellIndex < maxKIndex; ++vtkKCellIndex) {
-			for (uint32_t vtkJCellIndex = 0; vtkJCellIndex < jCellCount; ++vtkJCellIndex) {
-				for (uint32_t vtkICellIndex = 0; vtkICellIndex < iCellCount; ++vtkICellIndex) {
-					if (elementIndices[indice] == cellIndex) {
+		for (uint32_t vtkKCellIndex = initKIndex; vtkKCellIndex < maxKIndex; ++vtkKCellIndex)
+		{
+			for (uint32_t vtkJCellIndex = 0; vtkJCellIndex < jCellCount; ++vtkJCellIndex)
+			{
+				for (uint32_t vtkICellIndex = 0; vtkICellIndex < iCellCount; ++vtkICellIndex)
+				{
+					if (elementIndices[indice] == cellIndex)
+					{
 						vtkSmartPointer<vtkHexahedron> hex = vtkSmartPointer<vtkHexahedron>::New();
 
-						for (uint8_t cornerId = 0; cornerId < 8; ++cornerId) {
+						for (uint8_t cornerId = 0; cornerId < 8; ++cornerId)
+						{
 							hex->GetPointIds()->SetId(cornerId,
-								supportingGrid->getXyzPointIndexFromCellCorner(vtkICellIndex, vtkJCellIndex, vtkKCellIndex, correspondingResqmlCornerId[cornerId]));
+													  supportingGrid->getXyzPointIndexFromCellCorner(vtkICellIndex, vtkJCellIndex, vtkKCellIndex, correspondingResqmlCornerId[cornerId]));
 						}
 						vtk_unstructuredGrid->InsertNextCell(hex->GetCellType(), hex->GetPointIds());
 						indice++;
