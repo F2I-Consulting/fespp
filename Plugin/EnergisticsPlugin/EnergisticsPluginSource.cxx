@@ -35,13 +35,13 @@ under the License.
 vtkStandardNewMacro(EnergisticsPluginSource);
 
 //----------------------------------------------------------------------------
-EnergisticsPluginSource::EnergisticsPluginSource() :
-    IpConnection("51.210.100.205"),
-    PortConnection(9002),
-    AuthConnection("Basic Zm9vOmJhcg =="),
-    AssemblyTag(0),
-    MarkerOrientation(true),
-    MarkerSize(10)
+EnergisticsPluginSource::EnergisticsPluginSource() : ETPUrl("wss://osdu-ship.msft-osdu-test.org:443/oetp/reservoir-ddms/"),
+DataPartition("opendes"),
+Authentification("Bearer"),
+AuthPwd(""),
+                                                     AssemblyTag(0),
+                                                     MarkerOrientation(true),
+                                                     MarkerSize(10)
 {
   SetNumberOfInputPorts(0);
   SetNumberOfOutputPorts(1);
@@ -51,40 +51,56 @@ EnergisticsPluginSource::EnergisticsPluginSource() :
 EnergisticsPluginSource::~EnergisticsPluginSource() = default;
 
 //------------------------------------------------------------------------------
-int EnergisticsPluginSource::RequestInformation(vtkInformation* vtkNotUsed(request),
-    vtkInformationVector** vtkNotUsed(inputVector), vtkInformationVector* outputVector)
+int EnergisticsPluginSource::RequestInformation(vtkInformation *vtkNotUsed(request),
+                                                vtkInformationVector **vtkNotUsed(inputVector), vtkInformationVector *outputVector)
 {
-    vtkInformation* outInfo = outputVector->GetInformationObject(0);
-    outInfo->Set(CAN_HANDLE_PIECE_REQUEST(), 1);
-    return 1;
+  vtkInformation *outInfo = outputVector->GetInformationObject(0);
+  outInfo->Set(CAN_HANDLE_PIECE_REQUEST(), 1);
+  return 1;
 }
 
 //----------------------------------------------------------------------------
-void EnergisticsPluginSource::setIpConnection(char * ip_connection)
+void EnergisticsPluginSource::setETPUrlConnection(char *etp_url)
 {
-    this->IpConnection = std::string(ip_connection);
-}
-
-
-//----------------------------------------------------------------------------
-void EnergisticsPluginSource::setPortConnection(int port_connection)
-{
-    this->PortConnection = port_connection;
+  this->ETPUrl = std::string(etp_url);
 }
 
 //----------------------------------------------------------------------------
-void EnergisticsPluginSource::setAuthConnection(char* auth_connection)
+void EnergisticsPluginSource::setDataPartition(char *data_partition)
 {
-    this->AuthConnection = std::string(auth_connection);
+  this->DataPartition = std::string(data_partition);
+}
+
+//----------------------------------------------------------------------------
+void EnergisticsPluginSource::setAuthType(int auth_type)
+{
+  if (auth_type == 0)
+  {
+    this->Authentification = "Bearer";
+  }
+  else if (auth_type == 1)
+  {
+    this->Authentification = "Basic";
+  }
+  else
+  {
+      this->Authentification = "unknow";
+  }
+}
+
+//----------------------------------------------------------------------------
+void EnergisticsPluginSource::setAuthPwd(char *auth_connection)
+{
+  this->AuthPwd = std::string(auth_connection);
 }
 
 //----------------------------------------------------------------------------
 void EnergisticsPluginSource::confirmConnectionClicked()
 {
-        this->repository.connect(this->IpConnection, this->PortConnection, this->AuthConnection);
-        this->AssemblyTag++;
-        this->Modified();
-        this->Update();
+  this->repository.connect(this->ETPUrl, this->DataPartition, this->Authentification + " " + this->AuthPwd);
+  this->AssemblyTag++;
+  this->Modified();
+  this->Update();
 }
 
 //----------------------------------------------------------------------------
@@ -170,13 +186,13 @@ void EnergisticsPluginSource::setMarkerSize(int size)
 
 //----------------------------------------------------------------------------
 int EnergisticsPluginSource::RequestData(vtkInformation *,
-                                   vtkInformationVector **,
-                                   vtkInformationVector *outputVector)
+                                         vtkInformationVector **,
+                                         vtkInformationVector *outputVector)
 {
 
-    auto outInfo = outputVector->GetInformationObject(0);
-    auto output = vtkPartitionedDataSetCollection::GetData(outInfo);
-    
+  auto outInfo = outputVector->GetInformationObject(0);
+  auto output = vtkPartitionedDataSetCollection::GetData(outInfo);
+
   outInfo->Remove(vtkStreamingDemandDrivenPipeline::TIME_STEPS());
   std::vector<double> times = this->repository.getTimes();
   double requestedTimeStep = 0;
@@ -198,7 +214,6 @@ int EnergisticsPluginSource::RequestData(vtkInformation *,
   {
     vtkWarningMacro(<< e.what());
   }
-  
 
   return 1;
 }
@@ -208,7 +223,6 @@ void EnergisticsPluginSource::PrintSelf(ostream &os, vtkIndent indent)
 {
   this->Superclass::PrintSelf(os, indent);
 }
-
 
 //----------------------------------------------------------------------------
 vtkDataAssembly *EnergisticsPluginSource::GetAssembly()

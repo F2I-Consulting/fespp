@@ -49,21 +49,23 @@ public:
 	/**
 	 * Set the Ip for ETP connection.
 	 */
-	void setIpConnection(char * ip_connection);
+	void setETPUrlConnection(char * etp_url);
 	///@}
 		
 	///@{
 	/**
 	 * Set the Port for ETP connection.
 	 */
-	void setPortConnection(int port_connection);
+	void setDataPartition(char * data_partition);
 	///@}
 	
+	 void setAuthType(int auth_type);
+
 	///@{
 	/**
 	 * Set the Auth for ETP connection.
 	 */
-	void setAuthConnection(char* auth_connection);
+	void setAuthPwd(char* auth_connection);
 	///@}
 
 	void confirmConnectionClicked();
@@ -133,9 +135,10 @@ private:
 	EnergisticsPluginSource(const EnergisticsPluginSource&) = delete;
 	void operator=(const EnergisticsPluginSource&) = delete;
 
-	std::string IpConnection;
-	int PortConnection;
-	std::string AuthConnection;
+	std::string ETPUrl;
+	std::string DataPartition;
+	std::string Authentification;
+	std::string AuthPwd;
 
 	// treeview
 	std::set<std::string> selectors;

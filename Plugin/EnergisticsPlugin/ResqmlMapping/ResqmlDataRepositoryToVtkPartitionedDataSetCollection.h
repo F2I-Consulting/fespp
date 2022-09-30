@@ -61,7 +61,7 @@ public:
 	std::string addFile(const char *file);
 
 	// for ETP connection
-	std::string connect(const std::string ip_connection, int port_connection,const std::string auth_connection);
+	std::string connect(const std::string etp_url, const std::string data_partition,const std::string auth_connection);
 
 	// Wellbore Options
 	void setMarkerOrientation(bool orientation);
@@ -71,7 +71,10 @@ public:
 
 	std::vector<double> getTimes() { return times_step; }
 
-	void selectNodeId(int node);
+	/**
+	* @return selection parent
+	*/
+	std::string selectNodeId(int node);
 	void clearSelection();
 
 private:

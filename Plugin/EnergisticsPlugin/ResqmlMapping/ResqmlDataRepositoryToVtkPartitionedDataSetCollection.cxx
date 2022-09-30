@@ -93,11 +93,11 @@ ResqmlDataRepositoryToVtkPartitionedDataSetCollection::~ResqmlDataRepositoryToVt
 }
 
 //----------------------------------------------------------------------------
-std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::connect(const std::string ip_connection, int port_connection, const std::string auth_connection)
+std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::connect(const std::string etp_url, const std::string data_partition, const std::string auth_connection)
 {
 #ifdef WITH_ETP
     boost::uuids::random_generator gen;
-    ETP_NS::InitializationParameters initializationParams(gen(), ip_connection, port_connection);
+    ETP_NS::InitializationParameters initializationParams(gen(), etp_url, data_partition);
 
     session = ETP_NS::ClientSessionLaunchers::createWsClientSession(&initializationParams, "/", auth_connection);
     session->setCoreProtocolHandlers(std::make_shared<FesppCoreProtocolHandlers>(session.get(), repository));
@@ -114,7 +114,7 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::connect(const
     {
     }
 #endif
-    vtkOutputWindowDisplayWarningText(("connection with paramater: " + ip_connection + std::to_string(port_connection) + auth_connection + "\n").c_str());
+    vtkOutputWindowDisplayWarningText(("connection with paramater: " + etp_url + " data partition: " + data_partition + " authentication " + auth_connection + "\n").c_str());
     return buildDataAssemblyFromDataObjectRepo("");
 }
 
@@ -595,7 +595,7 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchTimeSer
     return return_message;
 }
 
-void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::selectNodeId(int node)
+std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::selectNodeId(int node)
 {
     this->selectNodeIdParent(node);
 
@@ -603,6 +603,8 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::selectNodeId(int nod
     this->old_selection.erase(node);
 
     this->selectNodeIdChildren(node);
+
+    return "";
 }
 
 void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::selectNodeIdParent(int node)

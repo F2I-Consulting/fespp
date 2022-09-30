@@ -158,7 +158,11 @@ bool EnergisticsPlugin::AddSelector(const char *selector)
     }
     else
     {
-        this->repository.selectNodeId(node_id);
+        std::string selection_parent = this->repository.selectNodeId(node_id);
+        //if (selection_parent != "") {
+   //     if (node_id!=41)
+     //   SetSelector("/data/WellboreTrajectoryRepresentation.Wellbore1.Interp1.TrajRep");
+        //}
         this->Modified();
         Modified();
         Update();
