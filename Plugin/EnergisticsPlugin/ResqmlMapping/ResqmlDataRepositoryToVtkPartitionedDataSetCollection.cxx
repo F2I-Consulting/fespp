@@ -46,14 +46,15 @@ under the License.
 #include <fesapi/resqml2/ContinuousProperty.h>
 #include <fesapi/resqml2/DiscreteProperty.h>
 
-#ifdef WITH_ETP
+#ifdef WITH_ETP_SSL
 #include <thread>
 
 #include <fetpapi/etp/fesapi/FesapiHdfProxy.h>
 
-#include "../etp/FesppCoreProtocolHandlers.h"
-#include "../etp/FesppDiscoveryProtocolHandlers.h"
-#include "../etp/FesppStoreProtocolHandlers.h"
+#include <fetpapi/etp/ProtocolHandlers/DataspaceHandlers.h>
+#include <fetpapi/etp/ProtocolHandlers/DiscoveryHandlers.h>
+#include <fetpapi/etp/ProtocolHandlers/StoreHandlers.h>
+#include <fetpapi/etp/ProtocolHandlers/DataArrayHandlers.h>
 #endif
 #include <fesapi/common/EpcDocument.h>
 
@@ -95,24 +96,78 @@ ResqmlDataRepositoryToVtkPartitionedDataSetCollection::~ResqmlDataRepositoryToVt
 //----------------------------------------------------------------------------
 std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::connect(const std::string etp_url, const std::string data_partition, const std::string auth_connection)
 {
-#ifdef WITH_ETP
+#ifdef WITH_ETP_SSL
     boost::uuids::random_generator gen;
-    ETP_NS::InitializationParameters initializationParams(gen(), etp_url, data_partition);
+    ETP_NS::InitializationParameters initializationParams(gen(), etp_url);
 
-    session = ETP_NS::ClientSessionLaunchers::createWsClientSession(&initializationParams, "/", auth_connection);
-    session->setCoreProtocolHandlers(std::make_shared<FesppCoreProtocolHandlers>(session.get(), repository));
-    session->setDiscoveryProtocolHandlers(std::make_shared<FesppDiscoveryProtocolHandlers>(session.get(), repository));
-    auto storeHandlers = std::make_shared<FesppStoreProtocolHandlers>(session.get(), repository);
-    session->setStoreProtocolHandlers(storeHandlers);
-    session->setDataArrayProtocolHandlers(std::make_shared<ETP_NS::DataArrayHandlers>(session.get()));
+	std::map<std::string, std::string> additionalHandshakeHeaderFields = { {"data-partition-id" , data_partition} };
+	if (initializationParams.getPort() == 80) {
+		session = ETP_NS::ClientSessionLaunchers::createWsClientSession(&initializationParams, auth_connection, additionalHandshakeHeaderFields);
+	}
+	else {
+		session = ETP_NS::ClientSessionLaunchers::createWssClientSession(&initializationParams, auth_connection, additionalHandshakeHeaderFields);
+	}
+	session->setDataspaceProtocolHandlers(std::make_shared<ETP_NS::DataspaceHandlers>(session.get()));
+    session->setDiscoveryProtocolHandlers(std::make_shared<ETP_NS::DiscoveryHandlers>(session.get()));
+	session->setStoreProtocolHandlers(std::make_shared<ETP_NS::StoreHandlers>(session.get()));
+	session->setDataArrayProtocolHandlers(std::make_shared<ETP_NS::DataArrayHandlers>(session.get()));
 
     repository->setHdfProxyFactory(new ETP_NS::FesapiHdfProxyFactory(session.get()));
 
-    std::thread sessionThread(&ETP_NS::PlainClientSession::run, session);
-    sessionThread.detach();
-    while (!storeHandlers->isDone())
-    {
-    }
+	auto plainSession = std::dynamic_pointer_cast<ETP_NS::PlainClientSession>(session);
+	if (initializationParams.getPort() == 80) {
+		std::thread sessionThread(&ETP_NS::PlainClientSession::run, plainSession);
+		sessionThread.detach();
+	}
+	else {
+		auto sslSession = std::dynamic_pointer_cast<ETP_NS::SslClientSession>(session);
+		std::thread sessionThread(&ETP_NS::SslClientSession::run, sslSession);
+		sessionThread.detach();
+	}
+
+	// Wait for the ETP session to be opened
+	auto t_start = std::chrono::high_resolution_clock::now();
+	// the work...
+	auto t_end = std::chrono::high_resolution_clock::now();
+	while (session->isEtpSessionClosed()) {
+		if (std::chrono::duration<double, std::milli>(std::chrono::high_resolution_clock::now() - t_start).count() > 5000) {
+			vtkOutputWindowDisplayWarningText(("Time out for websocket connection : " +
+				std::to_string(std::chrono::duration<double, std::milli>(std::chrono::high_resolution_clock::now() - t_start).count()) + "ms\n").c_str());
+			return "ETP time out";
+		}
+	}
+
+	//************ LIST DATASPACES ************
+	const auto dataspaces = session->getDataspaces();
+	//************ LIST RESOURCES ************
+	const auto dsIter = std::find_if(dataspaces.begin(), dataspaces.end(),
+		[](const Energistics::Etp::v12::Datatypes::Object::Dataspace& ds) { return ds.uri == "eml:///dataspace('DANI/DEMO_F2F')"; });
+	Energistics::Etp::v12::Datatypes::Object::ContextInfo ctxInfo;
+	ctxInfo.uri = dsIter == dataspaces.end()
+		? dataspaces[0].uri
+		: dsIter->uri;
+	ctxInfo.depth = 0;
+	ctxInfo.navigableEdges = Energistics::Etp::v12::Datatypes::Object::RelationshipKind::Both;
+	ctxInfo.includeSecondaryTargets = false;
+	ctxInfo.includeSecondarySources = false;
+	const auto resources = session->getResources(ctxInfo, Energistics::Etp::v12::Datatypes::Object::ContextScopeKind::targets);
+	//************ GET ALL DATAOBJECTS ************
+	repository->setHdfProxyFactory(new ETP_NS::FesapiHdfProxyFactory(session.get()));
+	if (!resources.empty()) {
+		std::map< std::string, std::string > query;
+		for (size_t i = 0; i < resources.size(); ++i) {
+			query[std::to_string(i)] = resources[i].uri;
+		}
+		const auto dataobjects = session->getDataObjects(query);
+		for (auto& datoObject : dataobjects) {
+			repository->addOrReplaceGsoapProxy(datoObject.second.data,
+				ETP_NS::EtpHelpers::getDataObjectType(datoObject.second.resource.uri),
+				ETP_NS::EtpHelpers::getDataspaceUri(datoObject.second.resource.uri));
+		}
+	}
+	else {
+		std::cout << "There is no dataobject in this dataspace" << std::endl;
+	}
 #endif
     vtkOutputWindowDisplayWarningText(("connection with paramater: " + etp_url + " data partition: " + data_partition + " authentication " + auth_connection + "\n").c_str());
     return buildDataAssemblyFromDataObjectRepo("");
