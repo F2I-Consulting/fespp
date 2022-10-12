@@ -16,7 +16,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 -----------------------------------------------------------------------*/
-#include "EnergisticsPluginSource.h"
+#include "vtkETPSource.h"
 
 #include <exception>
 #include <iterator>
@@ -32,10 +32,10 @@ under the License.
 #include <vtkStreamingDemandDrivenPipeline.h>
 #include <vtkDataObject.h>
 
-vtkStandardNewMacro(EnergisticsPluginSource);
+vtkStandardNewMacro(vtkETPSource);
 
 //----------------------------------------------------------------------------
-EnergisticsPluginSource::EnergisticsPluginSource() : ETPUrl("wss://osdu-ship.msft-osdu-test.org:443/oetp/reservoir-ddms/"),
+vtkETPSource::vtkETPSource() : ETPUrl("wss://osdu-ship.msft-osdu-test.org:443/oetp/reservoir-ddms/"),
 DataPartition("opendes"),
 Authentification("Bearer"),
 AuthPwd(""),
@@ -48,10 +48,10 @@ AuthPwd(""),
 }
 
 //----------------------------------------------------------------------------
-EnergisticsPluginSource::~EnergisticsPluginSource() = default;
+vtkETPSource::~vtkETPSource() = default;
 
 //------------------------------------------------------------------------------
-int EnergisticsPluginSource::RequestInformation(vtkInformation *vtkNotUsed(request),
+int vtkETPSource::RequestInformation(vtkInformation *vtkNotUsed(request),
                                                 vtkInformationVector **vtkNotUsed(inputVector), vtkInformationVector *outputVector)
 {
   vtkInformation *outInfo = outputVector->GetInformationObject(0);
@@ -60,19 +60,19 @@ int EnergisticsPluginSource::RequestInformation(vtkInformation *vtkNotUsed(reque
 }
 
 //----------------------------------------------------------------------------
-void EnergisticsPluginSource::setETPUrlConnection(char *etp_url)
+void vtkETPSource::setETPUrlConnection(char *etp_url)
 {
   this->ETPUrl = std::string(etp_url);
 }
 
 //----------------------------------------------------------------------------
-void EnergisticsPluginSource::setDataPartition(char *data_partition)
+void vtkETPSource::setDataPartition(char *data_partition)
 {
   this->DataPartition = std::string(data_partition);
 }
 
 //----------------------------------------------------------------------------
-void EnergisticsPluginSource::setAuthType(int auth_type)
+void vtkETPSource::setAuthType(int auth_type)
 {
   if (auth_type == 0)
   {
@@ -89,13 +89,13 @@ void EnergisticsPluginSource::setAuthType(int auth_type)
 }
 
 //----------------------------------------------------------------------------
-void EnergisticsPluginSource::setAuthPwd(char *auth_connection)
+void vtkETPSource::setAuthPwd(char *auth_connection)
 {
   this->AuthPwd = std::string(auth_connection);
 }
 
 //----------------------------------------------------------------------------
-void EnergisticsPluginSource::confirmConnectionClicked()
+void vtkETPSource::confirmConnectionClicked()
 {
   this->repository.connect(this->ETPUrl, this->DataPartition, this->Authentification + " " + this->AuthPwd);
   this->AssemblyTag++;
@@ -104,7 +104,7 @@ void EnergisticsPluginSource::confirmConnectionClicked()
 }
 
 //----------------------------------------------------------------------------
-bool EnergisticsPluginSource::AddSelector(const char *selector)
+bool vtkETPSource::AddSelector(const char *selector)
 {
   if (selector != nullptr && this->selectors.insert(selector).second)
   {
@@ -122,7 +122,7 @@ bool EnergisticsPluginSource::AddSelector(const char *selector)
 }
 
 //----------------------------------------------------------------------------
-void EnergisticsPluginSource::ClearSelectors()
+void vtkETPSource::ClearSelectors()
 {
   this->repository.clearSelection();
   if (!this->selectors.empty())
@@ -133,7 +133,7 @@ void EnergisticsPluginSource::ClearSelectors()
 }
 
 //----------------------------------------------------------------------------
-int EnergisticsPluginSource::GetNumberOfSelectors() const
+int vtkETPSource::GetNumberOfSelectors() const
 {
   if (selectors.size() > (std::numeric_limits<int>::max)()) {
 	throw std::out_of_range("Too much selectors.");
@@ -143,7 +143,7 @@ int EnergisticsPluginSource::GetNumberOfSelectors() const
 }
 
 //----------------------------------------------------------------------------
-void EnergisticsPluginSource::SetSelector(const char *selector)
+void vtkETPSource::SetSelector(const char *selector)
 {
   this->ClearSelectors();
   this->AddSelector(selector);
@@ -156,7 +156,7 @@ void EnergisticsPluginSource::SetSelector(const char *selector)
 }
 
 //----------------------------------------------------------------------------
-const char *EnergisticsPluginSource::GetSelector(int index) const
+const char *vtkETPSource::GetSelector(int index) const
 {
   if (index >= 0 && index < this->GetNumberOfSelectors())
   {
@@ -167,7 +167,7 @@ const char *EnergisticsPluginSource::GetSelector(int index) const
 }
 
 //----------------------------------------------------------------------------
-void EnergisticsPluginSource::setMarkerOrientation(bool orientation)
+void vtkETPSource::setMarkerOrientation(bool orientation)
 {
   this->repository.setMarkerOrientation(orientation);
   this->Modified();
@@ -178,7 +178,7 @@ void EnergisticsPluginSource::setMarkerOrientation(bool orientation)
 }
 
 //----------------------------------------------------------------------------
-void EnergisticsPluginSource::setMarkerSize(int size)
+void vtkETPSource::setMarkerSize(int size)
 {
   this->repository.setMarkerSize(size);
   this->Modified();
@@ -189,7 +189,7 @@ void EnergisticsPluginSource::setMarkerSize(int size)
 }
 
 //----------------------------------------------------------------------------
-int EnergisticsPluginSource::RequestData(vtkInformation *,
+int vtkETPSource::RequestData(vtkInformation *,
                                          vtkInformationVector **,
                                          vtkInformationVector *outputVector)
 {
@@ -225,13 +225,13 @@ int EnergisticsPluginSource::RequestData(vtkInformation *,
 }
 
 //----------------------------------------------------------------------------
-void EnergisticsPluginSource::PrintSelf(ostream &os, vtkIndent indent)
+void vtkETPSource::PrintSelf(ostream &os, vtkIndent indent)
 {
   this->Superclass::PrintSelf(os, indent);
 }
 
 //----------------------------------------------------------------------------
-vtkDataAssembly *EnergisticsPluginSource::GetAssembly()
+vtkDataAssembly *vtkETPSource::GetAssembly()
 {
   try
   {

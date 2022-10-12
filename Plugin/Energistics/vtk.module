@@ -1,0 +1,14 @@
+NAME
+  Energistics
+LIBRARY_NAME
+  Energistics
+DEPENDS
+  VTK::CommonCore
+  VTK::CommonDataModel
+  VTK::CommonExecutionModel
+  VTK::CommonTransforms
+  VTK::FiltersGeneral
+  VTK::FiltersSources
+  VTK::ParallelCore
+PRIVATE_DEPENDS
+  VTK::vtksys

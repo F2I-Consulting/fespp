@@ -16,8 +16,8 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 -----------------------------------------------------------------------*/
-#ifndef __EnergisticsPluginSource_h
-#define __EnergisticsPluginSource_h
+#ifndef __vtkETPSource_h
+#define __vtkETPSource_h
 
 // include system
 #include <string>
@@ -27,7 +27,7 @@ under the License.
 #include <vtkSmartPointer.h>
 #include <vtkStringArray.h>
 
-#include "EnergisticsPluginModule.h"
+#include "EnergisticsModule.h"
 #include "ResqmlMapping/ResqmlDataRepositoryToVtkPartitionedDataSetCollection.h"
 
 class vtkDataAssembly;
@@ -36,11 +36,11 @@ class vtkMultiProcessController;
 /**
  * A VTK reader for EPC document.
  */
-class ENERGISTICSPLUGIN_EXPORT EnergisticsPluginSource : public vtkPartitionedDataSetCollectionAlgorithm
+class ENERGISTICS_EXPORT vtkETPSource : public vtkPartitionedDataSetCollectionAlgorithm
 {
 public:
-	static EnergisticsPluginSource *New();
-	vtkTypeMacro(EnergisticsPluginSource, vtkPartitionedDataSetCollectionAlgorithm);
+	static vtkETPSource *New();
+	vtkTypeMacro(vtkETPSource, vtkPartitionedDataSetCollectionAlgorithm);
 	void PrintSelf(ostream &os, vtkIndent indent) final;
 
 	// --------------- PART Properties------ -------------
@@ -125,15 +125,15 @@ public:
 	///@{
 
 protected:
-	EnergisticsPluginSource();
-	~EnergisticsPluginSource() override;
+	vtkETPSource();
+	~vtkETPSource() override;
 
 	int RequestData(vtkInformation*, vtkInformationVector**, vtkInformationVector*) override;
 	int RequestInformation(vtkInformation*, vtkInformationVector**, vtkInformationVector*) override;
 
 private:
-	EnergisticsPluginSource(const EnergisticsPluginSource&) = delete;
-	void operator=(const EnergisticsPluginSource&) = delete;
+	vtkETPSource(const vtkETPSource&) = delete;
+	void operator=(const vtkETPSource&) = delete;
 
 	std::string ETPUrl;
 	std::string DataPartition;

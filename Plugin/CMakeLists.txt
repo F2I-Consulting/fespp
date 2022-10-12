@@ -71,8 +71,8 @@ if (PARAVIEW_BUILD_QT_GUI)
 	paraview_add_plugin(${PROJECT_NAME}
 		VERSION ${PROJECT_VERSION}
 		SOURCES ${FESPP_NO_QT_SOURCES}
-		MODULES EnergisticsPlugin
-		MODULE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/EnergisticsPlugin/vtk.module"
+		MODULES Energistics
+		MODULE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/Energistics/vtk.module"
 		XML_DOCUMENTATION OFF
 	)
 
@@ -83,8 +83,8 @@ else (PARAVIEW_BUILD_QT_GUI)
 		REQUIRED_ON_SERVER
 		VERSION ${PROJECT_VERSION}
 		SOURCES ${FESPP_NO_QT_SOURCES}
-		MODULES EnergisticsPlugin
-		MODULE_FILES EnergisticsPlugin/vtk.module
+		MODULES Energistics
+		MODULE_FILES Energistics/vtk.module
 		XML_DOCUMENTATION OFF)
 
 endif (PARAVIEW_BUILD_QT_GUI)
