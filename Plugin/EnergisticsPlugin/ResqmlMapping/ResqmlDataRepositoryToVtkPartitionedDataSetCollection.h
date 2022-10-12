@@ -28,7 +28,7 @@ under the License.
 #include <vtkPartitionedDataSetCollection.h>
 #include <vtkMultiProcessController.h>
 
-#ifdef WITH_ETP
+#ifdef WITH_ETP_SSL
 #include <fetpapi/etp/ClientSessionLaunchers.h>
 #endif
 
@@ -115,8 +115,8 @@ private:
 
 	// time step values
 	std::vector<double> times_step;
-#ifdef WITH_ETP
-	std::shared_ptr<ETP_NS::PlainClientSession> session;
+#ifdef WITH_ETP_SSL
+	std::shared_ptr<ETP_NS::AbstractSession> session;
 #endif
 
 };

@@ -4,10 +4,10 @@ set(classes
 
 FILE (GLOB FESPP_MAPPING_SOURCES ResqmlMapping/*.cxx)
 FILE (GLOB FESPP_MAPPING_HEADERS ResqmlMapping/*.h)
-if (WITH_ETP)
+if (WITH_ETP_SSL)
 	FILE (GLOB FESPP_ETP_SOURCES etp/*.cxx)
 	FILE (GLOB FESPP_ETP_HEADERS etp/*.h)
-ENDIF (WITH_ETP)
+ENDIF (WITH_ETP_SSL)
 set (ENERGISTICS_READER_SOURCES
 		${FESPP_MAPPING_SOURCES}
 		${FESPP_ETP_SOURCES}
@@ -23,9 +23,9 @@ vtk_module_add_module(EnergisticsPlugin
   PRIVATE_HEADERS ${ENERGISTICS_READER_PRIVATE_HEADERS} # Do not wrap PRIVATE_HEADERS but only HEADERS (or CLASSES which also defines HEADERS)
 )
 
-if (WITH_ETP)
+if (WITH_ETP_SSL)
 	vtk_module_definitions(EnergisticsPlugin PRIVATE
-		WITH_ETP
+		WITH_ETP_SSL
 		BOOST_ALL_NO_LIB
 	)
 	if (NOT Boost_USE_STATIC_LIBS)
@@ -56,15 +56,15 @@ if (WITH_ETP)
 		get_WIN32_WINNT(ver)
 		vtk_module_definitions(EnergisticsPlugin PRIVATE _WIN32_WINNT=${ver})
 	endif (WIN32)
-endif (WITH_ETP)
+endif (WITH_ETP_SSL)
 
 # ============================================================================
 # External include
 # ============================================================================
 vtk_module_include(EnergisticsPlugin PRIVATE ${FESAPI_INCLUDE_DIR})
-if (WITH_ETP)
-	vtk_module_include(EnergisticsPlugin PRIVATE ${FETPAPI_INCLUDE_DIR} ${AVRO_INCLUDE_DIR} ${Boost_INCLUDE_DIR})
-endif (WITH_ETP)
+if (WITH_ETP_SSL)
+	vtk_module_include(EnergisticsPlugin PRIVATE ${FETPAPI_INCLUDE_DIR} ${AVRO_INCLUDE_DIR} ${Boost_INCLUDE_DIR} ${OPENSSL_INCLUDE_DIR})
+endif (WITH_ETP_SSL)
 
 # ============================================================================
 # External link
@@ -79,9 +79,9 @@ if (WIN32)
 		message(ERROR "No FESAPI library has been set.")
 	endif ()
 	
-	if (WITH_ETP)
+	if (WITH_ETP_SSL)
 		vtk_module_link (EnergisticsPlugin PRIVATE bcrypt.lib)
-	endif (WITH_ETP)
+	endif (WITH_ETP_SSL)
 elseif (UNIX)	
 	if (CMAKE_BUILD_TYPE STREQUAL "Debug")
 		vtk_module_link(EnergisticsPlugin PRIVATE ${FESAPI_LIBRARY_DEBUG})
@@ -89,10 +89,11 @@ elseif (UNIX)
 		vtk_module_link(EnergisticsPlugin PRIVATE ${FESAPI_LIBRARY_RELEASE})
 	endif()
 endif (WIN32)
-	
-if (EXISTS ${FETPAPI_LIBRARY_RELEASE})
+
+if (WITH_ETP_SSL)
+	vtk_module_link (EnergisticsPlugin PRIVATE OpenSSL::SSL OpenSSL::Crypto)
 	vtk_module_link (EnergisticsPlugin PRIVATE ${FETPAPI_LIBRARY_RELEASE} ${AVRO_LIBRARY_RELEASE} ${Boost_SYSTEM_LIBRARY} ${CMAKE_THREAD_LIBS_INIT})
-endif()
+endif(WITH_ETP_SSL)
 
 # ============================================================================
 # PARAVIEW SERVER MANAGER XML

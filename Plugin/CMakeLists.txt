@@ -15,12 +15,15 @@ set (FESAPI_INCLUDE_DIR FESAPI_INCLUDE_DIR-NOTFOUND CACHE PATH "Path to the dire
 set (FESAPI_LIBRARY_RELEASE FESAPI_LIBRARY_RELEASE-NOTFOUND CACHE FILEPATH "Path to the FESAPI release library")
 set (FESAPI_LIBRARY_DEBUG FESAPI_LIBRARY_DEBUG-NOTFOUND CACHE FILEPATH "Path to the FESAPI debug library")
 
-set (WITH_ETP OFF CACHE BOOL "Only if FESAPI build with ETP support... for building Fespp with ETP support.")
+set (WITH_ETP_SSL OFF CACHE BOOL "Only if FESAPI build with ETP support... for building Fespp with ETP support.")
 
-if (WITH_ETP)
+if (WITH_ETP_SSL)
 	find_package(Boost 1.66.0 REQUIRED system)
 	find_package( Threads )
-
+	if (NOT TARGET OpenSSL::SSL OR NOT TARGET OpenSSL::Crypto)
+		find_package(OpenSSL REQUIRED)
+	endif()
+	
 	#FETPAPI
 	set (FETPAPI_INCLUDE_DIR FETPAPI_INCLUDE_DIR-NOTFOUND CACHE PATH "Path to the directory which contains the FETPAPI header files")
 	if (NOT IS_DIRECTORY ${FETPAPI_INCLUDE_DIR})
@@ -48,7 +51,7 @@ if (WITH_ETP)
 	if (NOT EXISTS ${AVRO_LIBRARY_DEBUG})
 		message(WARNING "The AVRO library (AVRO_LIBRARY_DEBUG variable) does not look to be a valid file. Please modify it.")
 	endif ()
-endif (WITH_ETP)
+endif (WITH_ETP_SSL)
 
 # -----------------------------------------------------------------------------
 # Build the Paraview plugins

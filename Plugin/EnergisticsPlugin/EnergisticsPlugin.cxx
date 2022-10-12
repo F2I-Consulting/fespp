@@ -32,17 +32,13 @@ under the License.
 #include <vtkStreamingDemandDrivenPipeline.h>
 #include <vtkDataObject.h>
 
-#include <vtkSelectionSource.h>
-
-
 vtkStandardNewMacro(EnergisticsPlugin);
 vtkCxxSetObjectMacro(EnergisticsPlugin, Controller, vtkMultiProcessController);
 
 //----------------------------------------------------------------------------
-EnergisticsPlugin::EnergisticsPlugin() : Files(),
+EnergisticsPlugin::EnergisticsPlugin() : FileNames(),
                                          FilesNames(vtkStringArray::New()),
                                          Controller(nullptr),
-                                         Selectors({}),
                                          AssemblyTag(0),
                                          MarkerOrientation(true),
                                          MarkerSize(10)
@@ -62,13 +58,13 @@ void EnergisticsPlugin::SetFileName(const char *fname)
     return;
   }
 
-  if (this->Files.size() == 1 && *this->Files.begin() == fname)
+  if (this->FileNames.size() == 1 && *this->FileNames.begin() == fname)
   {
     return;
   }
 
-  this->Files.clear();
-  this->Files.insert(fname);
+  this->FileNames.clear();
+  this->FileNames.insert(fname);
   this->Modified();
 }
 
@@ -84,9 +80,9 @@ void EnergisticsPlugin::AddFileName(const char *fname)
 //----------------------------------------------------------------------------
 void EnergisticsPlugin::ClearFileNames()
 {
-  if (!this->Files.empty())
+  if (!this->FileNames.empty())
   {
-    this->Files.clear();
+    this->FileNames.clear();
     this->Modified();
   }
 }
@@ -94,9 +90,9 @@ void EnergisticsPlugin::ClearFileNames()
 //----------------------------------------------------------------------------
 const char *EnergisticsPlugin::GetFileName(int index) const
 {
-  if (this->Files.size() > index)
+  if (this->FileNames.size() > index)
   {
-    auto iter = std::next(this->Files.begin(), index);
+    auto iter = std::next(this->FileNames.begin(), index);
     return iter->c_str();
   }
   return nullptr;
@@ -105,7 +101,7 @@ const char *EnergisticsPlugin::GetFileName(int index) const
 //----------------------------------------------------------------------------
 size_t EnergisticsPlugin::GetNumberOfFileNames() const
 {
-  return this->Files.size();
+  return this->FileNames.size();
 }
 
 //------------------------------------------------------------------------------
@@ -150,19 +146,24 @@ void EnergisticsPlugin::SetFiles(const std::string &file)
 }
 
 //----------------------------------------------------------------------------
-bool EnergisticsPlugin::AddSelector(const char *path)
+bool EnergisticsPlugin::AddSelector(const char *selector)
 {
-
-  if (path != nullptr && this->Selectors.insert(path).second)
+  if (selector != nullptr)
   {
-    int node_id = GetAssembly()->GetFirstNodeByPath(path);
-    if (node_id == -1) // for load State => addSelector before treeView loaded
+    int node_id = GetAssembly()->GetFirstNodeByPath(selector);
+    
+    if (node_id == -1)
     {
-        selectorNotLoaded.insert(std::string(path));
+        selectorNotLoaded.insert(std::string(selector));
     }
-    else 
+    else
     {
         std::string selection_parent = this->repository.selectNodeId(node_id);
+        //if (selection_parent != "") {
+   //     if (node_id!=41)
+     //   SetSelector("/data/WellboreTrajectoryRepresentation.Wellbore1.Interp1.TrajRep");
+        //}
+        this->Modified();
         Modified();
         Update();
         UpdateDataObject();
@@ -178,9 +179,9 @@ bool EnergisticsPlugin::AddSelector(const char *path)
 void EnergisticsPlugin::ClearSelectors()
 {
   this->repository.clearSelection();
-  if (!this->Selectors.empty())
+  if (!this->selectors.empty())
   {
-    this->Selectors.clear();
+    this->selectors.clear();
     this->Modified();
   }
 }
@@ -188,7 +189,10 @@ void EnergisticsPlugin::ClearSelectors()
 //----------------------------------------------------------------------------
 int EnergisticsPlugin::GetNumberOfSelectors() const
 {
-  return this->Selectors.size();
+  if (selectors.size() > (std::numeric_limits<int>::max)()) {
+	throw std::out_of_range("Too much selectors.");
+  }
+  return static_cast<int>(selectors.size());
 }
 
 //----------------------------------------------------------------------------
@@ -209,7 +213,7 @@ const char *EnergisticsPlugin::GetSelector(int index) const
 {
   if (index >= 0 && index < this->GetNumberOfSelectors())
   {
-    auto iter = std::next(this->Selectors.begin(), index);
+    auto iter = std::next(this->selectors.begin(), index);
     return iter->c_str();
   }
   return nullptr;
@@ -242,25 +246,27 @@ int EnergisticsPlugin::RequestData(vtkInformation *,
                                    vtkInformationVector **,
                                    vtkInformationVector *outputVector)
 {
-    auto outInfo = outputVector->GetInformationObject(0);
-    auto output = vtkPartitionedDataSetCollection::GetData(outInfo);
-  
+    auto* outInfo = outputVector->GetInformationObject(0);
     outInfo->Remove(vtkStreamingDemandDrivenPipeline::TIME_STEPS());
-    std::vector<double> times = this->repository.getTimes();
+    const std::vector<double> times = this->repository.getTimes();
+	if (times.size() > (std::numeric_limits<int>::max)()) {
+		throw std::out_of_range("Too much times.");
+	}
     double requestedTimeStep = 0;
     if (!times.empty())
     {
-        std::pair<std::vector<double>::iterator, std::vector<double>::iterator> minmax = std::minmax_element(begin(times), end(times));
-        outInfo->Set(vtkStreamingDemandDrivenPipeline::TIME_STEPS(), &times[0], times.size());
+        const auto minmax = std::minmax_element(begin(times), end(times));
+        outInfo->Set(vtkStreamingDemandDrivenPipeline::TIME_STEPS(), &times[0], static_cast<int>(times.size()));
         static double timeRange[] = {*minmax.first, *minmax.second};
         outInfo->Set(vtkStreamingDemandDrivenPipeline::TIME_RANGE(), timeRange, 2);
 
         // current timeStep value
         requestedTimeStep = outInfo->Get(vtkStreamingDemandDrivenPipeline::UPDATE_TIME_STEP());
     }
+
     try
     {
-        output->DeepCopy(this->repository.getVtkPartitionedDatasSetCollection(requestedTimeStep));
+		vtkPartitionedDataSetCollection::GetData(outInfo)->DeepCopy(this->repository.getVtkPartitionedDatasSetCollection(requestedTimeStep));
     } 
     catch (const std::exception &e)
     {
