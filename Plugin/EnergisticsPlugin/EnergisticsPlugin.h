@@ -157,7 +157,7 @@ private:
 	vtkMultiProcessController *Controller;
 
 	// treeview
-	std::set<std::string> Selectors;
+	std::set<std::string> selectors;
 	int AssemblyTag;
 
 	// Properties
