@@ -30,11 +30,13 @@
 			<DoubleVectorProperty information_only="1" name="TimestepValues" repeatable="1">
 				<TimeStepsInformationHelper />
 			</DoubleVectorProperty>
+
+
 			<!-- treeView Selection -->
 			<IntVectorProperty name="AssemblyTag" command="GetAssemblyTag" information_only="1">
 				<Documentation> This is simply an int that changes whenever a new assembly is built by the reader. This can be used to determine if the assembly should be fetched from the reader whenever the reader is updated.</Documentation>
 			</IntVectorProperty>
-			<StringVectorProperty name="AssemblySelectors" command="AddSelector" clean_command="ClearSelectors" repeat_command="1" number_of_elements_per_command="1" panel_widget="data_assembly_editor">
+			<StringVectorProperty name="Selectors" command="AddSelector" clean_command="ClearSelectors" repeat_command="1" number_of_elements_per_command="1" panel_widget="data_assembly_editor">
 				<DataAssemblyDomain name="data_assembly">
 					<RequiredProperties>
 						<Property function="Tag" name="AssemblyTag" />
@@ -46,6 +48,8 @@
 					<PropertyWidgetDecorator type="GenericDecorator" mode="visibility" property="AssemblyTag" value="0" inverse="1" />
 				</Hints>
 			</StringVectorProperty>
+
+
 			<!-- Wellbore marker properties: -->
 			<!-- enable/disable Marker orientation -->
 			<IntVectorProperty name="MarkerOrientation" command="setMarkerOrientation" number_of_elements="1" default_values="1">
@@ -105,11 +109,13 @@
 			<DoubleVectorProperty information_only="1" name="TimestepValues" repeatable="1">
 				<TimeStepsInformationHelper />
 			</DoubleVectorProperty>
+
+
 			<!-- treeView Selection -->
 			<IntVectorProperty name="AssemblyTag" command="GetAssemblyTag" information_only="1">
 				<Documentation> This is simply an int that changes whenever a new assembly is built by the reader. This can be used to determine if the assembly should be fetched from the reader whenever the reader is updated.</Documentation>
 			</IntVectorProperty>
-			<StringVectorProperty name="AssemblySelectors" command="AddSelector" clean_command="ClearSelectors" repeat_command="1" number_of_elements_per_command="1" panel_widget="data_assembly_editor">
+			<StringVectorProperty name="Selectors" command="AddSelector" clean_command="ClearSelectors" repeat_command="1" number_of_elements_per_command="1" panel_widget="data_assembly_editor">
 				<DataAssemblyDomain name="data_assembly">
 					<RequiredProperties>
 						<Property function="Tag" name="AssemblyTag" />
@@ -121,6 +127,8 @@
 					<PropertyWidgetDecorator type="GenericDecorator" mode="visibility" property="AssemblyTag" value="0" inverse="1" />
 				</Hints>
 			</StringVectorProperty>
+
+
 			<!-- Wellbore marker properties: -->
 			<!-- enable/disable Marker orientation -->
 			<IntVectorProperty name="MarkerOrientation" command="setMarkerOrientation" number_of_elements="1" default_values="1">

@@ -32,13 +32,17 @@ under the License.
 #include <vtkStreamingDemandDrivenPipeline.h>
 #include <vtkDataObject.h>
 
+#include <vtkSelectionSource.h>
+
+
 vtkStandardNewMacro(EnergisticsPlugin);
 vtkCxxSetObjectMacro(EnergisticsPlugin, Controller, vtkMultiProcessController);
 
 //----------------------------------------------------------------------------
-EnergisticsPlugin::EnergisticsPlugin() : FileNames(),
+EnergisticsPlugin::EnergisticsPlugin() : Files(),
                                          FilesNames(vtkStringArray::New()),
                                          Controller(nullptr),
+                                         Selectors({}),
                                          AssemblyTag(0),
                                          MarkerOrientation(true),
                                          MarkerSize(10)
@@ -58,13 +62,13 @@ void EnergisticsPlugin::SetFileName(const char *fname)
     return;
   }
 
-  if (this->FileNames.size() == 1 && *this->FileNames.begin() == fname)
+  if (this->Files.size() == 1 && *this->Files.begin() == fname)
   {
     return;
   }
 
-  this->FileNames.clear();
-  this->FileNames.insert(fname);
+  this->Files.clear();
+  this->Files.insert(fname);
   this->Modified();
 }
 
@@ -80,9 +84,9 @@ void EnergisticsPlugin::AddFileName(const char *fname)
 //----------------------------------------------------------------------------
 void EnergisticsPlugin::ClearFileNames()
 {
-  if (!this->FileNames.empty())
+  if (!this->Files.empty())
   {
-    this->FileNames.clear();
+    this->Files.clear();
     this->Modified();
   }
 }
@@ -90,9 +94,9 @@ void EnergisticsPlugin::ClearFileNames()
 //----------------------------------------------------------------------------
 const char *EnergisticsPlugin::GetFileName(int index) const
 {
-  if (this->FileNames.size() > index)
+  if (this->Files.size() > index)
   {
-    auto iter = std::next(this->FileNames.begin(), index);
+    auto iter = std::next(this->Files.begin(), index);
     return iter->c_str();
   }
   return nullptr;
@@ -101,7 +105,7 @@ const char *EnergisticsPlugin::GetFileName(int index) const
 //----------------------------------------------------------------------------
 size_t EnergisticsPlugin::GetNumberOfFileNames() const
 {
-  return this->FileNames.size();
+  return this->Files.size();
 }
 
 //------------------------------------------------------------------------------
@@ -146,24 +150,19 @@ void EnergisticsPlugin::SetFiles(const std::string &file)
 }
 
 //----------------------------------------------------------------------------
-bool EnergisticsPlugin::AddSelector(const char *selector)
+bool EnergisticsPlugin::AddSelector(const char *path)
 {
-  if (selector != nullptr)
+
+  if (path != nullptr && this->Selectors.insert(path).second)
   {
-    int node_id = GetAssembly()->GetFirstNodeByPath(selector);
-    
-    if (node_id == -1)
+    int node_id = GetAssembly()->GetFirstNodeByPath(path);
+    if (node_id == -1) // for load State => addSelector before treeView loaded
     {
-        selectorNotLoaded.insert(std::string(selector));
+        selectorNotLoaded.insert(std::string(path));
     }
-    else
+    else 
     {
         std::string selection_parent = this->repository.selectNodeId(node_id);
-        //if (selection_parent != "") {
-   //     if (node_id!=41)
-     //   SetSelector("/data/WellboreTrajectoryRepresentation.Wellbore1.Interp1.TrajRep");
-        //}
-        this->Modified();
         Modified();
         Update();
         UpdateDataObject();
@@ -179,9 +178,9 @@ bool EnergisticsPlugin::AddSelector(const char *selector)
 void EnergisticsPlugin::ClearSelectors()
 {
   this->repository.clearSelection();
-  if (!this->selectors.empty())
+  if (!this->Selectors.empty())
   {
-    this->selectors.clear();
+    this->Selectors.clear();
     this->Modified();
   }
 }
@@ -189,7 +188,7 @@ void EnergisticsPlugin::ClearSelectors()
 //----------------------------------------------------------------------------
 int EnergisticsPlugin::GetNumberOfSelectors() const
 {
-  return this->selectors.size();
+  return this->Selectors.size();
 }
 
 //----------------------------------------------------------------------------
@@ -210,7 +209,7 @@ const char *EnergisticsPlugin::GetSelector(int index) const
 {
   if (index >= 0 && index < this->GetNumberOfSelectors())
   {
-    auto iter = std::next(this->selectors.begin(), index);
+    auto iter = std::next(this->Selectors.begin(), index);
     return iter->c_str();
   }
   return nullptr;

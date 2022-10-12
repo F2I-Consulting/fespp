@@ -78,8 +78,6 @@ public:
 	void clearSelection();
 
 private:
-	int addNodeGroup(std::string name, int idNode); // return: idNode for the groupName
-
 	std::string buildDataAssemblyFromDataObjectRepo(const char *fileName);
 
 	std::string searchPolylines(const std::string &fileName);
@@ -100,9 +98,6 @@ private:
 
 	ResqmlAbstractRepresentationToVtkDataset *loadToVtk(std::string uuid, double time);
 
-	std::string changeInvalidCharacter(std::string text);
-	int searchNodeByUuid(const std::string &uuid);
-
 	bool markerOrientation;
 	int markerSize;
 
@@ -110,7 +105,6 @@ private:
 
 	vtkSmartPointer<vtkPartitionedDataSetCollection> output;
 
-	std::map<int, std::string> nodeId_to_uuid;									// index of VtkDataAssembly to Resqml uuid
 	std::map<int, ResqmlAbstractRepresentationToVtkDataset *> nodeId_to_resqml; // index of VtkDataAssembly to ResqmlAbstractRepresentationToVtkDataset
 
 	//\/          uuid             title            index        prop_uuid

@@ -147,7 +147,7 @@ private:
 	int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) final;
 
 	// files
-	std::set<std::string> FileNames;
+	std::set<std::string> Files;
 	vtkSmartPointer<vtkStringArray> FilesNames;
 	std::set<std::string> FileNamesLoaded;
 
@@ -157,7 +157,7 @@ private:
 	vtkMultiProcessController *Controller;
 
 	// treeview
-	std::set<std::string> selectors;
+	std::set<std::string> Selectors;
 	int AssemblyTag;
 
 	// Properties
