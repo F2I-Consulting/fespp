@@ -18,11 +18,7 @@ under the License.
 -----------------------------------------------------------------------*/
 #include "ResqmlMapping/ResqmlUnstructuredGridToVtkUnstructuredGrid.h"
 
-// SYSTEM
-#include <sstream>
-
 // VTK
-#include <vtkSmartPointer.h>
 #include <vtkCellData.h>
 #include <vtkPointData.h>
 #include <vtkDataArray.h>
@@ -39,11 +35,7 @@ under the License.
 
 // FESAPI
 #include <fesapi/resqml2/UnstructuredGridRepresentation.h>
-//#include <fesapi/resqml2/SubRepresentation.h>
 #include <fesapi/resqml2/AbstractLocal3dCrs.h>
-
-// FESPP
-#include "ResqmlMapping/ResqmlAbstractRepresentationToVtkDataset.h"
 
 //----------------------------------------------------------------------------
 ResqmlUnstructuredGridToVtkUnstructuredGrid::ResqmlUnstructuredGridToVtkUnstructuredGrid(RESQML2_NS::UnstructuredGridRepresentation *unstructuredGrid, int proc_number, int max_proc)
