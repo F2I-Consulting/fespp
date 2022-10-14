@@ -166,11 +166,6 @@ ResqmlPropertyToVtkDataArray::ResqmlPropertyToVtkDataArray(resqml2::AbstractValu
 	}
 
 	const unsigned int elementCountPerValue = valuesProperty->getElementCountPerValue();
-	if (elementCountPerValue > 1)
-	{
-		throw std::invalid_argument("Does not support vectorial property yet");
-	}
-
 	const std::string name = valuesProperty->getTitle();
 	if (valuesProperty->getXmlTag() == resqml2::ContinuousProperty::XML_TAG)
 	{
@@ -186,6 +181,7 @@ ResqmlPropertyToVtkDataArray::ResqmlPropertyToVtkDataArray(resqml2::AbstractValu
 		valuesProperty->getDoubleValuesOfPatch(patch_index, valuesDoubleSet);
 
 		vtkSmartPointer<vtkDoubleArray> cellDataDouble = vtkSmartPointer<vtkDoubleArray>::New();
+		cellDataDouble->SetNumberOfComponents(elementCountPerValue);
 		cellDataDouble->Allocate(nbElement * elementCountPerValue);
 		cellDataDouble->SetName(name.c_str());
 		cellDataDouble->SetArray(valuesDoubleSet, nbElement * elementCountPerValue, 0, vtkAbstractArray::VTK_DATA_ARRAY_DELETE);
@@ -199,6 +195,7 @@ ResqmlPropertyToVtkDataArray::ResqmlPropertyToVtkDataArray(resqml2::AbstractValu
 		valuesProperty->getIntValuesOfPatch(patch_index, values);
 
 		vtkSmartPointer<vtkIntArray> cellDataInt = vtkSmartPointer<vtkIntArray>::New();
+		cellDataInt->SetNumberOfComponents(elementCountPerValue);
 		cellDataInt->Allocate(nbElement * elementCountPerValue);
 		cellDataInt->SetName(name.c_str());
 		cellDataInt->SetArray(values, nbElement * elementCountPerValue, 0, vtkAbstractArray::VTK_DATA_ARRAY_DELETE);
