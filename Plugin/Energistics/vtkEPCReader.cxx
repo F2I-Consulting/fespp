@@ -32,8 +32,6 @@ under the License.
 #include <vtkStreamingDemandDrivenPipeline.h>
 #include <vtkDataObject.h>
 
-#include "vtkProperty.h"
-
 vtkStandardNewMacro(vtkEPCReader);
 vtkCxxSetObjectMacro(vtkEPCReader, Controller, vtkMultiProcessController);
 
