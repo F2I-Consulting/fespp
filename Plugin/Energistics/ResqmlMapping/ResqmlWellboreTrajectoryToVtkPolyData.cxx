@@ -41,8 +41,6 @@ ResqmlWellboreTrajectoryToVtkPolyData::ResqmlWellboreTrajectoryToVtkPolyData(res
 
 	this->vtkData = vtkSmartPointer<vtkPartitionedDataSet>::New();
 
-	this->loadVtkObject();
-
 	this->vtkData->Modified();
 }
 

@@ -791,7 +791,7 @@ vtkPartitionedDataSetCollection *ResqmlDataRepositoryToVtkPartitionedDataSetColl
 
     unsigned int index = 0; // index for PartionedDatasSet
 
-    // delete Property or Wellbore marker
+    // delete unchecked object
     for (const int selection : this->old_selection)
     {
         const std::string uuid_unselect = std::string(tmp_assembly->GetNodeName(selection)).substr(1);

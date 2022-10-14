@@ -43,7 +43,6 @@ ResqmlTriangulatedSetToVtkPartitionedDataSet::ResqmlTriangulatedSetToVtkPartitio
 {
 	this->vtkData = vtkSmartPointer<vtkPartitionedDataSet>::New();
 	this->pointCount = resqmlData->getXyzPointCountOfAllPatches();
-	this->loadVtkObject();
 	this->vtkData->Modified();
 }
 

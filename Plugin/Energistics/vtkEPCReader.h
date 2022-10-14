@@ -31,6 +31,7 @@ under the License.
 #include "ResqmlMapping/ResqmlDataRepositoryToVtkPartitionedDataSetCollection.h"
 
 class vtkDataAssembly;
+class vtkProperty;
 class vtkMultiProcessController;
 
 /**
@@ -42,6 +43,11 @@ public:
 	static vtkEPCReader *New();
 	vtkTypeMacro(vtkEPCReader, vtkPartitionedDataSetCollectionAlgorithm);
 	void PrintSelf(ostream &os, vtkIndent indent) final;
+
+	/**
+ * Get the property associated with the object.
+ */
+	virtual vtkProperty* GetProperty() { return this->Property; }
 
 	// --------------- PART: files------ -------------
 
@@ -142,6 +148,7 @@ public:
 protected:
 	vtkEPCReader();
 	~vtkEPCReader() final { SetController(nullptr); }
+	//int ReadProperty(vtkProperty* property);
 
 private:
 	int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) final;
@@ -165,5 +172,7 @@ private:
 	int MarkerSize;
 
 	ResqmlDataRepositoryToVtkPartitionedDataSetCollection repository;
+
+	vtkProperty* Property;
 };
 #endif

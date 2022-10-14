@@ -57,8 +57,6 @@ ResqmlUnstructuredGridToVtkUnstructuredGrid::ResqmlUnstructuredGridToVtkUnstruct
 
 	this->vtkData = vtkSmartPointer<vtkPartitionedDataSet>::New();
 
-	this->loadVtkObject();
-
 	this->vtkData->Modified();
 }
 

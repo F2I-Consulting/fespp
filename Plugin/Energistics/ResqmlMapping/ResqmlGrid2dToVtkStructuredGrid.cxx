@@ -41,8 +41,6 @@ ResqmlGrid2dToVtkStructuredGrid::ResqmlGrid2dToVtkStructuredGrid(RESQML2_NS::Gri
 
 	this->vtkData = vtkSmartPointer<vtkPartitionedDataSet>::New();
 
-	this->loadVtkObject();
-
 	this->vtkData->Modified();
 }
 

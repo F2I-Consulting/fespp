@@ -32,6 +32,8 @@ under the License.
 #include <vtkStreamingDemandDrivenPipeline.h>
 #include <vtkDataObject.h>
 
+#include "vtkProperty.h"
+
 vtkStandardNewMacro(vtkEPCReader);
 vtkCxxSetObjectMacro(vtkEPCReader, Controller, vtkMultiProcessController);
 
@@ -46,8 +48,31 @@ vtkEPCReader::vtkEPCReader() : Files(),
   SetNumberOfInputPorts(0);
   SetNumberOfOutputPorts(1);
 
+  //this->Property = vtkProperty::New();
+
   this->SetController(vtkMultiProcessController::GetGlobalController());
 }
+
+//------------------------------------------------------------------------------
+// int vtkEPCReader::ReadProperty(vtkProperty* property)
+// {
+//     vtkFloatArray* tmpArray = vtkFloatArray::New();
+
+//     int status = this->ParseValues(tmpArray, 5);
+
+//     if (status != 0)
+//     {
+//         property->SetAmbient(tmpArray->GetValue(0));
+//         property->SetDiffuse(tmpArray->GetValue(1));
+//         property->SetSpecular(tmpArray->GetValue(2));
+//         property->SetSpecularPower(tmpArray->GetValue(3));
+//         property->SetOpacity(tmpArray->GetValue(4));
+//     }
+
+//     tmpArray->Delete();
+
+//     return status;
+// }
 
 //----------------------------------------------------------------------------
 void vtkEPCReader::SetFileName(const char *fname)
@@ -140,8 +165,9 @@ vtkStringArray *vtkEPCReader::GetAllFilesNames()
 //------------------------------------------------------------------------------
 void vtkEPCReader::SetFiles(const std::string &file)
 {
-    if (file != "0") {
-             this->FilesNames->InsertNextValue(file);
+    if (file != "0")
+    {
+        this->Files.insert(file);
     }
 }
 
@@ -159,6 +185,13 @@ bool vtkEPCReader::AddSelector(const char *path)
     else
     {
         std::string selection_parent = this->repository.selectNodeId(node_id);
+ /*
+        if (GetAssembly()->HasAttribute(node_id, "traj"))
+        {
+            int node_id_parent = GetAssembly()->GetAttributeOrDefault(node_id, "traj", 0);
+            vtkOutputWindowDisplayText(std::to_string(node_id_parent).c_str());
+        }
+ */
         Modified();
         Update();
         UpdateDataObject();

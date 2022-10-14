@@ -53,6 +53,6 @@ protected:
 	unsigned int getPreviousPatchesNodeCount() const;
 
 	RESQML2_NS::TriangulatedSetRepresentation *resqmlData;
-	int patch_index;
+	unsigned int patch_index;
 };
 #endif

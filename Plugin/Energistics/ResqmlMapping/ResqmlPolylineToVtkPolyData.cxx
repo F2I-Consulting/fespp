@@ -44,8 +44,6 @@ ResqmlPolylineToVtkPolyData::ResqmlPolylineToVtkPolyData(RESQML2_NS::PolylineSet
 
 	this->vtkData = vtkSmartPointer<vtkPartitionedDataSet>::New();
 
-	this->loadVtkObject();
-
 	this->vtkData->Modified();
 }
 

@@ -193,7 +193,6 @@ int vtkETPSource::RequestData(vtkInformation *,
                                          vtkInformationVector **,
                                          vtkInformationVector *outputVector)
 {
-
   auto* outInfo = outputVector->GetInformationObject(0);
   outInfo->Remove(vtkStreamingDemandDrivenPipeline::TIME_STEPS());
   const std::vector<double> times = this->repository.getTimes();
