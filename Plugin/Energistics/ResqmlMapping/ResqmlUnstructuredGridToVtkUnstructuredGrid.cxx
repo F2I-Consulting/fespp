@@ -18,11 +18,7 @@ under the License.
 -----------------------------------------------------------------------*/
 #include "ResqmlMapping/ResqmlUnstructuredGridToVtkUnstructuredGrid.h"
 
-// SYSTEM
-#include <sstream>
-
 // VTK
-#include <vtkSmartPointer.h>
 #include <vtkCellData.h>
 #include <vtkPointData.h>
 #include <vtkDataArray.h>
@@ -39,11 +35,7 @@ under the License.
 
 // FESAPI
 #include <fesapi/resqml2/UnstructuredGridRepresentation.h>
-//#include <fesapi/resqml2/SubRepresentation.h>
 #include <fesapi/resqml2/AbstractLocal3dCrs.h>
-
-// FESPP
-#include "ResqmlMapping/ResqmlAbstractRepresentationToVtkDataset.h"
 
 //----------------------------------------------------------------------------
 ResqmlUnstructuredGridToVtkUnstructuredGrid::ResqmlUnstructuredGridToVtkUnstructuredGrid(RESQML2_NS::UnstructuredGridRepresentation *unstructuredGrid, int proc_number, int max_proc)
@@ -64,7 +56,7 @@ ResqmlUnstructuredGridToVtkUnstructuredGrid::ResqmlUnstructuredGridToVtkUnstruct
 void ResqmlUnstructuredGridToVtkUnstructuredGrid::loadVtkObject()
 {
 	vtkSmartPointer<vtkUnstructuredGrid> vtk_unstructuredGrid = vtkSmartPointer<vtkUnstructuredGrid>::New();
-	vtk_unstructuredGrid->Allocate(this->resqmlData->getCellCount());
+	vtk_unstructuredGrid->AllocateExact(resqmlData->getCellCount(), resqmlData->getXyzPointCountOfAllPatches());
 
 	// POINTS
 	vtkSmartPointer<vtkPoints> vtkPts = createPoints();
@@ -72,18 +64,11 @@ void ResqmlUnstructuredGridToVtkUnstructuredGrid::loadVtkObject()
 	vtk_unstructuredGrid->SetPoints(vtkPts);
 
 	this->resqmlData->loadGeometry();
-	// CELLS
-	const unsigned int nodeCount = this->resqmlData->getNodeCount();
-	std::unique_ptr<vtkIdType[]> pointIds(new vtkIdType[nodeCount]);
-	for (unsigned int i = 0; i < nodeCount; ++i)
-	{
-		pointIds[i] = i;
-	}
 
-	const ULONG64 cellCount = this->resqmlData->getCellCount();
-	ULONG64 const *cumulativeFaceCountPerCell = this->resqmlData->isFaceCountOfCellsConstant()
-													? nullptr
-													: this->resqmlData->getCumulativeFaceCountPerCell(); // This pointer is owned and managed by FESAPI
+	const uint64_t cellCount = this->resqmlData->getCellCount();
+	uint64_t const* cumulativeFaceCountPerCell = this->resqmlData->isFaceCountOfCellsConstant()
+		? nullptr
+		: this->resqmlData->getCumulativeFaceCountPerCell(); // This pointer is owned and managed by FESAPI
 	std::unique_ptr<unsigned char[]> cellFaceNormalOutwardlyDirected(new unsigned char[cumulativeFaceCountPerCell == nullptr
 																						   ? cellCount * this->resqmlData->getConstantFaceCountOfCells()
 																						   : cumulativeFaceCountPerCell[cellCount - 1]]);
@@ -92,11 +77,11 @@ void ResqmlUnstructuredGridToVtkUnstructuredGrid::loadVtkObject()
 
 	auto maxCellIndex = (this->procNumber + 1) * cellCount / this->maxProc;
 
-	for (ULONG64 cellIndex = this->procNumber * cellCount / this->maxProc; cellIndex < maxCellIndex; ++cellIndex)
+	for (uint64_t cellIndex = this->procNumber * cellCount / this->maxProc; cellIndex < maxCellIndex; ++cellIndex)
 	{
 		bool isOptimizedCell = false;
 
-		const ULONG64 localFaceCount = this->resqmlData->getFaceCountOfCell(cellIndex);
+		const uint64_t localFaceCount = this->resqmlData->getFaceCountOfCell(cellIndex);
 
 		if (localFaceCount == 4)
 		{ // VTK_TETRA
@@ -127,11 +112,11 @@ void ResqmlUnstructuredGridToVtkUnstructuredGrid::loadVtkObject()
 
 			// For polyhedron cell, a special ptIds input format is required : (numCellFaces, numFace0Pts, id1, id2, id3, numFace1Pts, id1, id2, id3, ...)
 			idList->InsertNextId(localFaceCount);
-			for (ULONG64 localFaceIndex = 0; localFaceIndex < localFaceCount; ++localFaceIndex)
+			for (uint64_t localFaceIndex = 0; localFaceIndex < localFaceCount; ++localFaceIndex)
 			{
 				const unsigned int localNodeCount = this->resqmlData->getNodeCountOfFaceOfCell(cellIndex, localFaceIndex);
 				idList->InsertNextId(localNodeCount);
-				ULONG64 const *nodeIndices = this->resqmlData->getNodeIndicesOfFaceOfCell(cellIndex, localFaceIndex);
+				uint64_t const *nodeIndices = this->resqmlData->getNodeIndicesOfFaceOfCell(cellIndex, localFaceIndex);
 				for (unsigned int i = 0; i < localNodeCount; ++i)
 				{
 					idList->InsertNextId(nodeIndices[i]);
@@ -166,13 +151,27 @@ vtkSmartPointer<vtkPoints> ResqmlUnstructuredGridToVtkUnstructuredGrid::createPo
 {
 	// POINTS
 	double *allXyzPoints = new double[this->pointCount * 3]; // Will be deleted by VTK;
-	this->resqmlData->getXyzPointsOfAllPatchesInGlobalCrs(allXyzPoints);
+	bool partialCRS = false;
+	const uint64_t patchCount = resqmlData->getPatchCount();
+	for (uint64_t patchIndex = 0; patchIndex < patchCount; ++patchIndex) {
+		if (resqmlData->getLocalCrs(patchIndex)->isPartial()) {
+			partialCRS = true;
+			break;
+		}
+	}
+	if (partialCRS) {
+		vtkOutputWindowDisplayWarningText(("At least one of the local CRS of  : " + resqmlData->getUuid() + " is partial. Get coordinates in local CRS instead.\n").c_str());
+		resqmlData->getXyzPointsOfAllPatches(allXyzPoints);
+	}
+	else {
+		resqmlData->getXyzPointsOfAllPatchesInGlobalCrs(allXyzPoints);
+	}
 
 	vtkSmartPointer<vtkPoints> vtkPts = vtkSmartPointer<vtkPoints>::New();
-	const size_t coordCount = this->pointCount * 3;
-	if (this->resqmlData->getLocalCrs(0)->isDepthOriented())
+	const uint64_t coordCount = pointCount * 3;
+	if (!partialCRS && resqmlData->getLocalCrs(0)->isDepthOriented())
 	{
-		for (size_t zCoordIndex = 2; zCoordIndex < coordCount; zCoordIndex += 3)
+		for (uint64_t zCoordIndex = 2; zCoordIndex < coordCount; zCoordIndex += 3)
 		{
 			allXyzPoints[zCoordIndex] *= -1;
 		}

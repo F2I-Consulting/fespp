@@ -35,7 +35,7 @@ under the License.
 #include "ResqmlMapping/ResqmlPropertyToVtkDataArray.h"
 
 //----------------------------------------------------------------------------
-ResqmlTriangulatedToVtkPolyData::ResqmlTriangulatedToVtkPolyData(RESQML2_NS::TriangulatedSetRepresentation *triangulated, int patch_index, int proc_number, int max_proc)
+ResqmlTriangulatedToVtkPolyData::ResqmlTriangulatedToVtkPolyData(RESQML2_NS::TriangulatedSetRepresentation *triangulated, uint32_t patch_index, int proc_number, int max_proc)
 	: ResqmlAbstractRepresentationToVtkDataset(triangulated,
 											   proc_number - 1,
 											   max_proc),
@@ -49,11 +49,11 @@ ResqmlTriangulatedToVtkPolyData::ResqmlTriangulatedToVtkPolyData(RESQML2_NS::Tri
 	this->loadVtkObject();
 }
 
-unsigned int ResqmlTriangulatedToVtkPolyData::getPreviousPatchesNodeCount() const
+uint32_t ResqmlTriangulatedToVtkPolyData::getPreviousPatchesNodeCount() const
 {
-	unsigned int result = 0;
+	uint32_t result = 0;
 
-	for (unsigned int previousPatchIndex = 0; previousPatchIndex < patch_index; ++previousPatchIndex)
+	for (uint32_t previousPatchIndex = 0; previousPatchIndex < patch_index; ++previousPatchIndex)
 	{
 		result += resqmlData->getXyzPointCountOfPatch(previousPatchIndex);
 	}
