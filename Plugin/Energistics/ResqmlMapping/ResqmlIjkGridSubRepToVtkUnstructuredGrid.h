@@ -22,7 +22,7 @@ under the License.
 /** @brief	transform a resqml ijkGrid Subrepresentation to vtkUnstructuredGrid
  */
 
-#include "ResqmlAbstractRepresentationToVtkDataset.h"
+#include "ResqmlAbstractRepresentationToVtkPartitionedDataSet.h"
 
 namespace RESQML2_NS
 {
@@ -31,7 +31,7 @@ namespace RESQML2_NS
 
 class ResqmlIjkGridToVtkUnstructuredGrid;
 
-class ResqmlIjkGridSubRepToVtkUnstructuredGrid : public ResqmlAbstractRepresentationToVtkDataset
+class ResqmlIjkGridSubRepToVtkUnstructuredGrid : public ResqmlAbstractRepresentationToVtkPartitionedDataSet
 {
 public:
 	/**

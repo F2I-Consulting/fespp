@@ -16,7 +16,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 -----------------------------------------------------------------------*/
-#include "ResqmlMapping/ResqmlAbstractRepresentationToVtkDataset.h"
+#include "ResqmlMapping/ResqmlAbstractRepresentationToVtkPartitionedDataSet.h"
 
 #include <algorithm>
 
@@ -32,7 +32,7 @@ under the License.
 #include "ResqmlMapping/ResqmlPropertyToVtkDataArray.h"
 
 //----------------------------------------------------------------------------
-ResqmlAbstractRepresentationToVtkDataset::ResqmlAbstractRepresentationToVtkDataset(RESQML2_NS::AbstractRepresentation *abstract_representation, int proc_number, int max_proc):
+ResqmlAbstractRepresentationToVtkPartitionedDataSet::ResqmlAbstractRepresentationToVtkPartitionedDataSet(RESQML2_NS::AbstractRepresentation *abstract_representation, int proc_number, int max_proc):
 	procNumber(proc_number),
 	maxProc(max_proc),
 	resqmlData(abstract_representation),
@@ -41,7 +41,7 @@ ResqmlAbstractRepresentationToVtkDataset::ResqmlAbstractRepresentationToVtkDatas
 {
 }
 
-void ResqmlAbstractRepresentationToVtkDataset::addDataArray(const std::string &uuid, int patch_index)
+void ResqmlAbstractRepresentationToVtkPartitionedDataSet::addDataArray(const std::string &uuid, int patch_index)
 {
 	std::vector<RESQML2_NS::AbstractValuesProperty *> valuesPropertySet = this->resqmlData->getValuesPropertySet();
 	std::vector<RESQML2_NS::AbstractValuesProperty *>::iterator it = std::find_if(valuesPropertySet.begin(), valuesPropertySet.end(),
@@ -84,7 +84,7 @@ void ResqmlAbstractRepresentationToVtkDataset::addDataArray(const std::string &u
 	}
 }
 
-void ResqmlAbstractRepresentationToVtkDataset::deleteDataArray(const std::string &uuid)
+void ResqmlAbstractRepresentationToVtkPartitionedDataSet::deleteDataArray(const std::string &uuid)
 {
 	ResqmlPropertyToVtkDataArray* vtkDataArray = uuidToVtkDataArray[uuid];
 	if (vtkDataArray != nullptr)

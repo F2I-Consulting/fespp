@@ -25,14 +25,14 @@ under the License.
 // include system
 #include <string>
 
-#include "ResqmlMapping/ResqmlAbstractRepresentationToVtkDataset.h"
+#include "ResqmlMapping/ResqmlAbstractRepresentationToVtkPartitionedDataSet.h"
 
 namespace RESQML2_NS
 {
 	class TriangulatedSetRepresentation;
 }
 
-class ResqmlTriangulatedToVtkPolyData : public ResqmlAbstractRepresentationToVtkDataset
+class ResqmlTriangulatedToVtkPolyData : public ResqmlAbstractRepresentationToVtkPartitionedDataSet
 {
 public:
 	/**

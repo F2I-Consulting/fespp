@@ -30,7 +30,7 @@ under the License.
 
 //----------------------------------------------------------------------------
 ResqmlWellboreFrameToVtkPartitionedDataSet::ResqmlWellboreFrameToVtkPartitionedDataSet(resqml2::WellboreFrameRepresentation *frame, int proc_number, int max_proc)
-	: ResqmlAbstractRepresentationToVtkDataset(frame,
+	: ResqmlAbstractRepresentationToVtkPartitionedDataSet(frame,
 											   proc_number - 1,
 											   max_proc),
 	  resqmlData(frame)

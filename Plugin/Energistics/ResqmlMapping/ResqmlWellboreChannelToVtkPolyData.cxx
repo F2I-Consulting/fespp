@@ -32,7 +32,7 @@ under the License.
 
 //----------------------------------------------------------------------------
 ResqmlWellboreChannelToVtkPolyData::ResqmlWellboreChannelToVtkPolyData(RESQML2_NS::WellboreFrameRepresentation *frame, RESQML2_NS::AbstractValuesProperty *property, const std::string &uuid, int proc_number, int max_proc)
-	: ResqmlAbstractRepresentationToVtkDataset(frame,
+	: ResqmlAbstractRepresentationToVtkPartitionedDataSet(frame,
 											   proc_number - 1,
 											   max_proc),
 	  abstractProperty(property),

@@ -30,14 +30,15 @@ under the License.
 #include <vtkSmartPointer.h> 
 #include <vtkStructuredGrid.h>
 
-#include "ResqmlAbstractRepresentationToVtkDataset.h"
+#include "ResqmlAbstractRepresentationToVtkPartitionedDataSet.h"
 
 namespace RESQML2_NS
 {
 	class Grid2dRepresentation;
 }
 
-class ResqmlGrid2dToVtkStructuredGrid : public ResqmlAbstractRepresentationToVtkDataset {
+class ResqmlGrid2dToVtkStructuredGrid : public ResqmlAbstractRepresentationToVtkPartitionedDataSet 
+{
 public:
 	/**
 	* Constructor

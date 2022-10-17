@@ -29,14 +29,14 @@ under the License.
 #include <vtkSmartPointer.h>
 #include <vtkPoints.h>
 
-#include "ResqmlAbstractRepresentationToVtkDataset.h"
+#include "ResqmlAbstractRepresentationToVtkPartitionedDataSet.h"
 
 namespace RESQML2_NS
 {
 	class AbstractIjkGridRepresentation;
 }
 
-class ResqmlIjkGridToVtkUnstructuredGrid : public ResqmlAbstractRepresentationToVtkDataset
+class ResqmlIjkGridToVtkUnstructuredGrid : public ResqmlAbstractRepresentationToVtkPartitionedDataSet
 {
 public:
 	/**

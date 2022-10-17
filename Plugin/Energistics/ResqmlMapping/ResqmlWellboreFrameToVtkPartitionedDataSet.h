@@ -19,7 +19,7 @@ under the License.
 #ifndef __ResqmlWellboreFrameToVtkPartitionedDataSet_H_
 #define __ResqmlWellboreFrameToVtkPartitionedDataSet_H_
 
-#include "ResqmlAbstractRepresentationToVtkDataset.h"
+#include "ResqmlAbstractRepresentationToVtkPartitionedDataSet.h"
 
 namespace RESQML2_NS
 {
@@ -29,7 +29,7 @@ namespace RESQML2_NS
 
 class ResqmlWellboreChannelToVtkPolyData;
 
-class ResqmlWellboreFrameToVtkPartitionedDataSet : public ResqmlAbstractRepresentationToVtkDataset
+class ResqmlWellboreFrameToVtkPartitionedDataSet : public ResqmlAbstractRepresentationToVtkPartitionedDataSet
 {
 public:
 	/**

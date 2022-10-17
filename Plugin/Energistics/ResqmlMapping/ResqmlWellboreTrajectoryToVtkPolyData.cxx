@@ -32,7 +32,7 @@ under the License.
 
 //----------------------------------------------------------------------------
 ResqmlWellboreTrajectoryToVtkPolyData::ResqmlWellboreTrajectoryToVtkPolyData(resqml2::WellboreTrajectoryRepresentation *wellbore, int proc_number, int max_proc)
-	: ResqmlAbstractRepresentationToVtkDataset(wellbore,
+	: ResqmlAbstractRepresentationToVtkPartitionedDataSet(wellbore,
 											   proc_number - 1,
 											   max_proc),
 	  resqmlData(wellbore)

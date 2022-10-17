@@ -19,7 +19,7 @@ under the License.
 #ifndef __ResqmlWellboreChannelToVtkPolyData_H_
 #define __ResqmlWellboreChannelToVtkPolyData__H_
 
-#include "ResqmlMapping/ResqmlAbstractRepresentationToVtkDataset.h"
+#include "ResqmlMapping/ResqmlAbstractRepresentationToVtkPartitionedDataSet.h"
 
 namespace RESQML2_NS
 {
@@ -27,7 +27,7 @@ namespace RESQML2_NS
 	class AbstractValuesProperty;
 }
 
-class ResqmlWellboreChannelToVtkPolyData : public ResqmlAbstractRepresentationToVtkDataset
+class ResqmlWellboreChannelToVtkPolyData : public ResqmlAbstractRepresentationToVtkPartitionedDataSet
 {
 public:
 	/**

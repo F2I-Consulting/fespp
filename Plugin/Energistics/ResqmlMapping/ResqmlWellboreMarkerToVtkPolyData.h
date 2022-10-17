@@ -19,7 +19,7 @@ under the License.
 #ifndef _ResqmlWellboreMarkerToVtkPolyData_H_
 #define _ResqmlWellboreMarkerToVtkPolyData_H_
 
-#include "ResqmlMapping/ResqmlAbstractRepresentationToVtkDataset.h"
+#include "ResqmlMapping/ResqmlAbstractRepresentationToVtkPartitionedDataSet.h"
 
 #include <set>
 
@@ -28,7 +28,7 @@ namespace RESQML2_NS
 	class WellboreMarkerFrameRepresentation;
 }
 
-class ResqmlWellboreMarkerToVtkPolyData : public ResqmlAbstractRepresentationToVtkDataset
+class ResqmlWellboreMarkerToVtkPolyData : public ResqmlAbstractRepresentationToVtkPartitionedDataSet
 {
 public:
 	/**

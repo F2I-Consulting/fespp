@@ -39,7 +39,7 @@ under the License.
 
 //----------------------------------------------------------------------------
 ResqmlUnstructuredGridToVtkUnstructuredGrid::ResqmlUnstructuredGridToVtkUnstructuredGrid(RESQML2_NS::UnstructuredGridRepresentation *unstructuredGrid, int proc_number, int max_proc)
-	: ResqmlAbstractRepresentationToVtkDataset(unstructuredGrid,
+	: ResqmlAbstractRepresentationToVtkPartitionedDataSet(unstructuredGrid,
 											   proc_number - 1,
 											   max_proc),
 	  resqmlData(unstructuredGrid)

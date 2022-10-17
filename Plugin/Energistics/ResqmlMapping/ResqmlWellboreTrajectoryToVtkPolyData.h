@@ -19,14 +19,14 @@ under the License.
 #ifndef __ResqmlWellboreTrajectoryToVtkPolyData_h
 #define __ResqmlWellboreTrajectoryToVtkPolyData_h
 
-#include "ResqmlAbstractRepresentationToVtkDataset.h"
+#include "ResqmlAbstractRepresentationToVtkPartitionedDataSet.h"
 
 namespace resqml2
 {
 	class WellboreTrajectoryRepresentation;
 }
 
-class ResqmlWellboreTrajectoryToVtkPolyData : public ResqmlAbstractRepresentationToVtkDataset 
+class ResqmlWellboreTrajectoryToVtkPolyData : public ResqmlAbstractRepresentationToVtkPartitionedDataSet
 {
 public:
 	/**

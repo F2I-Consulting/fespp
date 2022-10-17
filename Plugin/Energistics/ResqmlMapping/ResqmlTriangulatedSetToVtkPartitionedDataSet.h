@@ -26,7 +26,7 @@ under the License.
 #include <map>
 #include <string>
 
-#include "ResqmlAbstractRepresentationToVtkDataset.h"
+#include "ResqmlAbstractRepresentationToVtkPartitionedDataSet.h"
 
 class ResqmlTriangulatedToVtkPolyData;
 
@@ -35,7 +35,7 @@ namespace RESQML2_NS
 	class TriangulatedSetRepresentation;
 }
 
-class ResqmlTriangulatedSetToVtkPartitionedDataSet : public ResqmlAbstractRepresentationToVtkDataset
+class ResqmlTriangulatedSetToVtkPartitionedDataSet : public ResqmlAbstractRepresentationToVtkPartitionedDataSet
 {
 public:
 	/**

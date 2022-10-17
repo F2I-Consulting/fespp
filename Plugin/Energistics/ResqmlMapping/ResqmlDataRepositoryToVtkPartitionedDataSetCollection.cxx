@@ -656,7 +656,7 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::clearSelection()
     this->current_selection.clear();
 }
 
-ResqmlAbstractRepresentationToVtkDataset *ResqmlDataRepositoryToVtkPartitionedDataSetCollection::loadToVtk(std::string uuid, double time)
+ResqmlAbstractRepresentationToVtkPartitionedDataSet *ResqmlDataRepositoryToVtkPartitionedDataSetCollection::loadToVtk(std::string uuid, double time)
 {
 
     if (uuid == "ata") // root
@@ -679,7 +679,7 @@ ResqmlAbstractRepresentationToVtkDataset *ResqmlDataRepositoryToVtkPartitionedDa
 
     COMMON_NS::AbstractObject *const result = repository->getDataObjectByUuid(uuid);
 
-    ResqmlAbstractRepresentationToVtkDataset *rep = nullptr;
+    ResqmlAbstractRepresentationToVtkPartitionedDataSet *rep = nullptr;
     try
     {
         if (dynamic_cast<RESQML2_NS::AbstractIjkGridRepresentation *>(result) != nullptr)
@@ -758,7 +758,7 @@ ResqmlAbstractRepresentationToVtkDataset *ResqmlDataRepositoryToVtkPartitionedDa
             }
             else
             {
-                static_cast<ResqmlAbstractRepresentationToVtkDataset *>(nodeId_to_resqml[node_parent])->addDataArray(uuid);
+                static_cast<ResqmlAbstractRepresentationToVtkPartitionedDataSet *>(nodeId_to_resqml[node_parent])->addDataArray(uuid);
             }
             return nullptr;
         }
@@ -825,7 +825,7 @@ vtkPartitionedDataSetCollection *ResqmlDataRepositoryToVtkPartitionedDataSetColl
                     {
                         if (this->nodeId_to_resqml.find(node_parent) != this->nodeId_to_resqml.end())
                         {
-                            ResqmlAbstractRepresentationToVtkDataset *rep = this->nodeId_to_resqml[node_parent];
+                            ResqmlAbstractRepresentationToVtkPartitionedDataSet *rep = this->nodeId_to_resqml[node_parent];
                             rep->deleteDataArray(assembly->GetNodeName(selection));
                         }
                     }
@@ -865,7 +865,7 @@ vtkPartitionedDataSetCollection *ResqmlDataRepositoryToVtkPartitionedDataSetColl
     // foreach selection node
     for (const int node_selection : this->current_selection)
     {
-        ResqmlAbstractRepresentationToVtkDataset *rep = nullptr;
+        ResqmlAbstractRepresentationToVtkPartitionedDataSet *rep = nullptr;
         if (this->nodeId_to_resqml.find(node_selection) != this->nodeId_to_resqml.end())
         {
             rep = this->nodeId_to_resqml[node_selection];

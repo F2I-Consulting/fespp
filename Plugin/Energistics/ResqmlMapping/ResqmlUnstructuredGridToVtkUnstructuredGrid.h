@@ -19,7 +19,7 @@ under the License.
 #ifndef __ResqmlUnstructuredGridToVtkUnstructuredGrid_h
 #define __ResqmlUnstructuredGridToVtkUnstructuredGrid_h
 
-#include "ResqmlAbstractRepresentationToVtkDataset.h"
+#include "ResqmlAbstractRepresentationToVtkPartitionedDataSet.h"
 
 // include VTK
 #include <vtkSmartPointer.h>
@@ -30,7 +30,7 @@ namespace RESQML2_NS
 	class UnstructuredGridRepresentation;
 }
 
-class ResqmlUnstructuredGridToVtkUnstructuredGrid : public ResqmlAbstractRepresentationToVtkDataset
+class ResqmlUnstructuredGridToVtkUnstructuredGrid : public ResqmlAbstractRepresentationToVtkPartitionedDataSet
 {
 public:
 	/**

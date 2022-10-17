@@ -40,12 +40,12 @@ under the License.
 #include <fesapi/resqml2/AbstractLocal3dCrs.h>
 
 // FESPP
-#include "ResqmlAbstractRepresentationToVtkDataset.h"
+#include "ResqmlAbstractRepresentationToVtkPartitionedDataSet.h"
 #include "ResqmlUnstructuredGridToVtkUnstructuredGrid.h"
 
 //----------------------------------------------------------------------------
 ResqmlUnstructuredGridSubRepToVtkUnstructuredGrid::ResqmlUnstructuredGridSubRepToVtkUnstructuredGrid(RESQML2_NS::SubRepresentation *subRep, ResqmlUnstructuredGridToVtkUnstructuredGrid *support, int proc_number, int max_proc)
-	: ResqmlAbstractRepresentationToVtkDataset(subRep,
+	: ResqmlAbstractRepresentationToVtkPartitionedDataSet(subRep,
 											   proc_number - 1,
 											   max_proc),
 	  resqmlData(subRep),

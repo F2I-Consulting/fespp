@@ -42,7 +42,7 @@ namespace resqml2
 	class AbstractRepresentation;
 }
 
-class ResqmlAbstractRepresentationToVtkDataset;
+class ResqmlAbstractRepresentationToVtkPartitionedDataSet;
 
 /**
  * @brief	class description.
@@ -96,7 +96,7 @@ private:
 	void selectNodeIdParent(int node);
 	void selectNodeIdChildren(int node);
 
-	ResqmlAbstractRepresentationToVtkDataset* loadToVtk(std::string uuid, double time);
+	ResqmlAbstractRepresentationToVtkPartitionedDataSet* loadToVtk(std::string uuid, double time);
 
 	bool markerOrientation;
 	int markerSize;
@@ -105,7 +105,7 @@ private:
 
 	vtkSmartPointer<vtkPartitionedDataSetCollection> output;
 
-	std::map<int, ResqmlAbstractRepresentationToVtkDataset*> nodeId_to_resqml; // index of VtkDataAssembly to ResqmlAbstractRepresentationToVtkDataset
+	std::map<int, ResqmlAbstractRepresentationToVtkPartitionedDataSet*> nodeId_to_resqml; // index of VtkDataAssembly to ResqmlAbstractRepresentationToVtkPartitionedDataSet
 
 	//\/          uuid             title            index        prop_uuid
 	std::map<std::string, std::map<std::string, std::map<double, std::string>>> timeSeries_uuid_and_title_to_index_and_properties_uuid;

@@ -19,7 +19,7 @@ under the License.
 #ifndef __ResqmlPolylineToVtkPolyData_h
 #define __ResqmlPolylineToVtkPolyData_h
 
-#include "ResqmlAbstractRepresentationToVtkDataset.h"
+#include "ResqmlAbstractRepresentationToVtkPartitionedDataSet.h"
 
 namespace RESQML2_NS
 {
@@ -29,7 +29,7 @@ namespace RESQML2_NS
 /** @brief	The fespp polyline representation (set or simple)
  */
 
-class ResqmlPolylineToVtkPolyData : public ResqmlAbstractRepresentationToVtkDataset
+class ResqmlPolylineToVtkPolyData : public ResqmlAbstractRepresentationToVtkPartitionedDataSet
 {
 public:
 	/**

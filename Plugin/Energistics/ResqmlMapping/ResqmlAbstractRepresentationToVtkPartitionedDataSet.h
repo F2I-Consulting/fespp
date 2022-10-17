@@ -16,8 +16,8 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 -----------------------------------------------------------------------*/
-#ifndef __ResqmlAbstractRepresentationToVtkDataset__h__
-#define __ResqmlAbstractRepresentationToVtkDataset__h__
+#ifndef __ResqmlAbstractRepresentationTovtkPartitionedDataSet__h__
+#define __ResqmlAbstractRepresentationTovtkPartitionedDataSet__h__
 
 // include system
 #include <string>
@@ -29,33 +29,33 @@ under the License.
 // include F2i-consulting Energistics Standards API
 #include <fesapi/resqml2/AbstractRepresentation.h>
 
-/** @brief	transform a RESQML abstract representation to vtkDataSet
+/** @brief	transform a RESQML abstract representation to vtkPartitionedDataSet
  */
-class ResqmlAbstractRepresentationToVtkDataset
+class ResqmlAbstractRepresentationToVtkPartitionedDataSet
 {
 public:
 	/**
 	 * Constructor
 	 */
-	ResqmlAbstractRepresentationToVtkDataset(RESQML2_NS::AbstractRepresentation *abstract_representation, int proc_number = 1, int max_proc = 1);
+	ResqmlAbstractRepresentationToVtkPartitionedDataSet(RESQML2_NS::AbstractRepresentation *abstract_representation, int proc_number = 1, int max_proc = 1);
 
 	/**
 	 * Destructor
 	 */
-	virtual ~ResqmlAbstractRepresentationToVtkDataset() = default;
+	virtual ~ResqmlAbstractRepresentationToVtkPartitionedDataSet() = default;
 
 	/**
-	 * load vtkDataSet with resqml data
+	 * load VtkPartitionedDataSet with resqml data
 	 */
 	virtual void loadVtkObject() = 0;
 
 	/**
-	 * add a resqml property to vtkDataSet
+	 * add a resqml property to VtkPartitionedDataSet
 	 */
 	void addDataArray(const std::string &uuid, int patch_index = 0);
 
 	/**
-	 * remove a resqml property to vtkDataSet
+	 * remove a resqml property to VtkPartitionedDataSet
 	 */
 	void deleteDataArray(const std::string &uuid);
 

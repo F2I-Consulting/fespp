@@ -23,7 +23,7 @@ under the License.
  */
 
 
-#include "ResqmlAbstractRepresentationToVtkDataset.h"
+#include "ResqmlAbstractRepresentationToVtkPartitionedDataSet.h"
 
 namespace RESQML2_NS
 {
@@ -33,7 +33,7 @@ namespace RESQML2_NS
 class ResqmlUnstructuredGridToVtkUnstructuredGrid;
 class vtkUnstructuredGrid;
 
-class ResqmlUnstructuredGridSubRepToVtkUnstructuredGrid : public ResqmlAbstractRepresentationToVtkDataset
+class ResqmlUnstructuredGridSubRepToVtkUnstructuredGrid : public ResqmlAbstractRepresentationToVtkPartitionedDataSet
 {
 public:
 	/**
