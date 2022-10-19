@@ -42,7 +42,8 @@ ResqmlUnstructuredGridToVtkUnstructuredGrid::ResqmlUnstructuredGridToVtkUnstruct
 	: ResqmlAbstractRepresentationToVtkPartitionedDataSet(unstructuredGrid,
 											   proc_number - 1,
 											   max_proc),
-	  resqmlData(unstructuredGrid)
+	  resqmlData(unstructuredGrid),
+	points(vtkSmartPointer<vtkPoints>::New())
 {
 	this->pointCount = unstructuredGrid->getXyzPointCountOfAllPatches();
 	this->iCellCount = unstructuredGrid->getCellCount();
@@ -59,9 +60,7 @@ void ResqmlUnstructuredGridToVtkUnstructuredGrid::loadVtkObject()
 	vtk_unstructuredGrid->AllocateExact(resqmlData->getCellCount(), resqmlData->getXyzPointCountOfAllPatches());
 
 	// POINTS
-	vtkSmartPointer<vtkPoints> vtkPts = createPoints();
-
-	vtk_unstructuredGrid->SetPoints(vtkPts);
+	vtk_unstructuredGrid->SetPoints(this->getVtkPoints());
 
 	this->resqmlData->loadGeometry();
 
@@ -135,19 +134,15 @@ void ResqmlUnstructuredGridToVtkUnstructuredGrid::loadVtkObject()
 //----------------------------------------------------------------------------
 vtkSmartPointer<vtkPoints> ResqmlUnstructuredGridToVtkUnstructuredGrid::getVtkPoints()
 {
-	if (this->vtkData->GetNumberOfPartitions() > 0)
+	if (this->points->GetNumberOfPoints() < 1)
 	{
-		vtkUnstructuredGrid *vtk_unstructuredGrid = dynamic_cast<vtkUnstructuredGrid *>(this->vtkData->GetPartition(0));
-		if (vtk_unstructuredGrid != nullptr)
-		{
-			return vtk_unstructuredGrid->GetPoints();
-		}
+		createPoints();
 	}
-	return createPoints();
+	return this->points;
 }
 
 //----------------------------------------------------------------------------
-vtkSmartPointer<vtkPoints> ResqmlUnstructuredGridToVtkUnstructuredGrid::createPoints()
+void ResqmlUnstructuredGridToVtkUnstructuredGrid::createPoints()
 {
 	// POINTS
 	double *allXyzPoints = new double[this->pointCount * 3]; // Will be deleted by VTK;
@@ -167,7 +162,6 @@ vtkSmartPointer<vtkPoints> ResqmlUnstructuredGridToVtkUnstructuredGrid::createPo
 		resqmlData->getXyzPointsOfAllPatchesInGlobalCrs(allXyzPoints);
 	}
 
-	vtkSmartPointer<vtkPoints> vtkPts = vtkSmartPointer<vtkPoints>::New();
 	const uint64_t coordCount = pointCount * 3;
 	if (!partialCRS && resqmlData->getLocalCrs(0)->isDepthOriented())
 	{
@@ -180,8 +174,7 @@ vtkSmartPointer<vtkPoints> ResqmlUnstructuredGridToVtkUnstructuredGrid::createPo
 	vtkUnderlyingArray->SetNumberOfComponents(3);
 	// Take ownership of the underlying C array
 	vtkUnderlyingArray->SetArray(allXyzPoints, coordCount, vtkAbstractArray::VTK_DATA_ARRAY_DELETE);
-	vtkPts->SetData(vtkUnderlyingArray);
-	return vtkPts;
+	this->points->SetData(vtkUnderlyingArray);
 }
 
 //----------------------------------------------------------------------------

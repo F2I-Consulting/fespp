@@ -96,7 +96,8 @@ private:
 	void selectNodeIdParent(int node);
 	void selectNodeIdChildren(int node);
 
-	ResqmlAbstractRepresentationToVtkPartitionedDataSet* loadToVtk(std::string uuid, double time);
+	ResqmlAbstractRepresentationToVtkPartitionedDataSet* initMapper(std::string uuid);
+	ResqmlAbstractRepresentationToVtkPartitionedDataSet* loadMapper(std::string uuid, double time);
 
 	bool markerOrientation;
 	int markerSize;

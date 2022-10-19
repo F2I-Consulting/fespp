@@ -66,7 +66,7 @@ void ResqmlUnstructuredGridSubRepToVtkUnstructuredGrid::loadVtkObject()
 		vtkSmartPointer<vtkUnstructuredGrid> vtk_unstructuredGrid = vtkSmartPointer<vtkUnstructuredGrid>::New();
 		vtk_unstructuredGrid->Allocate(this->resqmlData->getElementCountOfPatch(0));
 
-		vtk_unstructuredGrid->SetPoints(this->mapperUnstructuredGrid->getVtkPoints());
+		vtk_unstructuredGrid->SetPoints(this->getMapperVtkPoint());
 
 		supportingGrid->loadGeometry();
 		// CELLS
@@ -150,6 +150,20 @@ void ResqmlUnstructuredGridSubRepToVtkUnstructuredGrid::loadVtkObject()
 	{
 		// TODO msg d'erreur
 	}
+}
+
+//----------------------------------------------------------------------------
+std::string ResqmlUnstructuredGridSubRepToVtkUnstructuredGrid::unregisterToMapperSupportingGrid()
+{
+	this->mapperUnstructuredGrid->unregisterSubRep();
+	return this->mapperUnstructuredGrid->getUuid();
+}
+
+//----------------------------------------------------------------------------
+vtkSmartPointer<vtkPoints> ResqmlUnstructuredGridSubRepToVtkUnstructuredGrid::getMapperVtkPoint()
+{
+	this->mapperUnstructuredGrid->registerSubRep();
+	return this->mapperUnstructuredGrid->getVtkPoints();
 }
 
 //----------------------------------------------------------------------------

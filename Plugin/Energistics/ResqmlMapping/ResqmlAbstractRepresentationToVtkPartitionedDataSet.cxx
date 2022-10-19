@@ -33,6 +33,7 @@ under the License.
 
 //----------------------------------------------------------------------------
 ResqmlAbstractRepresentationToVtkPartitionedDataSet::ResqmlAbstractRepresentationToVtkPartitionedDataSet(RESQML2_NS::AbstractRepresentation *abstract_representation, int proc_number, int max_proc):
+	subrep_pointer_on_points_count(0),
 	procNumber(proc_number),
 	maxProc(max_proc),
 	resqmlData(abstract_representation),
@@ -105,4 +106,29 @@ void ResqmlAbstractRepresentationToVtkPartitionedDataSet::deleteDataArray(const 
 	{
 		throw std::invalid_argument("The property " + uuid + "cannot be deleted from representation " + resqmlData->getUuid() + " since it has never been added");
 	}
+}
+
+void ResqmlAbstractRepresentationToVtkPartitionedDataSet::unloadVtkObject()
+{
+	this->vtkData = vtkSmartPointer<vtkPartitionedDataSet>::New();
+}
+
+void ResqmlAbstractRepresentationToVtkPartitionedDataSet::registerSubRep() 
+{ 
+	++subrep_pointer_on_points_count; 
+}
+
+void ResqmlAbstractRepresentationToVtkPartitionedDataSet::unregisterSubRep() 
+{
+	--subrep_pointer_on_points_count; 
+}
+
+unsigned int ResqmlAbstractRepresentationToVtkPartitionedDataSet::subRepLinkedCount()
+{ 
+	return subrep_pointer_on_points_count; 
+}
+
+std::string ResqmlAbstractRepresentationToVtkPartitionedDataSet::getUuid() const
+{
+	return this->resqmlData->getUuid();
 }

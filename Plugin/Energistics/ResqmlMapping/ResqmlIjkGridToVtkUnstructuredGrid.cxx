@@ -41,7 +41,9 @@ ResqmlIjkGridToVtkUnstructuredGrid::ResqmlIjkGridToVtkUnstructuredGrid(RESQML2_N
 	: ResqmlAbstractRepresentationToVtkPartitionedDataSet(ijkGrid,
 											   proc_number - 1,
 											   max_proc),
-	  resqmlData(ijkGrid)
+	  resqmlData(ijkGrid),
+	points(vtkSmartPointer<vtkPoints>::New()),
+	pointer_on_points(0)
 {
 	this->iCellCount = ijkGrid->getICellCount();
 	this->jCellCount = ijkGrid->getJCellCount();
@@ -88,7 +90,7 @@ void ResqmlIjkGridToVtkUnstructuredGrid::loadVtkObject()
 {
 	// Create and set the list of points of the vtkUnstructuredGrid
 	vtkSmartPointer<vtkUnstructuredGrid> vtk_unstructuredGrid = vtkSmartPointer<vtkUnstructuredGrid>::New();
-	vtk_unstructuredGrid->SetPoints(createPoints());
+	vtk_unstructuredGrid->SetPoints(this->getVtkPoints());
 
 	// Define hexahedron node ordering according to Paraview convention : https://lorensen.github.io/VTKExamples/site/VTKBook/05Chapter5/#Figure%205-3
 	std::array<unsigned int, 8> correspondingResqmlCornerId = {0, 1, 2, 3, 4, 5, 6, 7};
@@ -146,21 +148,17 @@ void ResqmlIjkGridToVtkUnstructuredGrid::loadVtkObject()
 
 vtkSmartPointer<vtkPoints> ResqmlIjkGridToVtkUnstructuredGrid::getVtkPoints()
 {
-	if (this->vtkData->GetNumberOfPartitions() > 0)
+	if (this->points->GetNumberOfPoints() < 1)
 	{
-		vtkUnstructuredGrid *vtk_unstructuredGrid = dynamic_cast<vtkUnstructuredGrid *>(this->vtkData->GetPartition(0));
-		if (vtk_unstructuredGrid != nullptr)
-		{
-			return vtk_unstructuredGrid->GetPoints();
-		}
+		createPoints();
 	}
-	return createPoints();
+	
+	return this->points;
 }
 
 //----------------------------------------------------------------------------
-vtkSmartPointer<vtkPoints> ResqmlIjkGridToVtkUnstructuredGrid::createPoints()
+void ResqmlIjkGridToVtkUnstructuredGrid::createPoints()
 {
-	vtkSmartPointer<vtkPoints> points = vtkSmartPointer<vtkPoints>::New();
 
 	if (this->isHyperslabed && !this->resqmlData->isNodeGeometryCompressed())
 	{
@@ -203,7 +201,7 @@ vtkSmartPointer<vtkPoints> ResqmlIjkGridToVtkUnstructuredGrid::createPoints()
 			const double zIndice = crs->isDepthOriented() ? -1 : 1;
 			for (uint64_t nodeIndex = 0; nodeIndex < kInterfaceNodeCount * 3; nodeIndex += 3)
 			{
-				points->InsertNextPoint(allXyzPoints[nodeIndex] + xOffset, allXyzPoints[nodeIndex + 1] + yOffset, (allXyzPoints[nodeIndex + 2] + zOffset) * zIndice);
+				this->points->InsertNextPoint(allXyzPoints[nodeIndex] + xOffset, allXyzPoints[nodeIndex + 1] + yOffset, (allXyzPoints[nodeIndex + 2] + zOffset) * zIndice);
 			}
 		}
 	}
@@ -219,9 +217,7 @@ vtkSmartPointer<vtkPoints> ResqmlIjkGridToVtkUnstructuredGrid::createPoints()
 		const double zIndice = this->resqmlData->getLocalCrs(0)->isDepthOriented() ? -1 : 1;
 		for (uint64_t pointIndex = 0; pointIndex < coordCount; pointIndex += 3)
 		{
-			points->InsertNextPoint(allXyzPoints[pointIndex], allXyzPoints[pointIndex + 1], -allXyzPoints[pointIndex + 2] * zIndice);
+			this->points->InsertNextPoint(allXyzPoints[pointIndex], allXyzPoints[pointIndex + 1], -allXyzPoints[pointIndex + 2] * zIndice);
 		}
 	}
-
-	return points;
 }

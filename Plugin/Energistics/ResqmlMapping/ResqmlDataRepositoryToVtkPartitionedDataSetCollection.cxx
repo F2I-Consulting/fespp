@@ -99,74 +99,86 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::connect(const
     boost::uuids::random_generator gen;
     ETP_NS::InitializationParameters initializationParams(gen(), etp_url);
 
-	std::map<std::string, std::string> additionalHandshakeHeaderFields = { {"data-partition-id" , data_partition} };
-	if (initializationParams.getPort() == 80) {
-		session = ETP_NS::ClientSessionLaunchers::createWsClientSession(&initializationParams, auth_connection, additionalHandshakeHeaderFields);
-	}
-	else {
-		session = ETP_NS::ClientSessionLaunchers::createWssClientSession(&initializationParams, auth_connection, additionalHandshakeHeaderFields);
-	}
-	session->setDataspaceProtocolHandlers(std::make_shared<ETP_NS::DataspaceHandlers>(session.get()));
+    std::map<std::string, std::string> additionalHandshakeHeaderFields = {{"data-partition-id", data_partition}};
+    if (initializationParams.getPort() == 80)
+    {
+        session = ETP_NS::ClientSessionLaunchers::createWsClientSession(&initializationParams, auth_connection, additionalHandshakeHeaderFields);
+    }
+    else
+    {
+        session = ETP_NS::ClientSessionLaunchers::createWssClientSession(&initializationParams, auth_connection, additionalHandshakeHeaderFields);
+    }
+    session->setDataspaceProtocolHandlers(std::make_shared<ETP_NS::DataspaceHandlers>(session.get()));
     session->setDiscoveryProtocolHandlers(std::make_shared<ETP_NS::DiscoveryHandlers>(session.get()));
-	session->setStoreProtocolHandlers(std::make_shared<ETP_NS::StoreHandlers>(session.get()));
-	session->setDataArrayProtocolHandlers(std::make_shared<ETP_NS::DataArrayHandlers>(session.get()));
+    session->setStoreProtocolHandlers(std::make_shared<ETP_NS::StoreHandlers>(session.get()));
+    session->setDataArrayProtocolHandlers(std::make_shared<ETP_NS::DataArrayHandlers>(session.get()));
 
     repository->setHdfProxyFactory(new ETP_NS::FesapiHdfProxyFactory(session.get()));
 
-	auto plainSession = std::dynamic_pointer_cast<ETP_NS::PlainClientSession>(session);
-	if (initializationParams.getPort() == 80) {
-		std::thread sessionThread(&ETP_NS::PlainClientSession::run, plainSession);
-		sessionThread.detach();
-	}
-	else {
-		auto sslSession = std::dynamic_pointer_cast<ETP_NS::SslClientSession>(session);
-		std::thread sessionThread(&ETP_NS::SslClientSession::run, sslSession);
-		sessionThread.detach();
-	}
+    auto plainSession = std::dynamic_pointer_cast<ETP_NS::PlainClientSession>(session);
+    if (initializationParams.getPort() == 80)
+    {
+        std::thread sessionThread(&ETP_NS::PlainClientSession::run, plainSession);
+        sessionThread.detach();
+    }
+    else
+    {
+        auto sslSession = std::dynamic_pointer_cast<ETP_NS::SslClientSession>(session);
+        std::thread sessionThread(&ETP_NS::SslClientSession::run, sslSession);
+        sessionThread.detach();
+    }
 
-	// Wait for the ETP session to be opened
-	auto t_start = std::chrono::high_resolution_clock::now();
-	// the work...
-	auto t_end = std::chrono::high_resolution_clock::now();
-	while (session->isEtpSessionClosed()) {
-		if (std::chrono::duration<double, std::milli>(std::chrono::high_resolution_clock::now() - t_start).count() > 5000) {
-			vtkOutputWindowDisplayWarningText(("Time out for websocket connection : " +
-				std::to_string(std::chrono::duration<double, std::milli>(std::chrono::high_resolution_clock::now() - t_start).count()) + "ms\n").c_str());
-			return "ETP time out";
-		}
-	}
+    // Wait for the ETP session to be opened
+    auto t_start = std::chrono::high_resolution_clock::now();
+    // the work...
+    auto t_end = std::chrono::high_resolution_clock::now();
+    while (session->isEtpSessionClosed())
+    {
+        if (std::chrono::duration<double, std::milli>(std::chrono::high_resolution_clock::now() - t_start).count() > 5000)
+        {
+            vtkOutputWindowDisplayWarningText(("Time out for websocket connection : " +
+                                               std::to_string(std::chrono::duration<double, std::milli>(std::chrono::high_resolution_clock::now() - t_start).count()) + "ms\n")
+                                                  .c_str());
+            return "ETP time out";
+        }
+    }
 
-	//************ LIST DATASPACES ************
-	const auto dataspaces = session->getDataspaces();
-	//************ LIST RESOURCES ************
-	const auto dsIter = std::find_if(dataspaces.begin(), dataspaces.end(),
-		[](const Energistics::Etp::v12::Datatypes::Object::Dataspace& ds) { return ds.uri == "eml:///dataspace('DANI/DEMO_F2F')"; });
-	Energistics::Etp::v12::Datatypes::Object::ContextInfo ctxInfo;
-	ctxInfo.uri = dsIter == dataspaces.end()
-		? dataspaces[0].uri
-		: dsIter->uri;
-	ctxInfo.depth = 0;
-	ctxInfo.navigableEdges = Energistics::Etp::v12::Datatypes::Object::RelationshipKind::Both;
-	ctxInfo.includeSecondaryTargets = false;
-	ctxInfo.includeSecondarySources = false;
-	const auto resources = session->getResources(ctxInfo, Energistics::Etp::v12::Datatypes::Object::ContextScopeKind::targets);
-	//************ GET ALL DATAOBJECTS ************
-	repository->setHdfProxyFactory(new ETP_NS::FesapiHdfProxyFactory(session.get()));
-	if (!resources.empty()) {
-		std::map< std::string, std::string > query;
-		for (size_t i = 0; i < resources.size(); ++i) {
-			query[std::to_string(i)] = resources[i].uri;
-		}
-		const auto dataobjects = session->getDataObjects(query);
-		for (auto& datoObject : dataobjects) {
-			repository->addOrReplaceGsoapProxy(datoObject.second.data,
-				ETP_NS::EtpHelpers::getDataObjectType(datoObject.second.resource.uri),
-				ETP_NS::EtpHelpers::getDataspaceUri(datoObject.second.resource.uri));
-		}
-	}
-	else {
-		std::cout << "There is no dataobject in this dataspace" << std::endl;
-	}
+    //************ LIST DATASPACES ************
+    const auto dataspaces = session->getDataspaces();
+    //************ LIST RESOURCES ************
+    const auto dsIter = std::find_if(dataspaces.begin(), dataspaces.end(),
+                                     [](const Energistics::Etp::v12::Datatypes::Object::Dataspace &ds)
+                                     { return ds.uri == "eml:///dataspace('DANI/DEMO_F2F')"; });
+    Energistics::Etp::v12::Datatypes::Object::ContextInfo ctxInfo;
+    ctxInfo.uri = dsIter == dataspaces.end()
+                      ? dataspaces[0].uri
+                      : dsIter->uri;
+    ctxInfo.depth = 0;
+    ctxInfo.navigableEdges = Energistics::Etp::v12::Datatypes::Object::RelationshipKind::Both;
+    ctxInfo.includeSecondaryTargets = false;
+    ctxInfo.includeSecondarySources = false;
+    const auto resources = session->getResources(ctxInfo, Energistics::Etp::v12::Datatypes::Object::ContextScopeKind::targets);
+    //************ GET ALL DATAOBJECTS ************
+    repository->setHdfProxyFactory(new ETP_NS::FesapiHdfProxyFactory(session.get()));
+    if (!resources.empty())
+    {
+        std::map<std::string, std::string> query;
+        for (size_t i = 0; i < resources.size(); ++i)
+        {
+            query[std::to_string(i)] = resources[i].uri;
+        }
+        const auto dataobjects = session->getDataObjects(query);
+        for (auto &datoObject : dataobjects)
+        {
+            repository->addOrReplaceGsoapProxy(datoObject.second.data,
+                                               ETP_NS::EtpHelpers::getDataObjectType(datoObject.second.resource.uri),
+                                               ETP_NS::EtpHelpers::getDataspaceUri(datoObject.second.resource.uri));
+        }
+    }
+    else
+    {
+        std::cout << "There is no dataobject in this dataspace" << std::endl;
+    }
 #endif
     vtkOutputWindowDisplayWarningText(("connection with paramater: " + etp_url + " data partition: " + data_partition + " authentication " + auth_connection + "\n").c_str());
     return buildDataAssemblyFromDataObjectRepo("");
@@ -656,95 +668,139 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::clearSelection()
     this->current_selection.clear();
 }
 
-ResqmlAbstractRepresentationToVtkPartitionedDataSet *ResqmlDataRepositoryToVtkPartitionedDataSetCollection::loadToVtk(std::string uuid, double time)
+ResqmlAbstractRepresentationToVtkPartitionedDataSet *ResqmlDataRepositoryToVtkPartitionedDataSetCollection::initMapper(std::string uuid)
 {
-
+    ResqmlAbstractRepresentationToVtkPartitionedDataSet *rep = nullptr;
     if (uuid == "ata") // root
     {
-        return nullptr;
+        return rep;
     }
-    if (uuid.length() > 36)
-    { // Time Series Properties
-        std::string ts_uuid = uuid.substr(0, 36);
-        std::string node_name = uuid.substr(36);
+    if (uuid.length() == 36)
+    {
 
-        auto const *assembly = this->output->GetDataAssembly();
-        const int node_parent = assembly->GetParent(output->GetDataAssembly()->FindFirstNodeWithName(("_" + uuid).c_str()));
-        if (nodeId_to_resqml[node_parent])
+        COMMON_NS::AbstractObject *const result = repository->getDataObjectByUuid(uuid);
+
+        try
         {
-            nodeId_to_resqml[node_parent]->addDataArray(timeSeries_uuid_and_title_to_index_and_properties_uuid[ts_uuid][node_name][time]);
+            if (dynamic_cast<RESQML2_NS::AbstractIjkGridRepresentation *>(result) != nullptr)
+            {
+                rep = new ResqmlIjkGridToVtkUnstructuredGrid(static_cast<RESQML2_NS::AbstractIjkGridRepresentation *>(result));
+            }
+            else if (dynamic_cast<RESQML2_NS::Grid2dRepresentation *>(result) != nullptr)
+            {
+                rep = new ResqmlGrid2dToVtkStructuredGrid(static_cast<RESQML2_NS::Grid2dRepresentation *>(result));
+            }
+            else if (dynamic_cast<RESQML2_NS::TriangulatedSetRepresentation *>(result) != nullptr)
+            {
+                rep = new ResqmlTriangulatedSetToVtkPartitionedDataSet(static_cast<RESQML2_NS::TriangulatedSetRepresentation *>(result));
+            }
+            else if (dynamic_cast<RESQML2_NS::PolylineSetRepresentation *>(result) != nullptr)
+            {
+                rep = new ResqmlPolylineToVtkPolyData(static_cast<RESQML2_NS::PolylineSetRepresentation *>(result));
+            }
+            else if (dynamic_cast<RESQML2_NS::UnstructuredGridRepresentation *>(result) != nullptr)
+            {
+                rep = new ResqmlUnstructuredGridToVtkUnstructuredGrid(static_cast<RESQML2_NS::UnstructuredGridRepresentation *>(result));
+            }
+            else if (dynamic_cast<RESQML2_NS::SubRepresentation *>(result) != nullptr)
+            {
+                RESQML2_NS::SubRepresentation *subRep = static_cast<RESQML2_NS::SubRepresentation *>(result);
+
+                if (dynamic_cast<RESQML2_NS::AbstractIjkGridRepresentation *>(subRep->getSupportingRepresentation(0)) != nullptr)
+                {
+                    auto *supportingGrid = static_cast<RESQML2_NS::AbstractIjkGridRepresentation *>(subRep->getSupportingRepresentation(0));
+                    if (this->nodeId_to_resqml.find(output->GetDataAssembly()->FindFirstNodeWithName(("_" + supportingGrid->getUuid()).c_str())) == this->nodeId_to_resqml.end())
+                    {
+                        this->nodeId_to_resqml[output->GetDataAssembly()->FindFirstNodeWithName(("_" + supportingGrid->getUuid()).c_str())] = new ResqmlIjkGridToVtkUnstructuredGrid(supportingGrid);
+                    }
+                    rep = new ResqmlIjkGridSubRepToVtkUnstructuredGrid(subRep, dynamic_cast<ResqmlIjkGridToVtkUnstructuredGrid *>(this->nodeId_to_resqml[output->GetDataAssembly()->FindFirstNodeWithName(("_" + supportingGrid->getUuid()).c_str())]));
+                }
+                else if (dynamic_cast<RESQML2_NS::UnstructuredGridRepresentation *>(subRep->getSupportingRepresentation(0)) != nullptr)
+                {
+                    auto *supportingGrid = static_cast<RESQML2_NS::UnstructuredGridRepresentation *>(subRep->getSupportingRepresentation(0));
+                    if (this->nodeId_to_resqml.find(output->GetDataAssembly()->FindFirstNodeWithName(("_" + supportingGrid->getUuid()).c_str())) == this->nodeId_to_resqml.end())
+                    {
+                        this->nodeId_to_resqml[output->GetDataAssembly()->FindFirstNodeWithName(("_" + supportingGrid->getUuid()).c_str())] = new ResqmlUnstructuredGridToVtkUnstructuredGrid(supportingGrid);
+                    }
+                    rep = new ResqmlUnstructuredGridSubRepToVtkUnstructuredGrid(subRep, dynamic_cast<ResqmlUnstructuredGridToVtkUnstructuredGrid *>(this->nodeId_to_resqml[output->GetDataAssembly()->FindFirstNodeWithName(("_" + supportingGrid->getUuid()).c_str())]));
+                }
+            }
+            else if (dynamic_cast<RESQML2_NS::WellboreTrajectoryRepresentation *>(result) != nullptr)
+            {
+                rep = new ResqmlWellboreTrajectoryToVtkPolyData(static_cast<RESQML2_NS::WellboreTrajectoryRepresentation *>(result));
+            }
+            else if (dynamic_cast<RESQML2_NS::WellboreMarkerFrameRepresentation *>(result) != nullptr)
+            {
+                rep = new ResqmlWellboreMarkerFrameToVtkPartitionedDataSet(static_cast<RESQML2_NS::WellboreMarkerFrameRepresentation *>(result));
+            }
+            else if (dynamic_cast<RESQML2_NS::WellboreFrameRepresentation *>(result) != nullptr)
+            {
+                rep = new ResqmlWellboreFrameToVtkPartitionedDataSet(static_cast<RESQML2_NS::WellboreFrameRepresentation *>(result));
+            }
+            else
+            {
+                return rep;
+            }
+            this->nodeId_to_resqml[output->GetDataAssembly()->FindFirstNodeWithName(("_" + uuid).c_str())] = rep;
         }
+        catch (const std::exception &e)
+        {
+            vtkOutputWindowDisplayErrorText(("Error when initialize uuid: " + uuid + "\n" + e.what()).c_str());
+            return rep;
+        }
+    }
+    else
+    { // time series
+        return rep;
+    }
+
+    return rep;
+}
+
+ResqmlAbstractRepresentationToVtkPartitionedDataSet *ResqmlDataRepositoryToVtkPartitionedDataSetCollection::loadMapper(std::string uuid, double time)
+{
+    try
+    { // load Time Series Properties
+        if (uuid.length() > 36)
+        {
+            std::string ts_uuid = uuid.substr(0, 36);
+            std::string node_name = uuid.substr(36);
+
+            auto const *assembly = this->output->GetDataAssembly();
+            const int node_parent = assembly->GetParent(output->GetDataAssembly()->FindFirstNodeWithName(("_" + uuid).c_str()));
+            if (nodeId_to_resqml[node_parent])
+            {
+                nodeId_to_resqml[node_parent]->addDataArray(timeSeries_uuid_and_title_to_index_and_properties_uuid[ts_uuid][node_name][time]);
+            }
+            return nullptr;
+        }
+    }
+    catch (const std::exception &e)
+    {
+        vtkOutputWindowDisplayErrorText(("Error when load Time Series property marker uuid: " + uuid + "\n" + e.what()).c_str());
         return nullptr;
     }
 
     COMMON_NS::AbstractObject *const result = repository->getDataObjectByUuid(uuid);
 
-    ResqmlAbstractRepresentationToVtkPartitionedDataSet *rep = nullptr;
     try
-    {
-        if (dynamic_cast<RESQML2_NS::AbstractIjkGridRepresentation *>(result) != nullptr)
-        {
-            rep = new ResqmlIjkGridToVtkUnstructuredGrid(static_cast<RESQML2_NS::AbstractIjkGridRepresentation *>(result));
-        }
-        else if (dynamic_cast<RESQML2_NS::Grid2dRepresentation *>(result) != nullptr)
-        {
-            rep = new ResqmlGrid2dToVtkStructuredGrid(static_cast<RESQML2_NS::Grid2dRepresentation *>(result));
-        }
-        else if (dynamic_cast<RESQML2_NS::TriangulatedSetRepresentation *>(result) != nullptr)
-        {
-            rep = new ResqmlTriangulatedSetToVtkPartitionedDataSet(static_cast<RESQML2_NS::TriangulatedSetRepresentation *>(result));
-        }
-        else if (dynamic_cast<RESQML2_NS::PolylineSetRepresentation *>(result) != nullptr)
-        {
-            rep = new ResqmlPolylineToVtkPolyData(static_cast<RESQML2_NS::PolylineSetRepresentation *>(result));
-        }
-        else if (dynamic_cast<RESQML2_NS::UnstructuredGridRepresentation *>(result) != nullptr)
-        {
-            rep = new ResqmlUnstructuredGridToVtkUnstructuredGrid(static_cast<RESQML2_NS::UnstructuredGridRepresentation *>(result));
-        }
-        else if (dynamic_cast<RESQML2_NS::SubRepresentation *>(result) != nullptr)
-        {
-            RESQML2_NS::SubRepresentation *subRep = static_cast<RESQML2_NS::SubRepresentation *>(result);
-            if (dynamic_cast<RESQML2_NS::AbstractIjkGridRepresentation *>(subRep->getSupportingRepresentation(0)) != nullptr)
-            {
-                auto *supportingGrid = static_cast<RESQML2_NS::AbstractIjkGridRepresentation *>(subRep->getSupportingRepresentation(0));
-                if (this->nodeId_to_resqml.find(output->GetDataAssembly()->FindFirstNodeWithName(("_" + supportingGrid->getUuid()).c_str())) == this->nodeId_to_resqml.end())
-                {
-                    this->nodeId_to_resqml[output->GetDataAssembly()->FindFirstNodeWithName(("_" + supportingGrid->getUuid()).c_str())] = new ResqmlIjkGridToVtkUnstructuredGrid(supportingGrid);
-                }
-                rep = new ResqmlIjkGridSubRepToVtkUnstructuredGrid(subRep, dynamic_cast<ResqmlIjkGridToVtkUnstructuredGrid *>(this->nodeId_to_resqml[output->GetDataAssembly()->FindFirstNodeWithName(("_" + supportingGrid->getUuid()).c_str())]));
-            }
-            else if (dynamic_cast<RESQML2_NS::UnstructuredGridRepresentation *>(subRep->getSupportingRepresentation(0)) != nullptr)
-            {
-                auto *supportingGrid = static_cast<RESQML2_NS::UnstructuredGridRepresentation *>(subRep->getSupportingRepresentation(0));
-                if (this->nodeId_to_resqml.find(output->GetDataAssembly()->FindFirstNodeWithName(("_" + supportingGrid->getUuid()).c_str())) == this->nodeId_to_resqml.end())
-                {
-                    this->nodeId_to_resqml[output->GetDataAssembly()->FindFirstNodeWithName(("_" + supportingGrid->getUuid()).c_str())] = new ResqmlUnstructuredGridToVtkUnstructuredGrid(supportingGrid);
-                }
-                rep = new ResqmlUnstructuredGridSubRepToVtkUnstructuredGrid(subRep, dynamic_cast<ResqmlUnstructuredGridToVtkUnstructuredGrid *>(this->nodeId_to_resqml[output->GetDataAssembly()->FindFirstNodeWithName(("_" + supportingGrid->getUuid()).c_str())]));
-            }
-        }
-        else if (dynamic_cast<RESQML2_NS::WellboreTrajectoryRepresentation *>(result) != nullptr)
-        {
-            rep = new ResqmlWellboreTrajectoryToVtkPolyData(static_cast<RESQML2_NS::WellboreTrajectoryRepresentation *>(result));
-        }
-        else if (dynamic_cast<RESQML2_NS::WellboreMarkerFrameRepresentation *>(result) != nullptr)
-        {
-            rep = new ResqmlWellboreMarkerFrameToVtkPartitionedDataSet(static_cast<RESQML2_NS::WellboreMarkerFrameRepresentation *>(result));
-        }
-        else if (dynamic_cast<RESQML2_NS::WellboreFrameRepresentation *>(result) != nullptr)
-        {
-            rep = new ResqmlWellboreFrameToVtkPartitionedDataSet(static_cast<RESQML2_NS::WellboreFrameRepresentation *>(result));
-        }
-        // add return rep ??
-        else if (dynamic_cast<RESQML2_NS::WellboreMarker *>(result) != nullptr)
+    { // load Wellbore Marker
+        if (dynamic_cast<RESQML2_NS::WellboreMarker *>(result) != nullptr)
         {
             auto const *assembly = this->output->GetDataAssembly();
             const int node_parent = assembly->GetParent(output->GetDataAssembly()->FindFirstNodeWithName(("_" + uuid).c_str()));
             static_cast<ResqmlWellboreMarkerFrameToVtkPartitionedDataSet *>(nodeId_to_resqml[node_parent])->addMarker(uuid, markerOrientation, markerSize);
             return nullptr;
         }
-        else if (dynamic_cast<RESQML2_NS::AbstractValuesProperty *>(result) != nullptr)
+    }
+    catch (const std::exception &e)
+    {
+        vtkOutputWindowDisplayErrorText(("Error when load wellbore marker uuid: " + uuid + "\n" + e.what()).c_str());
+        return nullptr;
+    }
+    try
+    { // load property
+        if (dynamic_cast<RESQML2_NS::AbstractValuesProperty *>(result) != nullptr)
         {
             auto const *assembly = this->output->GetDataAssembly();
             const int node_parent = assembly->GetParent(output->GetDataAssembly()->FindFirstNodeWithName(("_" + uuid).c_str()));
@@ -765,13 +821,16 @@ ResqmlAbstractRepresentationToVtkPartitionedDataSet *ResqmlDataRepositoryToVtkPa
     }
     catch (const std::exception &e)
     {
-        vtkOutputWindowDisplayErrorText(("Error when initialize uuid: " + uuid + "\n" + e.what()).c_str());
+        vtkOutputWindowDisplayErrorText(("Error when load property uuid: " + uuid + "\n" + e.what()).c_str());
         return nullptr;
     }
+
     try
-    {
-        nodeId_to_resqml[output->GetDataAssembly()->FindFirstNodeWithName(("_" + uuid).c_str())] = rep;
+    { // load representation
+
+        ResqmlAbstractRepresentationToVtkPartitionedDataSet *rep = nodeId_to_resqml[output->GetDataAssembly()->FindFirstNodeWithName(("_" + uuid).c_str())];
         rep->loadVtkObject();
+
         return rep;
     }
     catch (const std::exception &e)
@@ -795,13 +854,12 @@ vtkPartitionedDataSetCollection *ResqmlDataRepositoryToVtkPartitionedDataSetColl
     for (const int selection : this->old_selection)
     {
         const std::string uuid_unselect = std::string(tmp_assembly->GetNodeName(selection)).substr(1);
-        if (uuid_unselect.length() > 36)
+        if (uuid_unselect.length() > 36) // uncheck Time Series
         { // TimeSerie properties deselection
             std::string ts_uuid = uuid_unselect.substr(0, 36);
             std::string node_name = uuid_unselect.substr(36);
 
-            auto const* assembly = this->output->GetDataAssembly();
-            const int node_parent = assembly->GetParent(output->GetDataAssembly()->FindFirstNodeWithName(("_" + uuid_unselect).c_str()));
+            const int node_parent = tmp_assembly->GetParent(tmp_assembly->FindFirstNodeWithName(("_" + uuid_unselect).c_str()));
             if (this->nodeId_to_resqml.find(node_parent) != this->nodeId_to_resqml.end())
             {
                 nodeId_to_resqml[node_parent]->deleteDataArray(timeSeries_uuid_and_title_to_index_and_properties_uuid[ts_uuid][node_name][time]);
@@ -819,27 +877,25 @@ vtkPartitionedDataSetCollection *ResqmlDataRepositoryToVtkPartitionedDataSetColl
             {
                 if (dynamic_cast<RESQML2_NS::AbstractValuesProperty *>(result) != nullptr)
                 {
-                    auto const *assembly = this->output->GetDataAssembly();
-                    const int node_parent = assembly->GetParent(selection);
+                    const int node_parent = tmp_assembly->GetParent(selection);
                     try
                     {
                         if (this->nodeId_to_resqml.find(node_parent) != this->nodeId_to_resqml.end())
                         {
                             ResqmlAbstractRepresentationToVtkPartitionedDataSet *rep = this->nodeId_to_resqml[node_parent];
-                            rep->deleteDataArray(assembly->GetNodeName(selection));
+                            rep->deleteDataArray(std::string(tmp_assembly->GetNodeName(selection)).substr(1));
                         }
                     }
                     catch (const std::exception &e)
                     {
-                        vtkOutputWindowDisplayErrorText(("Error in property load for uuid: " + uuid_unselect + "\n" + e.what()).c_str());
+                        vtkOutputWindowDisplayErrorText(("Error in property unload for uuid: " + uuid_unselect + "\n" + e.what()).c_str());
                     }
                 }
                 else if (dynamic_cast<RESQML2_NS::WellboreMarker *>(result) != nullptr)
                 {
                     try
                     {
-                        auto const *assembly = this->output->GetDataAssembly();
-                        const int node_parent = assembly->GetParent(selection);
+                        const int node_parent = tmp_assembly->GetParent(selection);
                         if (this->nodeId_to_resqml.find(node_parent) != this->nodeId_to_resqml.end())
                         {
                             ResqmlWellboreMarkerFrameToVtkPartitionedDataSet *rep = dynamic_cast<ResqmlWellboreMarkerFrameToVtkPartitionedDataSet *>(this->nodeId_to_resqml[node_parent]);
@@ -848,14 +904,54 @@ vtkPartitionedDataSetCollection *ResqmlDataRepositoryToVtkPartitionedDataSetColl
                     }
                     catch (const std::exception &e)
                     {
-                        vtkOutputWindowDisplayErrorText(("Error in property load for uuid: " + uuid_unselect + "\n" + e.what()).c_str());
+                        vtkOutputWindowDisplayErrorText(("Error in wellboremarker unload for uuid: " + uuid_unselect + "\n" + e.what()).c_str());
+                    }
+                }
+                else if (dynamic_cast<RESQML2_NS::SubRepresentation*>(result) != nullptr)
+                {
+                    try
+                    {
+                        if (this->nodeId_to_resqml.find(selection) != this->nodeId_to_resqml.end())
+                        {
+                            if (dynamic_cast<ResqmlUnstructuredGridSubRepToVtkUnstructuredGrid*>(this->nodeId_to_resqml[selection]) != nullptr)
+                            {
+                                std::string uuid_supporting_grid = static_cast<ResqmlUnstructuredGridSubRepToVtkUnstructuredGrid*>(this->nodeId_to_resqml[selection])->unregisterToMapperSupportingGrid();
+                                this->nodeId_to_resqml.erase(selection);
+                                const int node_parent = tmp_assembly->FindFirstNodeWithName(("_"+ uuid_supporting_grid).c_str());
+                                if ((this->nodeId_to_resqml.find(node_parent) != this->nodeId_to_resqml.end()))
+                                {
+                                    if (this->current_selection.find(node_parent) == this->current_selection.end())
+                                    {
+                                        if (this->nodeId_to_resqml[node_parent]->subRepLinkedCount() == 0)
+                                        {
+                                            this->nodeId_to_resqml.erase(node_parent);
+                                        }
+                                    }
+                                }
+                            }
+                            else if (dynamic_cast<ResqmlIjkGridSubRepToVtkUnstructuredGrid*>(this->nodeId_to_resqml[selection]) != nullptr)
+                            {
+
+                            }
+                        }
+                        else
+                        {
+                            vtkOutputWindowDisplayErrorText(("Error in deselection for uuid: " + uuid_unselect + "\n").c_str());
+                        }
+                    }
+                    catch (const std::exception& e)
+                    {
+                        vtkOutputWindowDisplayErrorText(("Error in subrepresentation unload for uuid: " + uuid_unselect + "\n" + e.what()).c_str());
                     }
                 }
                 else
                 {
                     if (this->nodeId_to_resqml.find(selection) != this->nodeId_to_resqml.end())
                     {
-                        this->nodeId_to_resqml.erase(selection); // erase object
+                        if (this->nodeId_to_resqml[selection]->subRepLinkedCount() == 0)
+                        {
+                            this->nodeId_to_resqml.erase(selection);
+                        }
                     }
                 }
             }
@@ -872,12 +968,21 @@ vtkPartitionedDataSetCollection *ResqmlDataRepositoryToVtkPartitionedDataSetColl
         }
         else
         {
-            rep = loadToVtk(std::string(tmp_assembly->GetNodeName(node_selection)).substr(1), time);
+            rep = initMapper(std::string(tmp_assembly->GetNodeName(node_selection)).substr(1));
         }
-        if (rep)
+
+        if (rep != nullptr)
         {
+            if (this->nodeId_to_resqml[node_selection]->getOutput()->GetNumberOfPartitions() < 1)
+            {
+                this->nodeId_to_resqml[node_selection] = loadMapper(std::string(tmp_assembly->GetNodeName(node_selection)).substr(1), time);
+            }
             this->output->SetPartitionedDataSet(index, rep->getOutput());
             this->output->GetMetaData(index++)->Set(vtkCompositeDataSet::NAME(), this->output->GetDataAssembly()->GetNodeName(node_selection));
+        }
+        else
+        {
+            loadMapper(std::string(tmp_assembly->GetNodeName(node_selection)).substr(1), time);
         }
     }
 

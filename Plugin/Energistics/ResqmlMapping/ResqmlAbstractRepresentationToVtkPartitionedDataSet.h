@@ -48,6 +48,10 @@ public:
 	 * load VtkPartitionedDataSet with resqml data
 	 */
 	virtual void loadVtkObject() = 0;
+	/**
+	 * unload VtkPartitionedDataSet
+	 */
+	void unloadVtkObject();
 
 	/**
 	 * add a resqml property to VtkPartitionedDataSet
@@ -64,7 +68,24 @@ public:
 	 */
 	vtkSmartPointer<vtkPartitionedDataSet> getOutput() const { return vtkData; }
 
+	/**
+	*
+	*/
+	void registerSubRep();
+	void unregisterSubRep();
+	unsigned int subRepLinkedCount();
+
+	/**
+*
+*/
+	std::string getUuid() const;
+	
+
 protected:
+
+
+
+	unsigned int subrep_pointer_on_points_count;
 
 	uint64_t pointCount = 0;
 	uint32_t iCellCount = 0; // = cellcount if not ijkGrid

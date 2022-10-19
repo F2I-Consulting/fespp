@@ -52,17 +52,18 @@ public:
 	/**
 	 * Create the VTK points from the RESQML points of the RESQML IJK grid representation.
 	 */
-	vtkSmartPointer<vtkPoints> createPoints(/* RESQML2_NS::AbstractIjkGridRepresentation *ijkGrid */);
+	void createPoints(/* RESQML2_NS::AbstractIjkGridRepresentation *ijkGrid */);
 
 	/**
 	 *	Return The vtkPoints
 	 */
 	vtkSmartPointer<vtkPoints> getVtkPoints();
 
-	std::string message;
-
 protected:
 	RESQML2_NS::AbstractIjkGridRepresentation *resqmlData;
+	vtkSmartPointer<vtkPoints> points;
+
+	unsigned int pointer_on_points;
 
 	/**
 	 * method : checkHyperslabingCapacity

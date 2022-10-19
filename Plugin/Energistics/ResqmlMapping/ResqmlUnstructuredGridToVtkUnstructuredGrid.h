@@ -46,7 +46,7 @@ public:
 	/**
 	 * Create the VTK points from the RESQML points of the RESQML IJK grid representation.
 	 */
-	vtkSmartPointer<vtkPoints> createPoints(/* RESQML2_NS::AbstractIjkGridRepresentation *ijkGrid */);
+	void createPoints(/* RESQML2_NS::AbstractIjkGridRepresentation *ijkGrid */);
 	/**
 	 *	Return The vtkPoints
 	 */
@@ -54,6 +54,7 @@ public:
 
 protected:
 	RESQML2_NS::UnstructuredGridRepresentation *resqmlData;
+	vtkSmartPointer<vtkPoints> points;
 
 private:
 	/**
