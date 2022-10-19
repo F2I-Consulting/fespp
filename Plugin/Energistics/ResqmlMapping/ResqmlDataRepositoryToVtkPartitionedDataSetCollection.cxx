@@ -668,13 +668,9 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::clearSelection()
     this->current_selection.clear();
 }
 
-ResqmlAbstractRepresentationToVtkPartitionedDataSet *ResqmlDataRepositoryToVtkPartitionedDataSetCollection::initMapper(std::string uuid)
+void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::initMapper(std::string uuid)
 {
     ResqmlAbstractRepresentationToVtkPartitionedDataSet *rep = nullptr;
-    if (uuid == "ata") // root
-    {
-        return rep;
-    }
     if (uuid.length() == 36)
     {
 
@@ -739,25 +735,18 @@ ResqmlAbstractRepresentationToVtkPartitionedDataSet *ResqmlDataRepositoryToVtkPa
             }
             else
             {
-                return rep;
+                return;
             }
             this->nodeId_to_resqml[output->GetDataAssembly()->FindFirstNodeWithName(("_" + uuid).c_str())] = rep;
         }
         catch (const std::exception &e)
         {
             vtkOutputWindowDisplayErrorText(("Error when initialize uuid: " + uuid + "\n" + e.what()).c_str());
-            return rep;
         }
     }
-    else
-    { // time series
-        return rep;
-    }
-
-    return rep;
 }
 
-ResqmlAbstractRepresentationToVtkPartitionedDataSet *ResqmlDataRepositoryToVtkPartitionedDataSetCollection::loadMapper(std::string uuid, double time)
+void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::loadMapper(std::string uuid, double time)
 {
     try
     { // load Time Series Properties
@@ -772,13 +761,13 @@ ResqmlAbstractRepresentationToVtkPartitionedDataSet *ResqmlDataRepositoryToVtkPa
             {
                 nodeId_to_resqml[node_parent]->addDataArray(timeSeries_uuid_and_title_to_index_and_properties_uuid[ts_uuid][node_name][time]);
             }
-            return nullptr;
+            return;
         }
     }
     catch (const std::exception &e)
     {
         vtkOutputWindowDisplayErrorText(("Error when load Time Series property marker uuid: " + uuid + "\n" + e.what()).c_str());
-        return nullptr;
+        return;
     }
 
     COMMON_NS::AbstractObject *const result = repository->getDataObjectByUuid(uuid);
@@ -790,13 +779,13 @@ ResqmlAbstractRepresentationToVtkPartitionedDataSet *ResqmlDataRepositoryToVtkPa
             auto const *assembly = this->output->GetDataAssembly();
             const int node_parent = assembly->GetParent(output->GetDataAssembly()->FindFirstNodeWithName(("_" + uuid).c_str()));
             static_cast<ResqmlWellboreMarkerFrameToVtkPartitionedDataSet *>(nodeId_to_resqml[node_parent])->addMarker(uuid, markerOrientation, markerSize);
-            return nullptr;
+            return;
         }
     }
     catch (const std::exception &e)
     {
         vtkOutputWindowDisplayErrorText(("Error when load wellbore marker uuid: " + uuid + "\n" + e.what()).c_str());
-        return nullptr;
+        return;
     }
     try
     { // load property
@@ -816,27 +805,26 @@ ResqmlAbstractRepresentationToVtkPartitionedDataSet *ResqmlDataRepositoryToVtkPa
             {
                 static_cast<ResqmlAbstractRepresentationToVtkPartitionedDataSet *>(nodeId_to_resqml[node_parent])->addDataArray(uuid);
             }
-            return nullptr;
+            return;
         }
     }
     catch (const std::exception &e)
     {
         vtkOutputWindowDisplayErrorText(("Error when load property uuid: " + uuid + "\n" + e.what()).c_str());
-        return nullptr;
+        return;
     }
 
     try
     { // load representation
 
-        ResqmlAbstractRepresentationToVtkPartitionedDataSet *rep = nodeId_to_resqml[output->GetDataAssembly()->FindFirstNodeWithName(("_" + uuid).c_str())];
-        rep->loadVtkObject();
+        nodeId_to_resqml[output->GetDataAssembly()->FindFirstNodeWithName(("_" + uuid).c_str())]->loadVtkObject();
 
-        return rep;
+        return;
     }
     catch (const std::exception &e)
     {
         vtkOutputWindowDisplayErrorText(("Error when rendering uuid: " + uuid + "\n" + e.what()).c_str());
-        return nullptr;
+        return;
     }
 }
 
@@ -965,23 +953,22 @@ vtkPartitionedDataSetCollection *ResqmlDataRepositoryToVtkPartitionedDataSetColl
     for (const int node_selection : this->current_selection)
     {
         ResqmlAbstractRepresentationToVtkPartitionedDataSet *rep = nullptr;
-        if (this->nodeId_to_resqml.find(node_selection) != this->nodeId_to_resqml.end())
+        if (this->nodeId_to_resqml.find(node_selection) == this->nodeId_to_resqml.end())
         {
-            rep = this->nodeId_to_resqml[node_selection];
-        }
-        else
-        {
-            rep = initMapper(std::string(tmp_assembly->GetNodeName(node_selection)).substr(1));
+            initMapper(std::string(tmp_assembly->GetNodeName(node_selection)).substr(1));
         }
 
-        if (rep != nullptr)
+        if (this->nodeId_to_resqml.find(node_selection) != this->nodeId_to_resqml.end())
         {
             if (this->nodeId_to_resqml[node_selection]->getOutput()->GetNumberOfPartitions() < 1)
             {
-                this->nodeId_to_resqml[node_selection] = loadMapper(std::string(tmp_assembly->GetNodeName(node_selection)).substr(1), time);
+                loadMapper(std::string(tmp_assembly->GetNodeName(node_selection)).substr(1), time);
             }
-            this->output->SetPartitionedDataSet(index, rep->getOutput());
-            this->output->GetMetaData(index++)->Set(vtkCompositeDataSet::NAME(), this->output->GetDataAssembly()->GetNodeName(node_selection));
+            if (this->nodeId_to_resqml[node_selection]->getOutput()->GetNumberOfPartitions() > 0)
+            {
+                this->output->SetPartitionedDataSet(index, this->nodeId_to_resqml[node_selection]->getOutput());
+                this->output->GetMetaData(index++)->Set(vtkCompositeDataSet::NAME(), this->output->GetDataAssembly()->GetNodeName(node_selection));
+            }
         }
         else
         {
