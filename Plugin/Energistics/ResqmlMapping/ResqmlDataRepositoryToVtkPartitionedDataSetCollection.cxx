@@ -855,7 +855,7 @@ vtkPartitionedDataSetCollection *ResqmlDataRepositoryToVtkPartitionedDataSetColl
     {
         const std::string uuid_unselect = std::string(tmp_assembly->GetNodeName(selection)).substr(1);
         if (uuid_unselect.length() > 36) // uncheck Time Series
-        { // TimeSerie properties deselection
+        {                                // TimeSerie properties deselection
             std::string ts_uuid = uuid_unselect.substr(0, 36);
             std::string node_name = uuid_unselect.substr(36);
 
@@ -907,31 +907,34 @@ vtkPartitionedDataSetCollection *ResqmlDataRepositoryToVtkPartitionedDataSetColl
                         vtkOutputWindowDisplayErrorText(("Error in wellboremarker unload for uuid: " + uuid_unselect + "\n" + e.what()).c_str());
                     }
                 }
-                else if (dynamic_cast<RESQML2_NS::SubRepresentation*>(result) != nullptr)
+                else if (dynamic_cast<RESQML2_NS::SubRepresentation *>(result) != nullptr)
                 {
                     try
                     {
                         if (this->nodeId_to_resqml.find(selection) != this->nodeId_to_resqml.end())
                         {
-                            if (dynamic_cast<ResqmlUnstructuredGridSubRepToVtkUnstructuredGrid*>(this->nodeId_to_resqml[selection]) != nullptr)
+                            std::string uuid_supporting_grid = "";
+                            if (dynamic_cast<ResqmlUnstructuredGridSubRepToVtkUnstructuredGrid *>(this->nodeId_to_resqml[selection]) != nullptr)
                             {
-                                std::string uuid_supporting_grid = static_cast<ResqmlUnstructuredGridSubRepToVtkUnstructuredGrid*>(this->nodeId_to_resqml[selection])->unregisterToMapperSupportingGrid();
-                                this->nodeId_to_resqml.erase(selection);
-                                const int node_parent = tmp_assembly->FindFirstNodeWithName(("_"+ uuid_supporting_grid).c_str());
-                                if ((this->nodeId_to_resqml.find(node_parent) != this->nodeId_to_resqml.end()))
+                                uuid_supporting_grid = static_cast<ResqmlUnstructuredGridSubRepToVtkUnstructuredGrid *>(this->nodeId_to_resqml[selection])->unregisterToMapperSupportingGrid();
+                            }
+                            else if (dynamic_cast<ResqmlIjkGridSubRepToVtkUnstructuredGrid *>(this->nodeId_to_resqml[selection]) != nullptr)
+                            {
+                                uuid_supporting_grid = static_cast<ResqmlIjkGridSubRepToVtkUnstructuredGrid *>(this->nodeId_to_resqml[selection])->unregisterToMapperSupportingGrid();
+                            }
+                            // erase representation
+                            this->nodeId_to_resqml.erase(selection);
+                            // erase supporting grid ??
+                            const int node_parent = tmp_assembly->FindFirstNodeWithName(("_" + uuid_supporting_grid).c_str());
+                            if ((this->nodeId_to_resqml.find(node_parent) != this->nodeId_to_resqml.end()))
+                            {
+                                if (this->current_selection.find(node_parent) == this->current_selection.end())
                                 {
-                                    if (this->current_selection.find(node_parent) == this->current_selection.end())
+                                    if (this->nodeId_to_resqml[node_parent]->subRepLinkedCount() == 0)
                                     {
-                                        if (this->nodeId_to_resqml[node_parent]->subRepLinkedCount() == 0)
-                                        {
-                                            this->nodeId_to_resqml.erase(node_parent);
-                                        }
+                                        this->nodeId_to_resqml.erase(node_parent);
                                     }
                                 }
-                            }
-                            else if (dynamic_cast<ResqmlIjkGridSubRepToVtkUnstructuredGrid*>(this->nodeId_to_resqml[selection]) != nullptr)
-                            {
-
                             }
                         }
                         else
@@ -939,7 +942,7 @@ vtkPartitionedDataSetCollection *ResqmlDataRepositoryToVtkPartitionedDataSetColl
                             vtkOutputWindowDisplayErrorText(("Error in deselection for uuid: " + uuid_unselect + "\n").c_str());
                         }
                     }
-                    catch (const std::exception& e)
+                    catch (const std::exception &e)
                     {
                         vtkOutputWindowDisplayErrorText(("Error in subrepresentation unload for uuid: " + uuid_unselect + "\n" + e.what()).c_str());
                     }

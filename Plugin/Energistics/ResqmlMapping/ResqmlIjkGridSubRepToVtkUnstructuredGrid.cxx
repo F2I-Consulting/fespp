@@ -60,7 +60,7 @@ void ResqmlIjkGridSubRepToVtkUnstructuredGrid::loadVtkObject()
 		// Create and set the list of points of the vtkUnstructuredGrid
 		vtkSmartPointer<vtkUnstructuredGrid> vtk_unstructuredGrid = vtkSmartPointer<vtkUnstructuredGrid>::New();
 
-		vtk_unstructuredGrid->SetPoints(this->mapperIjkGrid->getVtkPoints() /*createPoints()*/);
+		vtk_unstructuredGrid->SetPoints(this->getMapperVtkPoint());
 
 		// Define hexahedron node ordering according to Paraview convention : https://lorensen.github.io/VTKExamples/site/VTKBook/05Chapter5/#Figure%205-3
 		std::array<unsigned int, 8> correspondingResqmlCornerId = {0, 1, 2, 3, 4, 5, 6, 7};
@@ -118,4 +118,18 @@ void ResqmlIjkGridSubRepToVtkUnstructuredGrid::loadVtkObject()
 	{
 		// TODO msg d'erreur
 	}
+}
+
+//----------------------------------------------------------------------------
+std::string ResqmlIjkGridSubRepToVtkUnstructuredGrid::unregisterToMapperSupportingGrid()
+{
+	this->mapperIjkGrid->unregisterSubRep();
+	return this->mapperIjkGrid->getUuid();
+}
+
+//----------------------------------------------------------------------------
+vtkSmartPointer<vtkPoints> ResqmlIjkGridSubRepToVtkUnstructuredGrid::getMapperVtkPoint()
+{
+	this->mapperIjkGrid->registerSubRep();
+	return this->mapperIjkGrid->getVtkPoints();
 }

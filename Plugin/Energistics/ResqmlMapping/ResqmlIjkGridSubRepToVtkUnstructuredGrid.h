@@ -24,6 +24,10 @@ under the License.
 
 #include "ResqmlAbstractRepresentationToVtkPartitionedDataSet.h"
 
+ // include VTK
+#include <vtkSmartPointer.h>
+#include <vtkUnstructuredGrid.h>
+
 namespace RESQML2_NS
 {
 	class SubRepresentation;
@@ -44,10 +48,19 @@ public:
 	 */
 	void loadVtkObject();
 
+	/**
+	*
+	*/
+	std::string unregisterToMapperSupportingGrid();
+
 protected:
 	RESQML2_NS::SubRepresentation* resqmlData;
 
 	ResqmlIjkGridToVtkUnstructuredGrid* mapperIjkGrid;
+
+private:
+
+	vtkSmartPointer<vtkPoints> getMapperVtkPoint();
 
 };
 #endif
