@@ -219,6 +219,13 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::buildDataAsse
     return message;
 }
 
+namespace {
+	auto lexicographicalComparison = [](const COMMON_NS::AbstractObject *a, const COMMON_NS::AbstractObject *b) -> bool
+	{
+		return a->getTitle().compare(b->getTitle()) < 0;
+	};
+}
+
 std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchPolylines(const std::string &fileName)
 {
     std::string result;
@@ -226,11 +233,7 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchPolylin
     try
     {
         auto polylineSetSet = repository->getAllPolylineSetRepresentationSet();
-        std::sort(polylineSetSet.begin(), polylineSetSet.end(),
-                  [](const RESQML2_NS::PolylineSetRepresentation *a, const RESQML2_NS::PolylineSetRepresentation *b) -> bool
-                  {
-                      return a->getTitle().compare(b->getTitle()) < 0;
-                  });
+        std::sort(polylineSetSet.begin(), polylineSetSet.end(), lexicographicalComparison);
         for (auto const *polylineSet : polylineSetSet)
         {
             // add full representation
@@ -255,11 +258,7 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchUnstruc
     try
     {
         auto unstructuredGridSet = repository->getUnstructuredGridRepresentationSet();
-        std::sort(unstructuredGridSet.begin(), unstructuredGridSet.end(),
-                  [](const RESQML2_NS::UnstructuredGridRepresentation *a, const RESQML2_NS::UnstructuredGridRepresentation *b) -> bool
-                  {
-                      return a->getTitle().compare(b->getTitle()) < 0;
-                  });
+        std::sort(unstructuredGridSet.begin(), unstructuredGridSet.end(), lexicographicalComparison);
         for (auto const *unstructuredGrid : unstructuredGridSet)
         {
             if (output->GetDataAssembly()->FindFirstNodeWithName(("_" + unstructuredGrid->getUuid()).c_str()) == -1)
@@ -283,11 +282,7 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchTriangu
     try
     {
         auto triangulatedSet = repository->getAllTriangulatedSetRepresentationSet();
-        std::sort(triangulatedSet.begin(), triangulatedSet.end(),
-                  [](const RESQML2_NS::TriangulatedSetRepresentation *a, const RESQML2_NS::TriangulatedSetRepresentation *b) -> bool
-                  {
-                      return a->getTitle().compare(b->getTitle()) < 0;
-                  });
+        std::sort(triangulatedSet.begin(), triangulatedSet.end(), lexicographicalComparison);
         for (auto const *triangulated : triangulatedSet)
         {
             if (output->GetDataAssembly()->FindFirstNodeWithName(("_" + triangulated->getUuid()).c_str()) == -1)
@@ -311,11 +306,7 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchGrid2d(
     try
     {
         auto grid2DSet = repository->getHorizonGrid2dRepresentationSet();
-        std::sort(grid2DSet.begin(), grid2DSet.end(),
-                  [](const RESQML2_NS::Grid2dRepresentation *a, const RESQML2_NS::Grid2dRepresentation *b) -> bool
-                  {
-                      return a->getTitle().compare(b->getTitle()) < 0;
-                  });
+        std::sort(grid2DSet.begin(), grid2DSet.end(), lexicographicalComparison);
         for (auto const *grid2D : grid2DSet)
         {
             if (output->GetDataAssembly()->FindFirstNodeWithName(("_" + grid2D->getUuid()).c_str()) == -1)
@@ -339,11 +330,7 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchIjkGrid
     try
     {
         auto ijkGridSet = repository->getIjkGridRepresentationSet();
-        std::sort(ijkGridSet.begin(), ijkGridSet.end(),
-                  [](const RESQML2_NS::AbstractIjkGridRepresentation *a, const RESQML2_NS::AbstractIjkGridRepresentation *b) -> bool
-                  {
-                      return a->getTitle().compare(b->getTitle()) < 0;
-                  });
+        std::sort(ijkGridSet.begin(), ijkGridSet.end(), lexicographicalComparison);
         for (auto const *ijkGrid : ijkGridSet)
         {
             if (output->GetDataAssembly()->FindFirstNodeWithName(("_" + ijkGrid->getUuid()).c_str()) == -1)
@@ -355,7 +342,7 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchIjkGrid
     }
     catch (const std::exception &e)
     {
-        return "EXCEPTION in fesapi when calling getIjkGridRepresentationSet with file: " + fileName + " : " + e.what();
+        return "EXCEPTION in FESAPI when calling getIjkGridRepresentationSet with file: " + fileName + " : " + e.what();
     }
     return result;
 }
@@ -404,11 +391,7 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchSubRepr
     try
     {
         auto subRepresentationSet = representation->getSubRepresentationSet();
-        std::sort(subRepresentationSet.begin(), subRepresentationSet.end(),
-                  [](const RESQML2_NS::SubRepresentation *a, const RESQML2_NS::SubRepresentation *b) -> bool
-                  {
-                      return a->getTitle().compare(b->getTitle()) < 0;
-                  });
+        std::sort(subRepresentationSet.begin(), subRepresentationSet.end(), lexicographicalComparison);
         for (auto const *subRepresentation : subRepresentationSet)
         {
             if (output->GetDataAssembly()->FindFirstNodeWithName(("_" + subRepresentation->getUuid()).c_str()) == -1)
@@ -431,11 +414,7 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchPropert
     try
     {
         auto valuesPropertySet = representation->getValuesPropertySet();
-        std::sort(valuesPropertySet.begin(), valuesPropertySet.end(),
-                  [](const RESQML2_NS::AbstractValuesProperty *a, const RESQML2_NS::AbstractValuesProperty *b) -> bool
-                  {
-                      return a->getTitle().compare(b->getTitle()) < 0;
-                  });
+        std::sort(valuesPropertySet.begin(), valuesPropertySet.end(), lexicographicalComparison);
         // property
         for (auto *property : valuesPropertySet)
         {
