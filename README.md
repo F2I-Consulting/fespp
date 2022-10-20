@@ -3,7 +3,7 @@
 - If you want to build Fespp by your own, look below for instructions.
 
 ## BUILD dependencies
-- [FESAPI v2.3.0.0](https://github.com/F2I-Consulting/fesapi/releases/tag/v2.3.0.0)
+- [FESAPI v2.4.0.0](https://github.com/F2I-Consulting/fesapi/releases/tag/v2.4.0.0)
 - ParaView with same HDF5 libraries used by FESAPI
 	 > known to work on Linux and Windows starting from ParaView 5.10.0
 
@@ -19,13 +19,13 @@ You should fill in the following variables
  
 	- in the ParaView bin folder on Linux:
 	   - libFesapiCpp.so (from FESAPI install)
-	   - libFesapiCpp.so.2.3 (from FESAPI install)
-	   - libFesapiCpp.so.2.3.0 (from FESAPI install)
+	   - libFesapiCpp.so.2.4 (from FESAPI install)
+	   - libFesapiCpp.so.2.4.0 (from FESAPI install)
 	   - libEPCReader.so (from FESPP install)
 	   - libFespp.so (from FESPP install)
    
 	- in a ParaView bin\paraview-5.10\plugins\Fespp folder on Windows:
-	   - FesapiCpp.2.3.0.0.dll (from FESAPI install)
+	   - FesapiCpp.2.4.0.0.dll (from FESAPI install)
 	   - EPCReader.dll (from FESPP install)
 	   - Fespp.dll (from FESPP install)
 

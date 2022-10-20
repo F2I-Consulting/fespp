@@ -533,10 +533,10 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchTimeSer
 
     std::string return_message = "";
     auto *assembly = output->GetDataAssembly();
-    std::vector<EML2_NS::TimeSeries *> timeSeries;
+    std::vector<EML2_NS::TimeSeries *> timeSeriesSet;
     try
     {
-        timeSeries = repository->getTimeSeriesSet();
+        timeSeriesSet = repository->getTimeSeriesSet();
     }
     catch (const std::exception &e)
     {
@@ -546,14 +546,14 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchTimeSer
     /****
      *  change property parent to times serie parent
      ****/
-    for (auto const *timeSerie : timeSeries)
+    for (auto const *timeSeries : timeSeriesSet)
     {
         bool valid = true;
 
         // get properties link to Times series
         try
         {
-            auto propSeries = timeSerie->getPropertySet();
+            auto propSeries = timeSeries->getPropertySet();
 
             std::vector<std::string> property_name_set;
             std::map<std::string, std::vector<int>> property_name_to_node_set;
@@ -578,19 +578,15 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchTimeSer
                         }
                         if (node_parent == assembly->GetParent(node_id))
                         {
-                            if (prop->getTimeIndicesCount() > 1)
-                            {
-                                return_message = return_message + "The property " + prop->getUuid() + " correspond to more than one time index. It is not supported yet.\n";
-                                continue;
-                            }
                             property_name_to_node_set[prop->getTitle()].push_back(node_id);
-                            times_step.push_back(prop->getTimeIndexStart());
-                            timeSeries_uuid_and_title_to_index_and_properties_uuid[timeSerie->getUuid()][vtkDataAssembly::MakeValidNodeName((timeSerie->getXmlTag() + '.' + prop->getTitle()).c_str())][prop->getTimeIndexStart()] = prop->getUuid();
+							const size_t timeIndexInTimeSeries = timeSeries->getTimestampIndex(prop->getSingleTimestamp());
+                            times_step.push_back(timeIndexInTimeSeries);
+                            timeSeries_uuid_and_title_to_index_and_properties_uuid[timeSeries->getUuid()][vtkDataAssembly::MakeValidNodeName((timeSeries->getXmlTag() + '.' + prop->getTitle()).c_str())][timeIndexInTimeSeries] = prop->getUuid();
                         }
                         else
                         {
                             valid = false;
-                            return_message = return_message + "The properties of time series " + timeSerie->getUuid() + " aren't same parent and is not supported.\n";
+                            return_message = return_message + "The properties of time series " + timeSeries->getUuid() + " aren't same parent and is not supported.\n";
                         }
                     }
                 }
@@ -610,8 +606,8 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchTimeSer
                         output->GetDataAssembly()->RemoveNode(node);
                         nodeId_to_resqml.erase(node);
                     }
-                    std::string name = vtkDataAssembly::MakeValidNodeName((timeSerie->getXmlTag() + '.' + myPair.first).c_str());
-                    auto times_serie_node_id = output->GetDataAssembly()->AddNode(("_" + timeSerie->getUuid() + name).c_str(), node_parent);
+                    std::string name = vtkDataAssembly::MakeValidNodeName((timeSeries->getXmlTag() + '.' + myPair.first).c_str());
+                    auto times_serie_node_id = output->GetDataAssembly()->AddNode(("_" + timeSeries->getUuid() + name).c_str(), node_parent);
                     output->GetDataAssembly()->SetAttribute(times_serie_node_id, "label", name.c_str());
                 }
             }
