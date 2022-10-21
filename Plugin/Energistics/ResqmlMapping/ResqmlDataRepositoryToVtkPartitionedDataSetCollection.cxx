@@ -371,11 +371,11 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchReprese
     if (dynamic_cast<RESQML2_NS::AbstractIjkGridRepresentation const *>(representation) != nullptr ||
         dynamic_cast<RESQML2_NS::UnstructuredGridRepresentation const *>(representation) != nullptr)
     {
-        result += searchSubRepresentation(representation, data_assembly, idNode);
+		result += searchSubRepresentation(representation, data_assembly, idNode);
     }
 
     // add properties to representation
-    result += searchProperties(representation, data_assembly, idNode);
+	result += searchProperties(representation, data_assembly, idNode);
 
     return result;
 }
@@ -387,7 +387,7 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchSubRepr
     try
     {
         auto subRepresentationSet = representation->getSubRepresentationSet();
-        std::sort(subRepresentationSet.begin(), subRepresentationSet.end(), lexicographicalComparison);
+		std::sort(subRepresentationSet.begin(), subRepresentationSet.end(), lexicographicalComparison);
         for (auto const *subRepresentation : subRepresentationSet)
         {
             if (output->GetDataAssembly()->FindFirstNodeWithName(("_" + subRepresentation->getUuid()).c_str()) == -1)

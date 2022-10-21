@@ -104,6 +104,6 @@ if (DEV_UNDER_WIN32)
 		COMMAND ${CMAKE_COMMAND} -E copy
 			$<$<CONFIG:Debug>:$<TARGET_FILE:Energistics>> $<$<CONFIG:Debug>:$<TARGET_PDB_FILE:Energistics>>
 			$<$<CONFIG:RelWithDebInfo>:$<TARGET_FILE:Energistics>> $<$<CONFIG:RelWithDebInfo>:$<TARGET_PDB_FILE:Energistics>>
-			$<$<CONFIG:Debug>:"C:/Dev/build/pv5.10.0/install/bin/paraview-5.10/plugins/Fespp"> $<$<CONFIG:RelWithDebInfo>:"C:/Dev/build/pv5.10.0/install/bin/paraview-5.10/plugins/Fespp">
+			$<$<CONFIG:Debug>:"${ParaView_DIR}/bin/paraview-5.10/plugins/Fespp"> $<$<CONFIG:RelWithDebInfo>:"${ParaView_DIR}/bin/paraview-5.10/plugins/Fespp">
 	)
 endif (DEV_UNDER_WIN32)
