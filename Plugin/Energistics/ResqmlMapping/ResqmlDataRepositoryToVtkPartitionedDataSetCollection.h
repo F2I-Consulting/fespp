@@ -86,18 +86,18 @@ private:
 	std::string searchGrid2d(const std::string& fileName);
 	std::string searchIjkGrid(const std::string& fileName);
 	std::string searchWellboreTrajectory(const std::string& fileName);
-	std::string searchRepresentations(resqml2::AbstractRepresentation* representation, int idNode = 0 /* 0 is root's id*/);
+	std::string searchRepresentations(resqml2::AbstractRepresentation const* representation, int idNode = 0 /* 0 is root's id*/);
 
-	std::string searchSubRepresentation(resqml2::AbstractRepresentation* representation, vtkDataAssembly* assembly, int node_parent);
+	std::string searchSubRepresentation(resqml2::AbstractRepresentation const* representation, vtkDataAssembly* assembly, int node_parent);
 	std::string searchTimeSeries(const std::string& fileName);
 
-	std::string searchProperties(resqml2::AbstractRepresentation* representation, vtkDataAssembly* assembly, int node_parent);
+	std::string searchProperties(resqml2::AbstractRepresentation const* representation, vtkDataAssembly* assembly, int node_parent);
 
 	void selectNodeIdParent(int node);
 	void selectNodeIdChildren(int node);
 
-	void initMapper(std::string uuid);
-	void loadMapper(std::string uuid, double time);
+	void initMapper(const std::string& uuid);
+	void loadMapper(const std::string& uuid, double time);
 
 	bool markerOrientation;
 	int markerSize;
