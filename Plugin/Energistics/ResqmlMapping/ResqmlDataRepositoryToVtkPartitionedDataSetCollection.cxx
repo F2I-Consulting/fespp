@@ -195,151 +195,43 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::addFile(const
     return message;
 }
 
-std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::buildDataAssemblyFromDataObjectRepo(const char *fileName)
-{
-    std::string message;
-
-    // create vtkDataAssembly: create treeView in property panel
-    // get grid2D + subrepresentation + property
-    message += searchGrid2d(fileName);
-    // get ijkGrid + subrepresentation + property
-    message += searchIjkGrid(fileName);
-    // get polylines + subrepresentation + property
-    message += searchPolylines(fileName);
-    // get triangulated + subrepresentation + property
-    message += searchTriangulated(fileName);
-    // get unstructuredGrid + subrepresentation + property
-    message += searchUnstructuredGrid(fileName);
-    // get WellboreTrajectory + subrepresentation + property
-    message += searchWellboreTrajectory(fileName);
-
-    // get TimeSeries
-    message += searchTimeSeries(fileName);
-
-    return message;
-}
-
 namespace {
 	auto lexicographicalComparison = [](const COMMON_NS::AbstractObject *a, const COMMON_NS::AbstractObject *b) -> bool
 	{
 		return a->getTitle().compare(b->getTitle()) < 0;
 	};
+
+	template<typename T>
+	void sortAndAdd(std::vector<T> source, std::vector<RESQML2_NS::AbstractRepresentation const *>& dest) {
+		std::sort(source.begin(), source.end(), lexicographicalComparison);
+		std::move(source.begin(), source.end(), std::inserter(dest, dest.end()));
+	}
 }
 
-std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchPolylines(const std::string &fileName)
+std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::buildDataAssemblyFromDataObjectRepo(const char *fileName)
 {
-    std::string result;
+	std::vector<RESQML2_NS::AbstractRepresentation const *> allReps;
 
-    try
-    {
-        auto polylineSetSet = repository->getAllPolylineSetRepresentationSet();
-        std::sort(polylineSetSet.begin(), polylineSetSet.end(), lexicographicalComparison);
-        for (auto const *polylineSet : polylineSetSet)
-        {
-            // add full representation
-            if (output->GetDataAssembly()->FindFirstNodeWithName(("_" + polylineSet->getUuid()).c_str()) == -1)
-            { // verify uuid exist in treeview
-                result += searchRepresentations(polylineSet);
-            }
-        }
-    }
-    catch (const std::exception &e)
-    {
-        return "Exception in FESAPI when calling getHorizonPolylineSetRepresentationSet with file: " + fileName + " : " + e.what();
-    }
-    return result;
-}
+    // create vtkDataAssembly: create treeView in property panel
+	sortAndAdd(repository->getHorizonGrid2dRepresentationSet(), allReps);
+	sortAndAdd(repository->getIjkGridRepresentationSet(), allReps);
+	sortAndAdd(repository->getAllPolylineSetRepresentationSet(), allReps);
+	sortAndAdd(repository->getAllTriangulatedSetRepresentationSet(), allReps);
+	sortAndAdd(repository->getUnstructuredGridRepresentationSet(), allReps);
 
-std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchUnstructuredGrid(const std::string &fileName)
-{
-    std::string result;
+	std::string message;
+	for (auto const* rep : allReps)
+	{
+		message += searchRepresentations(rep);
+	}
 
-    try
-    {
-        auto unstructuredGridSet = repository->getUnstructuredGridRepresentationSet();
-        std::sort(unstructuredGridSet.begin(), unstructuredGridSet.end(), lexicographicalComparison);
-        for (auto const *unstructuredGrid : unstructuredGridSet)
-        {
-            if (output->GetDataAssembly()->FindFirstNodeWithName(("_" + unstructuredGrid->getUuid()).c_str()) == -1)
-            { // verify uuid exist in treeview
-                result += searchRepresentations(unstructuredGrid);
-            }
-        }
-    }
-    catch (const std::exception &e)
-    {
-		result =  "Exception in FESAPI when calling getUnstructuredGridRepresentationSet with file: " + fileName + " : " + e.what();
-    }
-    return result;
-}
+    // get WellboreTrajectory + subrepresentation + property
+	message += searchWellboreTrajectory(fileName);
 
-std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchTriangulated(const std::string &fileName)
-{
-    std::string result;
+    // get TimeSeries
+    message += searchTimeSeries(fileName);
 
-    try
-    {
-        auto triangulatedSet = repository->getAllTriangulatedSetRepresentationSet();
-        std::sort(triangulatedSet.begin(), triangulatedSet.end(), lexicographicalComparison);
-        for (auto const *triangulated : triangulatedSet)
-        {
-            if (output->GetDataAssembly()->FindFirstNodeWithName(("_" + triangulated->getUuid()).c_str()) == -1)
-            { // verify uuid exist in treeview
-                result += searchRepresentations(triangulated);
-            }
-        }
-    }
-    catch (const std::exception &e)
-    {
-        return "Exception in FESAPI when calling getHorizonTriangulatedSetRepresentationSet with file: " + fileName + " : " + e.what();
-    }
-    return result;
-}
-
-std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchGrid2d(const std::string &fileName)
-{
-    std::string result;
-
-    try
-    {
-        auto grid2DSet = repository->getHorizonGrid2dRepresentationSet();
-        std::sort(grid2DSet.begin(), grid2DSet.end(), lexicographicalComparison);
-        for (auto const *grid2D : grid2DSet)
-        {
-            if (output->GetDataAssembly()->FindFirstNodeWithName(("_" + grid2D->getUuid()).c_str()) == -1)
-            { // verify uuid exist in treeview (generally when we load another epcfile in same repository)
-                result += searchRepresentations(grid2D);
-            }
-        }
-    }
-    catch (const std::exception &e)
-    {
-        return "Exception in FESAPI when calling getHorizonGrid2dRepresentationSet with file: " + fileName + " : " + e.what();
-    }
-    return result;
-}
-
-std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchIjkGrid(const std::string &fileName)
-{
-    std::string result;
-
-    try
-    {
-        auto ijkGridSet = repository->getIjkGridRepresentationSet();
-        std::sort(ijkGridSet.begin(), ijkGridSet.end(), lexicographicalComparison);
-        for (auto const *ijkGrid : ijkGridSet)
-        {
-            if (output->GetDataAssembly()->FindFirstNodeWithName(("_" + ijkGrid->getUuid()).c_str()) == -1)
-            { // verify uuid exist in treeview (generally when we load another epcfile in same repository)
-                result += searchRepresentations(ijkGrid);
-            }
-        }
-    }
-    catch (const std::exception &e)
-    {
-        return "Exception in FESAPI when calling getIjkGridRepresentationSet with file: " + fileName + " : " + e.what();
-    }
-    return result;
+    return message;
 }
 
 std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchRepresentations(resqml2::AbstractRepresentation const *representation, int idNode)
@@ -358,13 +250,21 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchReprese
     }
     else
     {
-        idNode = data_assembly->AddNode(("_" + representation->getUuid()).c_str(), idNode);
+		// The leading underscore is forced by VTK which does not support a node name starting with a digit (probably because it is a QNAME).
+		const std::string nodeName = "_" + representation->getUuid();
+		const int existingNodeId = output->GetDataAssembly()->FindFirstNodeWithName(nodeName.c_str());
+		if (existingNodeId == -1) {
+			idNode = data_assembly->AddNode(nodeName.c_str(), idNode);
 
-		auto const* subrep = dynamic_cast<RESQML2_NS::SubRepresentation const *>(representation);
-		const std::string representationVtkValidName = subrep == nullptr
-			? vtkDataAssembly::MakeValidNodeName((representation->getXmlTag() + "_" + representation->getTitle()).c_str())
-			: vtkDataAssembly::MakeValidNodeName((representation->getXmlTag() + "_" + subrep->getSupportingRepresentation(0)->getTitle() + "_" + representation->getTitle()).c_str());
-		data_assembly->SetAttribute(idNode, "label", representationVtkValidName.c_str());
+			auto const* subrep = dynamic_cast<RESQML2_NS::SubRepresentation const *>(representation);
+			const std::string representationVtkValidName = subrep == nullptr
+				? vtkDataAssembly::MakeValidNodeName((representation->getXmlTag() + "_" + representation->getTitle()).c_str())
+				: vtkDataAssembly::MakeValidNodeName((representation->getXmlTag() + "_" + subrep->getSupportingRepresentation(0)->getTitle() + "_" + representation->getTitle()).c_str());
+			data_assembly->SetAttribute(idNode, "label", representationVtkValidName.c_str());
+		}
+		else {
+			idNode = existingNodeId;
+		}
     }
 
     // add sub representation with properties (only for ijkGrid and unstructured grid)
@@ -390,10 +290,7 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchSubRepr
 		std::sort(subRepresentationSet.begin(), subRepresentationSet.end(), lexicographicalComparison);
         for (auto const *subRepresentation : subRepresentationSet)
         {
-            if (output->GetDataAssembly()->FindFirstNodeWithName(("_" + subRepresentation->getUuid()).c_str()) == -1)
-            { // verify uuid exist in treeview
-                result += searchRepresentations(subRepresentation, data_assembly->GetParent(node_parent));
-            }
+			result += searchRepresentations(subRepresentation, data_assembly->GetParent(node_parent));
         }
     }
     catch (const std::exception &e)

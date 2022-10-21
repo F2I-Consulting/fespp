@@ -80,11 +80,6 @@ public:
 private:
 	std::string buildDataAssemblyFromDataObjectRepo(const char* fileName);
 
-	std::string searchPolylines(const std::string& fileName);
-	std::string searchUnstructuredGrid(const std::string& fileName);
-	std::string searchTriangulated(const std::string& fileName);
-	std::string searchGrid2d(const std::string& fileName);
-	std::string searchIjkGrid(const std::string& fileName);
 	std::string searchWellboreTrajectory(const std::string& fileName);
 	std::string searchRepresentations(resqml2::AbstractRepresentation const* representation, int idNode = 0 /* 0 is root's id*/);
 
