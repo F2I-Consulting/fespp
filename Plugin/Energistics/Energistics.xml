@@ -71,11 +71,21 @@
 			</Hints>
 
 			<!-- properties for connection to server -->
+			<!-- tag for hide/enabled properties -->
+			<IntVectorProperty name="ConnectionTag" command="GetConnectionTag" information_only="1"></IntVectorProperty>
+			<IntVectorProperty name="DisconnectionTag" command="GetDisconnectionTag" information_only="1"></IntVectorProperty>
+
 			<StringVectorProperty command="setETPUrlConnection" default_values="wss://osdu-ship.msft-osdu-test.org:443/oetp/reservoir-ddms/" name="ETPUrl" label="ETP Url" number_of_elements="1" panel_visibility="default">
 				<Documentation>This property specifies the string used to describe the ETP Url</Documentation>
+				<Hints>
+					<PropertyWidgetDecorator type="GenericDecorator" mode="enabled_state" property="ConnectionTag" value="0" inverse="1" />
+				</Hints>
 			</StringVectorProperty>
 
 			<StringVectorProperty name="DataPartition" command="setDataPartition" number_of_elements="1" default_values="opendes">
+				<Hints>
+					<PropertyWidgetDecorator type="GenericDecorator" mode="enabled_state" property="ConnectionTag" value="0" inverse="1" />
+				</Hints>
 			</StringVectorProperty>
 
 			<IntVectorProperty name="Authentification" command="setAuthType" number_of_elements="1" default_values="0">
@@ -84,16 +94,27 @@
 					<Entry value="1" text="Basic"/>
 				</EnumerationDomain>
 				<Documentation> This property indicates which authentification type mode will be used.</Documentation>
+				<Hints>
+					<PropertyWidgetDecorator type="GenericDecorator" mode="enabled_state" property="ConnectionTag" value="0" inverse="1" />
+				</Hints>
 			</IntVectorProperty>
 
 			<StringVectorProperty command="setAuthPwd" default_values="" name="AuthPwd" number_of_elements="1" panel_visibility="default">
 				<Documentation>This property specifies the string used to describe the authorization.</Documentation>
+				<Hints>
+					<PropertyWidgetDecorator type="GenericDecorator" mode="enabled_state" property="ConnectionTag" value="0" inverse="1" />
+				</Hints>
 			</StringVectorProperty>
 
 			<Property name="Connect" command="confirmConnectionClicked">
+				<Hints>
+					<PropertyWidgetDecorator type="GenericDecorator" mode="visibility" property="ConnectionTag" value="0" inverse="1" />
+				</Hints>
 			</Property>
-
 			<Property name="Disconnect" command="disconnectionClicked">
+				<Hints>
+					<PropertyWidgetDecorator type="GenericDecorator" mode="visibility" property="DisconnectionTag" value="0" inverse="1" />
+				</Hints>
 			</Property>
 
 			<PropertyGroup label="ETP Connection">

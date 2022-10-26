@@ -42,6 +42,8 @@ Authentification("Bearer"),
 AuthPwd(""),
 AllDataspaces(vtkStringArray::New()),
                                                      AssemblyTag(0),
+    ConnectionTag(1),
+    DisconnectionTag(0),
                                                      MarkerOrientation(true),
                                                      MarkerSize(10)
 {
@@ -106,6 +108,8 @@ void vtkETPSource::confirmConnectionClicked()
       this->AllDataspaces->InsertNextValue(vtkStdString(dataspace));
   }
 
+  this->ConnectionTag = 0;
+  this->DisconnectionTag = 1;
   this->Modified();
   this->Update();
 }
@@ -114,6 +118,12 @@ void vtkETPSource::confirmConnectionClicked()
 void vtkETPSource::disconnectionClicked()
 {
     this->repository.disconnect();
+    this->Modified();
+    Modified();
+    Update();
+    UpdateDataObject();
+    UpdateInformation();
+    UpdateWholeExtent();
 }
 
 //------------------------------------------------------------------------------

@@ -99,6 +99,8 @@ public:
 	 * It is set to 0 whenever there's no valid assembly available.
 	 */
 	vtkGetMacro(AssemblyTag, int);
+	vtkGetMacro(ConnectionTag, int);
+	vtkGetMacro(DisconnectionTag, int);
 
 	///@{
 	/**
@@ -128,7 +130,6 @@ public:
 	void setMarkerSize(int size);
 	///@}
 
-	///@{
 
 protected:
 	vtkETPSource();
@@ -149,6 +150,8 @@ private:
 	// treeview
 	std::set<std::string> selectors;
 	int AssemblyTag;
+	int ConnectionTag;
+	int DisconnectionTag;
 
 	// Properties
 	bool MarkerOrientation;
