@@ -53,12 +53,12 @@ public:
 	ResqmlDataRepositoryToVtkPartitionedDataSetCollection();
 	~ResqmlDataRepositoryToVtkPartitionedDataSetCollection();
 	// --------------- PART: TreeView ---------------------
-	vtkDataAssembly* GetAssembly() { return output->GetDataAssembly(); }
+	vtkDataAssembly *GetAssembly() { return output->GetDataAssembly(); }
 
 	//---------------------------------
 
 	// for EPC reader
-	std::string addFile(const char* file);
+	std::string addFile(const char *file);
 
 	// for ETP connection
 	std::string connect(const std::string etp_url, const std::string data_partition, const std::string auth_connection);
@@ -67,41 +67,41 @@ public:
 	void setMarkerOrientation(bool orientation);
 	void setMarkerSize(int size);
 
-	vtkPartitionedDataSetCollection* getVtkPartitionedDatasSetCollection(const double time);
+	vtkPartitionedDataSetCollection *getVtkPartitionedDatasSetCollection(const double time);
 
 	std::vector<double> getTimes() { return times_step; }
 
 	/**
-	* @return selection parent
-	*/
+	 * @return selection parent
+	 */
 	std::string selectNodeId(int node);
 	void clearSelection();
 
 private:
-	std::string buildDataAssemblyFromDataObjectRepo(const char* fileName);
+	std::string buildDataAssemblyFromDataObjectRepo(const char *fileName);
 
-	std::string searchWellboreTrajectory(const std::string& fileName);
-	std::string searchRepresentations(resqml2::AbstractRepresentation const* representation, int idNode = 0 /* 0 is root's id*/);
+	std::string searchWellboreTrajectory(const std::string &fileName);
+	std::string searchRepresentations(resqml2::AbstractRepresentation const *representation, int idNode = 0 /* 0 is root's id*/);
 
-	std::string searchSubRepresentation(resqml2::AbstractRepresentation const* representation, vtkDataAssembly* assembly, int node_parent);
-	std::string searchTimeSeries(const std::string& fileName);
+	std::string searchSubRepresentation(resqml2::AbstractRepresentation const *representation, vtkDataAssembly *assembly, int node_parent);
+	std::string searchTimeSeries(const std::string &fileName);
 
-	std::string searchProperties(resqml2::AbstractRepresentation const* representation, vtkDataAssembly* assembly, int node_parent);
+	std::string searchProperties(resqml2::AbstractRepresentation const *representation, vtkDataAssembly *assembly, int node_parent);
 
 	void selectNodeIdParent(int node);
 	void selectNodeIdChildren(int node);
 
-	void initMapper(const std::string& uuid);
-	void loadMapper(const std::string& uuid, double time);
+	void initMapper(const std::string &uuid);
+	void loadMapper(const std::string &uuid, double time);
 
 	bool markerOrientation;
 	int markerSize;
 
-	common::DataObjectRepository* repository;
+	common::DataObjectRepository *repository;
 
 	vtkSmartPointer<vtkPartitionedDataSetCollection> output;
 
-	std::map<int, ResqmlAbstractRepresentationToVtkPartitionedDataSet*> nodeId_to_resqml; // index of VtkDataAssembly to ResqmlAbstractRepresentationToVtkPartitionedDataSet
+	std::map<int, ResqmlAbstractRepresentationToVtkPartitionedDataSet *> nodeId_to_resqml; // index of VtkDataAssembly to ResqmlAbstractRepresentationToVtkPartitionedDataSet
 
 	//\/          uuid             title            index        prop_uuid
 	std::map<std::string, std::map<std::string, std::map<double, std::string>>> timeSeries_uuid_and_title_to_index_and_properties_uuid;
@@ -114,6 +114,5 @@ private:
 #ifdef WITH_ETP_SSL
 	std::shared_ptr<ETP_NS::AbstractSession> session;
 #endif
-
 };
 #endif

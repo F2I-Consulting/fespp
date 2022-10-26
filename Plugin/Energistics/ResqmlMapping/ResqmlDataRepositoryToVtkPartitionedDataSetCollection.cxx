@@ -195,38 +195,40 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::addFile(const
     return message;
 }
 
-namespace {
-	auto lexicographicalComparison = [](const COMMON_NS::AbstractObject *a, const COMMON_NS::AbstractObject *b) -> bool
-	{
-		return a->getTitle().compare(b->getTitle()) < 0;
-	};
+namespace
+{
+    auto lexicographicalComparison = [](const COMMON_NS::AbstractObject *a, const COMMON_NS::AbstractObject *b) -> bool
+    {
+        return a->getTitle().compare(b->getTitle()) < 0;
+    };
 
-	template<typename T>
-	void sortAndAdd(std::vector<T> source, std::vector<RESQML2_NS::AbstractRepresentation const *>& dest) {
-		std::sort(source.begin(), source.end(), lexicographicalComparison);
-		std::move(source.begin(), source.end(), std::inserter(dest, dest.end()));
-	}
+    template <typename T>
+    void sortAndAdd(std::vector<T> source, std::vector<RESQML2_NS::AbstractRepresentation const *> &dest)
+    {
+        std::sort(source.begin(), source.end(), lexicographicalComparison);
+        std::move(source.begin(), source.end(), std::inserter(dest, dest.end()));
+    }
 }
 
 std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::buildDataAssemblyFromDataObjectRepo(const char *fileName)
 {
-	std::vector<RESQML2_NS::AbstractRepresentation const *> allReps;
+    std::vector<RESQML2_NS::AbstractRepresentation const *> allReps;
 
     // create vtkDataAssembly: create treeView in property panel
-	sortAndAdd(repository->getHorizonGrid2dRepresentationSet(), allReps);
-	sortAndAdd(repository->getIjkGridRepresentationSet(), allReps);
-	sortAndAdd(repository->getAllPolylineSetRepresentationSet(), allReps);
-	sortAndAdd(repository->getAllTriangulatedSetRepresentationSet(), allReps);
-	sortAndAdd(repository->getUnstructuredGridRepresentationSet(), allReps);
+    sortAndAdd(repository->getHorizonGrid2dRepresentationSet(), allReps);
+    sortAndAdd(repository->getIjkGridRepresentationSet(), allReps);
+    sortAndAdd(repository->getAllPolylineSetRepresentationSet(), allReps);
+    sortAndAdd(repository->getAllTriangulatedSetRepresentationSet(), allReps);
+    sortAndAdd(repository->getUnstructuredGridRepresentationSet(), allReps);
 
-	std::string message;
-	for (auto const* rep : allReps)
-	{
-		message += searchRepresentations(rep);
-	}
+    std::string message;
+    for (auto const *rep : allReps)
+    {
+        message += searchRepresentations(rep);
+    }
 
     // get WellboreTrajectory + subrepresentation + property
-	message += searchWellboreTrajectory(fileName);
+    message += searchWellboreTrajectory(fileName);
 
     // get TimeSeries
     message += searchTimeSeries(fileName);
@@ -250,32 +252,34 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchReprese
     }
     else
     {
-		// The leading underscore is forced by VTK which does not support a node name starting with a digit (probably because it is a QNAME).
-		const std::string nodeName = "_" + representation->getUuid();
-		const int existingNodeId = output->GetDataAssembly()->FindFirstNodeWithName(nodeName.c_str());
-		if (existingNodeId == -1) {
-			idNode = data_assembly->AddNode(nodeName.c_str(), idNode);
+        // The leading underscore is forced by VTK which does not support a node name starting with a digit (probably because it is a QNAME).
+        const std::string nodeName = "_" + representation->getUuid();
+        const int existingNodeId = output->GetDataAssembly()->FindFirstNodeWithName(nodeName.c_str());
+        if (existingNodeId == -1)
+        {
+            idNode = data_assembly->AddNode(nodeName.c_str(), idNode);
 
-			auto const* subrep = dynamic_cast<RESQML2_NS::SubRepresentation const *>(representation);
-			const std::string representationVtkValidName = subrep == nullptr
-				? vtkDataAssembly::MakeValidNodeName((representation->getXmlTag() + "_" + representation->getTitle()).c_str())
-				: vtkDataAssembly::MakeValidNodeName((representation->getXmlTag() + "_" + subrep->getSupportingRepresentation(0)->getTitle() + "_" + representation->getTitle()).c_str());
-			data_assembly->SetAttribute(idNode, "label", representationVtkValidName.c_str());
-		}
-		else {
-			idNode = existingNodeId;
-		}
+            auto const *subrep = dynamic_cast<RESQML2_NS::SubRepresentation const *>(representation);
+            const std::string representationVtkValidName = subrep == nullptr
+                                                               ? vtkDataAssembly::MakeValidNodeName((representation->getXmlTag() + "_" + representation->getTitle()).c_str())
+                                                               : vtkDataAssembly::MakeValidNodeName((representation->getXmlTag() + "_" + subrep->getSupportingRepresentation(0)->getTitle() + "_" + representation->getTitle()).c_str());
+            data_assembly->SetAttribute(idNode, "label", representationVtkValidName.c_str());
+        }
+        else
+        {
+            idNode = existingNodeId;
+        }
     }
 
     // add sub representation with properties (only for ijkGrid and unstructured grid)
     if (dynamic_cast<RESQML2_NS::AbstractIjkGridRepresentation const *>(representation) != nullptr ||
         dynamic_cast<RESQML2_NS::UnstructuredGridRepresentation const *>(representation) != nullptr)
     {
-		result += searchSubRepresentation(representation, data_assembly, idNode);
+        result += searchSubRepresentation(representation, data_assembly, idNode);
     }
 
     // add properties to representation
-	result += searchProperties(representation, data_assembly, idNode);
+    result += searchProperties(representation, data_assembly, idNode);
 
     return result;
 }
@@ -287,10 +291,10 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchSubRepr
     try
     {
         auto subRepresentationSet = representation->getSubRepresentationSet();
-		std::sort(subRepresentationSet.begin(), subRepresentationSet.end(), lexicographicalComparison);
+        std::sort(subRepresentationSet.begin(), subRepresentationSet.end(), lexicographicalComparison);
         for (auto const *subRepresentation : subRepresentationSet)
         {
-			result += searchRepresentations(subRepresentation, data_assembly->GetParent(node_parent));
+            result += searchRepresentations(subRepresentation, data_assembly->GetParent(node_parent));
         }
     }
     catch (const std::exception &e)
@@ -308,14 +312,15 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchPropert
         auto valuesPropertySet = representation->getValuesPropertySet();
         std::sort(valuesPropertySet.begin(), valuesPropertySet.end(), lexicographicalComparison);
         // property
-        for (auto *property : valuesPropertySet)
+        for (auto const *property : valuesPropertySet)
         {
-            property->setTitle(vtkDataAssembly::MakeValidNodeName((property->getXmlTag() + '.' + property->getTitle()).c_str()));
+            const std::string propertyVtkValidName = vtkDataAssembly::MakeValidNodeName((property->getXmlTag() + '.' + property->getTitle()).c_str());
+            // property->setTitle(vtkDataAssembly::MakeValidNodeName((property->getXmlTag() + '.' + property->getTitle()).c_str()));
 
             if (output->GetDataAssembly()->FindFirstNodeWithName(("_" + property->getUuid()).c_str()) == -1)
             { // verify uuid exist in treeview
                 int property_idNode = data_assembly->AddNode(("_" + property->getUuid()).c_str(), node_parent);
-                data_assembly->SetAttribute(property_idNode, "label", property->getTitle().c_str());
+                data_assembly->SetAttribute(property_idNode, "label", propertyVtkValidName.c_str());
             }
         }
     }
@@ -352,9 +357,10 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchWellbor
             }
             else
             {
-                wellboreTrajectory->setTitle(vtkDataAssembly::MakeValidNodeName((wellboreTrajectory->getXmlTag() + '_' + wellboreTrajectory->getTitle()).c_str()));
+                // wellboreTrajectory->setTitle(vtkDataAssembly::MakeValidNodeName((wellboreTrajectory->getXmlTag() + '_' + wellboreTrajectory->getTitle()).c_str()));
+                const std::string wellboreTrajectoryVtkValidName = vtkDataAssembly::MakeValidNodeName((wellboreTrajectory->getXmlTag() + '_' + wellboreTrajectory->getTitle()).c_str());
                 idNode = data_assembly->AddNode(("_" + wellboreTrajectory->getUuid()).c_str(), 0 /* add to root*/);
-                data_assembly->SetAttribute(idNode, "label", wellboreTrajectory->getTitle().c_str());
+                data_assembly->SetAttribute(idNode, "label", wellboreTrajectoryVtkValidName.c_str());
                 data_assembly->SetAttribute(idNode, "is_checkable", 0);
             }
         }
@@ -367,28 +373,32 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchWellbor
                 if (wellboreMarkerFrame == nullptr)
                 { // WellboreFrame
                     wellboreFrame->setTitle(vtkDataAssembly::MakeValidNodeName((wellboreFrame->getXmlTag() + '_' + wellboreFrame->getTitle()).c_str()));
+                    const std::string wellboreFrameVtkValidName = vtkDataAssembly::MakeValidNodeName((wellboreFrame->getXmlTag() + '_' + wellboreFrame->getTitle()).c_str());
                     int frame_idNode = data_assembly->AddNode(("_" + wellboreFrame->getUuid()).c_str(), 0 /* add to root*/);
-                    data_assembly->SetAttribute(frame_idNode, "label", wellboreFrame->getTitle().c_str());
+                    data_assembly->SetAttribute(frame_idNode, "label", wellboreFrameVtkValidName.c_str());
                     data_assembly->SetAttribute(frame_idNode, "traj", idNode);
                     for (auto *property : wellboreFrame->getValuesPropertySet())
                     {
-                        property->setTitle(vtkDataAssembly::MakeValidNodeName((property->getXmlTag() + '_' + property->getTitle()).c_str()));
+                        // property->setTitle(vtkDataAssembly::MakeValidNodeName((property->getXmlTag() + '_' + property->getTitle()).c_str()));
+                        const std::string propertyVtkValidName = vtkDataAssembly::MakeValidNodeName((property->getXmlTag() + '_' + property->getTitle()).c_str());
                         int property_idNode = data_assembly->AddNode(("_" + property->getUuid()).c_str(), frame_idNode);
-                        data_assembly->SetAttribute(property_idNode, "label", property->getTitle().c_str());
+                        data_assembly->SetAttribute(property_idNode, "label", propertyVtkValidName.c_str());
                         data_assembly->SetAttribute(property_idNode, "traj", idNode);
                     }
                 }
                 else
                 { // WellboreMarkerFrame
-                    wellboreFrame->setTitle(vtkDataAssembly::MakeValidNodeName((wellboreFrame->getXmlTag() + '.' + wellboreFrame->getTitle()).c_str()));
+                    // wellboreFrame->setTitle(vtkDataAssembly::MakeValidNodeName((wellboreFrame->getXmlTag() + '.' + wellboreFrame->getTitle()).c_str()));
+                    const std::string wellboreFrameVtkValidName = vtkDataAssembly::MakeValidNodeName((wellboreFrame->getXmlTag() + '.' + wellboreFrame->getTitle()).c_str());
                     int markerFrame_idNode = data_assembly->AddNode(("_" + wellboreFrame->getUuid()).c_str(), 0 /* add to root*/);
-                    data_assembly->SetAttribute(markerFrame_idNode, "label", wellboreFrame->getTitle().c_str());
+                    data_assembly->SetAttribute(markerFrame_idNode, "label", wellboreFrameVtkValidName.c_str());
                     data_assembly->SetAttribute(markerFrame_idNode, "traj", idNode);
                     for (auto *wellboreMarker : wellboreMarkerFrame->getWellboreMarkerSet())
                     {
-                        wellboreMarker->setTitle(vtkDataAssembly::MakeValidNodeName((wellboreMarker->getXmlTag() + '.' + wellboreMarker->getTitle()).c_str()));
+                        // wellboreMarker->setTitle(vtkDataAssembly::MakeValidNodeName((wellboreMarker->getXmlTag() + '.' + wellboreMarker->getTitle()).c_str()));
+                        const std::string wellboreMarkerVtkValidName = vtkDataAssembly::MakeValidNodeName((wellboreMarker->getXmlTag() + '.' + wellboreMarker->getTitle()).c_str());
                         int marker_idNode = data_assembly->AddNode(("_" + wellboreMarker->getUuid()).c_str(), markerFrame_idNode);
-                        data_assembly->SetAttribute(marker_idNode, "label", wellboreMarker->getTitle().c_str());
+                        data_assembly->SetAttribute(marker_idNode, "label", wellboreMarkerVtkValidName.c_str());
                         data_assembly->SetAttribute(marker_idNode, "traj", idNode);
                     }
                 }
@@ -419,16 +429,12 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchTimeSer
      ****/
     for (auto const *timeSeries : timeSeriesSet)
     {
-        bool valid = true;
-
         // get properties link to Times series
         try
         {
             auto propSeries = timeSeries->getPropertySet();
 
-            std::vector<std::string> property_name_set;
-            std::map<std::string, std::vector<int>> property_name_to_node_set;
-            int node_parent = -1;
+            std::map<std::string, std::vector<int>> propertyName_to_nodeSet;
             for (auto const *prop : propSeries)
             {
                 if (prop->getXmlTag() == RESQML2_NS::ContinuousProperty::XML_TAG ||
@@ -443,44 +449,40 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchTimeSer
                     else
                     {
                         // same node parent else not supported
-                        if (node_parent == -1)
+                        const int nodeParent = assembly->GetParent(node_id);
+                        if (nodeParent != -1)
                         {
-                            node_parent = assembly->GetParent(node_id);
-                        }
-                        if (node_parent == assembly->GetParent(node_id))
-                        {
-                            property_name_to_node_set[prop->getTitle()].push_back(node_id);
-							const size_t timeIndexInTimeSeries = timeSeries->getTimestampIndex(prop->getSingleTimestamp());
+                            propertyName_to_nodeSet[prop->getTitle()].push_back(node_id);
+                            const size_t timeIndexInTimeSeries = timeSeries->getTimestampIndex(prop->getSingleTimestamp());
                             times_step.push_back(timeIndexInTimeSeries);
                             timeSeries_uuid_and_title_to_index_and_properties_uuid[timeSeries->getUuid()][vtkDataAssembly::MakeValidNodeName((timeSeries->getXmlTag() + '.' + prop->getTitle()).c_str())][timeIndexInTimeSeries] = prop->getUuid();
                         }
                         else
                         {
-                            valid = false;
-                            return_message = return_message + "The properties of time series " + timeSeries->getUuid() + " aren't same parent and is not supported.\n";
+                            return_message = return_message + "The properties of time series " + timeSeries->getUuid() + " aren't parent and is not supported.\n";
+                            continue;
                         }
                     }
                 }
             }
-            if (valid)
+            // erase duplicate Index
+            sort(times_step.begin(), times_step.end());
+            times_step.erase(unique(times_step.begin(), times_step.end()), times_step.end());
+
+            for (const auto &myPair : propertyName_to_nodeSet)
             {
-                // erase duplicate Index
-                sort(times_step.begin(), times_step.end());
-                times_step.erase(unique(times_step.begin(), times_step.end()), times_step.end());
+                std::vector<int> property_node_set = myPair.second;
 
-                for (const auto &myPair : property_name_to_node_set)
+                int nodeParent = -1;
+                // erase property add to treeview for group by TimeSerie
+                for (auto node : property_node_set)
                 {
-                    std::vector<int> property_node_set = myPair.second;
-
-                    for (auto node : property_node_set)
-                    {
-                        output->GetDataAssembly()->RemoveNode(node);
-                        nodeId_to_resqml.erase(node);
-                    }
-                    std::string name = vtkDataAssembly::MakeValidNodeName((timeSeries->getXmlTag() + '.' + myPair.first).c_str());
-                    auto times_serie_node_id = output->GetDataAssembly()->AddNode(("_" + timeSeries->getUuid() + name).c_str(), node_parent);
-                    output->GetDataAssembly()->SetAttribute(times_serie_node_id, "label", name.c_str());
+                    nodeParent = output->GetDataAssembly()->GetParent(node);
+                    output->GetDataAssembly()->RemoveNode(node);
                 }
+                std::string name = vtkDataAssembly::MakeValidNodeName((timeSeries->getXmlTag() + '.' + myPair.first).c_str());
+                auto times_serie_node_id = output->GetDataAssembly()->AddNode(("_" + timeSeries->getUuid() + name).c_str(), nodeParent);
+                output->GetDataAssembly()->SetAttribute(times_serie_node_id, "label", name.c_str());
             }
         }
         catch (const std::exception &e)
@@ -535,7 +537,7 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::clearSelection()
     this->current_selection.clear();
 }
 
-void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::initMapper(const std::string& uuid)
+void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::initMapper(const std::string &uuid)
 {
     ResqmlAbstractRepresentationToVtkPartitionedDataSet *rep = nullptr;
     if (uuid.length() == 36)
@@ -613,7 +615,7 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::initMapper(const std
     }
 }
 
-void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::loadMapper(const std::string& uuid, double time)
+void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::loadMapper(const std::string &uuid, double time)
 {
     try
     { // load Time Series Properties
