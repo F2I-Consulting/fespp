@@ -93,7 +93,7 @@ ResqmlDataRepositoryToVtkPartitionedDataSetCollection::~ResqmlDataRepositoryToVt
 }
 
 //----------------------------------------------------------------------------
-std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::connect(const std::string etp_url, const std::string data_partition, const std::string auth_connection)
+std::vector<std::string> ResqmlDataRepositoryToVtkPartitionedDataSetCollection::connect(const std::string etp_url, const std::string data_partition, const std::string auth_connection)
 {
 #ifdef WITH_ETP_SSL
     boost::uuids::random_generator gen;
@@ -181,7 +181,9 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::connect(const
     }
 #endif
     vtkOutputWindowDisplayWarningText(("connection with paramater: " + etp_url + " data partition: " + data_partition + " authentication " + auth_connection + "\n").c_str());
-    return buildDataAssemblyFromDataObjectRepo("");
+
+    return { "dataspace 1", "dataspace 2", "dataspace 3", "dataspace 4" };
+    // return buildDataAssemblyFromDataObjectRepo("");
 }
 
 //----------------------------------------------------------------------------
@@ -193,6 +195,13 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::addFile(const
 
     message += buildDataAssemblyFromDataObjectRepo(fileName);
     return message;
+}
+
+//----------------------------------------------------------------------------
+std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::addDataspace(const char* dataspace)
+{
+    vtkOutputWindowDisplayText(("addDataspace " + std::string(dataspace)).c_str());
+    return buildDataAssemblyFromDataObjectRepo("");
 }
 
 namespace

@@ -31,6 +31,7 @@ under the License.
 #include <vtkMultiProcessController.h>
 #include <vtkStreamingDemandDrivenPipeline.h>
 #include <vtkDataObject.h>
+#include <vtkStdString.h>
 
 vtkStandardNewMacro(vtkETPSource);
 
@@ -39,6 +40,7 @@ vtkETPSource::vtkETPSource() : ETPUrl("wss://osdu-ship.msft-osdu-test.org:443/oe
 DataPartition("opendes"),
 Authentification("Bearer"),
 AuthPwd(""),
+AllDataspaces(vtkStringArray::New()),
                                                      AssemblyTag(0),
                                                      MarkerOrientation(true),
                                                      MarkerSize(10)
@@ -97,10 +99,29 @@ void vtkETPSource::setAuthPwd(char *auth_connection)
 //----------------------------------------------------------------------------
 void vtkETPSource::confirmConnectionClicked()
 {
-  this->repository.connect(this->ETPUrl, this->DataPartition, this->Authentification + " " + this->AuthPwd);
-  this->AssemblyTag++;
+  const auto dataspaces = this->repository.connect(this->ETPUrl, this->DataPartition, this->Authentification + " " + this->AuthPwd);
+  this->AllDataspaces->InsertNextValue(vtkStdString(""));
+  for (const std::string dataspace : dataspaces)
+  {
+      this->AllDataspaces->InsertNextValue(vtkStdString(dataspace));
+  }
+
   this->Modified();
   this->Update();
+}
+
+//------------------------------------------------------------------------------
+void vtkETPSource::SetDataspaces(const char* dataspaces)
+{
+    if (std::string(dataspaces) != "")
+    {
+        std::string msg = this->repository.addDataspace(dataspaces);
+        if (!msg.empty())
+        {
+            vtkWarningMacro(<< msg);
+        }
+    }
+    this->AssemblyTag++;
 }
 
 //----------------------------------------------------------------------------

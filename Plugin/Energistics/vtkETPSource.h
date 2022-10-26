@@ -49,26 +49,30 @@ public:
 	/**
 	 * Set the Ip for ETP connection.
 	 */
-	void setETPUrlConnection(char * etp_url);
+	void setETPUrlConnection(char *etp_url);
 	///@}
-		
+
 	///@{
 	/**
 	 * Set the Port for ETP connection.
 	 */
-	void setDataPartition(char * data_partition);
+	void setDataPartition(char *data_partition);
 	///@}
-	
-	 void setAuthType(int auth_type);
+
+	void setAuthType(int auth_type);
 
 	///@{
 	/**
 	 * Set the Auth for ETP connection.
 	 */
-	void setAuthPwd(char* auth_connection);
+	void setAuthPwd(char *auth_connection);
 	///@}
 
 	void confirmConnectionClicked();
+
+	vtkStringArray *AllDataspaces;
+	void SetDataspaces(const char *dataspace);
+	vtkGetObjectMacro(AllDataspaces, vtkStringArray);
 
 	///@{
 	/**
@@ -128,12 +132,12 @@ protected:
 	vtkETPSource();
 	~vtkETPSource() override;
 
-	int RequestData(vtkInformation*, vtkInformationVector**, vtkInformationVector*) override;
-	int RequestInformation(vtkInformation*, vtkInformationVector**, vtkInformationVector*) override;
+	int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
+	int RequestInformation(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
 
 private:
-	vtkETPSource(const vtkETPSource&) = delete;
-	void operator=(const vtkETPSource&) = delete;
+	vtkETPSource(const vtkETPSource &) = delete;
+	void operator=(const vtkETPSource &) = delete;
 
 	std::string ETPUrl;
 	std::string DataPartition;

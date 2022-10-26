@@ -70,6 +70,7 @@
 				<PipelineIcon name="CINEMA_MARK" />
 			</Hints>
 
+			<!-- properties for connection to server -->
 			<StringVectorProperty command="setETPUrlConnection" default_values="wss://osdu-ship.msft-osdu-test.org:443/oetp/reservoir-ddms/" name="ETPUrl" label="ETP Url" number_of_elements="1" panel_visibility="default">
 				<Documentation>This property specifies the string used to describe the ETP Url</Documentation>
 			</StringVectorProperty>
@@ -99,6 +100,19 @@
 				<Property name="AuthPwd" />
 				<Property name="Connect" />
 			</PropertyGroup>
+
+			<!-- property to choose dataspace -->
+			<StringVectorProperty command="GetAllDataspaces" information_only="1" name="DataspacesInfo">
+				<StringArrayHelper />
+			</StringVectorProperty>
+			<StringVectorProperty name="Dataspaces" command="SetDataspaces" number_of_elements="1" animateable="0">
+				<StringListDomain name="array_list">
+					<RequiredProperties>
+						<Property name="DataspacesInfo" function="ArrayList" />
+					</RequiredProperties>
+				</StringListDomain >
+			</StringVectorProperty>
+
 			<!-- TimeStepValues for Time series -->
 			<DoubleVectorProperty information_only="1" name="TimestepValues" repeatable="1">
 				<TimeStepsInformationHelper />
