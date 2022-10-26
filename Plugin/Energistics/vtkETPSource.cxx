@@ -110,6 +110,12 @@ void vtkETPSource::confirmConnectionClicked()
   this->Update();
 }
 
+//----------------------------------------------------------------------------
+void vtkETPSource::disconnectionClicked()
+{
+    this->repository.disconnect();
+}
+
 //------------------------------------------------------------------------------
 void vtkETPSource::SetDataspaces(const char* dataspaces)
 {

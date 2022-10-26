@@ -70,6 +70,8 @@ public:
 
 	void confirmConnectionClicked();
 
+	void disconnectionClicked();
+
 	vtkStringArray *AllDataspaces;
 	void SetDataspaces(const char *dataspace);
 	vtkGetObjectMacro(AllDataspaces, vtkStringArray);

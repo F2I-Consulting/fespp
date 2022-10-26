@@ -187,6 +187,12 @@ std::vector<std::string> ResqmlDataRepositoryToVtkPartitionedDataSetCollection::
 }
 
 //----------------------------------------------------------------------------
+void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::disconnect()
+{
+    vtkOutputWindowDisplayText("disconnect ");
+}
+
+//----------------------------------------------------------------------------
 std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::addFile(const char *fileName)
 {
     COMMON_NS::EpcDocument pck(fileName);

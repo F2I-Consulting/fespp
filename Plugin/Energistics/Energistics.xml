@@ -93,12 +93,16 @@
 			<Property name="Connect" command="confirmConnectionClicked">
 			</Property>
 
+			<Property name="Disconnect" command="disconnectionClicked">
+			</Property>
+
 			<PropertyGroup label="ETP Connection">
 				<Property name="ETPUrl" />
 				<Property name="DataPartition" />
 				<Property name="Authentification" />
 				<Property name="AuthPwd" />
 				<Property name="Connect" />
+				<Property name="Disconnect" />
 			</PropertyGroup>
 
 			<!-- property to choose dataspace -->
