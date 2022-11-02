@@ -130,66 +130,31 @@ std::vector<std::string> ResqmlDataRepositoryToVtkPartitionedDataSetCollection::
 
     // Wait for the ETP session to be opened
     auto t_start = std::chrono::high_resolution_clock::now();
-    // the work...
-    auto t_end = std::chrono::high_resolution_clock::now();
     while (session->isEtpSessionClosed())
     {
         if (std::chrono::duration<double, std::milli>(std::chrono::high_resolution_clock::now() - t_start).count() > 5000)
         {
-            vtkOutputWindowDisplayWarningText(("Time out for websocket connection : " +
-                                               std::to_string(std::chrono::duration<double, std::milli>(std::chrono::high_resolution_clock::now() - t_start).count()) + "ms\n")
-                                                  .c_str());
-            return "ETP time out";
+			throw std::invalid_argument("Did you forget to click apply button before to connect? Time out for websocket connection" +
+				std::to_string(std::chrono::duration<double, std::milli>(std::chrono::high_resolution_clock::now() - t_start).count()) + "ms.\n");
         }
     }
 
     //************ LIST DATASPACES ************
     const auto dataspaces = session->getDataspaces();
-    //************ LIST RESOURCES ************
-    const auto dsIter = std::find_if(dataspaces.begin(), dataspaces.end(),
-                                     [](const Energistics::Etp::v12::Datatypes::Object::Dataspace &ds)
-                                     { return ds.uri == "eml:///dataspace('DANI/DEMO_F2F')"; });
-    Energistics::Etp::v12::Datatypes::Object::ContextInfo ctxInfo;
-    ctxInfo.uri = dsIter == dataspaces.end()
-                      ? dataspaces[0].uri
-                      : dsIter->uri;
-    ctxInfo.depth = 0;
-    ctxInfo.navigableEdges = Energistics::Etp::v12::Datatypes::Object::RelationshipKind::Both;
-    ctxInfo.includeSecondaryTargets = false;
-    ctxInfo.includeSecondarySources = false;
-    const auto resources = session->getResources(ctxInfo, Energistics::Etp::v12::Datatypes::Object::ContextScopeKind::targets);
-    //************ GET ALL DATAOBJECTS ************
-    repository->setHdfProxyFactory(new ETP_NS::FesapiHdfProxyFactory(session.get()));
-    if (!resources.empty())
-    {
-        std::map<std::string, std::string> query;
-        for (size_t i = 0; i < resources.size(); ++i)
-        {
-            query[std::to_string(i)] = resources[i].uri;
-        }
-        const auto dataobjects = session->getDataObjects(query);
-        for (auto &datoObject : dataobjects)
-        {
-            repository->addOrReplaceGsoapProxy(datoObject.second.data,
-                                               ETP_NS::EtpHelpers::getDataObjectType(datoObject.second.resource.uri),
-                                               ETP_NS::EtpHelpers::getDataspaceUri(datoObject.second.resource.uri));
-        }
-    }
-    else
-    {
-        std::cout << "There is no dataobject in this dataspace" << std::endl;
-    }
+	std::vector<std::string> result;
+	for (const auto& ds : dataspaces) {
+		result.push_back(ds.uri);
+	}
+	return result;
 #endif
-    vtkOutputWindowDisplayWarningText(("connection with paramater: " + etp_url + " data partition: " + data_partition + " authentication " + auth_connection + "\n").c_str());
-
-    return { "dataspace 1", "dataspace 2", "dataspace 3", "dataspace 4" };
-    // return buildDataAssemblyFromDataObjectRepo("");
 }
 
 //----------------------------------------------------------------------------
 void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::disconnect()
 {
-    vtkOutputWindowDisplayText("disconnect ");
+#ifdef WITH_ETP_SSL
+	session->close();
+#endif
 }
 
 //----------------------------------------------------------------------------
@@ -206,7 +171,37 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::addFile(const
 //----------------------------------------------------------------------------
 std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::addDataspace(const char* dataspace)
 {
-    vtkOutputWindowDisplayText(("addDataspace " + std::string(dataspace)).c_str());
+	//************ LIST RESOURCES ************
+	Energistics::Etp::v12::Datatypes::Object::ContextInfo ctxInfo;
+	ctxInfo.uri = dataspace;
+	ctxInfo.depth = 0;
+	ctxInfo.navigableEdges = Energistics::Etp::v12::Datatypes::Object::RelationshipKind::Both;
+	ctxInfo.includeSecondaryTargets = false;
+	ctxInfo.includeSecondarySources = false;
+	const auto resources = session->getResources(ctxInfo, Energistics::Etp::v12::Datatypes::Object::ContextScopeKind::targets);
+
+	//************ GET ALL DATAOBJECTS ************
+	repository->setHdfProxyFactory(new ETP_NS::FesapiHdfProxyFactory(session.get()));
+	if (!resources.empty())
+	{
+		std::map<std::string, std::string> query;
+		for (size_t i = 0; i < resources.size(); ++i)
+		{
+			query[std::to_string(i)] = resources[i].uri;
+		}
+		const auto dataobjects = session->getDataObjects(query);
+		for (auto &datoObject : dataobjects)
+		{
+			repository->addOrReplaceGsoapProxy(datoObject.second.data,
+				ETP_NS::EtpHelpers::getDataObjectType(datoObject.second.resource.uri),
+				ETP_NS::EtpHelpers::getDataspaceUri(datoObject.second.resource.uri));
+		}
+	}
+	else
+	{
+		vtkOutputWindowDisplayWarningText(("There is no dataobject in the dataspace : " + std::string(dataspace) + "\n") .c_str());
+	}
+
     return buildDataAssemblyFromDataObjectRepo("");
 }
 

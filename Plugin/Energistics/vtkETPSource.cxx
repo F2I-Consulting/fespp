@@ -88,7 +88,7 @@ void vtkETPSource::setAuthType(int auth_type)
   }
   else
   {
-      this->Authentification = "unknow";
+    this->Authentification = "unknown";
   }
 }
 
@@ -101,17 +101,23 @@ void vtkETPSource::setAuthPwd(char *auth_connection)
 //----------------------------------------------------------------------------
 void vtkETPSource::confirmConnectionClicked()
 {
-  const auto dataspaces = this->repository.connect(this->ETPUrl, this->DataPartition, this->Authentification + " " + this->AuthPwd);
-  this->AllDataspaces->InsertNextValue(vtkStdString(""));
-  for (const std::string dataspace : dataspaces)
-  {
-      this->AllDataspaces->InsertNextValue(vtkStdString(dataspace));
-  }
+  try {
+	const auto dataspaces = this->repository.connect(this->ETPUrl, this->DataPartition, this->Authentification + " " + this->AuthPwd);
+	this->AllDataspaces->InsertNextValue(vtkStdString(""));
+	for (const std::string dataspace : dataspaces)
+	{
+		this->AllDataspaces->InsertNextValue(vtkStdString(dataspace));
+	}
 
-  this->ConnectionTag = 0;
-  this->DisconnectionTag = 1;
-  this->Modified();
-  this->Update();
+	this->ConnectionTag = 0;
+	this->DisconnectionTag = 1;
+	this->Modified();
+	this->Update();
+  }
+  catch (const std::exception &e)
+  {
+	  vtkErrorMacro(<< e.what());
+  }
 }
 
 //----------------------------------------------------------------------------
