@@ -171,6 +171,7 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::addFile(const
 //----------------------------------------------------------------------------
 std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::addDataspace(const char* dataspace)
 {
+#ifdef WITH_ETP_SSL
 	//************ LIST RESOURCES ************
 	Energistics::Etp::v12::Datatypes::Object::ContextInfo ctxInfo;
 	ctxInfo.uri = dataspace;
@@ -202,7 +203,9 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::addDataspace(
 		vtkOutputWindowDisplayWarningText(("There is no dataobject in the dataspace : " + std::string(dataspace) + "\n") .c_str());
 	}
 
+    #endif
     return buildDataAssemblyFromDataObjectRepo("");
+
 }
 
 namespace
