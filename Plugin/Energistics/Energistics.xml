@@ -6,8 +6,9 @@
 				<ReaderFactory extensions="epc" file_description="EPC files" filename_patterns="*.epc" />
 				<PipelineIcon name="CINEMA_MARK" />
 			</Hints>
+
 			<!-- File to load: -->
-			<StringVectorProperty clean_command="ClearFileNames" command="AddFileName" name="FileName" number_of_elements="1" repeat_command="1" label="add file">
+			<StringVectorProperty clean_command="ClearFileName" command="AddFileNameToFiles" name="FileName" number_of_elements="1" repeat_command="1" label="add file">
 				<FileListDomain name="files" />
 				<Documentation>This property specifies the file name for the epc reader.</Documentation>
 				<Hints>
@@ -15,17 +16,18 @@
 				</Hints>
 			</StringVectorProperty>
 			<!-- Files List loaded: -->
-			<StringVectorProperty command="GetAllFilesNames" information_only="1" name="FilesNameInfo">
+			<StringVectorProperty command="GetAllFiles" information_only="1" name="FilesInfo">
 				<StringArrayHelper />
 			</StringVectorProperty>
 			<StringVectorProperty name="Files" command="SetFiles" number_of_elements="1" repeat_command="1" label="all files loaded">
-				<ArraySelectionDomain name="FilesList">
+				<ArraySelectionDomain  name="FilesList">
 					<RequiredProperties>
-						<Property function="FilesNameInfo" name="FilesNameInfo" />
+						<Property function="FilesInfo" name="FilesInfo" />
 					</RequiredProperties>
-				</ArraySelectionDomain>
+				</ArraySelectionDomain >
 				<Documentation>List files loaded...</Documentation>
 			</StringVectorProperty>
+
 			<!-- TimeStepValues for Time series -->
 			<DoubleVectorProperty information_only="1" name="TimestepValues" repeatable="1">
 				<TimeStepsInformationHelper />

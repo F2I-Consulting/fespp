@@ -36,87 +36,38 @@ vtkStandardNewMacro(vtkEPCReader);
 vtkCxxSetObjectMacro(vtkEPCReader, Controller, vtkMultiProcessController);
 
 //----------------------------------------------------------------------------
-vtkEPCReader::vtkEPCReader() : Files(),
-                                         FilesNames(vtkStringArray::New()),
-                                         Controller(nullptr),
-                                         AssemblyTag(0),
-                                         MarkerOrientation(true),
-                                         MarkerSize(10)
+vtkEPCReader::vtkEPCReader() : Files(vtkStringArray::New()),
+                               Controller(nullptr),
+                               AssemblyTag(0),
+                               MarkerOrientation(true),
+                               MarkerSize(10)
 {
   SetNumberOfInputPorts(0);
   SetNumberOfOutputPorts(1);
 
-  //this->Property = vtkProperty::New();
-
   this->SetController(vtkMultiProcessController::GetGlobalController());
 }
 
-//------------------------------------------------------------------------------
-// int vtkEPCReader::ReadProperty(vtkProperty* property)
-// {
-//     vtkFloatArray* tmpArray = vtkFloatArray::New();
-
-//     int status = this->ParseValues(tmpArray, 5);
-
-//     if (status != 0)
-//     {
-//         property->SetAmbient(tmpArray->GetValue(0));
-//         property->SetDiffuse(tmpArray->GetValue(1));
-//         property->SetSpecular(tmpArray->GetValue(2));
-//         property->SetSpecularPower(tmpArray->GetValue(3));
-//         property->SetOpacity(tmpArray->GetValue(4));
-//     }
-
-//     tmpArray->Delete();
-
-//     return status;
-// }
-
 //----------------------------------------------------------------------------
-void vtkEPCReader::SetFileName(const char *fname)
-{
-  if (fname == nullptr)
-  {
-    ClearFileNames();
-    return;
-  }
-
-  if (this->Files.size() == 1 && *this->Files.begin() == fname)
-  {
-    return;
-  }
-
-  this->Files.clear();
-  this->Files.insert(fname);
-  this->Modified();
-}
-
-//----------------------------------------------------------------------------
-void vtkEPCReader::AddFileName(const char *fname)
+void vtkEPCReader::AddFileNameToFiles(const char *fname)
 {
   if (fname != nullptr) 
   {
-          this->FilesNames->InsertNextValue(fname);
+          this->Files->InsertNextValue(fname);
   }
 }
 
 //----------------------------------------------------------------------------
-void vtkEPCReader::ClearFileNames()
+void vtkEPCReader::ClearFileName()
 {
-  if (!this->Files.empty())
-  {
-    this->Files.clear();
-    this->Modified();
-  }
 }
 
 //----------------------------------------------------------------------------
 const char *vtkEPCReader::GetFileName(int index) const
 {
-  if (this->Files.size() > index)
+  if (this->Files->GetNumberOfValues() > index)
   {
-    auto iter = std::next(this->Files.begin(), index);
-    return iter->c_str();
+    return this->Files->GetValue(index).c_str();
   }
   return nullptr;
 }
@@ -124,16 +75,16 @@ const char *vtkEPCReader::GetFileName(int index) const
 //----------------------------------------------------------------------------
 size_t vtkEPCReader::GetNumberOfFileNames() const
 {
-  return this->Files.size();
+  return this->Files->GetNumberOfValues();
 }
 
 //------------------------------------------------------------------------------
-vtkStringArray *vtkEPCReader::GetAllFilesNames()
+vtkStringArray *vtkEPCReader::GetAllFiles()
 {
-    if (this->FilesNames->GetNumberOfValues() > 0)
+    if (this->Files->GetNumberOfValues() > 0)
     {
-        for (auto index = 0; index < this->FilesNames->GetNumberOfValues(); index++) {
-            auto file_property = this->FilesNames->GetValue(index);
+        for (auto index = 0; index < this->Files->GetNumberOfValues(); index++) {
+            auto file_property = this->Files->GetValue(index);
             auto search = this->FileNamesLoaded.find(file_property); 
             if (search == this->FileNamesLoaded.end()) {
                 std::string msg = this->repository.addFile(file_property.c_str());
@@ -157,15 +108,27 @@ vtkStringArray *vtkEPCReader::GetAllFilesNames()
             }
         }
     }
-    return this->FilesNames;
+    return this->Files;
 }
 
 //------------------------------------------------------------------------------
+
 void vtkEPCReader::SetFiles(const std::string &file)
 {
     if (file != "0")
     {
-        this->Files.insert(file);
+        bool exist = false;
+        for (auto index = 0; index < this->Files->GetNumberOfValues(); ++index) {
+            auto file_property = this->Files->GetValue(index);
+            if (file_property == file)
+            {
+                exist = true;
+            }
+        }
+        if (!exist)
+        {
+            this->Files->InsertNextValue(file);
+        }
     }
 }
 
@@ -187,7 +150,6 @@ bool vtkEPCReader::AddSelector(const char *path)
         if (GetAssembly()->HasAttribute(node_id, "traj"))
         {
             int node_id_parent = GetAssembly()->GetAttributeOrDefault(node_id, "traj", 0);
-            vtkOutputWindowDisplayText(std::to_string(node_id_parent).c_str());
         }
  */
         Modified();
@@ -272,6 +234,21 @@ int vtkEPCReader::RequestData(vtkInformation *,
                                    vtkInformationVector **,
                                    vtkInformationVector *outputVector)
 {
+    // Load state (load selection in wait)
+    if (this->selectorNotLoaded.size() > 0)
+    {
+        for (auto path : this->selectorNotLoaded)
+        {
+            int node_id = GetAssembly()->GetFirstNodeByPath(path.c_str());
+            if (node_id > -1)
+            {
+                std::string selection_parent = this->repository.selectNodeId(node_id);
+                this->selectorNotLoaded.erase(path);
+            }
+        }
+    }
+
+
     auto* outInfo = outputVector->GetInformationObject(0);
     outInfo->Remove(vtkStreamingDemandDrivenPipeline::TIME_STEPS());
     const std::vector<double> times = this->repository.getTimes();

@@ -55,8 +55,8 @@ public:
 	/**
     * API to set the filenames.
     */
-	void AddFileName(const char *fname);
-	void ClearFileNames();
+	void AddFileNameToFiles(const char *fname);
+	void ClearFileName();
 	const char *GetFileName(int index) const;
 	size_t GetNumberOfFileNames() const;
 	///@}
@@ -64,7 +64,7 @@ public:
 	/**
    * Set a single filename. Note, this will clear all existing filenames.
    */
-	void SetFileName(const char *fname);
+	/*void SetFileName(const char* fname);*/
 
 	// --------------- PART: Multi-Processor -------------
 
@@ -88,7 +88,7 @@ public:
  /**
    * Get a list all file names as a vtkStringArray.
    */
-  vtkStringArray* GetAllFilesNames();
+  vtkStringArray* GetAllFiles();
 
 ///@{
   /**
@@ -142,20 +142,18 @@ public:
 	void setMarkerSize(int size);
 	///@}
 
-	  ///@{
- 
 
 protected:
 	vtkEPCReader();
 	~vtkEPCReader() final { SetController(nullptr); }
-	//int ReadProperty(vtkProperty* property);
 
 private:
 	int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) final;
 
 	// files
-	std::set<std::string> Files;
-	vtkSmartPointer<vtkStringArray> FilesNames;
+	vtkSmartPointer<vtkStringArray> Files;
+	std::set<std::string> FilesList;
+	//vtkSmartPointer<vtkStringArray> FilesNames;
 	std::set<std::string> FileNamesLoaded;
 
 	std::set<std::string> selectorNotLoaded; // load state, load selector before files :(
