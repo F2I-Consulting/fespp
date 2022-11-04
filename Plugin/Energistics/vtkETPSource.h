@@ -130,7 +130,6 @@ public:
 	void setMarkerSize(int size);
 	///@}
 
-
 protected:
 	vtkETPSource();
 	~vtkETPSource() override;

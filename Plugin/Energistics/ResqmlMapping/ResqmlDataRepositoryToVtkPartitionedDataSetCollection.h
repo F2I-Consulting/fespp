@@ -60,9 +60,8 @@ public:
 	// for EPC reader
 	std::string addFile(const char *file);
 
-
 	// for ETP source
-	std::string addDataspace(const char* dataspace);
+	std::string addDataspace(const char *dataspace);
 
 	// for ETP connection
 	std::vector<std::string> connect(const std::string etp_url, const std::string data_partition, const std::string auth_connection);

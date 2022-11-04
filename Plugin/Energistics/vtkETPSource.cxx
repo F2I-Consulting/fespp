@@ -37,15 +37,15 @@ vtkStandardNewMacro(vtkETPSource);
 
 //----------------------------------------------------------------------------
 vtkETPSource::vtkETPSource() : ETPUrl("wss://osdu-ship.msft-osdu-test.org:443/oetp/reservoir-ddms/"),
-DataPartition("opendes"),
-Authentification("Bearer"),
-AuthPwd(""),
-AllDataspaces(vtkStringArray::New()),
-                                                     AssemblyTag(0),
-    ConnectionTag(1),
-    DisconnectionTag(0),
-                                                     MarkerOrientation(true),
-                                                     MarkerSize(10)
+                               DataPartition("opendes"),
+                               Authentification("Bearer"),
+                               AuthPwd(""),
+                               AllDataspaces(vtkStringArray::New()),
+                               AssemblyTag(0),
+                               ConnectionTag(1),
+                               DisconnectionTag(0),
+                               MarkerOrientation(true),
+                               MarkerSize(10)
 {
   SetNumberOfInputPorts(0);
   SetNumberOfOutputPorts(1);
@@ -56,7 +56,7 @@ vtkETPSource::~vtkETPSource() = default;
 
 //------------------------------------------------------------------------------
 int vtkETPSource::RequestInformation(vtkInformation *vtkNotUsed(request),
-                                                vtkInformationVector **vtkNotUsed(inputVector), vtkInformationVector *outputVector)
+                                     vtkInformationVector **vtkNotUsed(inputVector), vtkInformationVector *outputVector)
 {
   vtkInformation *outInfo = outputVector->GetInformationObject(0);
   outInfo->Set(CAN_HANDLE_PIECE_REQUEST(), 1);
@@ -101,49 +101,50 @@ void vtkETPSource::setAuthPwd(char *auth_connection)
 //----------------------------------------------------------------------------
 void vtkETPSource::confirmConnectionClicked()
 {
-  try {
-	const auto dataspaces = this->repository.connect(this->ETPUrl, this->DataPartition, this->Authentification + " " + this->AuthPwd);
-	this->AllDataspaces->InsertNextValue(vtkStdString(""));
-	for (const std::string dataspace : dataspaces)
-	{
-		this->AllDataspaces->InsertNextValue(vtkStdString(dataspace));
-	}
+  try
+  {
+    const auto dataspaces = this->repository.connect(this->ETPUrl, this->DataPartition, this->Authentification + " " + this->AuthPwd);
+    this->AllDataspaces->InsertNextValue(vtkStdString(""));
+    for (const std::string dataspace : dataspaces)
+    {
+      this->AllDataspaces->InsertNextValue(vtkStdString(dataspace));
+    }
 
-	this->ConnectionTag = 0;
-	this->DisconnectionTag = 1;
-	this->Modified();
-	this->Update();
+    this->ConnectionTag = 0;
+    this->DisconnectionTag = 1;
+    this->Modified();
+    this->Update();
   }
   catch (const std::exception &e)
   {
-	  vtkErrorMacro(<< e.what());
+    vtkErrorMacro(<< e.what());
   }
 }
 
 //----------------------------------------------------------------------------
 void vtkETPSource::disconnectionClicked()
 {
-    this->repository.disconnect();
-    this->Modified();
-    Modified();
-    Update();
-    UpdateDataObject();
-    UpdateInformation();
-    UpdateWholeExtent();
+  this->repository.disconnect();
+  this->Modified();
+  Modified();
+  Update();
+  UpdateDataObject();
+  UpdateInformation();
+  UpdateWholeExtent();
 }
 
 //------------------------------------------------------------------------------
-void vtkETPSource::SetDataspaces(const char* dataspaces)
+void vtkETPSource::SetDataspaces(const char *dataspaces)
 {
-    if (std::string(dataspaces) != "")
+  if (std::string(dataspaces) != "")
+  {
+    std::string msg = this->repository.addDataspace(dataspaces);
+    if (!msg.empty())
     {
-        std::string msg = this->repository.addDataspace(dataspaces);
-        if (!msg.empty())
-        {
-            vtkWarningMacro(<< msg);
-        }
+      vtkWarningMacro(<< msg);
     }
-    this->AssemblyTag++;
+  }
+  this->AssemblyTag++;
 }
 
 //----------------------------------------------------------------------------
@@ -178,8 +179,9 @@ void vtkETPSource::ClearSelectors()
 //----------------------------------------------------------------------------
 int vtkETPSource::GetNumberOfSelectors() const
 {
-  if (selectors.size() > (std::numeric_limits<int>::max)()) {
-	throw std::out_of_range("Too much selectors.");
+  if (selectors.size() > (std::numeric_limits<int>::max)())
+  {
+    throw std::out_of_range("Too much selectors.");
   }
 
   return static_cast<int>(selectors.size());
@@ -233,20 +235,21 @@ void vtkETPSource::setMarkerSize(int size)
 
 //----------------------------------------------------------------------------
 int vtkETPSource::RequestData(vtkInformation *,
-                                         vtkInformationVector **,
-                                         vtkInformationVector *outputVector)
+                              vtkInformationVector **,
+                              vtkInformationVector *outputVector)
 {
-  auto* outInfo = outputVector->GetInformationObject(0);
+  auto *outInfo = outputVector->GetInformationObject(0);
   outInfo->Remove(vtkStreamingDemandDrivenPipeline::TIME_STEPS());
   const std::vector<double> times = this->repository.getTimes();
-  if (times.size() > (std::numeric_limits<int>::max)()) {
-	throw std::out_of_range("Too much times.");
+  if (times.size() > (std::numeric_limits<int>::max)())
+  {
+    throw std::out_of_range("Too much times.");
   }
   double requestedTimeStep = 0;
   if (!times.empty())
   {
     const auto minmax = std::minmax_element(begin(times), end(times));
-	outInfo->Set(vtkStreamingDemandDrivenPipeline::TIME_STEPS(), &times[0], static_cast<int>(times.size()));
+    outInfo->Set(vtkStreamingDemandDrivenPipeline::TIME_STEPS(), &times[0], static_cast<int>(times.size()));
     static double timeRange[] = {*minmax.first, *minmax.second};
     outInfo->Set(vtkStreamingDemandDrivenPipeline::TIME_RANGE(), timeRange, 2);
 
@@ -256,7 +259,7 @@ int vtkETPSource::RequestData(vtkInformation *,
 
   try
   {
-	  vtkPartitionedDataSetCollection::GetData(outInfo)->DeepCopy(this->repository.getVtkPartitionedDatasSetCollection(requestedTimeStep));
+    vtkPartitionedDataSetCollection::GetData(outInfo)->DeepCopy(this->repository.getVtkPartitionedDatasSetCollection(requestedTimeStep));
   }
   catch (const std::exception &e)
   {
