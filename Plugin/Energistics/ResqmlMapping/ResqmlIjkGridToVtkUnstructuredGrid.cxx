@@ -53,11 +53,19 @@ ResqmlIjkGridToVtkUnstructuredGrid::ResqmlIjkGridToVtkUnstructuredGrid(RESQML2_N
 
 	if (this->isHyperslabed)
 	{
-		const auto optim = this->kCellCount / max_proc;
+		const auto optim = (this->kCellCount % max_proc) > 0 ? (this->kCellCount / max_proc) + 1 : this->kCellCount / max_proc;
 		this->initKIndex = this->procNumber * optim;
-		this->maxKIndex = this->procNumber == this->maxProc - 1
-							  ? this->kCellCount
-							  : this->initKIndex + optim;
+		if (this->initKIndex >= this->kCellCount)
+		{
+			this->initKIndex = 0;
+			this->maxKIndex = 0;
+		}
+		else
+		{
+			this->maxKIndex = this->procNumber == this->maxProc - 1
+				? this->kCellCount
+				: this->initKIndex + optim;
+		}
 	}
 	else
 	{
