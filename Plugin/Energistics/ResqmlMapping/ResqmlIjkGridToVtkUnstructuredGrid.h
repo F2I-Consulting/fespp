@@ -42,7 +42,7 @@ public:
 	/**
 	 * Constructor
 	 */
-	ResqmlIjkGridToVtkUnstructuredGrid(RESQML2_NS::AbstractIjkGridRepresentation *ijkGrid, int proc_number = 1, int max_proc = 1 /*, RESQML2_NS::SubRepresentation* ijkGridSubRep = nullptr*/);
+	ResqmlIjkGridToVtkUnstructuredGrid(RESQML2_NS::AbstractIjkGridRepresentation *ijkGrid, int proc_number = 0, int max_proc = 1);
 
 	/**
 	 * load vtkDataSet with resqml data

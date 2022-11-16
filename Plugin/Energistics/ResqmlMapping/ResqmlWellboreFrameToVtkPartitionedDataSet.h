@@ -35,7 +35,7 @@ public:
 	/**
 	 * Constructor
 	 */
-	ResqmlWellboreFrameToVtkPartitionedDataSet(RESQML2_NS::WellboreFrameRepresentation *frame, int proc_number = 1, int max_proc = 1);
+	ResqmlWellboreFrameToVtkPartitionedDataSet(RESQML2_NS::WellboreFrameRepresentation *frame, int proc_number = 0, int max_proc = 1);
 
 	/**
 	 * load vtkDataSet with resqml data

@@ -36,7 +36,7 @@ under the License.
 //----------------------------------------------------------------------------
 ResqmlPolylineToVtkPolyData::ResqmlPolylineToVtkPolyData(RESQML2_NS::PolylineSetRepresentation *polyline, int proc_number, int max_proc)
 	: ResqmlAbstractRepresentationToVtkPartitionedDataSet(polyline,
-											   proc_number - 1,
+											   proc_number,
 											   max_proc),
 	  resqmlData(polyline)
 {

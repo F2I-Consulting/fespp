@@ -41,7 +41,7 @@ public:
 	/**
 	* Constructor
 	*/
-	ResqmlTriangulatedSetToVtkPartitionedDataSet(RESQML2_NS::TriangulatedSetRepresentation *triangulated, int proc_number = 1, int max_proc = 1);
+	ResqmlTriangulatedSetToVtkPartitionedDataSet(RESQML2_NS::TriangulatedSetRepresentation *triangulated, int proc_number = 0, int max_proc = 1);
 	
 	/**
 	* load vtkDataSet with RESQML data

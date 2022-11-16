@@ -34,7 +34,7 @@ public:
 	/**
 	 * Constructor
 	 */
-	ResqmlWellboreMarkerToVtkPolyData(RESQML2_NS::WellboreMarkerFrameRepresentation *marker, std::string uuid, bool orientation, int size, int proc_number = 1, int max_proc = 1);
+	ResqmlWellboreMarkerToVtkPolyData(RESQML2_NS::WellboreMarkerFrameRepresentation *marker, std::string uuid, bool orientation, int size, int proc_number = 0, int max_proc = 1);
 
 	/**
 	 * load vtkDataSet with resqml data

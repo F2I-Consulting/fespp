@@ -35,7 +35,7 @@ under the License.
 //----------------------------------------------------------------------------
 ResqmlWellboreMarkerToVtkPolyData::ResqmlWellboreMarkerToVtkPolyData(RESQML2_NS::WellboreMarkerFrameRepresentation *marker_frame, std::string uuid, bool orientation, int size, int proc_number, int max_proc)
 	: ResqmlAbstractRepresentationToVtkPartitionedDataSet(marker_frame,
-											   proc_number - 1,
+											   proc_number,
 											   max_proc),
 	  orientation(orientation),
 	  size(size),

@@ -33,7 +33,7 @@ under the License.
 //----------------------------------------------------------------------------
 ResqmlGrid2dToVtkStructuredGrid::ResqmlGrid2dToVtkStructuredGrid(RESQML2_NS::Grid2dRepresentation *grid2D, int proc_number, int max_proc)
 	: ResqmlAbstractRepresentationToVtkPartitionedDataSet(grid2D,
-											   proc_number - 1,
+											   proc_number,
 											   max_proc),
 	  resqmlData(grid2D)
 {

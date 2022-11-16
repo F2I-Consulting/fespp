@@ -37,7 +37,7 @@ under the License.
 //----------------------------------------------------------------------------
 ResqmlTriangulatedSetToVtkPartitionedDataSet::ResqmlTriangulatedSetToVtkPartitionedDataSet(RESQML2_NS::TriangulatedSetRepresentation *triangulated, int proc_number, int max_proc)
 	: ResqmlAbstractRepresentationToVtkPartitionedDataSet(triangulated,
-											   proc_number - 1,
+											   proc_number,
 											   max_proc),
 	  resqmlData(triangulated)
 {

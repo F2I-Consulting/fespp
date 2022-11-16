@@ -550,7 +550,7 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::clearSelection()
     this->current_selection.clear();
 }
 
-void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::initMapper(const std::string &uuid)
+void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::initMapper(const std::string &uuid, const int nbProcess, const int processId)
 {
     ResqmlAbstractRepresentationToVtkPartitionedDataSet *rep = nullptr;
     if (uuid.length() == 36)
@@ -562,7 +562,7 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::initMapper(const std
         {
             if (dynamic_cast<RESQML2_NS::AbstractIjkGridRepresentation *>(result) != nullptr)
             {
-                rep = new ResqmlIjkGridToVtkUnstructuredGrid(static_cast<RESQML2_NS::AbstractIjkGridRepresentation *>(result));
+                rep = new ResqmlIjkGridToVtkUnstructuredGrid(static_cast<RESQML2_NS::AbstractIjkGridRepresentation *>(result), processId, nbProcess);
             }
             else if (dynamic_cast<RESQML2_NS::Grid2dRepresentation *>(result) != nullptr)
             {
@@ -710,7 +710,7 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::loadMapper(const std
     }
 }
 
-vtkPartitionedDataSetCollection *ResqmlDataRepositoryToVtkPartitionedDataSetCollection::getVtkPartitionedDatasSetCollection(const double time)
+vtkPartitionedDataSetCollection *ResqmlDataRepositoryToVtkPartitionedDataSetCollection::getVtkPartitionedDatasSetCollection(const double time, const int nbProcess, const int processId)
 {
     // initialization the output (VtkPartitionedDatasSetCollection)
     vtkSmartPointer<vtkDataAssembly> tmp_assembly = vtkSmartPointer<vtkDataAssembly>::New();
@@ -837,7 +837,7 @@ vtkPartitionedDataSetCollection *ResqmlDataRepositoryToVtkPartitionedDataSetColl
         ResqmlAbstractRepresentationToVtkPartitionedDataSet *rep = nullptr;
         if (this->nodeId_to_resqml.find(node_selection) == this->nodeId_to_resqml.end())
         {
-            initMapper(std::string(tmp_assembly->GetNodeName(node_selection)).substr(1));
+            initMapper(std::string(tmp_assembly->GetNodeName(node_selection)).substr(1), nbProcess, processId);
         }
 
         if (this->nodeId_to_resqml.find(node_selection) != this->nodeId_to_resqml.end())

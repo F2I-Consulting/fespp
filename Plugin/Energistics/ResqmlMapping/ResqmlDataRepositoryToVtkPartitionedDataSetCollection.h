@@ -71,7 +71,7 @@ public:
 	void setMarkerOrientation(bool orientation);
 	void setMarkerSize(int size);
 
-	vtkPartitionedDataSetCollection *getVtkPartitionedDatasSetCollection(const double time);
+	vtkPartitionedDataSetCollection *getVtkPartitionedDatasSetCollection(const double time, const int nbProcess = 1, const int processId = 0);
 
 	std::vector<double> getTimes() { return times_step; }
 
@@ -95,7 +95,7 @@ private:
 	void selectNodeIdParent(int node);
 	void selectNodeIdChildren(int node);
 
-	void initMapper(const std::string &uuid);
+	void initMapper(const std::string &uuid, const int nbProcess, const int processId);
 	void loadMapper(const std::string &uuid, double time);
 
 	bool markerOrientation;

@@ -50,7 +50,7 @@ under the License.
 //----------------------------------------------------------------------------
 ResqmlUnstructuredGridSubRepToVtkUnstructuredGrid::ResqmlUnstructuredGridSubRepToVtkUnstructuredGrid(RESQML2_NS::SubRepresentation *subRep, ResqmlUnstructuredGridToVtkUnstructuredGrid *support, int proc_number, int max_proc)
 	: ResqmlAbstractRepresentationToVtkPartitionedDataSet(subRep,
-														  proc_number - 1,
+														  proc_number,
 														  max_proc),
 	  resqmlData(subRep),
 	  mapperUnstructuredGrid(support)

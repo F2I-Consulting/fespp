@@ -37,7 +37,7 @@ public:
 	/**
 	 * Constructor
 	 */
-	ResqmlAbstractRepresentationToVtkPartitionedDataSet(RESQML2_NS::AbstractRepresentation *abstract_representation, int proc_number = 1, int max_proc = 1);
+	ResqmlAbstractRepresentationToVtkPartitionedDataSet(RESQML2_NS::AbstractRepresentation *abstract_representation, int proc_number = 0, int max_proc = 1);
 
 	/**
 	 * Destructor

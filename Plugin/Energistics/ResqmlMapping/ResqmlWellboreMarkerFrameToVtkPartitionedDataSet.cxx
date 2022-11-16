@@ -33,7 +33,7 @@ under the License.
 //----------------------------------------------------------------------------
 ResqmlWellboreMarkerFrameToVtkPartitionedDataSet::ResqmlWellboreMarkerFrameToVtkPartitionedDataSet(RESQML2_NS::WellboreMarkerFrameRepresentation *marker_frame, int proc_number, int max_proc)
 	: ResqmlAbstractRepresentationToVtkPartitionedDataSet(marker_frame,
-											   proc_number - 1,
+											   proc_number,
 											   max_proc),
 	  resqmlData(marker_frame)
 {

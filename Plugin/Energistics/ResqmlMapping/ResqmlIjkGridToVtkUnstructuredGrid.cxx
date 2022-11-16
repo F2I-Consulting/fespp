@@ -39,7 +39,7 @@ under the License.
 //----------------------------------------------------------------------------
 ResqmlIjkGridToVtkUnstructuredGrid::ResqmlIjkGridToVtkUnstructuredGrid(RESQML2_NS::AbstractIjkGridRepresentation *ijkGrid, int proc_number, int max_proc)
 	: ResqmlAbstractRepresentationToVtkPartitionedDataSet(ijkGrid,
-											   proc_number - 1,
+											   proc_number,
 											   max_proc),
 	  resqmlData(ijkGrid),
 	points(vtkSmartPointer<vtkPoints>::New()),

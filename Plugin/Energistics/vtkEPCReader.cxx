@@ -51,9 +51,9 @@ vtkEPCReader::vtkEPCReader() : Files(vtkStringArray::New()),
 //----------------------------------------------------------------------------
 void vtkEPCReader::AddFileNameToFiles(const char *fname)
 {
-  if (fname != nullptr) 
+  if (fname != nullptr)
   {
-          this->Files->InsertNextValue(fname);
+    this->Files->InsertNextValue(fname);
   }
 }
 
@@ -79,85 +79,92 @@ size_t vtkEPCReader::GetNumberOfFileNames() const
 }
 
 //------------------------------------------------------------------------------
-vtkStringArray *vtkEPCReader::GetAllFiles()
+vtkStringArray *vtkEPCReader::GetAllFiles() // call only by GUI
 {
-    if (this->Files->GetNumberOfValues() > 0)
+  if (this->Files->GetNumberOfValues() > 0)
+  {
+    for (auto index = 0; index < this->Files->GetNumberOfValues(); index++)
     {
-        for (auto index = 0; index < this->Files->GetNumberOfValues(); index++) {
-            auto file_property = this->Files->GetValue(index);
-            auto search = this->FileNamesLoaded.find(file_property); 
-            if (search == this->FileNamesLoaded.end()) {
-                std::string msg = this->repository.addFile(file_property.c_str());
-                this->FileNamesLoaded.insert(file_property);
-                // add selector
-                for (auto selector : selectorNotLoaded)
-                {
-                    if (AddSelector(selector.c_str()))
-                    {
-                        selectorNotLoaded.erase(selector);
-                    }
-                }
-                if (!msg.empty())
-                {
-                    vtkWarningMacro(<< msg);
-                }
-
-                this->AssemblyTag++;
-                this->Modified();
-                this->Update();
-            }
+      auto file_property = this->Files->GetValue(index);
+      auto search = this->FileNamesLoaded.find(file_property);
+      if (search == this->FileNamesLoaded.end())
+      {
+        std::string msg = this->repository.addFile(file_property.c_str());
+        this->FileNamesLoaded.insert(file_property);
+        // add selector
+        for (auto selector : selectorNotLoaded)
+        {
+          if (AddSelector(selector.c_str()))
+          {
+            selectorNotLoaded.erase(selector);
+          }
         }
+        if (!msg.empty())
+        {
+          vtkWarningMacro(<< msg);
+        }
+
+        this->AssemblyTag++;
+        this->Modified();
+        this->Update();
+      }
     }
-    return this->Files;
+  }
+  return this->Files;
 }
 
 //------------------------------------------------------------------------------
 
 void vtkEPCReader::SetFiles(const std::string &file)
 {
-    if (file != "0")
+  if (file != "0")
+  {
+    bool exist = false;
+    for (auto index = 0; index < this->Files->GetNumberOfValues(); ++index)
     {
-        bool exist = false;
-        for (auto index = 0; index < this->Files->GetNumberOfValues(); ++index) {
-            auto file_property = this->Files->GetValue(index);
-            if (file_property == file)
-            {
-                exist = true;
-            }
-        }
-        if (!exist)
-        {
-            this->Files->InsertNextValue(file);
-        }
+      auto file_property = this->Files->GetValue(index);
+      if (file_property == file)
+      {
+        exist = true;
+      }
     }
+    if (!exist)
+    {
+      this->Files->InsertNextValue(file);
+    }
+  }
+  if (this->Controller->GetLocalProcessId() > 0) // pvserver without GUI
+  {
+    this->GetAllFiles();
+  }
 }
 
 //----------------------------------------------------------------------------
 bool vtkEPCReader::AddSelector(const char *path)
 {
-   if (path != nullptr && this->selectors.insert(path).second)
+  if (path != nullptr && this->selectors.insert(path).second)
   {
     int node_id = GetAssembly()->GetFirstNodeByPath(path);
-    
+
     if (node_id == -1)
     {
-        selectorNotLoaded.insert(std::string(path));
+      selectorNotLoaded.insert(std::string(path));
     }
     else
     {
-        std::string selection_parent = this->repository.selectNodeId(node_id);
- /*
-        if (GetAssembly()->HasAttribute(node_id, "traj"))
-        {
-            int node_id_parent = GetAssembly()->GetAttributeOrDefault(node_id, "traj", 0);
-        }
- */
-        Modified();
-        Update();
-        UpdateDataObject();
-        UpdateInformation();
-        UpdateWholeExtent();
-        return true;
+      std::string selection_parent = this->repository.selectNodeId(node_id);
+      /*
+             if (GetAssembly()->HasAttribute(node_id, "traj"))
+             {
+                 int node_id_parent = GetAssembly()->GetAttributeOrDefault(node_id, "traj", 0);
+             }
+      */
+      Modified();
+      Update();
+      UpdateDataObject();
+      UpdateInformation();
+      UpdateWholeExtent();
+      return true;
     }
   }
   return false;
@@ -177,8 +184,9 @@ void vtkEPCReader::ClearSelectors()
 //----------------------------------------------------------------------------
 int vtkEPCReader::GetNumberOfSelectors() const
 {
-  if (selectors.size() > (std::numeric_limits<int>::max)()) {
-	throw std::out_of_range("Too much selectors.");
+  if (selectors.size() > (std::numeric_limits<int>::max)())
+  {
+    throw std::out_of_range("Too much selectors.");
   }
   return static_cast<int>(selectors.size());
 }
@@ -231,50 +239,50 @@ void vtkEPCReader::setMarkerSize(int size)
 
 //----------------------------------------------------------------------------
 int vtkEPCReader::RequestData(vtkInformation *,
-                                   vtkInformationVector **,
-                                   vtkInformationVector *outputVector)
+                              vtkInformationVector **,
+                              vtkInformationVector *outputVector)
 {
-    // Load state (load selection in wait)
-    if (this->selectorNotLoaded.size() > 0)
+  // Load state (load selection in wait)
+  if (this->selectorNotLoaded.size() > 0)
+  {
+    for (auto path : this->selectorNotLoaded)
     {
-        for (auto path : this->selectorNotLoaded)
-        {
-            int node_id = GetAssembly()->GetFirstNodeByPath(path.c_str());
-            if (node_id > -1)
-            {
-                std::string selection_parent = this->repository.selectNodeId(node_id);
-                this->selectorNotLoaded.erase(path);
-            }
-        }
+      int node_id = GetAssembly()->GetFirstNodeByPath(path.c_str());
+      if (node_id > -1)
+      {
+        std::string selection_parent = this->repository.selectNodeId(node_id);
+        this->selectorNotLoaded.erase(path);
+      }
     }
+  }
 
+  auto *outInfo = outputVector->GetInformationObject(0);
+  outInfo->Remove(vtkStreamingDemandDrivenPipeline::TIME_STEPS());
+  const std::vector<double> times = this->repository.getTimes();
+  if (times.size() > (std::numeric_limits<int>::max)())
+  {
+    throw std::out_of_range("Too much times.");
+  }
+  double requestedTimeStep = 0;
+  if (!times.empty())
+  {
+    const auto minmax = std::minmax_element(begin(times), end(times));
+    outInfo->Set(vtkStreamingDemandDrivenPipeline::TIME_STEPS(), &times[0], static_cast<int>(times.size()));
+    static double timeRange[] = {*minmax.first, *minmax.second};
+    outInfo->Set(vtkStreamingDemandDrivenPipeline::TIME_RANGE(), timeRange, 2);
 
-    auto* outInfo = outputVector->GetInformationObject(0);
-    outInfo->Remove(vtkStreamingDemandDrivenPipeline::TIME_STEPS());
-    const std::vector<double> times = this->repository.getTimes();
-	if (times.size() > (std::numeric_limits<int>::max)()) {
-		throw std::out_of_range("Too much times.");
-	}
-    double requestedTimeStep = 0;
-    if (!times.empty())
-    {
-        const auto minmax = std::minmax_element(begin(times), end(times));
-        outInfo->Set(vtkStreamingDemandDrivenPipeline::TIME_STEPS(), &times[0], static_cast<int>(times.size()));
-        static double timeRange[] = {*minmax.first, *minmax.second};
-        outInfo->Set(vtkStreamingDemandDrivenPipeline::TIME_RANGE(), timeRange, 2);
+    // current timeStep value
+    requestedTimeStep = outInfo->Get(vtkStreamingDemandDrivenPipeline::UPDATE_TIME_STEP());
+  }
 
-        // current timeStep value
-        requestedTimeStep = outInfo->Get(vtkStreamingDemandDrivenPipeline::UPDATE_TIME_STEP());
-    }
-
-    try
-    {
-		vtkPartitionedDataSetCollection::GetData(outInfo)->DeepCopy(this->repository.getVtkPartitionedDatasSetCollection(requestedTimeStep));
-    } 
-    catch (const std::exception &e)
-    {
-        vtkWarningMacro(<< e.what());
-    }
+  try
+  {
+    vtkPartitionedDataSetCollection::GetData(outInfo)->DeepCopy(this->repository.getVtkPartitionedDatasSetCollection(requestedTimeStep, this->Controller->GetNumberOfProcesses(), this->Controller->GetLocalProcessId()));
+  }
+  catch (const std::exception &e)
+  {
+    vtkWarningMacro(<< e.what());
+  }
 
   return 1;
 }
