@@ -200,9 +200,9 @@ void ResqmlUnstructuredGridSubRepToVtkUnstructuredGrid::loadVtkObject()
 						auto indice1 = nodeIndices[first_indiceValue];
 						auto indice2 = nodeIndices[first_indiceValue +1];
 						auto indice3 = nodeIndices[first_indiceValue +2];
-						triangle->GetPointIds()->SetId(0, nodeIndices[indice1]);
-						triangle->GetPointIds()->SetId(1, nodeIndices[indice2]);
-						triangle->GetPointIds()->SetId(2, nodeIndices[indice3]);
+						triangle->GetPointIds()->SetId(0, indice1);
+						triangle->GetPointIds()->SetId(1, indice2);
+						triangle->GetPointIds()->SetId(2, indice3);
 						polys->InsertNextCell(triangle);
 					}
 					else if (nodeCount_OfFaceIndex == 4) // vtkQuad

@@ -83,32 +83,32 @@ vtkStringArray *vtkEPCReader::GetAllFiles() // call only by GUI
 {
   if (this->Files->GetNumberOfValues() > 0)
   {
-    for (auto index = 0; index < this->Files->GetNumberOfValues(); index++)
-    {
-      auto file_property = this->Files->GetValue(index);
-      auto search = this->FileNamesLoaded.find(file_property);
-      if (search == this->FileNamesLoaded.end())
+      for (auto index = 0; index < this->Files->GetNumberOfValues(); index++)
       {
-        std::string msg = this->repository.addFile(file_property.c_str());
-        this->FileNamesLoaded.insert(file_property);
-        // add selector
-        for (auto selector : selectorNotLoaded)
-        {
-          if (AddSelector(selector.c_str()))
+          auto file_property = this->Files->GetValue(index);
+          auto search = this->FileNamesLoaded.find(file_property);
+          if (search == this->FileNamesLoaded.end())
           {
-            selectorNotLoaded.erase(selector);
+              std::string msg = this->repository.addFile(file_property.c_str());
+              this->FileNamesLoaded.insert(file_property);
+              // add selector
+              for (auto selector : selectorNotLoaded)
+              {
+                  if (AddSelector(selector.c_str()))
+                  {
+                      selectorNotLoaded.erase(selector);
+                  }
+              }
+              
+              if (this->Controller->GetLocalProcessId() == 0 && !msg.empty())
+              {
+                  vtkWarningMacro(<< msg);
+              }
+              this->AssemblyTag++;
+              this->Modified();
+              this->Update();
           }
-        }
-        if (!msg.empty())
-        {
-          vtkWarningMacro(<< msg);
-        }
-
-        this->AssemblyTag++;
-        this->Modified();
-        this->Update();
       }
-    }
   }
   return this->Files;
 }
