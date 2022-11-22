@@ -29,6 +29,8 @@ under the License.
 // include F2i-consulting Energistics Standards API
 #include <fesapi/resqml2/AbstractRepresentation.h>
 
+class vtkUnstructuredGrid;
+
 /** @brief	transform a RESQML abstract representation to vtkPartitionedDataSet
  */
 class ResqmlAbstractRepresentationToVtkPartitionedDataSet
@@ -83,8 +85,6 @@ public:
 
 protected:
 
-
-
 	unsigned int subrep_pointer_on_points_count;
 
 	uint64_t pointCount = 0;
@@ -103,5 +103,19 @@ protected:
 
 	vtkSmartPointer<vtkPartitionedDataSet> vtkData;
 	std::unordered_map<std::string, class ResqmlPropertyToVtkDataArray *> uuidToVtkDataArray;
+
+	/**
+	 * Insert a new VTK wedge or pyramid corresponding to a particular RESQML cell
+	 *
+	 * @param unstructuredGridRep				The RESQML UnstructuredGridRepresentation which contains the cell to map and to insert in the VTK UnstructuredGrid
+	 * @param cumulativeFaceCountPerCell		The cumulative count of faces for each cell of the RESQML UnstructuredGridRepresentation.
+	 * @param cellFaceNormalOutwardlyDirected	Indicates for each cell face of the RESQML UnstructuredGridRepresentation if its normal using the right hand rule is outwardly directed.
+	 * @param cellIndex							The index of the RESQML cell in the RESQML UnstructuredGridRepresentation to be mapped and inserted in the VTK UnstructuredGrid.
+	 */
+	void cellVtkWedgeOrPyramid(vtkSmartPointer<vtkUnstructuredGrid> vtk_unstructuredGrid,
+		const RESQML2_NS::UnstructuredGridRepresentation *unstructuredGridRep,
+		ULONG64 const *cumulativeFaceCountPerCell,
+		unsigned char const *cellFaceNormalOutwardlyDirected,
+		ULONG64 cellIndex);
 };
 #endif

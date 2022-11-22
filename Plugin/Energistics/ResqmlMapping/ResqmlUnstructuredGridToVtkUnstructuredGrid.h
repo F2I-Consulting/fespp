@@ -72,20 +72,6 @@ private:
 					  ULONG64 cellIndex);
 
 	/**
-	 * Insert a new VTK wedge or pyramid corresponding to a particular RESQML cell
-	 *
-	 * @param unstructuredGridRep				The RESQML UnstructuredGridRepresentation which contains the cell to map and to insert in the VTK UnstructuredGrid
-	 * @param cumulativeFaceCountPerCell			The cumulative count of faces for each cell of the RESQML UnstructuredGridRepresentation.
-	 * @param cellFaceNormalOutwardlyDirected	Indicates for each cell face of the RESQML UnstructuredGridRepresentation if its normal using the right hand rule is outwardly directed.
-	 * @param cellIndex							The index of the RESQML cell in the RESQML UnstructuredGridRepresentation to be mapped and inserted in the VTK UnstructuredGrid.
-	 */
-	void cellVtkWedgeOrPyramid(vtkSmartPointer<vtkUnstructuredGrid> vtk_unstructuredGrid,
-							   const RESQML2_NS::UnstructuredGridRepresentation *unstructuredGridRep,
-							   ULONG64 const *cumulativeFaceCountPerCell,
-							   unsigned char const *cellFaceNormalOutwardlyDirected,
-							   ULONG64 cellIndex);
-
-	/**
 	 * Insert a new VTK hexahedron corresponding to a particular RESQML cell only if the RESQML cell is Quadrilaterally-faced hexahedron.
 	 *
 	 * @param unstructuredGridRep				The RESQML UnstructuredGridRepresentation which contains the cell to map and to insert in the VTK UnstructuredGrid
