@@ -112,25 +112,25 @@ void ResqmlUnstructuredGridSubRepToVtkUnstructuredGrid::loadVtkObject()
 					// Following https://kitware.github.io/vtk-examples/site/VTKBook/05Chapter5/#Figure%205-2
 					if (localFaceCount == 4)
 					{ // VTK_TETRA
-						cellVtkTetra(vtk_unstructuredGrid, supportingGrid, cumulativeFaceCountPerCell, cellFaceNormalOutwardlyDirected.get(), elementIndices[cellIndex]);
+						this->mapperUnstructuredGrid->cellVtkTetra(vtk_unstructuredGrid, cumulativeFaceCountPerCell, cellFaceNormalOutwardlyDirected.get(), elementIndices[cellIndex]);
 						isOptimizedCell = true;
 					}
 					else if (localFaceCount == 5)
 					{ // VTK_WEDGE or VTK_PYRAMID
-						cellVtkWedgeOrPyramid(vtk_unstructuredGrid, supportingGrid, cumulativeFaceCountPerCell, cellFaceNormalOutwardlyDirected.get(), elementIndices[cellIndex]);
+						this->mapperUnstructuredGrid->cellVtkWedgeOrPyramid(vtk_unstructuredGrid, cumulativeFaceCountPerCell, cellFaceNormalOutwardlyDirected.get(), elementIndices[cellIndex]);
 						isOptimizedCell = true;
 					}
 					else if (localFaceCount == 6)
 					{ // VTK_HEXAHEDRON
-						isOptimizedCell = cellVtkHexahedron(vtk_unstructuredGrid, supportingGrid, cumulativeFaceCountPerCell, cellFaceNormalOutwardlyDirected.get(), elementIndices[cellIndex]);
+						isOptimizedCell = this->mapperUnstructuredGrid->cellVtkHexahedron(vtk_unstructuredGrid, cumulativeFaceCountPerCell, cellFaceNormalOutwardlyDirected.get(), elementIndices[cellIndex]);
 					}
 					else if (localFaceCount == 7)
 					{ // VTK_PENTAGONAL_PRISM
-						isOptimizedCell = cellVtkPentagonalPrism(vtk_unstructuredGrid, supportingGrid, elementIndices[cellIndex]);
+						isOptimizedCell = this->mapperUnstructuredGrid->cellVtkPentagonalPrism(vtk_unstructuredGrid, elementIndices[cellIndex]);
 					}
 					else if (localFaceCount == 8)
 					{ // VTK_HEXAGONAL_PRISM
-						isOptimizedCell = cellVtkHexagonalPrism(vtk_unstructuredGrid, supportingGrid, elementIndices[cellIndex]);
+						isOptimizedCell = this->mapperUnstructuredGrid->cellVtkHexagonalPrism(vtk_unstructuredGrid, elementIndices[cellIndex]);
 					}
 
 					if (!isOptimizedCell)
@@ -264,188 +264,3 @@ vtkSmartPointer<vtkPoints> ResqmlUnstructuredGridSubRepToVtkUnstructuredGrid::ge
 	return this->mapperUnstructuredGrid->getVtkPoints();
 }
 
-//----------------------------------------------------------------------------
-void ResqmlUnstructuredGridSubRepToVtkUnstructuredGrid::cellVtkTetra(vtkSmartPointer<vtkUnstructuredGrid> vtk_unstructuredGrid,
-																	 const RESQML2_NS::UnstructuredGridRepresentation *unstructuredGridRep,
-																	 ULONG64 const *cumulativeFaceCountPerCell, unsigned char const *cellFaceNormalOutwardlyDirected,
-																	 ULONG64 cellIndex)
-{
-	unsigned int nodes[4];
-
-	// Face 0
-	ULONG64 const *nodeIndices = unstructuredGridRep->getNodeIndicesOfFaceOfCell(cellIndex, 0);
-	size_t cellFaceIndex = unstructuredGridRep->isFaceCountOfCellsConstant() || cellIndex == 0
-							   ? cellIndex * 4
-							   : cumulativeFaceCountPerCell[cellIndex - 1];
-	if (cellFaceNormalOutwardlyDirected[cellFaceIndex] == 0)
-	{ // The RESQML orientation of face 0 honors the VTK orientation of face 0 i.e. the face 0 normal defined using a right hand rule is inwardly directed.
-		nodes[0] = nodeIndices[0];
-		nodes[1] = nodeIndices[1];
-		nodes[2] = nodeIndices[2];
-	}
-	else
-	{ // The RESQML orientation of face 0 does not honor the VTK orientation of face 0
-		nodes[0] = nodeIndices[2];
-		nodes[1] = nodeIndices[1];
-		nodes[2] = nodeIndices[0];
-	}
-
-	// Face 1
-	nodeIndices = unstructuredGridRep->getNodeIndicesOfFaceOfCell(cellIndex, 1);
-
-	for (size_t index = 0; index < 3; ++index)
-	{
-		if (std::find(nodes, nodes + 3, nodeIndices[index]) == nodes + 3)
-		{
-			nodes[3] = nodeIndices[index];
-			break;
-		}
-	}
-
-	vtkSmartPointer<vtkTetra> tetra = vtkSmartPointer<vtkTetra>::New();
-	for (vtkIdType pointId = 0; pointId < 4; ++pointId)
-	{
-		tetra->GetPointIds()->SetId(pointId, nodes[pointId]);
-	}
-	vtk_unstructuredGrid->InsertNextCell(tetra->GetCellType(), tetra->GetPointIds());
-}
-
-//----------------------------------------------------------------------------
-bool ResqmlUnstructuredGridSubRepToVtkUnstructuredGrid::cellVtkHexahedron(vtkSmartPointer<vtkUnstructuredGrid> vtk_unstructuredGrid,
-																		  const RESQML2_NS::UnstructuredGridRepresentation *unstructuredGridRep,
-																		  ULONG64 const *cumulativeFaceCountPerCell, unsigned char const *cellFaceNormalOutwardlyDirected,
-																		  ULONG64 cellIndex)
-{
-	for (ULONG64 localFaceIndex = 0; localFaceIndex < 6; ++localFaceIndex)
-	{
-		if (unstructuredGridRep->getNodeCountOfFaceOfCell(cellIndex, localFaceIndex) != 4)
-		{
-			return false;
-		}
-	}
-
-	ULONG64 nodes[8];
-
-	ULONG64 const *nodeIndices = unstructuredGridRep->getNodeIndicesOfFaceOfCell(cellIndex, 0);
-	const size_t cellFaceIndex = unstructuredGridRep->isFaceCountOfCellsConstant() || cellIndex == 0
-									 ? cellIndex * 6
-									 : cumulativeFaceCountPerCell[cellIndex - 1];
-	if (cellFaceNormalOutwardlyDirected[cellFaceIndex] == 0)
-	{ // The RESQML orientation of the face honors the VTK orientation of face 0 i.e. the face 0 normal defined using a right hand rule is inwardly directed.
-		nodes[0] = nodeIndices[0];
-		nodes[1] = nodeIndices[1];
-		nodes[2] = nodeIndices[2];
-		nodes[3] = nodeIndices[3];
-	}
-	else
-	{ // The RESQML orientation of the face does not honor the VTK orientation of face 0
-		nodes[0] = nodeIndices[3];
-		nodes[1] = nodeIndices[2];
-		nodes[2] = nodeIndices[1];
-		nodes[3] = nodeIndices[0];
-	}
-
-	// Find the opposite neighbors of the nodes already got
-	bool alreadyTreated[4] = {false, false, false, false};
-	for (unsigned int localFaceIndex = 1; localFaceIndex < 6; ++localFaceIndex)
-	{
-		nodeIndices = unstructuredGridRep->getNodeIndicesOfFaceOfCell(cellIndex, localFaceIndex);
-		for (size_t index = 0; index < 4; ++index)
-		{																	// Loop on face nodes
-			ULONG64 *itr = std::find(nodes, nodes + 4, nodeIndices[index]); // Locate a node on face 0
-			if (itr != nodes + 4)
-			{
-				// A top neighbor node can be found
-				const size_t topNeigborIdx = std::distance(nodes, itr);
-				if (!alreadyTreated[topNeigborIdx])
-				{
-					const size_t previousIndex = index == 0 ? 3 : index - 1;
-					nodes[topNeigborIdx + 4] = std::find(nodes, nodes + 4, nodeIndices[previousIndex]) != nodes + 4 // If previous index is also in face 0
-												   ? nodeIndices[index == 3 ? 0 : index + 1]						// Put next index
-												   : nodeIndices[previousIndex];									// Put previous index
-					alreadyTreated[topNeigborIdx] = true;
-				}
-			}
-		}
-		if (localFaceIndex > 2 && std::find(alreadyTreated, alreadyTreated + 4, false) == alreadyTreated + 4)
-		{
-			// All top neighbor nodes have been found. No need to continue
-			// A minimum of four faces is necessary in order to find all top neighbor nodes.
-			break;
-		}
-	}
-
-	vtkSmartPointer<vtkHexahedron> hexahedron = vtkSmartPointer<vtkHexahedron>::New();
-	for (int nodesIndex = 0; nodesIndex < 8; ++nodesIndex)
-	{
-		hexahedron->GetPointIds()->SetId(nodesIndex, nodes[nodesIndex]);
-	}
-	vtk_unstructuredGrid->InsertNextCell(hexahedron->GetCellType(), hexahedron->GetPointIds());
-	return true;
-}
-
-//----------------------------------------------------------------------------
-bool ResqmlUnstructuredGridSubRepToVtkUnstructuredGrid::cellVtkPentagonalPrism(vtkSmartPointer<vtkUnstructuredGrid> vtk_unstructuredGrid,
-																			   const RESQML2_NS::UnstructuredGridRepresentation *unstructuredGridRep, ULONG64 cellIndex)
-{
-	unsigned int faceTo5Nodes = 0;
-	ULONG64 nodes[10];
-	for (ULONG64 localFaceIndex = 0; localFaceIndex < 7; ++localFaceIndex)
-	{
-		const unsigned int localNodeCount = unstructuredGridRep->getNodeCountOfFaceOfCell(cellIndex, localFaceIndex);
-		if (localNodeCount == 5)
-		{
-			ULONG64 const *nodeIndices = unstructuredGridRep->getNodeIndicesOfFaceOfCell(cellIndex, localFaceIndex);
-			for (unsigned int i = 0; i < localNodeCount; ++i)
-			{
-				nodes[faceTo5Nodes * 5 + i] = nodeIndices[i];
-			}
-			++faceTo5Nodes;
-		}
-	}
-	if (faceTo5Nodes == 2)
-	{
-		vtkSmartPointer<vtkPentagonalPrism> pentagonalPrism = vtkSmartPointer<vtkPentagonalPrism>::New();
-		for (int nodesIndex = 0; nodesIndex < 10; ++nodesIndex)
-		{
-			pentagonalPrism->GetPointIds()->SetId(nodesIndex, nodes[nodesIndex]);
-		}
-		vtk_unstructuredGrid->InsertNextCell(pentagonalPrism->GetCellType(), pentagonalPrism->GetPointIds());
-		pentagonalPrism = nullptr;
-		return true;
-	}
-	return false;
-}
-
-//----------------------------------------------------------------------------
-bool ResqmlUnstructuredGridSubRepToVtkUnstructuredGrid::cellVtkHexagonalPrism(vtkSmartPointer<vtkUnstructuredGrid> vtk_unstructuredGrid,
-																			  const RESQML2_NS::UnstructuredGridRepresentation *unstructuredGridRep, ULONG64 cellIndex)
-{
-	unsigned int faceTo6Nodes = 0;
-	ULONG64 nodes[12];
-	for (ULONG64 localFaceIndex = 0; localFaceIndex < 8; ++localFaceIndex)
-	{
-		const unsigned int localNodeCount = unstructuredGridRep->getNodeCountOfFaceOfCell(cellIndex, localFaceIndex);
-		if (localNodeCount == 6)
-		{
-			ULONG64 const *nodeIndices = unstructuredGridRep->getNodeIndicesOfFaceOfCell(cellIndex, localFaceIndex);
-			for (unsigned int i = 0; i < localNodeCount; ++i)
-			{
-				nodes[faceTo6Nodes * 6 + i] = nodeIndices[i];
-			}
-			++faceTo6Nodes;
-		}
-	}
-	if (faceTo6Nodes == 2)
-	{
-		vtkSmartPointer<vtkHexagonalPrism> hexagonalPrism = vtkSmartPointer<vtkHexagonalPrism>::New();
-		for (int nodesIndex = 0; nodesIndex < 12; ++nodesIndex)
-		{
-			hexagonalPrism->GetPointIds()->SetId(nodesIndex, nodes[nodesIndex]);
-		}
-		vtk_unstructuredGrid->InsertNextCell(hexagonalPrism->GetCellType(), hexagonalPrism->GetPointIds());
-		hexagonalPrism = nullptr;
-		return true;
-	}
-	return false;
-}

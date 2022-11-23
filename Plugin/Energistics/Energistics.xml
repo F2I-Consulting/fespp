@@ -69,7 +69,7 @@
 		<SourceProxy name="ETPsource" class="vtkETPSource" label="ETP1.2 Store">
 			<Documentation short_help="A reader for an Energistics standard data format used by	various geosciences applications.">A reader for an Energistics standard data format used by	various geosciences applications. The underlying format uses OPC to store XML documents and links to an HDF5 file which stores the numerical data arrays into HDF5 datasets.</Documentation>
 			<Hints>
-				<PipelineIcon name="CINEMA_MARK" />
+				<PipelineIcon name="SECURE_SERVER" />
 			</Hints>
 
 			<!-- properties for connection to server -->
