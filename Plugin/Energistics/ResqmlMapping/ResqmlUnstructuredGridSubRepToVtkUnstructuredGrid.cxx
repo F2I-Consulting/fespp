@@ -162,8 +162,6 @@ void ResqmlUnstructuredGridSubRepToVtkUnstructuredGrid::loadVtkObject()
 			else if (this->resqmlData->getElementKindOfPatch(0, 0) == gsoap_eml2_3::resqml22__IndexableElement::faces)
 			{
 				vtkSmartPointer<vtkPolyData> vtk_polydata = vtkSmartPointer<vtkPolyData>::New();
-				vtk_polydata->Allocate(this->resqmlData->getElementCountOfPatch(0));
-
 				vtk_polydata->SetPoints(this->getMapperVtkPoint());
 
 				supportingGrid->loadGeometry();
@@ -188,6 +186,7 @@ void ResqmlUnstructuredGridSubRepToVtkUnstructuredGrid::loadVtkObject()
 				resqmlData->getElementIndicesOfPatch(0, 0, elementIndices.get());
 
 				vtkSmartPointer<vtkCellArray> polys = vtkSmartPointer<vtkCellArray>::New();
+				polys->AllocateEstimate(subFaceCount, 4);
 				for (ULONG64 subFaceIndex =0; subFaceIndex < subFaceCount; ++subFaceIndex)
 				{
 					ULONG64 faceIndex = elementIndices[subFaceIndex];

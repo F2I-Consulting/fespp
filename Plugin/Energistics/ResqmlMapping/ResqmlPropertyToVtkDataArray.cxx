@@ -76,7 +76,6 @@ ResqmlPropertyToVtkDataArray::ResqmlPropertyToVtkDataArray(RESQML2_NS::AbstractV
 	if (typeProperty == RESQML2_NS::ContinuousProperty::XML_TAG)
 	{
 		vtkSmartPointer<vtkFloatArray> cellDataFloat = vtkSmartPointer<vtkFloatArray>::New();
-		cellDataFloat->Allocate(nbElement);
 		float *valuesFloatSet = new float[nbElement]; // deleted by VTK cellData vtkSmartPointer
 		if (valuesProperty->getDimensionsCountOfPatch(patch_index) == 3)
 		{
@@ -97,7 +96,6 @@ ResqmlPropertyToVtkDataArray::ResqmlPropertyToVtkDataArray(RESQML2_NS::AbstractV
 	else if (typeProperty == RESQML2_NS::DiscreteProperty::XML_TAG)
 	{
 		vtkSmartPointer<vtkIntArray> cellDataInt = vtkSmartPointer<vtkIntArray>::New();
-		cellDataInt->Allocate(nbElement);
 		int *valuesIntSet = new int[nbElement]; // deleted by VTK cellData vtkSmartPointer
 		if (valuesProperty->getDimensionsCountOfPatch(patch_index) == 3)
 		{
@@ -118,7 +116,6 @@ ResqmlPropertyToVtkDataArray::ResqmlPropertyToVtkDataArray(RESQML2_NS::AbstractV
 	else if (typeProperty == RESQML2_NS::CategoricalProperty::XML_TAG)
 	{
 		vtkSmartPointer<vtkIntArray> cellDataInt = vtkSmartPointer<vtkIntArray>::New();
-		cellDataInt->Allocate(nbElement);
 		int *valuesIntSet = new int[nbElement]; // deleted by VTK cellData vtkSmartPointer
 		if (valuesProperty->getDimensionsCountOfPatch(patch_index) == 3)
 		{
@@ -182,7 +179,6 @@ ResqmlPropertyToVtkDataArray::ResqmlPropertyToVtkDataArray(resqml2::AbstractValu
 
 		vtkSmartPointer<vtkDoubleArray> cellDataDouble = vtkSmartPointer<vtkDoubleArray>::New();
 		cellDataDouble->SetNumberOfComponents(elementCountPerValue);
-		cellDataDouble->Allocate(nbElement * elementCountPerValue);
 		cellDataDouble->SetName(name.c_str());
 		cellDataDouble->SetArray(valuesDoubleSet, nbElement * elementCountPerValue, 0, vtkAbstractArray::VTK_DATA_ARRAY_DELETE);
 		this->dataArray = cellDataDouble;
@@ -196,7 +192,6 @@ ResqmlPropertyToVtkDataArray::ResqmlPropertyToVtkDataArray(resqml2::AbstractValu
 
 		vtkSmartPointer<vtkIntArray> cellDataInt = vtkSmartPointer<vtkIntArray>::New();
 		cellDataInt->SetNumberOfComponents(elementCountPerValue);
-		cellDataInt->Allocate(nbElement * elementCountPerValue);
 		cellDataInt->SetName(name.c_str());
 		cellDataInt->SetArray(values, nbElement * elementCountPerValue, 0, vtkAbstractArray::VTK_DATA_ARRAY_DELETE);
 		this->dataArray = cellDataInt;
