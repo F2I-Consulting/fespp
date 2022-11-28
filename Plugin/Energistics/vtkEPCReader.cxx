@@ -141,7 +141,6 @@ void vtkEPCReader::SetFiles(const std::string &file)
 //----------------------------------------------------------------------------
 bool vtkEPCReader::AddSelector(const char *path)
 {
-    vtkOutputWindowDisplayDebugText(("AddSelector " + std::string(path)).c_str());
   if (path != nullptr && this->selectors.insert(path).second)
   {
     int node_id = GetAssembly()->GetFirstNodeByPath(path);
@@ -169,7 +168,6 @@ bool vtkEPCReader::AddSelector(const char *path)
 //----------------------------------------------------------------------------
 void vtkEPCReader::ClearSelectors()
 {
-    vtkOutputWindowDisplayDebugText("ClearSelectors ");
   this->repository.clearSelection();
   if (!this->selectors.empty())
   {
@@ -181,7 +179,6 @@ void vtkEPCReader::ClearSelectors()
 //----------------------------------------------------------------------------
 int vtkEPCReader::GetNumberOfSelectors() const
 {
-    vtkOutputWindowDisplayDebugText("GetNumberOfSelectors " );
   if (selectors.size() > (std::numeric_limits<int>::max)())
   {
     throw std::out_of_range("Too much selectors.");
@@ -192,7 +189,6 @@ int vtkEPCReader::GetNumberOfSelectors() const
 //----------------------------------------------------------------------------
 void vtkEPCReader::SetSelector(const char *selector)
 {
-    vtkOutputWindowDisplayDebugText(("SetSelector " + std::string(selector)).c_str());
   this->ClearSelectors();
   this->AddSelector(selector);
 
@@ -202,7 +198,6 @@ void vtkEPCReader::SetSelector(const char *selector)
 //----------------------------------------------------------------------------
 const char *vtkEPCReader::GetSelector(int index) const
 {
-    vtkOutputWindowDisplayDebugText(("GetSelector " + std::to_string(index)).c_str());
   if (index >= 0 && index < this->GetNumberOfSelectors())
   {
     auto iter = std::next(this->selectors.begin(), index);
@@ -230,7 +225,6 @@ int vtkEPCReader::RequestData(vtkInformation *,
                               vtkInformationVector **,
                               vtkInformationVector *outputVector)
 {
-    vtkOutputWindowDisplayDebugText("RequestData ");
   // Load state (load selection in wait)
   if (this->selectorNotLoaded.size() > 0)
   {
