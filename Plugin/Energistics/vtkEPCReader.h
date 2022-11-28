@@ -174,3 +174,4 @@ private:
 	vtkProperty* Property;
 };
 #endif
+

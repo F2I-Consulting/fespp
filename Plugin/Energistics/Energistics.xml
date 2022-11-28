@@ -33,7 +33,6 @@
 				<TimeStepsInformationHelper />
 			</DoubleVectorProperty>
 
-
 			<!-- treeView Selection -->
 			<IntVectorProperty name="AssemblyTag" command="GetAssemblyTag" information_only="1">
 				<Documentation> This is simply an int that changes whenever a new assembly is built by the reader. This can be used to determine if the assembly should be fetched from the reader whenever the reader is updated.</Documentation>
