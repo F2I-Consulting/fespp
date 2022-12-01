@@ -82,13 +82,6 @@ void ResqmlUnstructuredGridSubRepToVtkUnstructuredGrid::loadVtkObject()
 
 				supportingGrid->loadGeometry();
 				// CELLS
-				const unsigned int nodeCount = supportingGrid->getNodeCount();
-				std::unique_ptr<vtkIdType[]> pointIds(new vtkIdType[nodeCount]);
-				for (unsigned int i = 0; i < nodeCount; ++i)
-				{
-					pointIds[i] = i;
-				}
-
 				const ULONG64 cellCount = this->resqmlData->getElementCountOfPatch(0);
 				ULONG64 const *cumulativeFaceCountPerCell = supportingGrid->isFaceCountOfCellsConstant()
 																? nullptr
@@ -164,24 +157,15 @@ void ResqmlUnstructuredGridSubRepToVtkUnstructuredGrid::loadVtkObject()
 				vtkSmartPointer<vtkPolyData> vtk_polydata = vtkSmartPointer<vtkPolyData>::New();
 				vtk_polydata->SetPoints(this->getMapperVtkPoint());
 
-				supportingGrid->loadGeometry();
-
 				// FACES
-				const unsigned int nodeCount = supportingGrid->getNodeCount();
-				std::unique_ptr<vtkIdType[]> pointIds(new vtkIdType[nodeCount]);
-				for (unsigned int i = 0; i < nodeCount; ++i)
-				{
-					pointIds[i] = i;
-				}
-
 				const ULONG64 gridFaceCount = supportingGrid->getFaceCount();
-					std::unique_ptr<uint64_t[]> nodeCountOfFaces(new uint64_t[gridFaceCount]);
-					supportingGrid->getCumulativeNodeCountPerFace(nodeCountOfFaces.get());
+				std::unique_ptr<uint64_t[]> nodeCountOfFaces(new uint64_t[gridFaceCount]);
+				supportingGrid->getCumulativeNodeCountPerFace(nodeCountOfFaces.get());
 				
-					std::unique_ptr<uint64_t[]> nodeIndices(new uint64_t[nodeCountOfFaces[gridFaceCount-1]]);
-					supportingGrid->getNodeIndicesOfFaces(nodeIndices.get());
+				std::unique_ptr<uint64_t[]> nodeIndices(new uint64_t[nodeCountOfFaces[gridFaceCount-1]]);
+				supportingGrid->getNodeIndicesOfFaces(nodeIndices.get());
 
-					const ULONG64 subFaceCount = this->resqmlData->getElementCountOfPatch(0);
+				const ULONG64 subFaceCount = this->resqmlData->getElementCountOfPatch(0);
 				std::unique_ptr<uint64_t[]> elementIndices(new uint64_t[subFaceCount]);
 				resqmlData->getElementIndicesOfPatch(0, 0, elementIndices.get());
 
@@ -190,49 +174,32 @@ void ResqmlUnstructuredGridSubRepToVtkUnstructuredGrid::loadVtkObject()
 				for (ULONG64 subFaceIndex =0; subFaceIndex < subFaceCount; ++subFaceIndex)
 				{
 					ULONG64 faceIndex = elementIndices[subFaceIndex];
-					auto indiceValue = nodeCountOfFaces[faceIndex];
 					auto first_indiceValue = faceIndex == 0 ? 0 : nodeCountOfFaces[faceIndex - 1];
-					ULONG64 nodeCount_OfFaceIndex = indiceValue - first_indiceValue;
+					ULONG64 nodeCount_OfFaceIndex = nodeCountOfFaces[faceIndex] - first_indiceValue;
 
-					if (nodeCount_OfFaceIndex == 3) // vtkTriangle
+					vtkSmartPointer<vtkCell> cell;
+					if (nodeCount_OfFaceIndex == 3)
 					{
-						vtkSmartPointer<vtkTriangle> triangle = vtkSmartPointer<vtkTriangle>::New();
-						auto indice1 = nodeIndices[first_indiceValue];
-						auto indice2 = nodeIndices[first_indiceValue +1];
-						auto indice3 = nodeIndices[first_indiceValue +2];
-						triangle->GetPointIds()->SetId(0, indice1);
-						triangle->GetPointIds()->SetId(1, indice2);
-						triangle->GetPointIds()->SetId(2, indice3);
-						polys->InsertNextCell(triangle);
+						cell = vtkSmartPointer<vtkTriangle>::New();
 					}
-					else if (nodeCount_OfFaceIndex == 4) // vtkQuad
+					else if (nodeCount_OfFaceIndex == 4)
 					{
-						vtkSmartPointer<vtkQuad> quad = vtkSmartPointer<vtkQuad>::New();
-						auto indice1 = nodeIndices[first_indiceValue];
-						auto indice2 = nodeIndices[first_indiceValue + 1];
-						auto indice3 = nodeIndices[first_indiceValue + 2];
-						auto indice4 = nodeIndices[first_indiceValue + 3];
-						quad->GetPointIds()->SetId(0, indice1);
-						quad->GetPointIds()->SetId(1, indice2);
-						quad->GetPointIds()->SetId(2, indice3);
-						quad->GetPointIds()->SetId(3, indice4);
-						polys->InsertNextCell(quad);
+						cell = vtkSmartPointer<vtkQuad>::New();
 					}
 					else
 					{
-						vtkSmartPointer<vtkPolygon> polygon = vtkSmartPointer<vtkPolygon>::New();
-						for (ULONG64 nodeIndex = 0; nodeIndex < nodeCount_OfFaceIndex; ++nodeIndex)
-						{
-							auto index = first_indiceValue + nodeIndex;
-							polygon->GetPointIds()->SetId(nodeIndex, nodeIndices[index]);
-						}
-						polys->InsertNextCell(polygon);
+						cell = vtkSmartPointer<vtkPolygon>::New();
+						cell->GetPointIds()->SetNumberOfIds(nodeCount_OfFaceIndex);
 					}
+
+					for (ULONG64 nodeIndex = 0; nodeIndex < nodeCount_OfFaceIndex; ++nodeIndex, ++first_indiceValue)
+					{
+						cell->GetPointIds()->SetId(nodeIndex, nodeIndices[first_indiceValue]);
+					}
+					polys->InsertNextCell(cell);
 				}
 
 				vtk_polydata->SetPolys(polys);
-
-				supportingGrid->unloadGeometry();
 
 				this->vtkData->SetPartition(0, vtk_polydata);
 				this->vtkData->Modified();
