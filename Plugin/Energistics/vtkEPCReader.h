@@ -44,11 +44,6 @@ public:
 	vtkTypeMacro(vtkEPCReader, vtkPartitionedDataSetCollectionAlgorithm);
 	void PrintSelf(ostream &os, vtkIndent indent) final;
 
-	/**
- * Get the property associated with the object.
- */
-	virtual vtkProperty* GetProperty() { return this->Property; }
-
 	// --------------- PART: files------ -------------
 
 	///@{
@@ -61,10 +56,6 @@ public:
 	size_t GetNumberOfFileNames() const;
 	///@}
 
-	/**
-   * Set a single filename. Note, this will clear all existing filenames.
-   */
-	/*void SetFileName(const char* fname);*/
 
 	// --------------- PART: Multi-Processor -------------
 
@@ -153,7 +144,6 @@ private:
 	// files
 	vtkSmartPointer<vtkStringArray> Files;
 	std::set<std::string> FilesList;
-	//vtkSmartPointer<vtkStringArray> FilesNames;
 	std::set<std::string> FileNamesLoaded;
 
 	std::set<std::string> selectorNotLoaded; // load state, load selector before files :(
@@ -170,8 +160,6 @@ private:
 	int MarkerSize;
 
 	ResqmlDataRepositoryToVtkPartitionedDataSetCollection repository;
-
-	vtkProperty* Property;
 };
 #endif
 
