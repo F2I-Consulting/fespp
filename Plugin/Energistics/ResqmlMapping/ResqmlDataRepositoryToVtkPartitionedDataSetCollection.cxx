@@ -846,11 +846,11 @@ vtkPartitionedDataSetCollection *ResqmlDataRepositoryToVtkPartitionedDataSetColl
             {
                 loadMapper(std::string(tmp_assembly->GetNodeName(node_selection)).substr(1), time);
             }
-            if (this->nodeId_to_resqml[node_selection]->getOutput()->GetNumberOfPartitions() > 0)
-            {
+ //           if (this->nodeId_to_resqml[node_selection]->getOutput()->GetNumberOfPartitions() > 0)
+ //           {
                 this->output->SetPartitionedDataSet(index, this->nodeId_to_resqml[node_selection]->getOutput());
                 this->output->GetMetaData(index++)->Set(vtkCompositeDataSet::NAME(), this->output->GetDataAssembly()->GetNodeName(node_selection));
-            }
+ //           }
         }
         else
         {
