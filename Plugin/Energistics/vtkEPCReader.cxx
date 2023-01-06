@@ -106,6 +106,7 @@ vtkStringArray *vtkEPCReader::GetAllFiles() // call only by GUI
               }
               this->AssemblyTag++;
               this->Modified();
+              this->Update();
           }
       }
   }
@@ -242,6 +243,7 @@ int vtkEPCReader::RequestData(vtkInformation *,
   auto *outInfo = outputVector->GetInformationObject(0);
   outInfo->Remove(vtkStreamingDemandDrivenPipeline::TIME_STEPS());
   const std::vector<double> times = this->repository.getTimes();
+ 
   if (times.size() > (std::numeric_limits<int>::max)())
   {
     throw std::out_of_range("Too much times.");
