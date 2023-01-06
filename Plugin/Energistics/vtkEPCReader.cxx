@@ -287,4 +287,5 @@ vtkDataAssembly *vtkEPCReader::GetAssembly()
   {
     vtkErrorMacro(<< e.what());
   }
+  return nullptr;
 }

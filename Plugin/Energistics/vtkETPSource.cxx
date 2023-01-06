@@ -286,4 +286,5 @@ vtkDataAssembly *vtkETPSource::GetAssembly()
   {
     vtkErrorMacro(<< e.what());
   }
+  return nullptr;
 }
