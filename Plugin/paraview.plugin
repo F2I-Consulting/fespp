@@ -5,8 +5,6 @@ DESCRIPTION
 REQUIRES_MODULES
   ParaView::pqComponents
   ParaView::pqCore
-  Qt5::Core
-  Qt5::Gui
-  Qt5::Widgets
+  VTK::CommonSystem
   VTK::CommonCore
   
