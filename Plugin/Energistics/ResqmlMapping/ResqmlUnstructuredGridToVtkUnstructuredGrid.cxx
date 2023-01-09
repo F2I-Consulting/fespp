@@ -71,11 +71,19 @@ void ResqmlUnstructuredGridToVtkUnstructuredGrid::loadVtkObject()
 	uint64_t const* cumulativeFaceCountPerCell = this->resqmlData->isFaceCountOfCellsConstant()
 		? nullptr
 		: this->resqmlData->getCumulativeFaceCountPerCell(); // This pointer is owned and managed by FESAPI
-	std::unique_ptr<unsigned char[]> cellFaceNormalOutwardlyDirected(new unsigned char[cumulativeFaceCountPerCell == nullptr
-																						   ? cellCount * this->resqmlData->getConstantFaceCountOfCells()
-																						   : cumulativeFaceCountPerCell[cellCount - 1]]);
+	const uint64_t faceCount = cumulativeFaceCountPerCell == nullptr
+		? cellCount * this->resqmlData->getConstantFaceCountOfCells()
+		: cumulativeFaceCountPerCell[cellCount - 1];
+	std::unique_ptr<unsigned char[]> cellFaceNormalOutwardlyDirected(new unsigned char[faceCount]);
 
 	this->resqmlData->getCellFaceIsRightHanded(cellFaceNormalOutwardlyDirected.get());
+	auto* crs = resqmlData->getLocalCrs(0);
+	if (!crs->isPartial() && crs->isDepthOriented())
+	{
+		for (size_t i = 0; i < faceCount; ++i) {
+			cellFaceNormalOutwardlyDirected[i] = !cellFaceNormalOutwardlyDirected[i];
+		}
+	}
 
 	auto maxCellIndex = (this->procNumber + 1) * cellCount / this->maxProc;
 
