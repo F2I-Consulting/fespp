@@ -34,6 +34,7 @@ under the License.
 #include <vtkUnstructuredGrid.h>
 #include <vtkPyramid.h>
 #include <vtkWedge.h>
+#include <vtkIdList.h>
 
 // FESAPI
 #include <fesapi/resqml2/UnstructuredGridRepresentation.h>
@@ -220,12 +221,13 @@ void ResqmlUnstructuredGridToVtkUnstructuredGrid::cellVtkTetra(vtkSmartPointer<v
 		}
 	}
 
-	vtkSmartPointer<vtkTetra> tetra = vtkSmartPointer<vtkTetra>::New();
+	//vtkSmartPointer<vtkTetra> tetra = vtkSmartPointer<vtkTetra>::New();
+	vtkSmartPointer<vtkIdList> tetra = vtkSmartPointer<vtkIdList>::New();
 	for (vtkIdType pointId = 0; pointId < 4; ++pointId)
 	{
-		tetra->GetPointIds()->SetId(pointId, nodes[pointId]);
+		tetra/*->GetPointIds()->SetId*/->InsertId(pointId, nodes[pointId]);
 	}
-	vtk_unstructuredGrid->InsertNextCell(tetra->GetCellType(), tetra->GetPointIds());
+	vtk_unstructuredGrid->InsertNextCell(/*tetra->GetCellType()*/ VTK_TETRA, tetra/*->GetPointIds()*/);
 }
 
 //----------------------------------------------------------------------------
@@ -357,12 +359,13 @@ void ResqmlUnstructuredGridToVtkUnstructuredGrid::cellVtkWedgeOrPyramid(vtkSmart
 			}
 		}
 
-		vtkSmartPointer<vtkWedge> wedge = vtkSmartPointer<vtkWedge>::New();
+		//vtkSmartPointer<vtkWedge> wedge = vtkSmartPointer<vtkWedge>::New();
+		vtkSmartPointer<vtkIdList> wedge = vtkSmartPointer<vtkIdList>::New();
 		for (int nodesIndex = 0; nodesIndex < 6; ++nodesIndex)
 		{
-			wedge->GetPointIds()->SetId(nodesIndex, nodes[nodesIndex]);
+			wedge/*->GetPointIds()->SetId*/->InsertId(nodesIndex, nodes[nodesIndex]);
 		}
-		vtk_unstructuredGrid->InsertNextCell(wedge->GetCellType(), wedge->GetPointIds());
+		vtk_unstructuredGrid->InsertNextCell(/*wedge->GetCellType()*/ VTK_WEDGE, wedge/*->GetPointIds()*/);
 	}
 	else if (localFaceIndexWith4Nodes.size() == 1)
 	{ // VTK_PYRAMID
@@ -400,12 +403,13 @@ void ResqmlUnstructuredGridToVtkUnstructuredGrid::cellVtkWedgeOrPyramid(vtkSmart
 			}
 		}
 
-		vtkSmartPointer<vtkPyramid> pyramid = vtkSmartPointer<vtkPyramid>::New();
+		//vtkSmartPointer<vtkPyramid> pyramid = vtkSmartPointer<vtkPyramid>::New();
+		vtkSmartPointer<vtkIdList> pyramid = vtkSmartPointer<vtkIdList>::New();
 		for (int nodesIndex = 0; nodesIndex < 5; ++nodesIndex)
 		{
-			pyramid->GetPointIds()->SetId(nodesIndex, nodes[nodesIndex]);
+			pyramid/*->GetPointIds()->SetId*/->InsertId(nodesIndex, nodes[nodesIndex]);
 		}
-		vtk_unstructuredGrid->InsertNextCell(pyramid->GetCellType(), pyramid->GetPointIds());
+		vtk_unstructuredGrid->InsertNextCell(/*pyramid->GetCellType()*/ VTK_PYRAMID, pyramid/*->GetPointIds()*/);
 	}
 	else
 	{
@@ -479,12 +483,14 @@ bool ResqmlUnstructuredGridToVtkUnstructuredGrid::cellVtkHexahedron(vtkSmartPoin
 		}
 	}
 
-	vtkSmartPointer<vtkHexahedron> hexahedron = vtkSmartPointer<vtkHexahedron>::New();
+	//vtkSmartPointer<vtkHexahedron> hexahedron = vtkSmartPointer<vtkHexahedron>::New();
+	vtkSmartPointer<vtkIdList> hexahedron = vtkSmartPointer<vtkIdList>::New();
 	for (int nodesIndex = 0; nodesIndex < 8; ++nodesIndex)
 	{
-		hexahedron->GetPointIds()->SetId(nodesIndex, nodes[nodesIndex]);
+		//hexahedron->GetPointIds()->SetId(nodesIndex, nodes[nodesIndex]);
+		hexahedron->InsertId(nodesIndex, nodes[nodesIndex]);
 	}
-	vtk_unstructuredGrid->InsertNextCell(hexahedron->GetCellType(), hexahedron->GetPointIds());
+	vtk_unstructuredGrid->InsertNextCell(/*hexahedron->GetCellType()*/ VTK_HEXAHEDRON, hexahedron);
 	return true;
 }
 

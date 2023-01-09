@@ -73,11 +73,11 @@ void ResqmlUnstructuredGridSubRepToVtkUnstructuredGrid::loadVtkObject()
 		auto *supportingGrid = dynamic_cast<RESQML2_NS::UnstructuredGridRepresentation *>(this->resqmlData->getSupportingRepresentation(0));
 		if (supportingGrid != nullptr)
 		{
-			if (this->resqmlData->getElementKindOfPatch(0, 0) == gsoap_eml2_3::resqml22__IndexableElement::cells)
+			gsoap_eml2_3::resqml22__IndexableElement indexable_element = this->resqmlData->getElementKindOfPatch(0, 0);
+			if (indexable_element == gsoap_eml2_3::resqml22__IndexableElement::cells)
 			{
 				vtkSmartPointer<vtkUnstructuredGrid> vtk_unstructuredGrid = vtkSmartPointer<vtkUnstructuredGrid>::New();
 				vtk_unstructuredGrid->Allocate(this->resqmlData->getElementCountOfPatch(0));
-
 				vtk_unstructuredGrid->SetPoints(this->getMapperVtkPoint());
 
 				supportingGrid->loadGeometry();
@@ -96,9 +96,10 @@ void ResqmlUnstructuredGridSubRepToVtkUnstructuredGrid::loadVtkObject()
 				std::unique_ptr<uint64_t[]> elementIndices(new uint64_t[cellCount]);
 				resqmlData->getElementIndicesOfPatch(0, 0, elementIndices.get());
 
+				bool isOptimizedCell = false;
 				for (ULONG64 cellIndex = this->procNumber * cellCount / this->maxProc; cellIndex < maxCellIndex; ++cellIndex)
 				{
-					bool isOptimizedCell = false;
+					isOptimizedCell = false;
 
 					const ULONG64 localFaceCount = supportingGrid->getFaceCountOfCell(elementIndices[cellIndex]);
 
@@ -152,7 +153,7 @@ void ResqmlUnstructuredGridSubRepToVtkUnstructuredGrid::loadVtkObject()
 				this->vtkData->SetPartition(0, vtk_unstructuredGrid);
 				this->vtkData->Modified();
 			}
-			else if (this->resqmlData->getElementKindOfPatch(0, 0) == gsoap_eml2_3::resqml22__IndexableElement::faces)
+			else if (indexable_element == gsoap_eml2_3::resqml22__IndexableElement::faces)
 			{
 				vtkSmartPointer<vtkPolyData> vtk_polydata = vtkSmartPointer<vtkPolyData>::New();
 				vtk_polydata->SetPoints(this->getMapperVtkPoint());
