@@ -19,6 +19,8 @@ under the License.
 #ifndef __ResqmlUnstructuredGridToVtkUnstructuredGrid_h
 #define __ResqmlUnstructuredGridToVtkUnstructuredGrid_h
 
+#include <array>
+
 #include "ResqmlAbstractRepresentationToVtkPartitionedDataSet.h"
 
 // include VTK
@@ -53,6 +55,7 @@ public:
 protected:
 	RESQML2_NS::UnstructuredGridRepresentation *resqmlData;
 	vtkSmartPointer<vtkPoints> points;
+	std::array<vtkIdType, 12> nodes;
 
 private:
 	/**
@@ -71,7 +74,7 @@ private:
 	void cellVtkTetra(vtkSmartPointer<vtkUnstructuredGrid> vtk_unstructuredGrid,
 					  ULONG64 const *cumulativeFaceCountPerCell,
 					  unsigned char const *cellFaceNormalOutwardlyDirected,
-					  ULONG64 cellIndex) const;
+					  ULONG64 cellIndex);
 
 	/**
 	* Insert a new VTK wedge or pyramid corresponding to a particular RESQML cell
@@ -83,7 +86,7 @@ private:
 	*/
 	void cellVtkWedgeOrPyramid(vtkSmartPointer<vtkUnstructuredGrid> vtk_unstructuredGrid,
 		ULONG64 const* cumulativeFaceCountPerCell, unsigned char const* cellFaceNormalOutwardlyDirected,
-		ULONG64 cellIndex) const;
+		ULONG64 cellIndex);
 
 	/**
 	 * Insert a new VTK hexahedron corresponding to a particular RESQML cell only if the RESQML cell is Quadrilaterally-faced hexahedron.
@@ -98,13 +101,13 @@ private:
 	bool cellVtkHexahedron(vtkSmartPointer<vtkUnstructuredGrid> vtk_unstructuredGrid,
 						   ULONG64 const *cumulativeFaceCountPerCell,
 						   unsigned char const *cellFaceNormalOutwardlyDirected,
-						   ULONG64 cellIndex) const;
+						   ULONG64 cellIndex);
 
 	// verify and add cell if is  VTK_PENTAGONAL_PRISM
-	bool cellVtkPentagonalPrism(vtkSmartPointer<vtkUnstructuredGrid> vtk_unstructuredGrid, ULONG64 cellIndex) const;
+	bool cellVtkPentagonalPrism(vtkSmartPointer<vtkUnstructuredGrid> vtk_unstructuredGrid, ULONG64 cellIndex);
 	
 	// verify and add cell if is  VTK_HEXAGONAL_PRISM
-	bool cellVtkHexagonalPrism(vtkSmartPointer<vtkUnstructuredGrid> vtk_unstructuredGrid, ULONG64 cellIndex) const;
+	bool cellVtkHexagonalPrism(vtkSmartPointer<vtkUnstructuredGrid> vtk_unstructuredGrid, ULONG64 cellIndex);
 
 	friend class ResqmlUnstructuredGridSubRepToVtkUnstructuredGrid;
 };
