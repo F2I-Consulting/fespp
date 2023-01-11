@@ -41,12 +41,12 @@ public:
 	/**
 	* Constructor
 	*/
-	ResqmlTriangulatedSetToVtkPartitionedDataSet(RESQML2_NS::TriangulatedSetRepresentation *triangulated, int proc_number = 0, int max_proc = 1);
+	explicit ResqmlTriangulatedSetToVtkPartitionedDataSet(RESQML2_NS::TriangulatedSetRepresentation *triangulated, int proc_number = 0, int max_proc = 1);
 	
 	/**
 	* load vtkDataSet with RESQML data
 	*/
-	void loadVtkObject();
+	void loadVtkObject() override;
 
 	/**
 	 * add a RESQML property to vtkDataSet
@@ -54,7 +54,7 @@ public:
 	void addDataArray(const std::string& uuid);
 
 protected:
-	RESQML2_NS::TriangulatedSetRepresentation *resqmlData;
+	RESQML2_NS::TriangulatedSetRepresentation * getResqmlData() const;
 
 	std::map<int, ResqmlTriangulatedToVtkPolyData*> patchIndex_to_ResqmlTriangulated;									// index of VtkDataAssembly to RESQML UUID
 };

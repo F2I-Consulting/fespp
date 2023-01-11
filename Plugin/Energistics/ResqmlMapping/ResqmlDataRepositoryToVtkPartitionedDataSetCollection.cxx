@@ -23,6 +23,7 @@ under the License.
 #include <set>
 #include <list>
 #include <regex>
+#include <numeric>
 
 // VTK includes
 #include <vtkPartitionedDataSetCollection.h>
@@ -93,7 +94,7 @@ ResqmlDataRepositoryToVtkPartitionedDataSetCollection::~ResqmlDataRepositoryToVt
 }
 
 //----------------------------------------------------------------------------
-std::vector<std::string> ResqmlDataRepositoryToVtkPartitionedDataSetCollection::connect(const std::string etp_url, const std::string data_partition, const std::string auth_connection)
+std::vector<std::string> ResqmlDataRepositoryToVtkPartitionedDataSetCollection::connect(const std::string& etp_url, const std::string& data_partition, const std::string& auth_connection)
 {
     std::vector<std::string> result;
 #ifdef WITH_ETP_SSL
@@ -147,6 +148,7 @@ std::vector<std::string> ResqmlDataRepositoryToVtkPartitionedDataSetCollection::
     {
         result.push_back(ds.uri);
     }
+
 #endif
     return result;
 }
@@ -233,12 +235,11 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::buildDataAsse
     sortAndAdd(repository->getAllPolylineSetRepresentationSet(), allReps);
     sortAndAdd(repository->getAllTriangulatedSetRepresentationSet(), allReps);
     sortAndAdd(repository->getUnstructuredGridRepresentationSet(), allReps);
-
-    std::string message;
-    for (auto const *rep : allReps)
-    {
-        message += searchRepresentations(rep);
-    }
+  
+    std::string message = std::accumulate(std::begin(allReps), std::end(allReps),std::string{},
+        [&](auto& a, auto b) {
+                return a + searchRepresentations(b);
+        });
 
     // get WellboreTrajectory + subrepresentation + property
     message += searchWellboreTrajectory(fileName);
@@ -305,10 +306,11 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchSubRepr
     {
         auto subRepresentationSet = representation->getSubRepresentationSet();
         std::sort(subRepresentationSet.begin(), subRepresentationSet.end(), lexicographicalComparison);
-        for (auto const *subRepresentation : subRepresentationSet)
-        {
-            result += searchRepresentations(subRepresentation, data_assembly->GetParent(node_parent));
-        }
+        
+        std::string message = std::accumulate(std::begin(subRepresentationSet), std::end(subRepresentationSet), std::string{},
+            [&](auto& a, auto b) {
+                return a + searchRepresentations(b, data_assembly->GetParent(node_parent));
+            }); 
     }
     catch (const std::exception &e)
     {
@@ -830,7 +832,6 @@ vtkPartitionedDataSetCollection *ResqmlDataRepositoryToVtkPartitionedDataSetColl
     // foreach selection node
     for (const int node_selection : this->current_selection)
     {
-        ResqmlAbstractRepresentationToVtkPartitionedDataSet *rep = nullptr;
         if (this->nodeId_to_resqml.find(node_selection) == this->nodeId_to_resqml.end())
         {
             initMapper(std::string(tmp_assembly->GetNodeName(node_selection)).substr(1), nbProcess, processId);

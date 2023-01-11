@@ -83,6 +83,8 @@ public:
 
 protected:
 
+	RESQML2_NS::AbstractRepresentation * getResqmlData() const { return resqmlData; }
+
 	unsigned int subrep_pointer_on_points_count;
 
 	uint64_t pointCount = 0;
@@ -97,7 +99,7 @@ protected:
 	int procNumber;
 	int maxProc;
 
-	RESQML2_NS::AbstractRepresentation const* resqmlData;
+	RESQML2_NS::AbstractRepresentation * resqmlData;
 
 	vtkSmartPointer<vtkPartitionedDataSet> vtkData;
 	std::unordered_map<std::string, class ResqmlPropertyToVtkDataArray *> uuidToVtkDataArray;

@@ -52,7 +52,6 @@ ResqmlUnstructuredGridSubRepToVtkUnstructuredGrid::ResqmlUnstructuredGridSubRepT
 	: ResqmlAbstractRepresentationToVtkPartitionedDataSet(subRep,
 														  proc_number,
 														  max_proc),
-	  resqmlData(subRep),
 	  mapperUnstructuredGrid(support)
 {
 	this->iCellCount = subRep->getElementCountOfPatch(0);
@@ -62,27 +61,35 @@ ResqmlUnstructuredGridSubRepToVtkUnstructuredGrid::ResqmlUnstructuredGridSubRepT
 }
 
 //----------------------------------------------------------------------------
+RESQML2_NS::SubRepresentation const* ResqmlUnstructuredGridSubRepToVtkUnstructuredGrid::getResqmlData() const
+{
+	return static_cast<RESQML2_NS::SubRepresentation const*>(resqmlData);
+}
+
+//----------------------------------------------------------------------------
 void ResqmlUnstructuredGridSubRepToVtkUnstructuredGrid::loadVtkObject()
 {
-	if (this->resqmlData->areElementIndicesPairwise(0))
+	RESQML2_NS::SubRepresentation const* subRep = getResqmlData();
+
+	if (subRep->areElementIndicesPairwise(0))
 	{
-		vtkOutputWindowDisplayErrorText(("not supported: the element indices of a particular patch are pairwise for SubRepresentation " + this->resqmlData->getUuid()).c_str());
+		vtkOutputWindowDisplayErrorText(("not supported: the element indices of a particular patch are pairwise for SubRepresentation " + subRep->getUuid()).c_str());
 	}
 	else
 	{
-		auto *supportingGrid = dynamic_cast<RESQML2_NS::UnstructuredGridRepresentation *>(this->resqmlData->getSupportingRepresentation(0));
+		auto *supportingGrid = dynamic_cast<RESQML2_NS::UnstructuredGridRepresentation *>(subRep->getSupportingRepresentation(0));
 		if (supportingGrid != nullptr)
 		{
-			gsoap_eml2_3::resqml22__IndexableElement indexable_element = this->resqmlData->getElementKindOfPatch(0, 0);
+			gsoap_eml2_3::resqml22__IndexableElement indexable_element = subRep->getElementKindOfPatch(0, 0);
 			if (indexable_element == gsoap_eml2_3::resqml22__IndexableElement::cells)
 			{
 				vtkSmartPointer<vtkUnstructuredGrid> vtk_unstructuredGrid = vtkSmartPointer<vtkUnstructuredGrid>::New();
-				vtk_unstructuredGrid->Allocate(this->resqmlData->getElementCountOfPatch(0));
+				vtk_unstructuredGrid->Allocate(subRep->getElementCountOfPatch(0));
 				vtk_unstructuredGrid->SetPoints(this->getMapperVtkPoint());
 
 				supportingGrid->loadGeometry();
 				// CELLS
-				const ULONG64 cellCount = this->resqmlData->getElementCountOfPatch(0);
+				const ULONG64 cellCount = subRep->getElementCountOfPatch(0);
 				ULONG64 const *cumulativeFaceCountPerCell = supportingGrid->isFaceCountOfCellsConstant()
 																? nullptr
 																: supportingGrid->getCumulativeFaceCountPerCell(); // This pointer is owned and managed by FESAPI
@@ -94,12 +101,11 @@ void ResqmlUnstructuredGridSubRepToVtkUnstructuredGrid::loadVtkObject()
 				auto maxCellIndex = (this->procNumber + 1) * cellCount / this->maxProc;
 
 				std::unique_ptr<uint64_t[]> elementIndices(new uint64_t[cellCount]);
-				resqmlData->getElementIndicesOfPatch(0, 0, elementIndices.get());
+				subRep->getElementIndicesOfPatch(0, 0, elementIndices.get());
 
-				bool isOptimizedCell = false;
 				for (ULONG64 cellIndex = this->procNumber * cellCount / this->maxProc; cellIndex < maxCellIndex; ++cellIndex)
 				{
-					isOptimizedCell = false;
+					bool isOptimizedCell = false;
 
 					const ULONG64 localFaceCount = supportingGrid->getFaceCountOfCell(elementIndices[cellIndex]);
 
@@ -166,9 +172,9 @@ void ResqmlUnstructuredGridSubRepToVtkUnstructuredGrid::loadVtkObject()
 				std::unique_ptr<uint64_t[]> nodeIndices(new uint64_t[nodeCountOfFaces[gridFaceCount-1]]);
 				supportingGrid->getNodeIndicesOfFaces(nodeIndices.get());
 
-				const ULONG64 subFaceCount = this->resqmlData->getElementCountOfPatch(0);
+				const ULONG64 subFaceCount = subRep->getElementCountOfPatch(0);
 				std::unique_ptr<uint64_t[]> elementIndices(new uint64_t[subFaceCount]);
-				resqmlData->getElementIndicesOfPatch(0, 0, elementIndices.get());
+				subRep->getElementIndicesOfPatch(0, 0, elementIndices.get());
 
 				vtkSmartPointer<vtkCellArray> polys = vtkSmartPointer<vtkCellArray>::New();
 				polys->AllocateEstimate(subFaceCount, 4);
@@ -207,7 +213,7 @@ void ResqmlUnstructuredGridSubRepToVtkUnstructuredGrid::loadVtkObject()
 			}
 			else
 			{
-				vtkOutputWindowDisplayErrorText(("not supported: SubRepresentation (" + this->resqmlData->getUuid() + ") with indexable element different from cell or nodes").c_str());
+				vtkOutputWindowDisplayErrorText(("not supported: SubRepresentation (" + subRep->getUuid() + ") with indexable element different from cell or nodes").c_str());
 			}
 		}
 		else

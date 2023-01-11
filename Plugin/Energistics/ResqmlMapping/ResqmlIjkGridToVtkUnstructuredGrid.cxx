@@ -41,7 +41,6 @@ ResqmlIjkGridToVtkUnstructuredGrid::ResqmlIjkGridToVtkUnstructuredGrid(RESQML2_N
 	: ResqmlAbstractRepresentationToVtkPartitionedDataSet(ijkGrid,
 											   proc_number,
 											   max_proc),
-	  resqmlData(ijkGrid),
 	points(vtkSmartPointer<vtkPoints>::New()),
 	pointer_on_points(0)
 {
@@ -77,13 +76,20 @@ ResqmlIjkGridToVtkUnstructuredGrid::ResqmlIjkGridToVtkUnstructuredGrid(RESQML2_N
 }
 
 //----------------------------------------------------------------------------
+RESQML2_NS::AbstractIjkGridRepresentation * ResqmlIjkGridToVtkUnstructuredGrid::getResqmlData() const
+{
+	return static_cast<RESQML2_NS::AbstractIjkGridRepresentation *>(resqmlData);
+}
+
+//----------------------------------------------------------------------------
 void ResqmlIjkGridToVtkUnstructuredGrid::checkHyperslabingCapacity(RESQML2_NS::AbstractIjkGridRepresentation *ijkGrid)
 {
 	try
 	{
-		const auto kInterfaceNodeCount = this->resqmlData->getXyzPointCountOfKInterface();
+		RESQML2_NS::AbstractIjkGridRepresentation * ijkGrid = getResqmlData();
+		const auto kInterfaceNodeCount = ijkGrid->getXyzPointCountOfKInterface();
 		std::unique_ptr<double[]> allXyzPoints(new double[kInterfaceNodeCount * 3]);
-		this->resqmlData->getXyzPointsOfKInterface(0, allXyzPoints.get());
+		ijkGrid->getXyzPointsOfKInterface(0, allXyzPoints.get());
 		this->isHyperslabed = true;
 	}
 	catch (const std::exception &)
@@ -96,34 +102,36 @@ void ResqmlIjkGridToVtkUnstructuredGrid::checkHyperslabingCapacity(RESQML2_NS::A
 // Create and set the list of hexahedra of the vtkUnstructuredGrid based on the list of points already set
 void ResqmlIjkGridToVtkUnstructuredGrid::loadVtkObject()
 {
+	RESQML2_NS::AbstractIjkGridRepresentation * ijkGrid = getResqmlData();
+
 	// Create and set the list of points of the vtkUnstructuredGrid
 	vtkSmartPointer<vtkUnstructuredGrid> vtk_unstructuredGrid = vtkSmartPointer<vtkUnstructuredGrid>::New();
 	vtk_unstructuredGrid->SetPoints(this->getVtkPoints());
 
 	// Define hexahedron node ordering according to Paraview convention : https://lorensen.github.io/VTKExamples/site/VTKBook/05Chapter5/#Figure%205-3
 	std::array<unsigned int, 8> correspondingResqmlCornerId = {0, 1, 2, 3, 4, 5, 6, 7};
-	if (!this->resqmlData->isRightHanded())
+	if (!ijkGrid->isRightHanded())
 	{
 		correspondingResqmlCornerId = {4, 5, 6, 7, 0, 1, 2, 3};
 	}
 
 	// Check which cells have no geometry
-	const uint64_t cellCount = this->resqmlData->getCellCount();
+	const uint64_t cellCount = ijkGrid->getCellCount();
 	std::unique_ptr<bool[]> enabledCells(new bool[cellCount]);
-	if (this->resqmlData->hasCellGeometryIsDefinedFlags())
+	if (ijkGrid->hasCellGeometryIsDefinedFlags())
 	{
-		this->resqmlData->getCellGeometryIsDefinedFlags(enabledCells.get());
+		ijkGrid->getCellGeometryIsDefinedFlags(enabledCells.get());
 	}
 	else
 	{
 		std::fill_n(enabledCells.get(), cellCount, true);
 	}
 
-	const uint64_t translatePoint = this->resqmlData->getXyzPointCountOfKInterface() * this->initKIndex;
+	const uint64_t translatePoint = ijkGrid->getXyzPointCountOfKInterface() * this->initKIndex;
 
 	uint64_t cellIndex = 0;
 	vtk_unstructuredGrid->Allocate(this->iCellCount * this->jCellCount);
-	this->resqmlData->loadSplitInformation();
+	ijkGrid->loadSplitInformation();
 	for (uint32_t vtkKCellIndex = this->initKIndex; vtkKCellIndex < this->maxKIndex; ++vtkKCellIndex)
 	{
 		for (uint32_t vtkJCellIndex = 0; vtkJCellIndex < this->jCellCount; ++vtkJCellIndex)
@@ -137,7 +145,7 @@ void ResqmlIjkGridToVtkUnstructuredGrid::loadVtkObject()
 					for (uint8_t cornerId = 0; cornerId < 8; ++cornerId)
 					{
 						cell->GetPointIds()->SetId(cornerId,
-												   resqmlData->getXyzPointIndexFromCellCorner(vtkICellIndex, vtkJCellIndex, vtkKCellIndex, correspondingResqmlCornerId[cornerId]) - translatePoint);
+							ijkGrid->getXyzPointIndexFromCellCorner(vtkICellIndex, vtkJCellIndex, vtkKCellIndex, correspondingResqmlCornerId[cornerId]) - translatePoint);
 					}
 				}
 				else
@@ -148,7 +156,7 @@ void ResqmlIjkGridToVtkUnstructuredGrid::loadVtkObject()
 			}
 		}
 	}
-	this->resqmlData->unloadSplitInformation();
+	ijkGrid->unloadSplitInformation();
 
 	this->vtkData->SetPartition(0, vtk_unstructuredGrid);
 	this->vtkData->Modified();
@@ -167,17 +175,18 @@ vtkSmartPointer<vtkPoints> ResqmlIjkGridToVtkUnstructuredGrid::getVtkPoints()
 //----------------------------------------------------------------------------
 void ResqmlIjkGridToVtkUnstructuredGrid::createPoints()
 {
+	RESQML2_NS::AbstractIjkGridRepresentation * ijkGrid = getResqmlData();
 
-	if (this->isHyperslabed && !this->resqmlData->isNodeGeometryCompressed())
+	if (this->isHyperslabed && !ijkGrid->isNodeGeometryCompressed())
 	{
 		// Take into account K gaps
-		const uint32_t kGapCount = this->resqmlData->getKGapsCount();
+		const uint32_t kGapCount = ijkGrid->getKGapsCount();
 		uint32_t initKInterfaceIndex = this->initKIndex;
 		uint32_t maxKInterfaceIndex = this->maxKIndex;
 		if (kGapCount > 0)
 		{
 			std::unique_ptr<bool[]> gapAfterLayer(new bool[this->kCellCount - 1]); // gap after each layer except for the last k cell
-			this->resqmlData->getKGaps(gapAfterLayer.get());
+			ijkGrid->getKGaps(gapAfterLayer.get());
 			uint32_t kLayer = 0;
 			for (; kLayer < this->initKIndex; ++kLayer)
 			{
@@ -196,12 +205,12 @@ void ResqmlIjkGridToVtkUnstructuredGrid::createPoints()
 			}
 		}
 
-		const uint64_t kInterfaceNodeCount = this->resqmlData->getXyzPointCountOfKInterface();
+		const uint64_t kInterfaceNodeCount = ijkGrid->getXyzPointCountOfKInterface();
 		std::unique_ptr<double[]> allXyzPoints(new double[kInterfaceNodeCount * 3]);
 		for (uint32_t kInterface = initKInterfaceIndex; kInterface <= maxKInterfaceIndex; ++kInterface)
 		{
-			this->resqmlData->getXyzPointsOfKInterface(kInterface, allXyzPoints.get());
-			auto const *crs = this->resqmlData->getLocalCrs(0);
+			ijkGrid->getXyzPointsOfKInterface(kInterface, allXyzPoints.get());
+			auto const *crs = ijkGrid->getLocalCrs(0);
 			const double xOffset = crs->getOriginOrdinal1();
 			const double yOffset = crs->getOriginOrdinal2();
 			auto const *depthCrs = dynamic_cast<RESQML2_NS::LocalDepth3dCrs const *>(crs);
@@ -219,10 +228,10 @@ void ResqmlIjkGridToVtkUnstructuredGrid::createPoints()
 		this->maxKIndex = this->kCellCount;
 
 		std::unique_ptr<double[]> allXyzPoints(new double[this->pointCount * 3]);
-		this->resqmlData->getXyzPointsOfAllPatchesInGlobalCrs(allXyzPoints.get());
+		ijkGrid->getXyzPointsOfAllPatchesInGlobalCrs(allXyzPoints.get());
 		const size_t coordCount = this->pointCount * 3;
 
-		const double zIndice = this->resqmlData->getLocalCrs(0)->isDepthOriented() ? -1 : 1;
+		const double zIndice = ijkGrid->getLocalCrs(0)->isDepthOriented() ? -1 : 1;
 		for (uint64_t pointIndex = 0; pointIndex < coordCount; pointIndex += 3)
 		{
 			this->points->InsertNextPoint(allXyzPoints[pointIndex], allXyzPoints[pointIndex + 1], -allXyzPoints[pointIndex + 2] * zIndice);

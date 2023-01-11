@@ -39,12 +39,12 @@ public:
 	/**
 	 * Constructor
 	 */
-	ResqmlUnstructuredGridToVtkUnstructuredGrid(RESQML2_NS::UnstructuredGridRepresentation *unstructuredGrid, int proc_number = 0, int max_proc = 1);
+	explicit ResqmlUnstructuredGridToVtkUnstructuredGrid(RESQML2_NS::UnstructuredGridRepresentation *unstructuredGrid, int proc_number = 0, int max_proc = 1);
 
 	/**
 	 * load vtkDataSet with resqml data
 	 */
-	void loadVtkObject();
+	void loadVtkObject() override;
 
 	/**
 	 * Create the VTK points from the RESQML points of the RESQML IJK grid representation.
@@ -53,7 +53,7 @@ public:
 
 
 protected:
-	RESQML2_NS::UnstructuredGridRepresentation *resqmlData;
+	RESQML2_NS::UnstructuredGridRepresentation * getResqmlData() const;
 	vtkSmartPointer<vtkPoints> points;
 	std::array<vtkIdType, 12> nodes;
 

@@ -40,8 +40,7 @@ ResqmlWellboreMarkerToVtkPolyData::ResqmlWellboreMarkerToVtkPolyData(RESQML2_NS:
 	  orientation(orientation),
 	  size(size),
 	  uuid(uuid),
-	  title(""),
-	  resqmlData(marker_frame)
+	  title("")
 {
 	this->vtkData = vtkSmartPointer<vtkPartitionedDataSet>::New();
 	this->loadVtkObject();
@@ -49,17 +48,25 @@ ResqmlWellboreMarkerToVtkPolyData::ResqmlWellboreMarkerToVtkPolyData(RESQML2_NS:
 }
 
 //----------------------------------------------------------------------------
+RESQML2_NS::WellboreMarkerFrameRepresentation const* ResqmlWellboreMarkerToVtkPolyData::getResqmlData() const
+{
+	return static_cast<RESQML2_NS::WellboreMarkerFrameRepresentation const*>(resqmlData);
+}
+
+//----------------------------------------------------------------------------
 void ResqmlWellboreMarkerToVtkPolyData::loadVtkObject()
 {
-	std::vector<RESQML2_NS::WellboreMarker *> markerSet = this->resqmlData->getWellboreMarkerSet();
+	RESQML2_NS::WellboreMarkerFrameRepresentation const* marker_frame = getResqmlData();
+
+	std::vector<RESQML2_NS::WellboreMarker *> markerSet = marker_frame->getWellboreMarkerSet();
 	// search Marker
 	for (unsigned int mIndex = 0; mIndex < markerSet.size(); ++mIndex)
 	{
 		if (markerSet[mIndex]->getUuid() == this->uuid)
 		{
 			this->title = markerSet[mIndex]->getTitle();
-			std::unique_ptr<double[]> doublePositions(new double[this->resqmlData->getMdValuesCount() * 3]);
-			this->resqmlData->getXyzPointsOfPatch(0, doublePositions.get());
+			std::unique_ptr<double[]> doublePositions(new double[marker_frame->getMdValuesCount() * 3]);
+			marker_frame->getXyzPointsOfPatch(0, doublePositions.get());
 
 			if (orientation)
 			{
@@ -137,10 +144,10 @@ namespace
 //----------------------------------------------------------------------------
 void ResqmlWellboreMarkerToVtkPolyData::createDisk(unsigned int markerIndex)
 {
-	vtkSmartPointer<vtkPolyData> vtkPolydata = vtkSmartPointer<vtkPolyData>::New();
+	RESQML2_NS::WellboreMarkerFrameRepresentation const* marker_frame = getResqmlData();
 
-	std::unique_ptr<double[]> doublePositions(new double[this->resqmlData->getMdValuesCount() * 3]);
-	this->resqmlData->getXyzPointsOfPatch(0, doublePositions.get());
+	std::unique_ptr<double[]> doublePositions(new double[marker_frame->getMdValuesCount() * 3]);
+	marker_frame->getXyzPointsOfPatch(0, doublePositions.get());
 
 	// initialize a disk
 	vtkSmartPointer<vtkDiskSource> diskSource = vtkSmartPointer<vtkDiskSource>::New();
@@ -148,10 +155,10 @@ void ResqmlWellboreMarkerToVtkPolyData::createDisk(unsigned int markerIndex)
 	diskSource->SetOuterRadius(this->size);
 	diskSource->Update();
 
-	vtkPolydata = diskSource->GetOutput();
+	vtkSmartPointer<vtkPolyData> vtkPolydata = diskSource->GetOutput();
 
 	// get markerSet
-	std::vector<RESQML2_NS::WellboreMarker *> markerSet = this->resqmlData->getWellboreMarkerSet();
+	std::vector<RESQML2_NS::WellboreMarker *> markerSet = marker_frame->getWellboreMarkerSet();
 
 	// disk orientation with dipAngle & dip Direction
 	vtkSmartPointer<vtkTransform> rotation = vtkSmartPointer<vtkTransform>::New();
@@ -168,7 +175,7 @@ void ResqmlWellboreMarkerToVtkPolyData::createDisk(unsigned int markerIndex)
 	vtkPolydata = transformFilter->GetOutput();
 
 	// disk translation with marker position
-	const double zIndice = this->resqmlData->getLocalCrs(0)->isDepthOriented() ? -1 : 1;
+	const double zIndice = marker_frame->getLocalCrs(0)->isDepthOriented() ? -1 : 1;
 	vtkSmartPointer<vtkTransform> translation = vtkSmartPointer<vtkTransform>::New();
 	translation->Translate(doublePositions[3 * markerIndex], doublePositions[3 * markerIndex + 1], zIndice * doublePositions[3 * markerIndex + 2]);
 
@@ -183,11 +190,13 @@ void ResqmlWellboreMarkerToVtkPolyData::createDisk(unsigned int markerIndex)
 //----------------------------------------------------------------------------
 void ResqmlWellboreMarkerToVtkPolyData::createSphere(unsigned int markerIndex)
 {
-	std::unique_ptr<double[]> doublePositions(new double[this->resqmlData->getMdValuesCount() * 3]);
-	this->resqmlData->getXyzPointsOfPatch(0, doublePositions.get());
+	RESQML2_NS::WellboreMarkerFrameRepresentation const* marker_frame = getResqmlData();
+
+	std::unique_ptr<double[]> doublePositions(new double[marker_frame->getMdValuesCount() * 3]);
+	marker_frame->getXyzPointsOfPatch(0, doublePositions.get());
 
 	// get markerSet
-	const double zIndice = this->resqmlData->getLocalCrs(0)->isDepthOriented() ? -1 : 1;
+	const double zIndice = marker_frame->getLocalCrs(0)->isDepthOriented() ? -1 : 1;
 
 	// create  sphere
 	vtkSmartPointer<vtkSphereSource> sphereSource = vtkSmartPointer<vtkSphereSource>::New();

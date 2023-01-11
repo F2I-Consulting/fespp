@@ -35,18 +35,18 @@ public:
 	/**
 	 * Constructor
 	 */
-	ResqmlWellboreFrameToVtkPartitionedDataSet(RESQML2_NS::WellboreFrameRepresentation *frame, int proc_number = 0, int max_proc = 1);
+	explicit ResqmlWellboreFrameToVtkPartitionedDataSet(RESQML2_NS::WellboreFrameRepresentation *frame, int proc_number = 0, int max_proc = 1);
 
 	/**
 	 * load vtkDataSet with resqml data
 	 */
-	void loadVtkObject();
+	void loadVtkObject() override;
 
 	void addChannel(const std::string &channel_uuid, RESQML2_NS::AbstractValuesProperty *property);
 	void removeChannel(const std::string &channel_uuid);
 
 protected:
-	RESQML2_NS::WellboreFrameRepresentation *resqmlData;
+	RESQML2_NS::WellboreFrameRepresentation * getResqmlData() const;
 
 private:
 	std::vector<ResqmlWellboreChannelToVtkPolyData *> list_channel;

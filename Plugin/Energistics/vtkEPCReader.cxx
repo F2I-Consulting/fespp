@@ -152,7 +152,7 @@ bool vtkEPCReader::AddSelector(const char *path)
     }
     else
     {
-      std::string selection_parent = this->repository.selectNodeId(node_id);
+      this->repository.selectNodeId(node_id);
       /*
              if (GetAssembly()->HasAttribute(node_id, "traj"))
              {
@@ -234,7 +234,7 @@ int vtkEPCReader::RequestData(vtkInformation *,
       int node_id = GetAssembly()->GetFirstNodeByPath(path.c_str());
       if (node_id > -1)
       {
-        std::string selection_parent = this->repository.selectNodeId(node_id);
+        this->repository.selectNodeId(node_id);
         this->selectorNotLoaded.erase(path);
       }
     }

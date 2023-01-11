@@ -35,11 +35,10 @@ under the License.
 #include "ResqmlMapping/ResqmlPropertyToVtkDataArray.h"
 
 //----------------------------------------------------------------------------
-ResqmlTriangulatedToVtkPolyData::ResqmlTriangulatedToVtkPolyData(RESQML2_NS::TriangulatedSetRepresentation *triangulated, uint32_t patch_index, int proc_number, int max_proc)
+ResqmlTriangulatedToVtkPolyData::ResqmlTriangulatedToVtkPolyData(RESQML2_NS::TriangulatedSetRepresentation * triangulated, uint32_t patch_index, int proc_number, int max_proc)
 	: ResqmlAbstractRepresentationToVtkPartitionedDataSet(triangulated,
 											   proc_number,
 											   max_proc),
-	  resqmlData(triangulated),
 	  patch_index(patch_index)
 {
 	this->pointCount = triangulated->getXyzPointCountOfPatch(patch_index);
@@ -49,13 +48,20 @@ ResqmlTriangulatedToVtkPolyData::ResqmlTriangulatedToVtkPolyData(RESQML2_NS::Tri
 	this->loadVtkObject();
 }
 
+//----------------------------------------------------------------------------
+RESQML2_NS::TriangulatedSetRepresentation const* ResqmlTriangulatedToVtkPolyData::getResqmlData() const
+{
+	return static_cast<RESQML2_NS::TriangulatedSetRepresentation const*>(resqmlData);
+}
+
 uint32_t ResqmlTriangulatedToVtkPolyData::getPreviousPatchesNodeCount() const
 {
 	uint32_t result = 0;
+	RESQML2_NS::TriangulatedSetRepresentation const* triangulated = getResqmlData();
 
 	for (uint32_t previousPatchIndex = 0; previousPatchIndex < patch_index; ++previousPatchIndex)
 	{
-		result += resqmlData->getXyzPointCountOfPatch(previousPatchIndex);
+		result += triangulated->getXyzPointCountOfPatch(previousPatchIndex);
 	}
 
 	return result;
@@ -66,13 +72,15 @@ void ResqmlTriangulatedToVtkPolyData::loadVtkObject()
 {
 	vtkSmartPointer<vtkPolyData> vtk_polydata = vtkSmartPointer<vtkPolyData>::New();
 
+	RESQML2_NS::TriangulatedSetRepresentation const* triangulated = getResqmlData();
+
 	double *allXyzPoints = new double[this->pointCount * 3]; // Will be deleted by VTK
-	this->resqmlData->getXyzPointsOfPatchInGlobalCrs(this->patch_index, allXyzPoints);
+	triangulated->getXyzPointsOfPatchInGlobalCrs(this->patch_index, allXyzPoints);
 
 	vtkSmartPointer<vtkPoints> vtkPts = vtkSmartPointer<vtkPoints>::New();
 
 	const size_t coordCount = this->pointCount * 3;
-	if (this->resqmlData->getLocalCrs(0)->isDepthOriented())
+	if (triangulated->getLocalCrs(0)->isDepthOriented())
 	{
 		for (size_t zCoordIndex = 2; zCoordIndex < coordCount; zCoordIndex += 3)
 		{
@@ -90,9 +98,9 @@ void ResqmlTriangulatedToVtkPolyData::loadVtkObject()
 	// CELLS
 	const size_t previousPatchesNodeCount = getPreviousPatchesNodeCount();
 	vtkSmartPointer<vtkCellArray> triangulatedRepresentationTriangles = vtkSmartPointer<vtkCellArray>::New();
-	std::unique_ptr<unsigned int[]> triangleIndices(new unsigned int[this->resqmlData->getTriangleCountOfPatch(this->patch_index) * 3]);
-	this->resqmlData->getTriangleNodeIndicesOfPatch(this->patch_index, triangleIndices.get());
-	for (unsigned int p = 0; p < this->resqmlData->getTriangleCountOfPatch(this->patch_index); ++p)
+	std::unique_ptr<unsigned int[]> triangleIndices(new unsigned int[triangulated->getTriangleCountOfPatch(this->patch_index) * 3]);
+	triangulated->getTriangleNodeIndicesOfPatch(this->patch_index, triangleIndices.get());
+	for (unsigned int p = 0; p < triangulated->getTriangleCountOfPatch(this->patch_index); ++p)
 	{
 		vtkSmartPointer<vtkTriangle> triangulatedRepresentationTriangle = vtkSmartPointer<vtkTriangle>::New();
 		triangulatedRepresentationTriangle->GetPointIds()->SetId(0, triangleIndices[p * 3] - previousPatchesNodeCount);

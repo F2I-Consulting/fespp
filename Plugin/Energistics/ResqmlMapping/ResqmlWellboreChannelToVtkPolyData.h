@@ -38,13 +38,13 @@ public:
 	/**
 	 * load vtkDataSet with resqml data
 	 */
-	void loadVtkObject();
+	void loadVtkObject() override;
 
 	std::string getUuid() const { return this->uuid; }
 	std::string getTitle() const { return this->title; }
 
 protected:
-	RESQML2_NS::WellboreFrameRepresentation *resqmlData;
+	RESQML2_NS::WellboreFrameRepresentation const* getResqmlData() const;
 
 private:
 	RESQML2_NS::AbstractValuesProperty *abstractProperty;

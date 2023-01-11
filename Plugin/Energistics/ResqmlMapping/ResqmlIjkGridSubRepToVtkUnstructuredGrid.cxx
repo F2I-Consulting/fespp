@@ -42,7 +42,6 @@ ResqmlIjkGridSubRepToVtkUnstructuredGrid::ResqmlIjkGridSubRepToVtkUnstructuredGr
 	: ResqmlAbstractRepresentationToVtkPartitionedDataSet(subRep,
 											   proc_number,
 											   max_proc),
-	  resqmlData(subRep),
 	  mapperIjkGrid(support)
 {
 	this->iCellCount = subRep->getElementCountOfPatch(0);
@@ -52,9 +51,16 @@ ResqmlIjkGridSubRepToVtkUnstructuredGrid::ResqmlIjkGridSubRepToVtkUnstructuredGr
 }
 
 //----------------------------------------------------------------------------
+RESQML2_NS::SubRepresentation const* ResqmlIjkGridSubRepToVtkUnstructuredGrid::getResqmlData() const
+{
+	return static_cast<RESQML2_NS::SubRepresentation const*>(resqmlData);
+}
+
+//----------------------------------------------------------------------------
 void ResqmlIjkGridSubRepToVtkUnstructuredGrid::loadVtkObject()
 {
-	auto *supportingGrid = dynamic_cast<RESQML2_NS::AbstractIjkGridRepresentation *>(this->resqmlData->getSupportingRepresentation(0));
+	RESQML2_NS::SubRepresentation const* subRep = getResqmlData();
+	auto *supportingGrid = dynamic_cast<RESQML2_NS::AbstractIjkGridRepresentation *>(subRep->getSupportingRepresentation(0));
 	if (supportingGrid != nullptr)
 	{
 		// Create and set the list of points of the vtkUnstructuredGrid
@@ -74,9 +80,9 @@ void ResqmlIjkGridSubRepToVtkUnstructuredGrid::loadVtkObject()
 		// Create and set the list of hexahedra of the vtkUnstructuredGrid based on the list of points already set
 		uint64_t cellIndex = 0;
 
-		uint64_t elementCountOfPatch = this->resqmlData->getElementCountOfPatch(0);
+		uint64_t elementCountOfPatch = subRep->getElementCountOfPatch(0);
 		std::unique_ptr<uint64_t[]> elementIndices(new uint64_t[elementCountOfPatch]);
-		resqmlData->getElementIndicesOfPatch(0, 0, elementIndices.get());
+		subRep->getElementIndicesOfPatch(0, 0, elementIndices.get());
 
 		iCellCount = supportingGrid->getICellCount();
 		jCellCount = supportingGrid->getJCellCount();

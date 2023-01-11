@@ -43,14 +43,14 @@ public:
 	/**
 	* Constructor
 	*/
-	ResqmlGrid2dToVtkStructuredGrid(RESQML2_NS::Grid2dRepresentation * grid2D, int proc_number = 0, int max_proc = 1);
+	explicit ResqmlGrid2dToVtkStructuredGrid(RESQML2_NS::Grid2dRepresentation * grid2D, int proc_number = 0, int max_proc = 1);
 
 	/**
 	* load vtkDataSet with resqml data
 	*/
-	void loadVtkObject();
+	void loadVtkObject() override;
 
 protected:
-	RESQML2_NS::Grid2dRepresentation *resqmlData;
+	RESQML2_NS::Grid2dRepresentation const* getResqmlData() const;
 };
 #endif

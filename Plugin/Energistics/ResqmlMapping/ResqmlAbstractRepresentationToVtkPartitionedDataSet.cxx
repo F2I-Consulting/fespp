@@ -46,7 +46,7 @@ ResqmlAbstractRepresentationToVtkPartitionedDataSet::ResqmlAbstractRepresentatio
 
 void ResqmlAbstractRepresentationToVtkPartitionedDataSet::addDataArray(const std::string &uuid, int patch_index)
 {
-	std::vector<RESQML2_NS::AbstractValuesProperty *> valuesPropertySet = this->resqmlData->getValuesPropertySet();
+	std::vector<RESQML2_NS::AbstractValuesProperty *> valuesPropertySet = this->getResqmlData()->getValuesPropertySet();
 	std::vector<RESQML2_NS::AbstractValuesProperty *>::iterator it = std::find_if(valuesPropertySet.begin(), valuesPropertySet.end(),
 																				  [&uuid](RESQML2_NS::AbstractValuesProperty const *property)
 																				  { return property->getUuid() == uuid; });
@@ -83,7 +83,7 @@ void ResqmlAbstractRepresentationToVtkPartitionedDataSet::addDataArray(const std
 	}
 	else
 	{
-		throw std::invalid_argument("The property " + uuid + "cannot be added since it is not contained in the representation " + this->resqmlData->getUuid());
+		throw std::invalid_argument("The property " + uuid + "cannot be added since it is not contained in the representation " + this->getResqmlData()->getUuid());
 	}
 }
 
@@ -106,7 +106,7 @@ void ResqmlAbstractRepresentationToVtkPartitionedDataSet::deleteDataArray(const 
 	}
 	else
 	{
-		throw std::invalid_argument("The property " + uuid + "cannot be deleted from representation " + resqmlData->getUuid() + " since it has never been added");
+		throw std::invalid_argument("The property " + uuid + "cannot be deleted from representation " + this->getResqmlData()->getUuid() + " since it has never been added");
 	}
 }
 
@@ -132,5 +132,5 @@ unsigned int ResqmlAbstractRepresentationToVtkPartitionedDataSet::subRepLinkedCo
 
 std::string ResqmlAbstractRepresentationToVtkPartitionedDataSet::getUuid() const
 {
-	return this->resqmlData->getUuid();
+	return this->getResqmlData()->getUuid();
 }

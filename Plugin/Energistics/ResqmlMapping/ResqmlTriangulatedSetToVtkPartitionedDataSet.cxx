@@ -38,8 +38,7 @@ under the License.
 ResqmlTriangulatedSetToVtkPartitionedDataSet::ResqmlTriangulatedSetToVtkPartitionedDataSet(RESQML2_NS::TriangulatedSetRepresentation *triangulated, int proc_number, int max_proc)
 	: ResqmlAbstractRepresentationToVtkPartitionedDataSet(triangulated,
 											   proc_number,
-											   max_proc),
-	  resqmlData(triangulated)
+											   max_proc)
 {
 	this->vtkData = vtkSmartPointer<vtkPartitionedDataSet>::New();
 	this->pointCount = resqmlData->getXyzPointCountOfAllPatches();
@@ -47,15 +46,22 @@ ResqmlTriangulatedSetToVtkPartitionedDataSet::ResqmlTriangulatedSetToVtkPartitio
 }
 
 //----------------------------------------------------------------------------
+RESQML2_NS::TriangulatedSetRepresentation * ResqmlTriangulatedSetToVtkPartitionedDataSet::getResqmlData() const
+{
+	return static_cast<RESQML2_NS::TriangulatedSetRepresentation *>(resqmlData);
+}
+
+//----------------------------------------------------------------------------
 void ResqmlTriangulatedSetToVtkPartitionedDataSet::loadVtkObject()
 {
 	vtkSmartPointer<vtkPartitionedDataSet> partition = vtkSmartPointer<vtkPartitionedDataSet>::New();
 
-	const unsigned int patchCount = this->resqmlData->getPatchCount();
+	RESQML2_NS::TriangulatedSetRepresentation * triangulatedSet = getResqmlData();
+	const unsigned int patchCount = triangulatedSet->getPatchCount();
 
 	for (unsigned int patchIndex = 0; patchIndex < patchCount; ++patchIndex)
 	{
-		auto rep = new ResqmlTriangulatedToVtkPolyData(this->resqmlData, patchIndex, this->procNumber, this->maxProc);
+		auto rep = new ResqmlTriangulatedToVtkPolyData(triangulatedSet, patchIndex, this->procNumber, this->maxProc);
 		partition->SetPartition(patchIndex, rep->getOutput()->GetPartitionAsDataObject(0));
 		partition->GetMetaData(patchIndex)->Set(vtkCompositeDataSet::NAME(), ("Patch " + std::to_string(patchIndex)).c_str());
 		patchIndex_to_ResqmlTriangulated[patchIndex] = rep;

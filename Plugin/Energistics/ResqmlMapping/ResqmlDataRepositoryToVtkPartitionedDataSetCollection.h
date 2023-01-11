@@ -64,7 +64,7 @@ public:
 	std::string addDataspace(const char *dataspace);
 
 	// for ETP connection
-	std::vector<std::string> connect(const std::string etp_url, const std::string data_partition, const std::string auth_connection);
+	std::vector<std::string> connect(const std::string& etp_url, const std::string& data_partition, const std::string& auth_connection);
 	void disconnect();
 
 	// Wellbore Options

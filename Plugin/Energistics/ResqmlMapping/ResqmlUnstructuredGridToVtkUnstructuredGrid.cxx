@@ -43,7 +43,6 @@ ResqmlUnstructuredGridToVtkUnstructuredGrid::ResqmlUnstructuredGridToVtkUnstruct
 	: ResqmlAbstractRepresentationToVtkPartitionedDataSet(unstructuredGrid,
 											   proc_number,
 											   max_proc),
-	  resqmlData(unstructuredGrid),
 	points(vtkSmartPointer<vtkPoints>::New())
 {
 	this->pointCount = unstructuredGrid->getXyzPointCountOfAllPatches();
@@ -55,27 +54,35 @@ ResqmlUnstructuredGridToVtkUnstructuredGrid::ResqmlUnstructuredGridToVtkUnstruct
 }
 
 //----------------------------------------------------------------------------
+RESQML2_NS::UnstructuredGridRepresentation * ResqmlUnstructuredGridToVtkUnstructuredGrid::getResqmlData() const
+{
+	return static_cast<RESQML2_NS::UnstructuredGridRepresentation *>(resqmlData);
+}
+
+//----------------------------------------------------------------------------
 void ResqmlUnstructuredGridToVtkUnstructuredGrid::loadVtkObject()
 {
 	vtkSmartPointer<vtkUnstructuredGrid> vtk_unstructuredGrid = vtkSmartPointer<vtkUnstructuredGrid>::New();
-	vtk_unstructuredGrid->AllocateExact(resqmlData->getCellCount(), resqmlData->getXyzPointCountOfAllPatches());
+	RESQML2_NS::UnstructuredGridRepresentation * unstructuredGrid = getResqmlData();
+
+	vtk_unstructuredGrid->AllocateExact(unstructuredGrid->getCellCount(), unstructuredGrid->getXyzPointCountOfAllPatches());
 
 	// POINTS
 	vtk_unstructuredGrid->SetPoints(this->getVtkPoints());
 
-	this->resqmlData->loadGeometry();
+	unstructuredGrid->loadGeometry();
 
-	const uint64_t cellCount = this->resqmlData->getCellCount();
-	uint64_t const* cumulativeFaceCountPerCell = this->resqmlData->isFaceCountOfCellsConstant()
+	const uint64_t cellCount = unstructuredGrid->getCellCount();
+	uint64_t const* cumulativeFaceCountPerCell = unstructuredGrid->isFaceCountOfCellsConstant()
 		? nullptr
-		: this->resqmlData->getCumulativeFaceCountPerCell(); // This pointer is owned and managed by FESAPI
+		: unstructuredGrid->getCumulativeFaceCountPerCell(); // This pointer is owned and managed by FESAPI
 	const uint64_t faceCount = cumulativeFaceCountPerCell == nullptr
-		? cellCount * this->resqmlData->getConstantFaceCountOfCells()
+		? cellCount * unstructuredGrid->getConstantFaceCountOfCells()
 		: cumulativeFaceCountPerCell[cellCount - 1];
 	std::unique_ptr<unsigned char[]> cellFaceNormalOutwardlyDirected(new unsigned char[faceCount]);
 
-	this->resqmlData->getCellFaceIsRightHanded(cellFaceNormalOutwardlyDirected.get());
-	auto* crs = resqmlData->getLocalCrs(0);
+	unstructuredGrid->getCellFaceIsRightHanded(cellFaceNormalOutwardlyDirected.get());
+	auto* crs = unstructuredGrid->getLocalCrs(0);
 	if (!crs->isPartial() && crs->isDepthOriented())
 	{
 		for (size_t i = 0; i < faceCount; ++i) {
@@ -89,7 +96,7 @@ void ResqmlUnstructuredGridToVtkUnstructuredGrid::loadVtkObject()
 	{
 		bool isOptimizedCell = false;
 
-		const uint64_t localFaceCount = this->resqmlData->getFaceCountOfCell(cellIndex);
+		const uint64_t localFaceCount = unstructuredGrid->getFaceCountOfCell(cellIndex);
 
 		// Following https://kitware.github.io/vtk-examples/site/VTKBook/05Chapter5/#Figure%205-2
 		if (localFaceCount == 4)
@@ -123,9 +130,9 @@ void ResqmlUnstructuredGridToVtkUnstructuredGrid::loadVtkObject()
 			idList->InsertNextId(localFaceCount);
 			for (uint64_t localFaceIndex = 0; localFaceIndex < localFaceCount; ++localFaceIndex)
 			{
-				const unsigned int localNodeCount = this->resqmlData->getNodeCountOfFaceOfCell(cellIndex, localFaceIndex);
+				const unsigned int localNodeCount = unstructuredGrid->getNodeCountOfFaceOfCell(cellIndex, localFaceIndex);
 				idList->InsertNextId(localNodeCount);
-				uint64_t const *nodeIndices = this->resqmlData->getNodeIndicesOfFaceOfCell(cellIndex, localFaceIndex);
+				uint64_t const *nodeIndices = unstructuredGrid->getNodeIndicesOfFaceOfCell(cellIndex, localFaceIndex);
 				for (unsigned int i = 0; i < localNodeCount; ++i)
 				{
 					idList->InsertNextId(nodeIndices[i]);
@@ -136,7 +143,7 @@ void ResqmlUnstructuredGridToVtkUnstructuredGrid::loadVtkObject()
 		}
 	}
 
-	this->resqmlData->unloadGeometry();
+	unstructuredGrid->unloadGeometry();
 
 	this->vtkData->SetPartition(0, vtk_unstructuredGrid);
 	this->vtkData->Modified();
@@ -154,26 +161,28 @@ vtkSmartPointer<vtkPoints> ResqmlUnstructuredGridToVtkUnstructuredGrid::getVtkPo
 //----------------------------------------------------------------------------
 void ResqmlUnstructuredGridToVtkUnstructuredGrid::createPoints()
 {
+	RESQML2_NS::UnstructuredGridRepresentation * unstructuredGrid = getResqmlData();
+
 	// POINTS
 	double *allXyzPoints = new double[this->pointCount * 3]; // Will be deleted by VTK;
 	bool partialCRS = false;
-	const uint64_t patchCount = resqmlData->getPatchCount();
+	const uint64_t patchCount = unstructuredGrid->getPatchCount();
 	for (uint64_t patchIndex = 0; patchIndex < patchCount; ++patchIndex) {
-		if (resqmlData->getLocalCrs(patchIndex)->isPartial()) {
+		if (unstructuredGrid->getLocalCrs(patchIndex)->isPartial()) {
 			partialCRS = true;
 			break;
 		}
 	}
 	if (partialCRS) {
-		vtkOutputWindowDisplayWarningText(("At least one of the local CRS of  : " + resqmlData->getUuid() + " is partial. Get coordinates in local CRS instead.\n").c_str());
-		resqmlData->getXyzPointsOfAllPatches(allXyzPoints);
+		vtkOutputWindowDisplayWarningText(("At least one of the local CRS of  : " + unstructuredGrid->getUuid() + " is partial. Get coordinates in local CRS instead.\n").c_str());
+		unstructuredGrid->getXyzPointsOfAllPatches(allXyzPoints);
 	}
 	else {
-		resqmlData->getXyzPointsOfAllPatchesInGlobalCrs(allXyzPoints);
+		unstructuredGrid->getXyzPointsOfAllPatchesInGlobalCrs(allXyzPoints);
 	}
 
 	const uint64_t coordCount = pointCount * 3;
-	if (!partialCRS && resqmlData->getLocalCrs(0)->isDepthOriented())
+	if (!partialCRS && unstructuredGrid->getLocalCrs(0)->isDepthOriented())
 	{
 		for (uint64_t zCoordIndex = 2; zCoordIndex < coordCount; zCoordIndex += 3)
 		{
@@ -192,11 +201,11 @@ void ResqmlUnstructuredGridToVtkUnstructuredGrid::cellVtkTetra(vtkSmartPointer<v
 															   ULONG64 const *cumulativeFaceCountPerCell, unsigned char const *cellFaceNormalOutwardlyDirected,
 															   ULONG64 cellIndex)
 {
-	const RESQML2_NS::UnstructuredGridRepresentation* unstructuredGridRep = this->resqmlData;
+	RESQML2_NS::UnstructuredGridRepresentation * unstructuredGrid = getResqmlData();
 
 	// Face 0
-	ULONG64 const *nodeIndices = unstructuredGridRep->getNodeIndicesOfFaceOfCell(cellIndex, 0);
-	size_t cellFaceIndex = unstructuredGridRep->isFaceCountOfCellsConstant() || cellIndex == 0
+	ULONG64 const *nodeIndices = unstructuredGrid->getNodeIndicesOfFaceOfCell(cellIndex, 0);
+	size_t cellFaceIndex = unstructuredGrid->isFaceCountOfCellsConstant() || cellIndex == 0
 							   ? cellIndex * 4
 							   : cumulativeFaceCountPerCell[cellIndex - 1];
 	if (cellFaceNormalOutwardlyDirected[cellFaceIndex] == 0)
@@ -213,7 +222,7 @@ void ResqmlUnstructuredGridToVtkUnstructuredGrid::cellVtkTetra(vtkSmartPointer<v
 	}
 
 	// Face 1
-	nodeIndices = unstructuredGridRep->getNodeIndicesOfFaceOfCell(cellIndex, 1);
+	nodeIndices = unstructuredGrid->getNodeIndicesOfFaceOfCell(cellIndex, 1);
 
 	for (size_t index = 0; index < 3; ++index)
 	{
@@ -232,17 +241,17 @@ void ResqmlUnstructuredGridToVtkUnstructuredGrid::cellVtkWedgeOrPyramid(vtkSmart
 	ULONG64 const* cumulativeFaceCountPerCell, unsigned char const* cellFaceNormalOutwardlyDirected,
 	ULONG64 cellIndex)
 {
-	const RESQML2_NS::UnstructuredGridRepresentation* unstructuredGridRep = this->resqmlData;
+	RESQML2_NS::UnstructuredGridRepresentation * unstructuredGrid = getResqmlData();
 
 	// The global index of the first face of the polyhedron in the cellFaceNormalOutwardlyDirected array
-	const size_t globalFirstFaceIndex = unstructuredGridRep->isFaceCountOfCellsConstant() || cellIndex == 0
+	const size_t globalFirstFaceIndex = unstructuredGrid->isFaceCountOfCellsConstant() || cellIndex == 0
 		? cellIndex * 5
 		: cumulativeFaceCountPerCell[cellIndex - 1];
 
 	std::vector<unsigned int> localFaceIndexWith4Nodes;
 	for (unsigned int localFaceIndex = 0; localFaceIndex < 5; ++localFaceIndex)
 	{
-		if (unstructuredGridRep->getNodeCountOfFaceOfCell(cellIndex, localFaceIndex) == 4)
+		if (unstructuredGrid->getNodeCountOfFaceOfCell(cellIndex, localFaceIndex) == 4)
 		{
 			localFaceIndexWith4Nodes.push_back(localFaceIndex);
 		}
@@ -253,10 +262,10 @@ void ResqmlUnstructuredGridToVtkUnstructuredGrid::cellVtkWedgeOrPyramid(vtkSmart
 		unsigned int triangleIndex = 0;
 		for (; triangleIndex < 5; ++triangleIndex)
 		{
-			const unsigned int localNodeCount = unstructuredGridRep->getNodeCountOfFaceOfCell(cellIndex, triangleIndex);
+			const unsigned int localNodeCount = unstructuredGrid->getNodeCountOfFaceOfCell(cellIndex, triangleIndex);
 			if (localNodeCount == 3)
 			{
-				uint64_t const* nodeIndices = unstructuredGridRep->getNodeIndicesOfFaceOfCell(cellIndex, triangleIndex);
+				uint64_t const* nodeIndices = unstructuredGrid->getNodeIndicesOfFaceOfCell(cellIndex, triangleIndex);
 				if (cellFaceNormalOutwardlyDirected[globalFirstFaceIndex + triangleIndex] == 0)
 				{
 					for (size_t i = 0; i < 3; ++i)
@@ -279,10 +288,10 @@ void ResqmlUnstructuredGridToVtkUnstructuredGrid::cellVtkWedgeOrPyramid(vtkSmart
 		// Find the index of the vertex at the opposite triangle regarding the triangle base
 		for (unsigned int localFaceIndex = 0; localFaceIndex < 5; ++localFaceIndex)
 		{
-			const unsigned int localNodeCount = unstructuredGridRep->getNodeCountOfFaceOfCell(cellIndex, localFaceIndex);
+			const unsigned int localNodeCount = unstructuredGrid->getNodeCountOfFaceOfCell(cellIndex, localFaceIndex);
 			if (localNodeCount == 4)
 			{
-				uint64_t const* nodeIndices = unstructuredGridRep->getNodeIndicesOfFaceOfCell(cellIndex, localFaceIndex);
+				uint64_t const* nodeIndices = unstructuredGrid->getNodeIndicesOfFaceOfCell(cellIndex, localFaceIndex);
 				if (nodeIndices[0] == nodes[0]) {
 					nodes[3] = nodeIndices[1] == nodes[1] || nodeIndices[1] == nodes[2]
 						? nodeIndices[3] : nodeIndices[1];
@@ -308,10 +317,10 @@ void ResqmlUnstructuredGridToVtkUnstructuredGrid::cellVtkWedgeOrPyramid(vtkSmart
 		// Set the other triangle of the wedge
 		for (; triangleIndex < 5; ++triangleIndex)
 		{
-			const unsigned int localNodeCount = unstructuredGridRep->getNodeCountOfFaceOfCell(cellIndex, triangleIndex);
+			const unsigned int localNodeCount = unstructuredGrid->getNodeCountOfFaceOfCell(cellIndex, triangleIndex);
 			if (localNodeCount == 3)
 			{
-				uint64_t const* nodeIndices = unstructuredGridRep->getNodeIndicesOfFaceOfCell(cellIndex, triangleIndex);
+				uint64_t const* nodeIndices = unstructuredGrid->getNodeIndicesOfFaceOfCell(cellIndex, triangleIndex);
 				if (nodeIndices[0] == nodes[3])
 				{
 					if (cellFaceNormalOutwardlyDirected[globalFirstFaceIndex + triangleIndex] == 0)
@@ -359,8 +368,8 @@ void ResqmlUnstructuredGridToVtkUnstructuredGrid::cellVtkWedgeOrPyramid(vtkSmart
 	}
 	else if (localFaceIndexWith4Nodes.size() == 1)
 	{ // VTK_PYRAMID
-		ULONG64 const* nodeIndices = unstructuredGridRep->getNodeIndicesOfFaceOfCell(cellIndex, localFaceIndexWith4Nodes[0]);
-		size_t cellFaceIndex = (unstructuredGridRep->isFaceCountOfCellsConstant() || cellIndex == 0
+		ULONG64 const* nodeIndices = unstructuredGrid->getNodeIndicesOfFaceOfCell(cellIndex, localFaceIndexWith4Nodes[0]);
+		size_t cellFaceIndex = (unstructuredGrid->isFaceCountOfCellsConstant() || cellIndex == 0
 			? cellIndex * 5
 			: cumulativeFaceCountPerCell[cellIndex - 1]) +
 			localFaceIndexWith4Nodes[0];
@@ -380,7 +389,7 @@ void ResqmlUnstructuredGridToVtkUnstructuredGrid::cellVtkWedgeOrPyramid(vtkSmart
 		}
 
 		// Face with 3 points
-		nodeIndices = unstructuredGridRep->getNodeIndicesOfFaceOfCell(cellIndex, localFaceIndexWith4Nodes[0] == 0 ? 1 : 0);
+		nodeIndices = unstructuredGrid->getNodeIndicesOfFaceOfCell(cellIndex, localFaceIndexWith4Nodes[0] == 0 ? 1 : 0);
 
 		for (size_t index = 0; index < 3; ++index)
 		{
@@ -404,18 +413,18 @@ bool ResqmlUnstructuredGridToVtkUnstructuredGrid::cellVtkHexahedron(vtkSmartPoin
 																	ULONG64 const *cumulativeFaceCountPerCell, unsigned char const *cellFaceNormalOutwardlyDirected,
 																	ULONG64 cellIndex) 
 {
-	const RESQML2_NS::UnstructuredGridRepresentation* unstructuredGridRep = this->resqmlData;
+	RESQML2_NS::UnstructuredGridRepresentation * unstructuredGrid = getResqmlData();
 
-	for (size_t localFaceIndex = 0; localFaceIndex < 6; ++localFaceIndex)
+	for (unsigned int localFaceIndex = 0; localFaceIndex < 6; ++localFaceIndex)
 	{
-		if (unstructuredGridRep->getNodeCountOfFaceOfCell(cellIndex, localFaceIndex) != 4)
+		if (unstructuredGrid->getNodeCountOfFaceOfCell(cellIndex, localFaceIndex) != 4)
 		{
 			return false;
 		}
 	}
 
-	ULONG64 const *nodeIndices = unstructuredGridRep->getNodeIndicesOfFaceOfCell(cellIndex, 0);
-	const size_t cellFaceIndex = unstructuredGridRep->isFaceCountOfCellsConstant() || cellIndex == 0
+	ULONG64 const *nodeIndices = unstructuredGrid->getNodeIndicesOfFaceOfCell(cellIndex, 0);
+	const size_t cellFaceIndex = unstructuredGrid->isFaceCountOfCellsConstant() || cellIndex == 0
 									 ? cellIndex * 6
 									 : cumulativeFaceCountPerCell[cellIndex - 1];
 	if (cellFaceNormalOutwardlyDirected[cellFaceIndex] == 0)
@@ -435,9 +444,9 @@ bool ResqmlUnstructuredGridToVtkUnstructuredGrid::cellVtkHexahedron(vtkSmartPoin
 
 	// Find the opposite neighbors of the nodes already got
 	bool alreadyTreated[4] = {false, false, false, false};
-	for (size_t localFaceIndex = 1; localFaceIndex < 6; ++localFaceIndex)
+	for (unsigned int localFaceIndex = 1; localFaceIndex < 6; ++localFaceIndex)
 	{
-		nodeIndices = unstructuredGridRep->getNodeIndicesOfFaceOfCell(cellIndex, localFaceIndex);
+		nodeIndices = unstructuredGrid->getNodeIndicesOfFaceOfCell(cellIndex, localFaceIndex);
 		for (size_t index = 0; index < 4; ++index)
 		{																	// Loop on face nodes
 			vtkIdType*itr = std::find(nodes.data(), nodes.data() + 4, nodeIndices[index]); // Locate a node on face 0
@@ -470,15 +479,15 @@ bool ResqmlUnstructuredGridToVtkUnstructuredGrid::cellVtkHexahedron(vtkSmartPoin
 //----------------------------------------------------------------------------
 bool ResqmlUnstructuredGridToVtkUnstructuredGrid::cellVtkPentagonalPrism(vtkSmartPointer<vtkUnstructuredGrid> vtk_unstructuredGrid, ULONG64 cellIndex)
 {
-	const RESQML2_NS::UnstructuredGridRepresentation* unstructuredGridRep = this->resqmlData;
+	RESQML2_NS::UnstructuredGridRepresentation * unstructuredGrid = getResqmlData();
 
 	unsigned int faceTo5Nodes = 0;
-	for (size_t localFaceIndex = 0; localFaceIndex < 7; ++localFaceIndex)
+	for (unsigned int localFaceIndex = 0; localFaceIndex < 7; ++localFaceIndex)
 	{
-		const unsigned int localNodeCount = unstructuredGridRep->getNodeCountOfFaceOfCell(cellIndex, localFaceIndex);
+		const unsigned int localNodeCount = unstructuredGrid->getNodeCountOfFaceOfCell(cellIndex, localFaceIndex);
 		if (localNodeCount == 5)
 		{
-			ULONG64 const *nodeIndices = unstructuredGridRep->getNodeIndicesOfFaceOfCell(cellIndex, localFaceIndex);
+			ULONG64 const *nodeIndices = unstructuredGrid->getNodeIndicesOfFaceOfCell(cellIndex, localFaceIndex);
 			for (size_t i = 0; i < localNodeCount; ++i)
 			{
 				nodes[faceTo5Nodes * 5 + i] = nodeIndices[i];
@@ -497,15 +506,15 @@ bool ResqmlUnstructuredGridToVtkUnstructuredGrid::cellVtkPentagonalPrism(vtkSmar
 //----------------------------------------------------------------------------
 bool ResqmlUnstructuredGridToVtkUnstructuredGrid::cellVtkHexagonalPrism(vtkSmartPointer<vtkUnstructuredGrid> vtk_unstructuredGrid, ULONG64 cellIndex)
 {
-	const RESQML2_NS::UnstructuredGridRepresentation* unstructuredGridRep = this->resqmlData;
+	RESQML2_NS::UnstructuredGridRepresentation * unstructuredGrid = getResqmlData();
 
 	unsigned int faceTo6Nodes = 0;
-	for (size_t localFaceIndex = 0; localFaceIndex < 8; ++localFaceIndex)
+	for (unsigned int localFaceIndex = 0; localFaceIndex < 8; ++localFaceIndex)
 	{
-		const unsigned int localNodeCount = unstructuredGridRep->getNodeCountOfFaceOfCell(cellIndex, localFaceIndex);
+		const unsigned int localNodeCount = unstructuredGrid->getNodeCountOfFaceOfCell(cellIndex, localFaceIndex);
 		if (localNodeCount == 6)
 		{
-			ULONG64 const *nodeIndices = unstructuredGridRep->getNodeIndicesOfFaceOfCell(cellIndex, localFaceIndex);
+			ULONG64 const *nodeIndices = unstructuredGrid->getNodeIndicesOfFaceOfCell(cellIndex, localFaceIndex);
 			for (size_t i = 0; i < localNodeCount; ++i)
 			{
 				nodes[faceTo6Nodes * 6 + i] = nodeIndices[i];

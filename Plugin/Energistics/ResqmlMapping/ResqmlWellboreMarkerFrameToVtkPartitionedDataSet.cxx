@@ -34,11 +34,16 @@ under the License.
 ResqmlWellboreMarkerFrameToVtkPartitionedDataSet::ResqmlWellboreMarkerFrameToVtkPartitionedDataSet(RESQML2_NS::WellboreMarkerFrameRepresentation *marker_frame, int proc_number, int max_proc)
 	: ResqmlAbstractRepresentationToVtkPartitionedDataSet(marker_frame,
 											   proc_number,
-											   max_proc),
-	  resqmlData(marker_frame)
+											   max_proc)
 {
 	this->vtkData = vtkSmartPointer<vtkPartitionedDataSet>::New();
 	this->vtkData->Modified();
+}
+
+//----------------------------------------------------------------------------
+RESQML2_NS::WellboreMarkerFrameRepresentation * ResqmlWellboreMarkerFrameToVtkPartitionedDataSet::getResqmlData() const
+{
+	return static_cast<RESQML2_NS::WellboreMarkerFrameRepresentation *>(resqmlData);
 }
 
 //----------------------------------------------------------------------------
@@ -71,7 +76,7 @@ void ResqmlWellboreMarkerFrameToVtkPartitionedDataSet::addMarker(std::string mar
 	}
 	if (!exist)
 	{
-		this->list_marker.push_back(new ResqmlWellboreMarkerToVtkPolyData(this->resqmlData, marker_uuid, orientation, size));
+		this->list_marker.push_back(new ResqmlWellboreMarkerToVtkPolyData(getResqmlData(), marker_uuid, orientation, size));
 		this->loadVtkObject();
 	}
 }

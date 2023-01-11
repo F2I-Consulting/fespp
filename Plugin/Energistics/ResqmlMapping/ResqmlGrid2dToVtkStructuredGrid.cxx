@@ -34,8 +34,7 @@ under the License.
 ResqmlGrid2dToVtkStructuredGrid::ResqmlGrid2dToVtkStructuredGrid(RESQML2_NS::Grid2dRepresentation *grid2D, int proc_number, int max_proc)
 	: ResqmlAbstractRepresentationToVtkPartitionedDataSet(grid2D,
 											   proc_number,
-											   max_proc),
-	  resqmlData(grid2D)
+											   max_proc)
 {
 	this->pointCount = grid2D->getNodeCountAlongIAxis() * grid2D->getNodeCountAlongJAxis();
 
@@ -45,26 +44,34 @@ ResqmlGrid2dToVtkStructuredGrid::ResqmlGrid2dToVtkStructuredGrid(RESQML2_NS::Gri
 }
 
 //----------------------------------------------------------------------------
+RESQML2_NS::Grid2dRepresentation const* ResqmlGrid2dToVtkStructuredGrid::getResqmlData() const
+{
+	return static_cast<RESQML2_NS::Grid2dRepresentation const*>(resqmlData);
+}
+
+//----------------------------------------------------------------------------
 void ResqmlGrid2dToVtkStructuredGrid::loadVtkObject()
 {
 	vtkSmartPointer<vtkStructuredGrid> structuredGrid = vtkSmartPointer<vtkStructuredGrid>::New();
 
-	const double originX = this->resqmlData->getXOriginInGlobalCrs();
-	const double originY = this->resqmlData->getYOriginInGlobalCrs();
-	const double XIOffset = this->resqmlData->getXIOffsetInGlobalCrs();
-	const double XJOffset = this->resqmlData->getXJOffsetInGlobalCrs();
-	const double YIOffset = this->resqmlData->getYIOffsetInGlobalCrs();
-	const double YJOffset = this->resqmlData->getYJOffsetInGlobalCrs();
-	const double zIndice = this->resqmlData->getLocalCrs(0)->isDepthOriented() ? -1 : 1;
-	const ULONG64 nbNodeI = this->resqmlData->getNodeCountAlongIAxis();
-	const ULONG64 nbNodeJ = this->resqmlData->getNodeCountAlongJAxis();
+	RESQML2_NS::Grid2dRepresentation const* grid2D = getResqmlData();
+
+	const double originX = grid2D->getXOriginInGlobalCrs();
+	const double originY = grid2D->getYOriginInGlobalCrs();
+	const double XIOffset = grid2D->getXIOffsetInGlobalCrs();
+	const double XJOffset = grid2D->getXJOffsetInGlobalCrs();
+	const double YIOffset = grid2D->getYIOffsetInGlobalCrs();
+	const double YJOffset = grid2D->getYJOffsetInGlobalCrs();
+	const double zIndice = grid2D->getLocalCrs(0)->isDepthOriented() ? -1 : 1;
+	const ULONG64 nbNodeI = grid2D->getNodeCountAlongIAxis();
+	const ULONG64 nbNodeJ = grid2D->getNodeCountAlongJAxis();
 
 	structuredGrid->SetDimensions(nbNodeI, nbNodeJ, 1);
 	// POINT
 	this->pointCount = nbNodeI * nbNodeJ;
 
 	std::unique_ptr<double[]> z(new double[nbNodeI * nbNodeJ]);
-	this->resqmlData->getZValuesInGlobalCrs(z.get());
+	grid2D->getZValuesInGlobalCrs(z.get());
 
 	vtkSmartPointer<vtkPoints> points = vtkSmartPointer<vtkPoints>::New();
 	vtkSmartPointer<vtkCellArray> vertices = vtkSmartPointer<vtkCellArray>::New();

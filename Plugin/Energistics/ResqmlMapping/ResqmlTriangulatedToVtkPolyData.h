@@ -38,7 +38,7 @@ public:
 	/**
 	* Constructor
 	*/
-	ResqmlTriangulatedToVtkPolyData(RESQML2_NS::TriangulatedSetRepresentation *triangulated, uint32_t patch_index, int proc_number = 0, int max_proc = 1);
+	ResqmlTriangulatedToVtkPolyData(RESQML2_NS::TriangulatedSetRepresentation * triangulated, uint32_t patch_index, int proc_number = 0, int max_proc = 1);
 	
 	/**
 	* load vtkDataSet with RESQML data
@@ -52,7 +52,7 @@ protected:
 	*/
 	uint32_t getPreviousPatchesNodeCount() const;
 
-	RESQML2_NS::TriangulatedSetRepresentation *resqmlData;
+	RESQML2_NS::TriangulatedSetRepresentation const* getResqmlData() const;
 	uint32_t patch_index;
 };
 #endif

@@ -39,7 +39,7 @@ public:
 	/**
 	 * load vtkDataSet with resqml data
 	 */
-	void loadVtkObject();
+	void loadVtkObject() override;
 
 	/**
 	 * @brief modify orientation & size + representation reload
@@ -58,7 +58,7 @@ public:
 	int getMarkerSize() { return this->size; }
 
 protected:
-	resqml2::WellboreMarkerFrameRepresentation *resqmlData;
+	resqml2::WellboreMarkerFrameRepresentation const* getResqmlData() const;
 
 private:
 	void createDisk(unsigned int markerIndex);

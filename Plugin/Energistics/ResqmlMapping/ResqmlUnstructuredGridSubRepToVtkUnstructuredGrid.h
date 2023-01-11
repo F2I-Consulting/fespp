@@ -48,7 +48,7 @@ public:
 	/**
 	 * load vtkDataSet with resqml data
 	 */
-	void loadVtkObject();
+	void loadVtkObject() override;
 
 	/**
 	 *
@@ -56,7 +56,7 @@ public:
 	std::string unregisterToMapperSupportingGrid();
 
 protected:
-	RESQML2_NS::SubRepresentation *resqmlData;
+	RESQML2_NS::SubRepresentation const* getResqmlData() const;
 	ResqmlUnstructuredGridToVtkUnstructuredGrid* mapperUnstructuredGrid;
 
 private:
