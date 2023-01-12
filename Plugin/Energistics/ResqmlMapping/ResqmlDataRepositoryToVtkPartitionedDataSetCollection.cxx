@@ -233,7 +233,7 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::buildDataAsse
     sortAndAdd(repository->getUnstructuredGridRepresentationSet(), allReps);
   
     std::string message = std::accumulate(std::begin(allReps), std::end(allReps),std::string{},
-        [&](auto& a, auto b) {
+        [&](const auto& a, auto b) {
                 return a + searchRepresentations(b);
         });
 
@@ -304,7 +304,7 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchSubRepr
         std::sort(subRepresentationSet.begin(), subRepresentationSet.end(), lexicographicalComparison);
         
         std::string message = std::accumulate(std::begin(subRepresentationSet), std::end(subRepresentationSet), std::string{},
-            [&](auto& a, auto b) {
+            [&](const auto& a, auto b) {
                 return a + searchRepresentations(b, data_assembly->GetParent(node_parent));
             }); 
     }
