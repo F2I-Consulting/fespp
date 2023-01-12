@@ -142,6 +142,8 @@ std::vector<std::string> ResqmlDataRepositoryToVtkPartitionedDataSetCollection::
     }
 
     //************ LIST DATASPACES ************
+    const auto dataspaces = session->getDataspaces();
+
     std::transform(dataspaces.begin(), dataspaces.end(), std::back_inserter(result),
         [](const auto& ds) { return ds.uri; });
 
