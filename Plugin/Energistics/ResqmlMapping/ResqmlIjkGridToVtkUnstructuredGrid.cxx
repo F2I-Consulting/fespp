@@ -138,21 +138,21 @@ void ResqmlIjkGridToVtkUnstructuredGrid::loadVtkObject()
 		{
 			for (uint32_t vtkICellIndex = 0; vtkICellIndex < this->iCellCount; ++vtkICellIndex)
 			{
-				vtkSmartPointer<vtkCell> cell;
+				vtkSmartPointer<vtkIdList> nodes = vtkSmartPointer<vtkIdList>::New();
 				if (enabledCells[cellIndex++])
 				{
-					cell = vtkSmartPointer<vtkHexahedron>::New();
 					for (uint8_t cornerId = 0; cornerId < 8; ++cornerId)
 					{
-						cell->GetPointIds()->SetId(cornerId,
+						nodes->InsertId(cornerId, 
 							ijkGrid->getXyzPointIndexFromCellCorner(vtkICellIndex, vtkJCellIndex, vtkKCellIndex, correspondingResqmlCornerId[cornerId]) - translatePoint);
 					}
+					vtk_unstructuredGrid->InsertNextCell(VTK_HEXAHEDRON, nodes);
 				}
 				else
 				{
-					cell = vtkSmartPointer<vtkEmptyCell>::New();
+					vtk_unstructuredGrid->InsertNextCell(VTK_EMPTY_CELL, nodes);
 				}
-				vtk_unstructuredGrid->InsertNextCell(cell->GetCellType(), cell->GetPointIds());
+				
 			}
 		}
 	}

@@ -178,32 +178,19 @@ void ResqmlUnstructuredGridSubRepToVtkUnstructuredGrid::loadVtkObject()
 
 				vtkSmartPointer<vtkCellArray> polys = vtkSmartPointer<vtkCellArray>::New();
 				polys->AllocateEstimate(subFaceCount, 4);
+
 				for (ULONG64 subFaceIndex =0; subFaceIndex < subFaceCount; ++subFaceIndex)
 				{
 					ULONG64 faceIndex = elementIndices[subFaceIndex];
 					auto first_indiceValue = faceIndex == 0 ? 0 : nodeCountOfFaces[faceIndex - 1];
 					ULONG64 nodeCount_OfFaceIndex = nodeCountOfFaces[faceIndex] - first_indiceValue;
 
-					vtkSmartPointer<vtkCell> cell;
-					if (nodeCount_OfFaceIndex == 3)
-					{
-						cell = vtkSmartPointer<vtkTriangle>::New();
-					}
-					else if (nodeCount_OfFaceIndex == 4)
-					{
-						cell = vtkSmartPointer<vtkQuad>::New();
-					}
-					else
-					{
-						cell = vtkSmartPointer<vtkPolygon>::New();
-						cell->GetPointIds()->SetNumberOfIds(nodeCount_OfFaceIndex);
-					}
-
+					vtkSmartPointer<vtkIdList> nodes = vtkSmartPointer<vtkIdList>::New();
 					for (ULONG64 nodeIndex = 0; nodeIndex < nodeCount_OfFaceIndex; ++nodeIndex, ++first_indiceValue)
 					{
-						cell->GetPointIds()->SetId(nodeIndex, nodeIndices[first_indiceValue]);
+						nodes->InsertId(nodeIndex, nodeIndices[first_indiceValue]);
 					}
-					polys->InsertNextCell(cell);
+					polys->InsertNextCell(nodes);
 				}
 
 				vtk_polydata->SetPolys(polys);
