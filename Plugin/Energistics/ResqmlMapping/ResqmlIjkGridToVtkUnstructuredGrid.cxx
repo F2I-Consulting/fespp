@@ -132,27 +132,27 @@ void ResqmlIjkGridToVtkUnstructuredGrid::loadVtkObject()
 	uint64_t cellIndex = 0;
 	vtk_unstructuredGrid->Allocate(this->iCellCount * this->jCellCount);
 	ijkGrid->loadSplitInformation();
+	vtkSmartPointer<vtkIdList> nodes = vtkSmartPointer<vtkIdList>::New();
+	nodes->SetNumberOfIds(8);
 	for (uint32_t vtkKCellIndex = this->initKIndex; vtkKCellIndex < this->maxKIndex; ++vtkKCellIndex)
 	{
 		for (uint32_t vtkJCellIndex = 0; vtkJCellIndex < this->jCellCount; ++vtkJCellIndex)
 		{
 			for (uint32_t vtkICellIndex = 0; vtkICellIndex < this->iCellCount; ++vtkICellIndex)
 			{
-				vtkSmartPointer<vtkIdList> nodes = vtkSmartPointer<vtkIdList>::New();
 				if (enabledCells[cellIndex++])
 				{
 					for (uint8_t cornerId = 0; cornerId < 8; ++cornerId)
 					{
-						nodes->InsertId(cornerId, 
+						nodes->SetId(cornerId, 
 							ijkGrid->getXyzPointIndexFromCellCorner(vtkICellIndex, vtkJCellIndex, vtkKCellIndex, correspondingResqmlCornerId[cornerId]) - translatePoint);
 					}
 					vtk_unstructuredGrid->InsertNextCell(VTK_HEXAHEDRON, nodes);
 				}
 				else
 				{
-					vtk_unstructuredGrid->InsertNextCell(VTK_EMPTY_CELL, nodes);
+					vtk_unstructuredGrid->InsertNextCell(VTK_EMPTY_CELL, 0, nullptr);
 				}
-				
 			}
 		}
 	}
