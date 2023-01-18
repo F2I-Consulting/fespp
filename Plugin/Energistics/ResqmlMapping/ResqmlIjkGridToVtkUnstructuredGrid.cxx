@@ -177,6 +177,9 @@ void ResqmlIjkGridToVtkUnstructuredGrid::createPoints()
 {
 	RESQML2_NS::AbstractIjkGridRepresentation * ijkGrid = getResqmlData();
 
+	this->points->SetNumberOfPoints(this->pointCount);
+	size_t point_id = 0;
+
 	if (this->isHyperslabed && !ijkGrid->isNodeGeometryCompressed())
 	{
 		// Take into account K gaps
@@ -207,6 +210,7 @@ void ResqmlIjkGridToVtkUnstructuredGrid::createPoints()
 
 		const uint64_t kInterfaceNodeCount = ijkGrid->getXyzPointCountOfKInterface();
 		std::unique_ptr<double[]> allXyzPoints(new double[kInterfaceNodeCount * 3]);
+
 		for (uint32_t kInterface = initKInterfaceIndex; kInterface <= maxKInterfaceIndex; ++kInterface)
 		{
 			ijkGrid->getXyzPointsOfKInterface(kInterface, allXyzPoints.get());
@@ -218,7 +222,7 @@ void ResqmlIjkGridToVtkUnstructuredGrid::createPoints()
 			const double zIndice = crs->isDepthOriented() ? -1 : 1;
 			for (uint64_t nodeIndex = 0; nodeIndex < kInterfaceNodeCount * 3; nodeIndex += 3)
 			{
-				this->points->InsertNextPoint(allXyzPoints[nodeIndex] + xOffset, allXyzPoints[nodeIndex + 1] + yOffset, (allXyzPoints[nodeIndex + 2] + zOffset) * zIndice);
+				this->points->SetPoint(point_id++, allXyzPoints[nodeIndex] + xOffset, allXyzPoints[nodeIndex + 1] + yOffset, (allXyzPoints[nodeIndex + 2] + zOffset) * zIndice);
 			}
 		}
 	}
@@ -234,7 +238,7 @@ void ResqmlIjkGridToVtkUnstructuredGrid::createPoints()
 		const double zIndice = ijkGrid->getLocalCrs(0)->isDepthOriented() ? -1 : 1;
 		for (uint64_t pointIndex = 0; pointIndex < coordCount; pointIndex += 3)
 		{
-			this->points->InsertNextPoint(allXyzPoints[pointIndex], allXyzPoints[pointIndex + 1], -allXyzPoints[pointIndex + 2] * zIndice);
+			this->points->SetPoint(point_id++, allXyzPoints[pointIndex], allXyzPoints[pointIndex + 1], -allXyzPoints[pointIndex + 2] * zIndice);
 		}
 	}
 }
