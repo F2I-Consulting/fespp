@@ -234,9 +234,10 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::buildDataAsse
     sortAndAdd(repository->getAllTriangulatedSetRepresentationSet(), allReps);
     sortAndAdd(repository->getUnstructuredGridRepresentationSet(), allReps);
   
-    std::string message = std::accumulate(std::begin(allReps), std::end(allReps),std::string{},
-        [&](const auto& a, auto b) {
-                return a + searchRepresentations(b);
+	// See https://stackoverflow.com/questions/15347123/how-to-construct-a-stdstring-from-a-stdvectorstring
+    std::string message = std::accumulate(std::begin(allReps), std::end(allReps), std::string{},
+        [&](std::string& message, RESQML2_NS::AbstractRepresentation const * rep) {
+                return message += searchRepresentations(rep);
         });
 
     // get WellboreTrajectory + subrepresentation + property
@@ -296,18 +297,16 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchReprese
     return result;
 }
 
-std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchSubRepresentation(resqml2::AbstractRepresentation const *representation, vtkDataAssembly *data_assembly, int node_parent)
+std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchSubRepresentation(RESQML2_NS::AbstractRepresentation const *representation, vtkDataAssembly *data_assembly, int node_parent)
 {
-    std::string result;
-
     try
     {
         auto subRepresentationSet = representation->getSubRepresentationSet();
         std::sort(subRepresentationSet.begin(), subRepresentationSet.end(), lexicographicalComparison);
         
         std::string message = std::accumulate(std::begin(subRepresentationSet), std::end(subRepresentationSet), std::string{},
-            [&](const auto& a, auto b) {
-                return a + searchRepresentations(b, data_assembly->GetParent(node_parent));
+            [&](std::string& message, RESQML2_NS::SubRepresentation* b) {
+                return message += searchRepresentations(b, data_assembly->GetParent(node_parent));
             }); 
     }
     catch (const std::exception &e)
@@ -315,10 +314,10 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchSubRepr
         return "Exception in FESAPI when calling getSubRepresentationSet for uuid : " + representation->getUuid() + " : " + e.what() + ".\n";
     }
 
-    return result;
+    return "";
 }
 
-std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchProperties(resqml2::AbstractRepresentation const *representation, vtkDataAssembly *data_assembly, int node_parent)
+std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchProperties(RESQML2_NS::AbstractRepresentation const *representation, vtkDataAssembly *data_assembly, int node_parent)
 {
     try
     {
@@ -340,6 +339,7 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchPropert
     {
         return "Exception in FESAPI when calling getValuesPropertySet with representation uuid: " + representation->getUuid() + " : " + e.what() + ".\n";
     }
+
     return "";
 }
 
