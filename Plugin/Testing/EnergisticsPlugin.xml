@@ -1,0 +1,243 @@
+<?xml version="1.0"?>
+<pqevents>
+
+<!-- ****************************** -->
+<!-- PREPARE PARAVIEW CONFIGURATION -->
+<!-- ****************************** -->
+
+	<!-- Reset the session -->
+	<pqevent object="pqClientMainWindow/menubar" command="activate" arguments="menu_Edit" />
+	<pqevent object="pqClientMainWindow/menubar/menu_Edit" command="activate" arguments="actionDelete_All" />
+	<pqevent object="pqClientMainWindow/CoreUtilitiesPromptUser/qt_msgbox_buttonbox/1QPushButton0" command="activate" arguments="" />
+
+	<!-- Load epc file -->
+	<pqevent object="pqClientMainWindow/MainControlsToolbar/actionOpenData" command="activate" arguments="" />
+	<pqevent object="pqClientMainWindow/FileOpenDialog" command="filesSelected" arguments="$PARAVIEW_DATA_ROOT/ExternalData/Fespp/Testing/Data/EPCReader/testingPackageCpp.epc" />
+  
+	<!-- resize renderview -->
+	<pqevent object="pqClientMainWindow/menubar" command="activate" arguments="menuTools"/>
+	<pqevent object="pqClientMainWindow/menubar/menuTools" command="activate" arguments="actionTesting_Window_Size"/>
+	<pqevent object="pqClientMainWindow/menubar" command="activate" arguments="menuTools"/>
+	<pqevent object="pqClientMainWindow/menubar/menuTools" command="activate" arguments="actionTesting_Window_Size_Custom"/>
+	<pqevent object="pqClientMainWindow/pqLockViewSizeCustomDialog/Width" command="set_string" arguments="300"/>
+	<pqevent object="pqClientMainWindow/pqLockViewSizeCustomDialog/Height" command="set_string" arguments="300"/>
+	<pqevent object="pqClientMainWindow/pqLockViewSizeCustomDialog/ButtonBox/1QPushButton2" command="activate" arguments=""/>
+	<pqevent object="pqClientMainWindow/pqLockViewSizeCustomDialog/ButtonBox/1QPushButton0" command="activate" arguments=""/>
+
+<!-- ******************************* -->
+<!-- VERIFY DATA EXAMPLE (unit test) -->
+<!-- ******************************* -->
+
+	<!-- change tab "Assembly" to "Selectors" for select by uuid-->
+	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/scrollArea/qt_scrollarea_viewport/scrollAreaWidgetContents/PropertiesFrame/ProxyPanel/Selectors/tabWidget/qt_tabwidget_tabbar" command="set_tab_with_text" arguments="Selectors" />
+
+
+
+	<!--
+		IJK grid explicit geometry and property
+		/data/_df2103a0-fa3d-11e5-b8d4-0002a5d5c51b/_ee0857fe-23ad-4dd9-8300-21fa2e9fb572
+	-->
+
+		<!-- select uuid -->
+	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/scrollArea/qt_scrollarea_viewport/scrollAreaWidgetContents/PropertiesFrame/ProxyPanel/Selectors/tabWidget/qt_tabwidget_stackedwidget/selectorsTab/add" command="activate" arguments="" />
+	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/scrollArea/qt_scrollarea_viewport/scrollAreaWidgetContents/PropertiesFrame/ProxyPanel/Selectors/tabWidget/qt_tabwidget_stackedwidget/selectorsTab/table" command="setSelection" arguments="0.0,0.0" />
+	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/scrollArea/qt_scrollarea_viewport/scrollAreaWidgetContents/PropertiesFrame/ProxyPanel/Selectors/tabWidget/qt_tabwidget_stackedwidget/selectorsTab/table" command="setCurrent" arguments="0.0" />
+	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/scrollArea/qt_scrollarea_viewport/scrollAreaWidgetContents/PropertiesFrame/ProxyPanel/Selectors/tabWidget/qt_tabwidget_stackedwidget/selectorsTab/table" command="editAccepted" arguments="0.0,/data/_df2103a0-fa3d-11e5-b8d4-0002a5d5c51b/_ee0857fe-23ad-4dd9-8300-21fa2e9fb572" />
+	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/scrollArea/qt_scrollarea_viewport/scrollAreaWidgetContents/PropertiesFrame/ProxyPanel/Selectors/tabWidget/qt_tabwidget_stackedwidget/selectorsTab/table" command="setSelection" arguments="" />
+		<!-- apply selectors -->
+	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/Accept" command="activate" arguments="" />
+		<!-- select paraview coloring: Two faulted sugar cubes cellIndex -->
+	<pqevent object="pqClientMainWindow/variableToolbar/displayColor/Variables" command="activated" arguments="Two faulted sugar cubes cellIndex" />
+		<!-- change plan view -->	
+	<pqevent object="pqClientMainWindow/cameraToolbar/actionIsometricView" command="activate" arguments="" />
+		<!-- compare view -->
+	<pqcompareview object="pqClientMainWindow/centralwidget/MultiViewWidget/CoreWidget/qt_tabwidget_stackedwidget/MultiViewWidget1/Container/Frame.0/CentralWidgetFrame/Viewport" baseline="$PARAVIEW_DATA_ROOT/ExternalData/Fespp/Testing/Data/EPCReader/Baseline/ee0857fe-23ad-4dd9-8300-21fa2e9fb572.png" threshold="0" />
+
+	<!-- !!! Erase !!! -->
+  	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/scrollArea/qt_scrollarea_viewport/scrollAreaWidgetContents/PropertiesFrame/ProxyPanel/Selectors/tabWidget/qt_tabwidget_stackedwidget/selectorsTab/removeAll" command="activate" arguments="" />
+	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/Accept" command="activate" arguments="" />
+	<pqevent object="pqClientMainWindow/variableToolbar/displayColor/Variables" command="activated" arguments="Solid Color" />
+	<pqevent object="pqClientMainWindow/cameraToolbar/actionNegativeZ" command="activate" arguments="" />
+	<pqcompareview object="pqClientMainWindow/centralwidget/MultiViewWidget/CoreWidget/qt_tabwidget_stackedwidget/MultiViewWidget1/Container/Frame.0/CentralWidgetFrame/Viewport" baseline="$PARAVIEW_DATA_ROOT/ExternalData/Fespp/Testing/Data/EPCReader/Baseline/empty.png" threshold="0" />
+
+
+
+	<!--
+	  Polyline set geometry 
+	  /data/_65c59595-bf48-451e-94aa-120ebdf28d8b
+	-->
+
+		<!-- select uuid -->
+	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/scrollArea/qt_scrollarea_viewport/scrollAreaWidgetContents/PropertiesFrame/ProxyPanel/Selectors/tabWidget/qt_tabwidget_stackedwidget/selectorsTab/add" command="activate" arguments="" />
+	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/scrollArea/qt_scrollarea_viewport/scrollAreaWidgetContents/PropertiesFrame/ProxyPanel/Selectors/tabWidget/qt_tabwidget_stackedwidget/selectorsTab/table" command="setSelection" arguments="0.0,0.0" />
+	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/scrollArea/qt_scrollarea_viewport/scrollAreaWidgetContents/PropertiesFrame/ProxyPanel/Selectors/tabWidget/qt_tabwidget_stackedwidget/selectorsTab/table" command="setCurrent" arguments="0.0" />
+	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/scrollArea/qt_scrollarea_viewport/scrollAreaWidgetContents/PropertiesFrame/ProxyPanel/Selectors/tabWidget/qt_tabwidget_stackedwidget/selectorsTab/table" command="editAccepted" arguments="0.0,/data/_65c59595-bf48-451e-94aa-120ebdf28d8b" />
+	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/scrollArea/qt_scrollarea_viewport/scrollAreaWidgetContents/PropertiesFrame/ProxyPanel/Selectors/tabWidget/qt_tabwidget_stackedwidget/selectorsTab/table" command="setSelection" arguments="" />
+		<!-- apply selectors -->
+	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/Accept" command="activate" arguments="" />
+		<!-- change plan view -->	
+	<pqevent object="pqClientMainWindow/cameraToolbar/actionIsometricView" command="activate" arguments="" />
+		<!-- compare view -->
+	<pqcompareview object="pqClientMainWindow/centralwidget/MultiViewWidget/CoreWidget/qt_tabwidget_stackedwidget/MultiViewWidget1/Container/Frame.0/CentralWidgetFrame/Viewport" baseline="$PARAVIEW_DATA_ROOT/ExternalData/Fespp/Testing/Data/EPCReader/Baseline/65c59595-bf48-451e-94aa-120ebdf28d8b.png" threshold="0" />
+
+	<!-- !!! Erase !!! -->
+  	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/scrollArea/qt_scrollarea_viewport/scrollAreaWidgetContents/PropertiesFrame/ProxyPanel/Selectors/tabWidget/qt_tabwidget_stackedwidget/selectorsTab/removeAll" command="activate" arguments="" />
+	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/Accept" command="activate" arguments="" />
+	<pqevent object="pqClientMainWindow/variableToolbar/displayColor/Variables" command="activated" arguments="Solid Color" />
+	<pqevent object="pqClientMainWindow/cameraToolbar/actionNegativeZ" command="activate" arguments="" />
+	<pqcompareview object="pqClientMainWindow/centralwidget/MultiViewWidget/CoreWidget/qt_tabwidget_stackedwidget/MultiViewWidget1/Container/Frame.0/CentralWidgetFrame/Viewport" baseline="$PARAVIEW_DATA_ROOT/ExternalData/Fespp/Testing/Data/EPCReader/Baseline/empty.png" threshold="0" />
+
+
+
+	<!--
+		Triangulation geometry 
+		/data/_1a4112fa-c4ef-4c8d-aed0-47d9273bebc5
+	-->
+	
+		<!-- select uuid -->
+	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/scrollArea/qt_scrollarea_viewport/scrollAreaWidgetContents/PropertiesFrame/ProxyPanel/Selectors/tabWidget/qt_tabwidget_stackedwidget/selectorsTab/add" command="activate" arguments="" />
+	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/scrollArea/qt_scrollarea_viewport/scrollAreaWidgetContents/PropertiesFrame/ProxyPanel/Selectors/tabWidget/qt_tabwidget_stackedwidget/selectorsTab/table" command="setSelection" arguments="0.0,0.0" />
+	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/scrollArea/qt_scrollarea_viewport/scrollAreaWidgetContents/PropertiesFrame/ProxyPanel/Selectors/tabWidget/qt_tabwidget_stackedwidget/selectorsTab/table" command="setCurrent" arguments="0.0" />
+	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/scrollArea/qt_scrollarea_viewport/scrollAreaWidgetContents/PropertiesFrame/ProxyPanel/Selectors/tabWidget/qt_tabwidget_stackedwidget/selectorsTab/table" command="editAccepted" arguments="0.0,/data/_1a4112fa-c4ef-4c8d-aed0-47d9273bebc5" />
+	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/scrollArea/qt_scrollarea_viewport/scrollAreaWidgetContents/PropertiesFrame/ProxyPanel/Selectors/tabWidget/qt_tabwidget_stackedwidget/selectorsTab/table" command="setSelection" arguments="" />
+		<!-- apply selectors -->
+	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/Accept" command="activate" arguments="" />
+		<!-- change plan view -->	
+	<pqevent object="pqClientMainWindow/cameraToolbar/actionIsometricView" command="activate" arguments="" />
+		<!-- compare view -->
+	<pqcompareview object="pqClientMainWindow/centralwidget/MultiViewWidget/CoreWidget/qt_tabwidget_stackedwidget/MultiViewWidget1/Container/Frame.0/CentralWidgetFrame/Viewport" baseline="$PARAVIEW_DATA_ROOT/ExternalData/Fespp/Testing/Data/EPCReader/Baseline/65c59595-bf48-451e-94aa-120ebdf28d8b.png" threshold="0" />
+   
+	<!-- !!! Erase !!! -->
+  	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/scrollArea/qt_scrollarea_viewport/scrollAreaWidgetContents/PropertiesFrame/ProxyPanel/Selectors/tabWidget/qt_tabwidget_stackedwidget/selectorsTab/removeAll" command="activate" arguments="" />
+	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/Accept" command="activate" arguments="" />
+	<pqevent object="pqClientMainWindow/variableToolbar/displayColor/Variables" command="activated" arguments="Solid Color" />
+	<pqevent object="pqClientMainWindow/cameraToolbar/actionNegativeZ" command="activate" arguments="" />
+	<pqcompareview object="pqClientMainWindow/centralwidget/MultiViewWidget/CoreWidget/qt_tabwidget_stackedwidget/MultiViewWidget1/Container/Frame.0/CentralWidgetFrame/Viewport" baseline="$PARAVIEW_DATA_ROOT/ExternalData/Fespp/Testing/Data/EPCReader/Baseline/empty.png" threshold="0" />
+
+
+
+	<!-- 
+		Unstructured grid geometry 
+		/data/_9283cd33-5e52-4110-b7b1-616abde2b303
+	--> 
+	
+		<!-- select uuid -->
+	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/scrollArea/qt_scrollarea_viewport/scrollAreaWidgetContents/PropertiesFrame/ProxyPanel/Selectors/tabWidget/qt_tabwidget_stackedwidget/selectorsTab/add" command="activate" arguments="" />
+	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/scrollArea/qt_scrollarea_viewport/scrollAreaWidgetContents/PropertiesFrame/ProxyPanel/Selectors/tabWidget/qt_tabwidget_stackedwidget/selectorsTab/table" command="setSelection" arguments="0.0,0.0" />
+	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/scrollArea/qt_scrollarea_viewport/scrollAreaWidgetContents/PropertiesFrame/ProxyPanel/Selectors/tabWidget/qt_tabwidget_stackedwidget/selectorsTab/table" command="setCurrent" arguments="0.0" />
+	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/scrollArea/qt_scrollarea_viewport/scrollAreaWidgetContents/PropertiesFrame/ProxyPanel/Selectors/tabWidget/qt_tabwidget_stackedwidget/selectorsTab/table" command="editAccepted" arguments="0.0,/data/_9283cd33-5e52-4110-b7b1-616abde2b303" />
+	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/scrollArea/qt_scrollarea_viewport/scrollAreaWidgetContents/PropertiesFrame/ProxyPanel/Selectors/tabWidget/qt_tabwidget_stackedwidget/selectorsTab/table" command="setSelection" arguments="" />
+		<!-- apply selectors -->
+	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/Accept" command="activate" arguments="" />
+		<!-- change plan view -->	
+	<pqevent object="pqClientMainWindow/cameraToolbar/actionIsometricView" command="activate" arguments="" />
+		<!-- compare view -->
+	<pqcompareview object="pqClientMainWindow/centralwidget/MultiViewWidget/CoreWidget/qt_tabwidget_stackedwidget/MultiViewWidget1/Container/Frame.0/CentralWidgetFrame/Viewport" baseline="$PARAVIEW_DATA_ROOT/ExternalData/Fespp/Testing/Data/EPCReader/Baseline/9283cd33-5e52-4110-b7b1-616abde2b303.png" threshold="0" />
+   
+	<!-- !!! Erase !!! -->
+  	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/scrollArea/qt_scrollarea_viewport/scrollAreaWidgetContents/PropertiesFrame/ProxyPanel/Selectors/tabWidget/qt_tabwidget_stackedwidget/selectorsTab/removeAll" command="activate" arguments="" />
+	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/Accept" command="activate" arguments="" />
+	<pqevent object="pqClientMainWindow/variableToolbar/displayColor/Variables" command="activated" arguments="Solid Color" />
+	<pqevent object="pqClientMainWindow/cameraToolbar/actionNegativeZ" command="activate" arguments="" />
+	<pqcompareview object="pqClientMainWindow/centralwidget/MultiViewWidget/CoreWidget/qt_tabwidget_stackedwidget/MultiViewWidget1/Container/Frame.0/CentralWidgetFrame/Viewport" baseline="$PARAVIEW_DATA_ROOT/ExternalData/Fespp/Testing/Data/EPCReader/Baseline/empty.png" threshold="0" />
+
+
+
+	<!-- 
+		2d grid
+		/data/_030a82f6-10a7-4ecf-af03-54749e098624
+	--> 
+	
+		<!-- select uuid -->
+	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/scrollArea/qt_scrollarea_viewport/scrollAreaWidgetContents/PropertiesFrame/ProxyPanel/Selectors/tabWidget/qt_tabwidget_stackedwidget/selectorsTab/add" command="activate" arguments="" />
+	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/scrollArea/qt_scrollarea_viewport/scrollAreaWidgetContents/PropertiesFrame/ProxyPanel/Selectors/tabWidget/qt_tabwidget_stackedwidget/selectorsTab/table" command="setSelection" arguments="0.0,0.0" />
+	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/scrollArea/qt_scrollarea_viewport/scrollAreaWidgetContents/PropertiesFrame/ProxyPanel/Selectors/tabWidget/qt_tabwidget_stackedwidget/selectorsTab/table" command="setCurrent" arguments="0.0" />
+	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/scrollArea/qt_scrollarea_viewport/scrollAreaWidgetContents/PropertiesFrame/ProxyPanel/Selectors/tabWidget/qt_tabwidget_stackedwidget/selectorsTab/table" command="editAccepted" arguments="0.0,/data/_030a82f6-10a7-4ecf-af03-54749e098624" />
+	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/scrollArea/qt_scrollarea_viewport/scrollAreaWidgetContents/PropertiesFrame/ProxyPanel/Selectors/tabWidget/qt_tabwidget_stackedwidget/selectorsTab/table" command="setSelection" arguments="" />
+		<!-- apply selectors -->
+	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/Accept" command="activate" arguments="" />
+		<!-- change plan view -->	
+	<pqevent object="pqClientMainWindow/cameraToolbar/actionIsometricView" command="activate" arguments="" />
+		<!-- compare view -->
+	<pqcompareview object="pqClientMainWindow/centralwidget/MultiViewWidget/CoreWidget/qt_tabwidget_stackedwidget/MultiViewWidget1/Container/Frame.0/CentralWidgetFrame/Viewport" baseline="$PARAVIEW_DATA_ROOT/ExternalData/Fespp/Testing/Data/EPCReader/Baseline/030a82f6-10a7-4ecf-af03-54749e098624.png" threshold="0" />
+   
+	<!-- !!! Erase !!! -->
+  	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/scrollArea/qt_scrollarea_viewport/scrollAreaWidgetContents/PropertiesFrame/ProxyPanel/Selectors/tabWidget/qt_tabwidget_stackedwidget/selectorsTab/removeAll" command="activate" arguments="" />
+	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/Accept" command="activate" arguments="" />
+	<pqevent object="pqClientMainWindow/variableToolbar/displayColor/Variables" command="activated" arguments="Solid Color" />
+	<pqevent object="pqClientMainWindow/cameraToolbar/actionNegativeZ" command="activate" arguments="" />
+	<pqcompareview object="pqClientMainWindow/centralwidget/MultiViewWidget/CoreWidget/qt_tabwidget_stackedwidget/MultiViewWidget1/Container/Frame.0/CentralWidgetFrame/Viewport" baseline="$PARAVIEW_DATA_ROOT/ExternalData/Fespp/Testing/Data/EPCReader/Baseline/empty.png" threshold="0" />
+
+
+
+	<!-- 
+		wellbore trajectory 
+		/data/_acd2cdcf-bb5d-48da-bd0e-9aeff3e52180
+		Wellbore marker frame
+		/data/_657d5e6b-1752-425d-b3e7-237037fa11eb
+	--> 
+	
+		<!-- select uuid wellbore traj -->
+	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/scrollArea/qt_scrollarea_viewport/scrollAreaWidgetContents/PropertiesFrame/ProxyPanel/Selectors/tabWidget/qt_tabwidget_stackedwidget/selectorsTab/add" command="activate" arguments="" />
+	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/scrollArea/qt_scrollarea_viewport/scrollAreaWidgetContents/PropertiesFrame/ProxyPanel/Selectors/tabWidget/qt_tabwidget_stackedwidget/selectorsTab/table" command="setSelection" arguments="0.0,0.0" />
+	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/scrollArea/qt_scrollarea_viewport/scrollAreaWidgetContents/PropertiesFrame/ProxyPanel/Selectors/tabWidget/qt_tabwidget_stackedwidget/selectorsTab/table" command="setCurrent" arguments="0.0" />
+	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/scrollArea/qt_scrollarea_viewport/scrollAreaWidgetContents/PropertiesFrame/ProxyPanel/Selectors/tabWidget/qt_tabwidget_stackedwidget/selectorsTab/table" command="editAccepted" arguments="0.0,/data/_acd2cdcf-bb5d-48da-bd0e-9aeff3e52180" />
+	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/scrollArea/qt_scrollarea_viewport/scrollAreaWidgetContents/PropertiesFrame/ProxyPanel/Selectors/tabWidget/qt_tabwidget_stackedwidget/selectorsTab/table" command="setSelection" arguments="" />
+		<!-- select uuid wellbore marker frame -->
+	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/scrollArea/qt_scrollarea_viewport/scrollAreaWidgetContents/PropertiesFrame/ProxyPanel/Selectors/tabWidget/qt_tabwidget_stackedwidget/selectorsTab/add" command="activate" arguments="" />
+	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/scrollArea/qt_scrollarea_viewport/scrollAreaWidgetContents/PropertiesFrame/ProxyPanel/Selectors/tabWidget/qt_tabwidget_stackedwidget/selectorsTab/table" command="setSelection" arguments="1.0,1.0" />
+	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/scrollArea/qt_scrollarea_viewport/scrollAreaWidgetContents/PropertiesFrame/ProxyPanel/Selectors/tabWidget/qt_tabwidget_stackedwidget/selectorsTab/table" command="setCurrent" arguments="1.0" />
+	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/scrollArea/qt_scrollarea_viewport/scrollAreaWidgetContents/PropertiesFrame/ProxyPanel/Selectors/tabWidget/qt_tabwidget_stackedwidget/selectorsTab/table" command="editAccepted" arguments="1.0,/data/_657d5e6b-1752-425d-b3e7-237037fa11eb" />
+	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/scrollArea/qt_scrollarea_viewport/scrollAreaWidgetContents/PropertiesFrame/ProxyPanel/Selectors/tabWidget/qt_tabwidget_stackedwidget/selectorsTab/table" command="setSelection" arguments="" />
+		<!-- apply selectors -->
+	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/Accept" command="activate" arguments="" />
+		<!-- change plan view -->	
+	<pqevent object="pqClientMainWindow/cameraToolbar/actionIsometricView" command="activate" arguments="" />
+		<!-- compare view -->
+	<pqcompareview object="pqClientMainWindow/centralwidget/MultiViewWidget/CoreWidget/qt_tabwidget_stackedwidget/MultiViewWidget1/Container/Frame.0/CentralWidgetFrame/Viewport" baseline="$PARAVIEW_DATA_ROOT/ExternalData/Fespp/Testing/Data/EPCReader/Baseline/acd2cdcf-bb5d-48da-bd0e-9aeff3e52180_657d5e6b-1752-425d-b3e7-237037fa11eb_size10_orientationOK.png" threshold="0" />
+
+		<!-- change wellbore marker properties-->
+	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/scrollArea/qt_scrollarea_viewport/scrollAreaWidgetContents/PropertiesFrame/ProxyPanel/MarkerOrientation/CheckBox" command="set_boolean" arguments="false" />
+	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/scrollArea/qt_scrollarea_viewport/scrollAreaWidgetContents/PropertiesFrame/ProxyPanel/MarkerSize/LineEdit0" command="set_string" arguments="20" />
+  		<!-- compare view -->
+ 	<pqcompareview object="pqClientMainWindow/centralwidget/MultiViewWidget/CoreWidget/qt_tabwidget_stackedwidget/MultiViewWidget1/Container/Frame.0/CentralWidgetFrame/Viewport" baseline="$PARAVIEW_DATA_ROOT/ExternalData/Fespp/Testing/Data/EPCReader/Baseline/acd2cdcf-bb5d-48da-bd0e-9aeff3e52180_657d5e6b-1752-425d-b3e7-237037fa11eb_size20_orientationKO.png" threshold="0" />
+
+
+   
+	<!-- !!! Erase !!! -->
+  	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/scrollArea/qt_scrollarea_viewport/scrollAreaWidgetContents/PropertiesFrame/ProxyPanel/Selectors/tabWidget/qt_tabwidget_stackedwidget/selectorsTab/removeAll" command="activate" arguments="" />
+	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/Accept" command="activate" arguments="" />
+	<pqevent object="pqClientMainWindow/variableToolbar/displayColor/Variables" command="activated" arguments="Solid Color" />
+	<pqevent object="pqClientMainWindow/cameraToolbar/actionNegativeZ" command="activate" arguments="" />
+	<pqcompareview object="pqClientMainWindow/centralwidget/MultiViewWidget/CoreWidget/qt_tabwidget_stackedwidget/MultiViewWidget1/Container/Frame.0/CentralWidgetFrame/Viewport" baseline="$PARAVIEW_DATA_ROOT/ExternalData/Fespp/Testing/Data/EPCReader/Baseline/empty.png" threshold="0" />
+
+
+	<!-- 
+		wellbore chanel
+		/data/_d873e243-d893-41ab-9a3e-d20b851c099f
+	--> 
+	
+		<!-- select uuid -->
+	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/scrollArea/qt_scrollarea_viewport/scrollAreaWidgetContents/PropertiesFrame/ProxyPanel/Selectors/tabWidget/qt_tabwidget_stackedwidget/selectorsTab/add" command="activate" arguments="" />
+	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/scrollArea/qt_scrollarea_viewport/scrollAreaWidgetContents/PropertiesFrame/ProxyPanel/Selectors/tabWidget/qt_tabwidget_stackedwidget/selectorsTab/table" command="setSelection" arguments="0.0,0.0" />
+	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/scrollArea/qt_scrollarea_viewport/scrollAreaWidgetContents/PropertiesFrame/ProxyPanel/Selectors/tabWidget/qt_tabwidget_stackedwidget/selectorsTab/table" command="setCurrent" arguments="0.0" />
+	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/scrollArea/qt_scrollarea_viewport/scrollAreaWidgetContents/PropertiesFrame/ProxyPanel/Selectors/tabWidget/qt_tabwidget_stackedwidget/selectorsTab/table" command="editAccepted" arguments="0.0,/data/_d873e243-d893-41ab-9a3e-d20b851c099f" />
+	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/scrollArea/qt_scrollarea_viewport/scrollAreaWidgetContents/PropertiesFrame/ProxyPanel/Selectors/tabWidget/qt_tabwidget_stackedwidget/selectorsTab/table" command="setSelection" arguments="" />
+		<!-- apply selectors -->
+	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/Accept" command="activate" arguments="" />
+		<!-- select paraview coloring: Wellbore1 Interp1 FrameRep IntervalIndex -->
+	<pqevent object="pqClientMainWindow/variableToolbar/displayColor/Variables" command="activated" arguments="Wellbore1 Interp1 FrameRep IntervalIndex" />
+		<!-- change plan view -->	
+	<pqevent object="pqClientMainWindow/cameraToolbar/actionIsometricView" command="activate" arguments="" />
+		<!-- compare view -->
+	<pqcompareview object="pqClientMainWindow/centralwidget/MultiViewWidget/CoreWidget/qt_tabwidget_stackedwidget/MultiViewWidget1/Container/Frame.0/CentralWidgetFrame/Viewport" baseline="$PARAVIEW_DATA_ROOT/ExternalData/Fespp/Testing/Data/EPCReader/Baseline/d873e243-d893-41ab-9a3e-d20b851c099f.png" threshold="0" />
+ 
+
+	<!-- !!! Erase !!! -->
+  	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/scrollArea/qt_scrollarea_viewport/scrollAreaWidgetContents/PropertiesFrame/ProxyPanel/Selectors/tabWidget/qt_tabwidget_stackedwidget/selectorsTab/removeAll" command="activate" arguments="" />
+	<pqevent object="pqClientMainWindow/propertiesDock/propertiesPanel/Accept" command="activate" arguments="" />
+	<pqevent object="pqClientMainWindow/variableToolbar/displayColor/Variables" command="activated" arguments="Solid Color" />
+	<pqevent object="pqClientMainWindow/cameraToolbar/actionNegativeZ" command="activate" arguments="" />
+	<pqcompareview object="pqClientMainWindow/centralwidget/MultiViewWidget/CoreWidget/qt_tabwidget_stackedwidget/MultiViewWidget1/Container/Frame.0/CentralWidgetFrame/Viewport" baseline="$PARAVIEW_DATA_ROOT/ExternalData/Fespp/Testing/Data/EPCReader/Baseline/empty.png" threshold="0" />
+
+</pqevents>

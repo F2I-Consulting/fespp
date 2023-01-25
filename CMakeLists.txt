@@ -1,10 +1,10 @@
-cmake_minimum_required(VERSION 3.12.0)
+cmake_minimum_required(VERSION 3.14.0)
 
 # The NEW behavior for this policy is to set VERSION as documented by the project() command.
 cmake_policy(SET CMP0048 NEW)
 
 project(Fespp
-	VERSION 2.3.1
+	VERSION 3.0.0
 	DESCRIPTION "Paraview plugin for importing EPC documents"
 	HOMEPAGE_URL "https://github.com/F2I-Consulting/fespp"
 	LANGUAGES C CXX
