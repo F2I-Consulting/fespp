@@ -92,7 +92,7 @@ void ResqmlUnstructuredGridToVtkUnstructuredGrid::loadVtkObject()
 
 	auto maxCellIndex = (this->procNumber + 1) * cellCount / this->maxProc;
 
-	for (uint64_t cellIndex = this->procNumber * cellCount / this->maxProc; cellIndex < maxCellIndex; ++cellIndex)
+	for (uint_fast64_t  cellIndex = this->procNumber * cellCount / this->maxProc; cellIndex < maxCellIndex; ++cellIndex)
 	{
 		bool isOptimizedCell = false;
 
@@ -128,7 +128,7 @@ void ResqmlUnstructuredGridToVtkUnstructuredGrid::loadVtkObject()
 
 			// For polyhedron cell, a special ptIds input format is required : (numCellFaces, numFace0Pts, id1, id2, id3, numFace1Pts, id1, id2, id3, ...)
 			idList->InsertNextId(localFaceCount);
-			for (uint64_t localFaceIndex = 0; localFaceIndex < localFaceCount; ++localFaceIndex)
+			for (uint_fast64_t  localFaceIndex = 0; localFaceIndex < localFaceCount; ++localFaceIndex)
 			{
 				const unsigned int localNodeCount = unstructuredGrid->getNodeCountOfFaceOfCell(cellIndex, localFaceIndex);
 				idList->InsertNextId(localNodeCount);
@@ -167,7 +167,7 @@ void ResqmlUnstructuredGridToVtkUnstructuredGrid::createPoints()
 	double *allXyzPoints = new double[this->pointCount * 3]; // Will be deleted by VTK;
 	bool partialCRS = false;
 	const uint64_t patchCount = unstructuredGrid->getPatchCount();
-	for (uint64_t patchIndex = 0; patchIndex < patchCount; ++patchIndex) {
+	for (uint_fast64_t  patchIndex = 0; patchIndex < patchCount; ++patchIndex) {
 		if (unstructuredGrid->getLocalCrs(patchIndex)->isPartial()) {
 			partialCRS = true;
 			break;
@@ -184,7 +184,7 @@ void ResqmlUnstructuredGridToVtkUnstructuredGrid::createPoints()
 	const uint64_t coordCount = pointCount * 3;
 	if (!partialCRS && unstructuredGrid->getLocalCrs(0)->isDepthOriented())
 	{
-		for (uint64_t zCoordIndex = 2; zCoordIndex < coordCount; zCoordIndex += 3)
+		for (uint_fast64_t  zCoordIndex = 2; zCoordIndex < coordCount; zCoordIndex += 3)
 		{
 			allXyzPoints[zCoordIndex] *= -1;
 		}

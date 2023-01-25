@@ -93,17 +93,17 @@ void ResqmlIjkGridSubRepToVtkUnstructuredGrid::loadVtkObject()
 
 		size_t indice = 0;
 
-		for (uint32_t vtkKCellIndex = initKIndex; vtkKCellIndex < maxKIndex; ++vtkKCellIndex)
+		for (uint_fast32_t  vtkKCellIndex = initKIndex; vtkKCellIndex < maxKIndex; ++vtkKCellIndex)
 		{
-			for (uint32_t vtkJCellIndex = 0; vtkJCellIndex < jCellCount; ++vtkJCellIndex)
+			for (uint_fast32_t  vtkJCellIndex = 0; vtkJCellIndex < jCellCount; ++vtkJCellIndex)
 			{
-				for (uint32_t vtkICellIndex = 0; vtkICellIndex < iCellCount; ++vtkICellIndex)
+				for (uint_fast32_t  vtkICellIndex = 0; vtkICellIndex < iCellCount; ++vtkICellIndex)
 				{
 					if (elementIndices[indice] == cellIndex)
 					{
 						vtkSmartPointer<vtkHexahedron> hex = vtkSmartPointer<vtkHexahedron>::New();
 
-						for (uint8_t cornerId = 0; cornerId < 8; ++cornerId)
+						for (uint_fast8_t  cornerId = 0; cornerId < 8; ++cornerId)
 						{
 							hex->GetPointIds()->SetId(cornerId,
 													  supportingGrid->getXyzPointIndexFromCellCorner(vtkICellIndex, vtkJCellIndex, vtkKCellIndex, correspondingResqmlCornerId[cornerId]));

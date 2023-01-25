@@ -59,7 +59,7 @@ uint32_t ResqmlTriangulatedToVtkPolyData::getPreviousPatchesNodeCount() const
 	uint32_t result = 0;
 	RESQML2_NS::TriangulatedSetRepresentation const* triangulated = getResqmlData();
 
-	for (uint32_t previousPatchIndex = 0; previousPatchIndex < patch_index; ++previousPatchIndex)
+	for (uint_fast32_t  previousPatchIndex = 0; previousPatchIndex < patch_index; ++previousPatchIndex)
 	{
 		result += triangulated->getXyzPointCountOfPatch(previousPatchIndex);
 	}

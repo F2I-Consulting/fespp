@@ -130,19 +130,19 @@ void ResqmlIjkGridToVtkUnstructuredGrid::loadVtkObject()
 	const uint64_t translatePoint = ijkGrid->getXyzPointCountOfKInterface() * this->initKIndex;
 
 	uint64_t cellIndex = 0;
-	vtk_unstructuredGrid->Allocate(this->iCellCount * this->jCellCount);
+	vtk_unstructuredGrid->Allocate(this->iCellCount * this->jCellCount * (this->maxKIndex- this->initKIndex));
 	ijkGrid->loadSplitInformation();
 	vtkSmartPointer<vtkIdList> nodes = vtkSmartPointer<vtkIdList>::New();
 	nodes->SetNumberOfIds(8);
-	for (uint32_t vtkKCellIndex = this->initKIndex; vtkKCellIndex < this->maxKIndex; ++vtkKCellIndex)
+	for (uint_fast32_t vtkKCellIndex = this->initKIndex; vtkKCellIndex < this->maxKIndex; ++vtkKCellIndex)
 	{
-		for (uint32_t vtkJCellIndex = 0; vtkJCellIndex < this->jCellCount; ++vtkJCellIndex)
+		for (uint_fast32_t vtkJCellIndex = 0; vtkJCellIndex < this->jCellCount; ++vtkJCellIndex)
 		{
-			for (uint32_t vtkICellIndex = 0; vtkICellIndex < this->iCellCount; ++vtkICellIndex)
+			for (uint_fast32_t vtkICellIndex = 0; vtkICellIndex < this->iCellCount; ++vtkICellIndex)
 			{
 				if (enabledCells[cellIndex++])
 				{
-					for (uint8_t cornerId = 0; cornerId < 8; ++cornerId)
+					for (uint_fast8_t cornerId = 0; cornerId < 8; ++cornerId)
 					{
 						nodes->SetId(cornerId, 
 							ijkGrid->getXyzPointIndexFromCellCorner(vtkICellIndex, vtkJCellIndex, vtkKCellIndex, correspondingResqmlCornerId[cornerId]) - translatePoint);
@@ -211,16 +211,27 @@ void ResqmlIjkGridToVtkUnstructuredGrid::createPoints()
 		const uint64_t kInterfaceNodeCount = ijkGrid->getXyzPointCountOfKInterface();
 		std::unique_ptr<double[]> allXyzPoints(new double[kInterfaceNodeCount * 3]);
 
-		for (uint32_t kInterface = initKInterfaceIndex; kInterface <= maxKInterfaceIndex; ++kInterface)
+		for (uint_fast32_t kInterface = initKInterfaceIndex; kInterface <= maxKInterfaceIndex; ++kInterface)
 		{
 			ijkGrid->getXyzPointsOfKInterface(kInterface, allXyzPoints.get());
 			auto const *crs = ijkGrid->getLocalCrs(0);
-			const double xOffset = crs->getOriginOrdinal1();
-			const double yOffset = crs->getOriginOrdinal2();
-			auto const *depthCrs = dynamic_cast<RESQML2_NS::LocalDepth3dCrs const *>(crs);
-			const double zOffset = depthCrs != nullptr ? depthCrs->getOriginDepthOrElevation() : 0;
-			const double zIndice = crs->isDepthOriented() ? -1 : 1;
-			for (uint64_t nodeIndex = 0; nodeIndex < kInterfaceNodeCount * 3; nodeIndex += 3)
+			double xOffset = .0;
+			double yOffset = .0;
+			double zOffset = .0;
+			double zIndice = allXyzPoints[2]>0?-1.:1.;
+			if (crs != nullptr && !crs->isPartial())
+			{
+				xOffset = crs->getOriginOrdinal1();
+				yOffset = crs->getOriginOrdinal2();
+				auto const* depthCrs = dynamic_cast<RESQML2_NS::LocalDepth3dCrs const*>(crs);
+				zOffset = depthCrs != nullptr ? depthCrs->getOriginDepthOrElevation() : 0;
+				zIndice = crs->isDepthOriented() ? -1. : 1.;
+			}
+			else
+			{
+				vtkOutputWindowDisplayWarningText("The CRS doesn't exist or is partial");
+			}
+			for (uint_fast64_t nodeIndex = 0; nodeIndex < kInterfaceNodeCount * 3; nodeIndex += 3)
 			{
 				this->points->SetPoint(point_id++, allXyzPoints[nodeIndex] + xOffset, allXyzPoints[nodeIndex + 1] + yOffset, (allXyzPoints[nodeIndex + 2] + zOffset) * zIndice);
 			}
@@ -236,7 +247,7 @@ void ResqmlIjkGridToVtkUnstructuredGrid::createPoints()
 		const size_t coordCount = this->pointCount * 3;
 
 		const double zIndice = ijkGrid->getLocalCrs(0)->isDepthOriented() ? -1 : 1;
-		for (uint64_t pointIndex = 0; pointIndex < coordCount; pointIndex += 3)
+		for (uint_fast64_t  pointIndex = 0; pointIndex < coordCount; pointIndex += 3)
 		{
 			this->points->SetPoint(point_id++, allXyzPoints[pointIndex], allXyzPoints[pointIndex + 1], -allXyzPoints[pointIndex + 2] * zIndice);
 		}
