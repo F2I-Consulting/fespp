@@ -76,8 +76,8 @@ public:
 	unsigned int subRepLinkedCount();
 
 	/**
-*
-*/
+	*
+	*/
 	std::string getUuid() const;
 	
 

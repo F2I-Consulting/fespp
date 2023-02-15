@@ -49,12 +49,14 @@ public:
 	/**
 	 * Create the VTK points from the RESQML points of the RESQML IJK grid representation.
 	 */
-	void createPoints(/* RESQML2_NS::AbstractIjkGridRepresentation *ijkGrid */);
+	void createPoints();
 
 
 protected:
 	RESQML2_NS::UnstructuredGridRepresentation * getResqmlData() const;
 	vtkSmartPointer<vtkPoints> points;
+	// Index of the nodes constituting a single VTK optimized cell
+	// The VTK HEXAGONALN PRISM is the VTK optimized cell containing the maximum number of nodes which is 12 as the size of this array.
 	std::array<vtkIdType, 12> nodes;
 
 private:
@@ -72,9 +74,9 @@ private:
 	 * @param cellIndex							The index of the RESQML cell in the RESQML UnstructuredGridRepresentation to be mapped and inserted in the VTK UnstructuredGrid.
 	 */
 	void cellVtkTetra(vtkSmartPointer<vtkUnstructuredGrid> vtk_unstructuredGrid,
-					  ULONG64 const *cumulativeFaceCountPerCell,
-					  unsigned char const *cellFaceNormalOutwardlyDirected,
-					  ULONG64 cellIndex);
+		uint64_t const *cumulativeFaceCountPerCell,
+		unsigned char const *cellFaceNormalOutwardlyDirected,
+		uint64_t cellIndex);
 
 	/**
 	* Insert a new VTK wedge or pyramid corresponding to a particular RESQML cell
@@ -85,29 +87,53 @@ private:
 	* @param cellIndex							The index of the RESQML cell in the RESQML UnstructuredGridRepresentation to be mapped and inserted in the VTK UnstructuredGrid.
 	*/
 	void cellVtkWedgeOrPyramid(vtkSmartPointer<vtkUnstructuredGrid> vtk_unstructuredGrid,
-		ULONG64 const* cumulativeFaceCountPerCell, unsigned char const* cellFaceNormalOutwardlyDirected,
-		ULONG64 cellIndex);
+		uint64_t const* cumulativeFaceCountPerCell, unsigned char const* cellFaceNormalOutwardlyDirected,
+		uint64_t cellIndex);
 
 	/**
 	 * Insert a new VTK hexahedron corresponding to a particular RESQML cell only if the RESQML cell is Quadrilaterally-faced hexahedron.
 	 *
 	 * @param unstructuredGridRep				The RESQML UnstructuredGridRepresentation which contains the cell to map and to insert in the VTK UnstructuredGrid
-	 * @param cumulativeFaceCountPerCell			The cumulative count of faces for each cell of the RESQML UnstructuredGridRepresentation.
+	 * @param cumulativeFaceCountPerCell		The cumulative count of faces for each cell of the RESQML UnstructuredGridRepresentation.
 	 * @param cellFaceNormalOutwardlyDirected	Indicates for each cell face of the RESQML UnstructuredGridRepresentation if its normal using the right hand rule is outwardly directed.
 	 * @param cellIndex							The index of the RESQML cell in the RESQML UnstructuredGridRepresentation to be mapped and inserted in the VTK UnstructuredGrid.
 	 *
 	 * @return true if the hexahedron is a Quadrilaterally-faced one, false otherwise
 	 */
 	bool cellVtkHexahedron(vtkSmartPointer<vtkUnstructuredGrid> vtk_unstructuredGrid,
-						   ULONG64 const *cumulativeFaceCountPerCell,
-						   unsigned char const *cellFaceNormalOutwardlyDirected,
-						   ULONG64 cellIndex);
+		uint64_t const *cumulativeFaceCountPerCell,
+		unsigned char const *cellFaceNormalOutwardlyDirected,
+		uint64_t cellIndex);
 
-	// verify and add cell if is  VTK_PENTAGONAL_PRISM
-	bool cellVtkPentagonalPrism(vtkSmartPointer<vtkUnstructuredGrid> vtk_unstructuredGrid, ULONG64 cellIndex);
-	
-	// verify and add cell if is  VTK_HEXAGONAL_PRISM
-	bool cellVtkHexagonalPrism(vtkSmartPointer<vtkUnstructuredGrid> vtk_unstructuredGrid, ULONG64 cellIndex);
+	/**
+	 * Insert a new VTK_PENTAGONAL_PRISM corresponding to a particular RESQML cell only if the RESQML cell contains two faces with 5 nodes.
+	 *
+	 * @param unstructuredGridRep				The RESQML UnstructuredGridRepresentation which contains the cell to map and to insert in the VTK UnstructuredGrid
+	 * @param cumulativeFaceCountPerCell		The cumulative count of faces for each cell of the RESQML UnstructuredGridRepresentation.
+	 * @param cellFaceNormalOutwardlyDirected	Indicates for each cell face of the RESQML UnstructuredGridRepresentation if its normal using the right hand rule is outwardly directed.
+	 * @param cellIndex							The index of the RESQML cell in the RESQML UnstructuredGridRepresentation to be mapped and inserted in the VTK UnstructuredGrid.
+	 *
+	 * @return true if the RESQML cell contains two faces with 5 nodes, false otherwise
+	 */
+	bool cellVtkPentagonalPrism(vtkSmartPointer<vtkUnstructuredGrid> vtk_unstructuredGrid,
+		uint64_t const *cumulativeFaceCountPerCell,
+		unsigned char const *cellFaceNormalOutwardlyDirected,
+		uint64_t cellIndex);
+
+	/**
+	 * Insert a new VTK_HEXAGONAL_PRISM corresponding to a particular RESQML cell only if the RESQML cell contains two faces with 5 nodes.
+	 *
+	 * @param unstructuredGridRep				The RESQML UnstructuredGridRepresentation which contains the cell to map and to insert in the VTK UnstructuredGrid
+	 * @param cumulativeFaceCountPerCell		The cumulative count of faces for each cell of the RESQML UnstructuredGridRepresentation.
+	 * @param cellFaceNormalOutwardlyDirected	Indicates for each cell face of the RESQML UnstructuredGridRepresentation if its normal using the right hand rule is outwardly directed.
+	 * @param cellIndex							The index of the RESQML cell in the RESQML UnstructuredGridRepresentation to be mapped and inserted in the VTK UnstructuredGrid.
+	 *
+	 * @return true if the RESQML cell contains two faces with 5 nodes, false otherwise
+	 */
+	bool cellVtkHexagonalPrism(vtkSmartPointer<vtkUnstructuredGrid> vtk_unstructuredGrid,
+		uint64_t const *cumulativeFaceCountPerCell,
+		unsigned char const *cellFaceNormalOutwardlyDirected,
+		uint64_t cellIndex);
 
 	friend class ResqmlUnstructuredGridSubRepToVtkUnstructuredGrid;
 };

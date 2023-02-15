@@ -126,11 +126,11 @@ void ResqmlUnstructuredGridSubRepToVtkUnstructuredGrid::loadVtkObject()
 					}
 					else if (localFaceCount == 7)
 					{ // VTK_PENTAGONAL_PRISM
-						isOptimizedCell = this->mapperUnstructuredGrid->cellVtkPentagonalPrism(vtk_unstructuredGrid, elementIndices[cellIndex]);
+						isOptimizedCell = this->mapperUnstructuredGrid->cellVtkPentagonalPrism(vtk_unstructuredGrid, cumulativeFaceCountPerCell, cellFaceNormalOutwardlyDirected.get(), elementIndices[cellIndex]);
 					}
 					else if (localFaceCount == 8)
 					{ // VTK_HEXAGONAL_PRISM
-						isOptimizedCell = this->mapperUnstructuredGrid->cellVtkHexagonalPrism(vtk_unstructuredGrid, elementIndices[cellIndex]);
+						isOptimizedCell = this->mapperUnstructuredGrid->cellVtkHexagonalPrism(vtk_unstructuredGrid, cumulativeFaceCountPerCell, cellFaceNormalOutwardlyDirected.get(), elementIndices[cellIndex]);
 					}
 
 					if (!isOptimizedCell)
