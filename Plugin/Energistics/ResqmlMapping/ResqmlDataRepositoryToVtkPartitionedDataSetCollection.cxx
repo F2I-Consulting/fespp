@@ -102,7 +102,7 @@ std::vector<std::string> ResqmlDataRepositoryToVtkPartitionedDataSetCollection::
     ETP_NS::InitializationParameters initializationParams(gen(), etp_url);
 
     std::map<std::string, std::string> additionalHandshakeHeaderFields = {{"data-partition-id", data_partition}};
-    if (initializationParams.getPort() == 80)
+    if (etp_url.find("ws://") == 0)
     {
         session = ETP_NS::ClientSessionLaunchers::createWsClientSession(&initializationParams, auth_connection, additionalHandshakeHeaderFields);
     }
@@ -118,7 +118,7 @@ std::vector<std::string> ResqmlDataRepositoryToVtkPartitionedDataSetCollection::
     repository->setHdfProxyFactory(new ETP_NS::FesapiHdfProxyFactory(session.get()));
 
     auto plainSession = std::dynamic_pointer_cast<ETP_NS::PlainClientSession>(session);
-    if (initializationParams.getPort() == 80)
+    if (etp_url.find("ws://") == 0)
     {
         std::thread sessionThread(&ETP_NS::PlainClientSession::run, plainSession);
         sessionThread.detach();
