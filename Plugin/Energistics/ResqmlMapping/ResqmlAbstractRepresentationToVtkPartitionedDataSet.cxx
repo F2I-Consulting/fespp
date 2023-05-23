@@ -134,3 +134,8 @@ std::string ResqmlAbstractRepresentationToVtkPartitionedDataSet::getUuid() const
 {
 	return this->getResqmlData()->getUuid();
 }
+
+std::string ResqmlAbstractRepresentationToVtkPartitionedDataSet::getTitle() const
+{
+	return this->getResqmlData()->getTitle();
+}

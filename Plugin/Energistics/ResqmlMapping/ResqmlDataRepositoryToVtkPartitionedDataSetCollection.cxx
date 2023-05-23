@@ -117,9 +117,10 @@ std::vector<std::string> ResqmlDataRepositoryToVtkPartitionedDataSetCollection::
 
     repository->setHdfProxyFactory(new ETP_NS::FesapiHdfProxyFactory(session.get()));
 
-    auto plainSession = std::dynamic_pointer_cast<ETP_NS::PlainClientSession>(session);
+ //
     if (etp_url.find("ws://") == 0)
     {
+        auto plainSession = std::dynamic_pointer_cast<ETP_NS::PlainClientSession>(session);
         std::thread sessionThread(&ETP_NS::PlainClientSession::run, plainSession);
         sessionThread.detach();
     }
@@ -841,11 +842,9 @@ vtkPartitionedDataSetCollection *ResqmlDataRepositoryToVtkPartitionedDataSetColl
             {
                 loadMapper(std::string(tmp_assembly->GetNodeName(node_selection)).substr(1), time);
             }
- //           if (this->nodeId_to_resqml[node_selection]->getOutput()->GetNumberOfPartitions() > 0)
- //           {
                 this->output->SetPartitionedDataSet(index, this->nodeId_to_resqml[node_selection]->getOutput());
-                this->output->GetMetaData(index++)->Set(vtkCompositeDataSet::NAME(), this->output->GetDataAssembly()->GetNodeName(node_selection));
- //           }
+                this->output->GetMetaData(index++)->Set(vtkCompositeDataSet::NAME(), this->nodeId_to_resqml[node_selection]->getTitle()+'('+this->nodeId_to_resqml[node_selection]->getUuid()+')');
+//                this->output->GetMetaData(index++)->Set(vtkCompositeDataSet::NAME(), this->output->GetDataAssembly()->GetNodeName(node_selection));
         }
         else
         {

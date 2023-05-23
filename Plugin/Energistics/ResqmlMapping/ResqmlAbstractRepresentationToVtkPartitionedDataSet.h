@@ -78,7 +78,8 @@ public:
 	/**
 	*
 	*/
-	std::string getUuid() const;
+	std::string getUuid() const; 
+	std::string getTitle() const;
 	
 
 protected:
