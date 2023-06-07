@@ -38,7 +38,7 @@ under the License.
 
 //----------------------------------------------------------------------------
 ResqmlPropertyToVtkDataArray::ResqmlPropertyToVtkDataArray(RESQML2_NS::AbstractValuesProperty const *valuesProperty,
-														   uint32_t cellCount,
+														   uint64_t cellCount,
 														   uint64_t pointCount,
 														   uint32_t iCellCount,
 														   uint32_t jCellCount,
@@ -69,8 +69,8 @@ ResqmlPropertyToVtkDataArray::ResqmlPropertyToVtkDataArray(RESQML2_NS::AbstractV
 		vtkOutputWindowDisplayErrorText("does not support vectorial property yet\n");
 	}
 
-	unsigned long long numValuesInEachDimension = cellCount;						 // cellCount/kCellCount; //3834;//iCellCount*jCellCount*kCellCount;
-	unsigned long long offsetInEachDimension = iCellCount * jCellCount * initKIndex; // initKIndex;//iCellCount*jCellCount*initKIndex;
+	const uint64_t numValuesInEachDimension = cellCount;						 // cellCount/kCellCount; //3834;//iCellCount*jCellCount*kCellCount;
+	const uint64_t offsetInEachDimension = iCellCount * jCellCount * initKIndex; // initKIndex;//iCellCount*jCellCount*initKIndex;
 
 	std::string typeProperty = valuesProperty->getXmlTag();
 	if (typeProperty == RESQML2_NS::ContinuousProperty::XML_TAG)
