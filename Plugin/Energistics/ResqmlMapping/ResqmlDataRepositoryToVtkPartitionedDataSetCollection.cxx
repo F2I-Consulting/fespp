@@ -146,7 +146,7 @@ std::vector<std::string> ResqmlDataRepositoryToVtkPartitionedDataSetCollection::
     const auto dataspaces = session->getDataspaces();
 
     std::transform(dataspaces.begin(), dataspaces.end(), std::back_inserter(result),
-        [](const auto& ds) { return ds.uri; });
+        [](const Energistics::Etp::v12::Datatypes::Object::Dataspace& ds) { return ds.uri; });
 
 #endif
     return result;
