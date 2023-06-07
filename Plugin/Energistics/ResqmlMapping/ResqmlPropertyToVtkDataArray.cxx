@@ -48,13 +48,13 @@ ResqmlPropertyToVtkDataArray::ResqmlPropertyToVtkDataArray(RESQML2_NS::AbstractV
 {
 	int nbElement = 0;
 
-	const gsoap_eml2_3::resqml22__IndexableElement element = valuesProperty->getAttachmentKind();
-	if (element == gsoap_eml2_3::resqml22__IndexableElement::cells ||
-		element == gsoap_eml2_3::resqml22__IndexableElement::triangles)
+	const gsoap_eml2_3::eml23__IndexableElement element = valuesProperty->getAttachmentKind();
+	if (element == gsoap_eml2_3::eml23__IndexableElement::cells ||
+		element == gsoap_eml2_3::eml23__IndexableElement::triangles)
 	{
 		nbElement = cellCount;
 	}
-	else if (element == gsoap_eml2_3::resqml22__IndexableElement::nodes)
+	else if (element == gsoap_eml2_3::eml23__IndexableElement::nodes)
 	{
 		nbElement = pointCount;
 	}
@@ -147,13 +147,13 @@ ResqmlPropertyToVtkDataArray::ResqmlPropertyToVtkDataArray(resqml2::AbstractValu
 {
 	int nbElement = 0;
 
-	const gsoap_eml2_3::resqml22__IndexableElement element = valuesProperty->getAttachmentKind();
-	if (element == gsoap_eml2_3::resqml22__IndexableElement::cells ||
-		element == gsoap_eml2_3::resqml22__IndexableElement::triangles)
+	const gsoap_eml2_3::eml23__IndexableElement element = valuesProperty->getAttachmentKind();
+	if (element == gsoap_eml2_3::eml23__IndexableElement::cells ||
+		element == gsoap_eml2_3::eml23__IndexableElement::triangles)
 	{
 		nbElement = cellCount;
 	}
-	else if (element == gsoap_eml2_3::resqml22__IndexableElement::nodes)
+	else if (element == gsoap_eml2_3::eml23__IndexableElement::nodes)
 	{
 		nbElement = pointCount;
 	}

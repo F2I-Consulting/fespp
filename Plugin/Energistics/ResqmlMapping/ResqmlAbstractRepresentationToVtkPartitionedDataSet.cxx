@@ -68,11 +68,11 @@ void ResqmlAbstractRepresentationToVtkPartitionedDataSet::addDataArray(const std
 					patch_index);
 		switch (resqmlProp->getAttachmentKind())
 		{
-		case gsoap_eml2_3::resqml22__IndexableElement::cells:
-		case gsoap_eml2_3::resqml22__IndexableElement::triangles:
+		case gsoap_eml2_3::eml23__IndexableElement::cells:
+		case gsoap_eml2_3::eml23__IndexableElement::triangles:
 			this->vtkData->GetPartition(0)->GetCellData()->AddArray(fesppProperty->getVtkData());
 			break;
-		case gsoap_eml2_3::resqml22__IndexableElement::nodes:
+		case gsoap_eml2_3::eml23__IndexableElement::nodes:
 			this->vtkData->GetPartition(0)->GetPointData()->AddArray(fesppProperty->getVtkData());
 			break;
 		default:

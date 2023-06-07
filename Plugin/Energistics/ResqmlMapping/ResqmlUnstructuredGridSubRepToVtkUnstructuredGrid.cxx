@@ -80,8 +80,8 @@ void ResqmlUnstructuredGridSubRepToVtkUnstructuredGrid::loadVtkObject()
 		auto *supportingGrid = dynamic_cast<RESQML2_NS::UnstructuredGridRepresentation *>(subRep->getSupportingRepresentation(0));
 		if (supportingGrid != nullptr)
 		{
-			gsoap_eml2_3::resqml22__IndexableElement indexable_element = subRep->getElementKindOfPatch(0, 0);
-			if (indexable_element == gsoap_eml2_3::resqml22__IndexableElement::cells)
+			gsoap_eml2_3::eml23__IndexableElement indexable_element = subRep->getElementKindOfPatch(0, 0);
+			if (indexable_element == gsoap_eml2_3::eml23__IndexableElement::cells)
 			{
 				vtkSmartPointer<vtkUnstructuredGrid> vtk_unstructuredGrid = vtkSmartPointer<vtkUnstructuredGrid>::New();
 				vtk_unstructuredGrid->Allocate(subRep->getElementCountOfPatch(0));
@@ -159,7 +159,7 @@ void ResqmlUnstructuredGridSubRepToVtkUnstructuredGrid::loadVtkObject()
 				this->vtkData->SetPartition(0, vtk_unstructuredGrid);
 				this->vtkData->Modified();
 			}
-			else if (indexable_element == gsoap_eml2_3::resqml22__IndexableElement::faces)
+			else if (indexable_element == gsoap_eml2_3::eml23__IndexableElement::faces)
 			{
 				vtkSmartPointer<vtkPolyData> vtk_polydata = vtkSmartPointer<vtkPolyData>::New();
 				vtk_polydata->SetPoints(this->getMapperVtkPoint());
