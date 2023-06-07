@@ -104,35 +104,35 @@ void ResqmlWellboreMarkerToVtkPolyData::displayOption(bool orientation, int size
 
 namespace
 {
-	double convertToDegree(double value, gsoap_eml2_1::eml21__PlaneAngleUom uom)
+	double convertToDegree(double value, gsoap_eml2_3::eml23__PlaneAngleUom uom)
 	{
 		switch (uom)
 		{
-			//				case gsoap_eml2_1::eml21__PlaneAngleUom::0_x002e001_x0020seca:
-		case gsoap_eml2_1::eml21__PlaneAngleUom::ccgr:
-		case gsoap_eml2_1::eml21__PlaneAngleUom::cgr:
+			//				case gsoap_eml2_3::eml23__PlaneAngleUom::0_x002e001_x0020seca:
+		case gsoap_eml2_3::eml23__PlaneAngleUom::ccgr:
+		case gsoap_eml2_3::eml23__PlaneAngleUom::cgr:
 			break;
-		case gsoap_eml2_1::eml21__PlaneAngleUom::dega:
+		case gsoap_eml2_3::eml23__PlaneAngleUom::dega:
 			return value;
-		case gsoap_eml2_1::eml21__PlaneAngleUom::gon:
+		case gsoap_eml2_3::eml23__PlaneAngleUom::gon:
 			return value * 0.9;
-		case gsoap_eml2_1::eml21__PlaneAngleUom::krad:
+		case gsoap_eml2_3::eml23__PlaneAngleUom::krad:
 			return value * 1e3 * 180 / vtkMath::Pi();
-		case gsoap_eml2_1::eml21__PlaneAngleUom::mila:
+		case gsoap_eml2_3::eml23__PlaneAngleUom::mila:
 			return value * 0.0573;
-		case gsoap_eml2_1::eml21__PlaneAngleUom::mina:
+		case gsoap_eml2_3::eml23__PlaneAngleUom::mina:
 			return value * 0.01666667;
-		case gsoap_eml2_1::eml21__PlaneAngleUom::Mrad:
+		case gsoap_eml2_3::eml23__PlaneAngleUom::Mrad:
 			return value * 1e6 * 180 / vtkMath::Pi();
-		case gsoap_eml2_1::eml21__PlaneAngleUom::mrad:
+		case gsoap_eml2_3::eml23__PlaneAngleUom::mrad:
 			return value * 1e-3 * 180 / vtkMath::Pi();
-		case gsoap_eml2_1::eml21__PlaneAngleUom::rad:
+		case gsoap_eml2_3::eml23__PlaneAngleUom::rad:
 			return value * 180 / vtkMath::Pi();
-		case gsoap_eml2_1::eml21__PlaneAngleUom::rev:
+		case gsoap_eml2_3::eml23__PlaneAngleUom::rev:
 			return value * 360;
-		case gsoap_eml2_1::eml21__PlaneAngleUom::seca:
+		case gsoap_eml2_3::eml23__PlaneAngleUom::seca:
 			return value * 0.0002777778;
-		case gsoap_eml2_1::eml21__PlaneAngleUom::urad:
+		case gsoap_eml2_3::eml23__PlaneAngleUom::urad:
 			return value * 1e-6 * 180 / vtkMath::Pi();
 		}
 
