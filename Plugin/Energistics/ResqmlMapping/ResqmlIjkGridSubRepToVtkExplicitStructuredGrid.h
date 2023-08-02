@@ -16,8 +16,8 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 -----------------------------------------------------------------------*/
-#ifndef __ResqmlIjkGridSubRepToVtkUnstructuredGrid__h__
-#define __ResqmlIjkGridSubRepToVtkUnstructuredGrid__h__
+#ifndef __ResqmlIjkGridSubRepToVtkExplicitStructuredGrid__h__
+#define __ResqmlIjkGridSubRepToVtkExplicitStructuredGrid__h__
 
 /** @brief	transform a resqml ijkGrid Subrepresentation to vtkUnstructuredGrid
  */
@@ -33,15 +33,15 @@ namespace RESQML2_NS
 	class SubRepresentation;
 }
 
-class ResqmlIjkGridToVtkUnstructuredGrid;
+class ResqmlIjkGridToVtkExplicitStructuredGrid;
 
-class ResqmlIjkGridSubRepToVtkUnstructuredGrid : public ResqmlAbstractRepresentationToVtkPartitionedDataSet
+class ResqmlIjkGridSubRepToVtkExplicitStructuredGrid : public ResqmlAbstractRepresentationToVtkPartitionedDataSet
 {
 public:
 	/**
 	 * Constructor
 	 */
-	ResqmlIjkGridSubRepToVtkUnstructuredGrid(RESQML2_NS::SubRepresentation *ijkGridSubRep, ResqmlIjkGridToVtkUnstructuredGrid* support, int proc_number = 0, int max_proc = 1);
+	ResqmlIjkGridSubRepToVtkExplicitStructuredGrid(RESQML2_NS::SubRepresentation *ijkGridSubRep, ResqmlIjkGridToVtkExplicitStructuredGrid* support, int proc_number = 0, int max_proc = 1);
 
 	/**
 	 * load vtkDataSet with resqml data
@@ -56,7 +56,7 @@ public:
 protected:
 	RESQML2_NS::SubRepresentation const* getResqmlData() const;
 
-	ResqmlIjkGridToVtkUnstructuredGrid* mapperIjkGrid;
+	ResqmlIjkGridToVtkExplicitStructuredGrid* mapperIjkGrid;
 
 private:
 

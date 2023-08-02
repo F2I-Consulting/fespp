@@ -16,7 +16,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 -----------------------------------------------------------------------*/
-#include "ResqmlMapping/ResqmlIjkGridToVtkUnstructuredGrid.h"
+#include "ResqmlMapping/ResqmlIjkGridToVtkExplicitStructuredGrid.h"
 
 #include <array>
 
@@ -27,7 +27,8 @@ under the License.
 #include <vtkDoubleArray.h>
 #include <vtkEmptyCell.h>
 #include <vtkHexahedron.h>
-#include <vtkUnstructuredGrid.h>
+#include <vtkExplicitStructuredGrid.h>
+#include "vtkPointData.h"
 
 // include FESAPI
 #include <fesapi/resqml2/AbstractIjkGridRepresentation.h>
@@ -37,7 +38,7 @@ under the License.
 #include "ResqmlPropertyToVtkDataArray.h"
 
 //----------------------------------------------------------------------------
-ResqmlIjkGridToVtkUnstructuredGrid::ResqmlIjkGridToVtkUnstructuredGrid(RESQML2_NS::AbstractIjkGridRepresentation *ijkGrid, int proc_number, int max_proc)
+ResqmlIjkGridToVtkExplicitStructuredGrid::ResqmlIjkGridToVtkExplicitStructuredGrid(RESQML2_NS::AbstractIjkGridRepresentation *ijkGrid, int proc_number, int max_proc)
 	: ResqmlAbstractRepresentationToVtkPartitionedDataSet(ijkGrid,
 											   proc_number,
 											   max_proc),
@@ -76,13 +77,13 @@ ResqmlIjkGridToVtkUnstructuredGrid::ResqmlIjkGridToVtkUnstructuredGrid(RESQML2_N
 }
 
 //----------------------------------------------------------------------------
-RESQML2_NS::AbstractIjkGridRepresentation * ResqmlIjkGridToVtkUnstructuredGrid::getResqmlData() const
+RESQML2_NS::AbstractIjkGridRepresentation * ResqmlIjkGridToVtkExplicitStructuredGrid::getResqmlData() const
 {
 	return static_cast<RESQML2_NS::AbstractIjkGridRepresentation *>(resqmlData);
 }
 
 //----------------------------------------------------------------------------
-void ResqmlIjkGridToVtkUnstructuredGrid::checkHyperslabingCapacity(RESQML2_NS::AbstractIjkGridRepresentation *ijkGrid)
+void ResqmlIjkGridToVtkExplicitStructuredGrid::checkHyperslabingCapacity(RESQML2_NS::AbstractIjkGridRepresentation *ijkGrid)
 {
 	try
 	{
@@ -99,21 +100,17 @@ void ResqmlIjkGridToVtkUnstructuredGrid::checkHyperslabingCapacity(RESQML2_NS::A
 }
 
 //----------------------------------------------------------------------------
-// Create and set the list of hexahedra of the vtkUnstructuredGrid based on the list of points already set
-void ResqmlIjkGridToVtkUnstructuredGrid::loadVtkObject()
+void ResqmlIjkGridToVtkExplicitStructuredGrid::loadVtkObject()
 {
-	RESQML2_NS::AbstractIjkGridRepresentation * ijkGrid = getResqmlData();
+	RESQML2_NS::AbstractIjkGridRepresentation* ijkGrid = getResqmlData();
 
-	// Create and set the list of points of the vtkUnstructuredGrid
-	vtkSmartPointer<vtkUnstructuredGrid> vtk_unstructuredGrid = vtkSmartPointer<vtkUnstructuredGrid>::New();
-	vtk_unstructuredGrid->SetPoints(this->getVtkPoints());
+	vtkExplicitStructuredGrid* vtk_explicitStructuredGrid = vtkExplicitStructuredGrid::New();
 
-	// Define hexahedron node ordering according to Paraview convention : https://lorensen.github.io/VTKExamples/site/VTKBook/05Chapter5/#Figure%205-3
-	std::array<unsigned int, 8> correspondingResqmlCornerId = {0, 1, 2, 3, 4, 5, 6, 7};
-	if (!ijkGrid->isRightHanded())
-	{
-		correspondingResqmlCornerId = {4, 5, 6, 7, 0, 1, 2, 3};
-	}
+
+	int extent[6] = { 0, this->iCellCount, 0, this->jCellCount, this->initKIndex, this->maxKIndex };
+	vtk_explicitStructuredGrid->SetExtent(extent);
+
+	vtk_explicitStructuredGrid->SetPoints(this->getVtkPoints());
 
 	// Check which cells have no geometry
 	const uint64_t cellCount = ijkGrid->getCellCount();
@@ -129,40 +126,50 @@ void ResqmlIjkGridToVtkUnstructuredGrid::loadVtkObject()
 
 	const uint64_t translatePoint = ijkGrid->getXyzPointCountOfKInterface() * this->initKIndex;
 
-	uint64_t cellIndex = 0;
-	vtk_unstructuredGrid->Allocate(this->iCellCount * this->jCellCount * (this->maxKIndex- this->initKIndex));
 	ijkGrid->loadSplitInformation();
+
+	uint64_t cellIndex = 0;
 	vtkSmartPointer<vtkIdList> nodes = vtkSmartPointer<vtkIdList>::New();
 	nodes->SetNumberOfIds(8);
+
 	for (uint_fast32_t vtkKCellIndex = this->initKIndex; vtkKCellIndex < this->maxKIndex; ++vtkKCellIndex)
 	{
 		for (uint_fast32_t vtkJCellIndex = 0; vtkJCellIndex < this->jCellCount; ++vtkJCellIndex)
 		{
 			for (uint_fast32_t vtkICellIndex = 0; vtkICellIndex < this->iCellCount; ++vtkICellIndex)
 			{
+				vtkIdType cellId = vtk_explicitStructuredGrid->ComputeCellId(vtkICellIndex, vtkJCellIndex, vtkKCellIndex);
 				if (enabledCells[cellIndex++])
 				{
-					for (uint_fast8_t cornerId = 0; cornerId < 8; ++cornerId)
-					{
-						nodes->SetId(cornerId, 
-							ijkGrid->getXyzPointIndexFromCellCorner(vtkICellIndex, vtkJCellIndex, vtkKCellIndex, correspondingResqmlCornerId[cornerId]) - translatePoint);
-					}
-					vtk_unstructuredGrid->InsertNextCell(VTK_HEXAHEDRON, nodes);
+					vtkIdType* indice = vtk_explicitStructuredGrid->GetCellPoints(cellId);
+					indice[0] = ijkGrid->getXyzPointIndexFromCellCorner(vtkICellIndex, vtkJCellIndex, vtkKCellIndex, 0) - translatePoint;
+					indice[1] = ijkGrid->getXyzPointIndexFromCellCorner(vtkICellIndex, vtkJCellIndex, vtkKCellIndex, 1) - translatePoint;
+					indice[2] = ijkGrid->getXyzPointIndexFromCellCorner(vtkICellIndex, vtkJCellIndex, vtkKCellIndex, 2) - translatePoint;
+					indice[3] = ijkGrid->getXyzPointIndexFromCellCorner(vtkICellIndex, vtkJCellIndex, vtkKCellIndex, 3) - translatePoint;
+					indice[4] = ijkGrid->getXyzPointIndexFromCellCorner(vtkICellIndex, vtkJCellIndex, vtkKCellIndex, 4) - translatePoint;
+					indice[5] = ijkGrid->getXyzPointIndexFromCellCorner(vtkICellIndex, vtkJCellIndex, vtkKCellIndex, 5) - translatePoint;
+					indice[6] = ijkGrid->getXyzPointIndexFromCellCorner(vtkICellIndex, vtkJCellIndex, vtkKCellIndex, 6) - translatePoint;
+					indice[7] = ijkGrid->getXyzPointIndexFromCellCorner(vtkICellIndex, vtkJCellIndex, vtkKCellIndex, 7) - translatePoint;
+
 				}
-				else
-				{
-					vtk_unstructuredGrid->InsertNextCell(VTK_EMPTY_CELL, 0, nullptr);
+				else {
+					vtk_explicitStructuredGrid->BlankCell(cellId);
 				}
 			}
 		}
 	}
+
 	ijkGrid->unloadSplitInformation();
 
-	this->vtkData->SetPartition(0, vtk_unstructuredGrid);
+	vtk_explicitStructuredGrid->CheckAndReorderFaces();
+	vtk_explicitStructuredGrid->ComputeFacesConnectivityFlagsArray();
+
+	this->vtkData->SetPartition(0, vtk_explicitStructuredGrid);
 	this->vtkData->Modified();
 }
 
-vtkSmartPointer<vtkPoints> ResqmlIjkGridToVtkUnstructuredGrid::getVtkPoints()
+//----------------------------------------------------------------------------
+vtkSmartPointer<vtkPoints> ResqmlIjkGridToVtkExplicitStructuredGrid::getVtkPoints()
 {
 	if (this->points->GetNumberOfPoints() < 1)
 	{
@@ -173,7 +180,7 @@ vtkSmartPointer<vtkPoints> ResqmlIjkGridToVtkUnstructuredGrid::getVtkPoints()
 }
 
 //----------------------------------------------------------------------------
-void ResqmlIjkGridToVtkUnstructuredGrid::createPoints()
+void ResqmlIjkGridToVtkExplicitStructuredGrid::createPoints()
 {
 	RESQML2_NS::AbstractIjkGridRepresentation * ijkGrid = getResqmlData();
 

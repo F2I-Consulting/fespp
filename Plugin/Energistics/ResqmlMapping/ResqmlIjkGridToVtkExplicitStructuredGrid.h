@@ -16,10 +16,10 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 -----------------------------------------------------------------------*/
-#ifndef __ResqmlIjkGridToVtkUnstructuredGrid__h__
-#define __ResqmlIjkGridToVtkUnstructuredGrid__h__
+#ifndef __ResqmlIjkGridToVtkExplicitStructuredGrid__h__
+#define __ResqmlIjkGridToVtkExplicitStructuredGrid__h__
 
-/** @brief	transform a resqml ijkGrid representation to vtkUnstructuredGrid
+/** @brief	transform a resqml ijkGrid representation to vtkExplicitStructuredGrid
  */
 
 // include system
@@ -36,13 +36,13 @@ namespace RESQML2_NS
 	class AbstractIjkGridRepresentation;
 }
 
-class ResqmlIjkGridToVtkUnstructuredGrid : public ResqmlAbstractRepresentationToVtkPartitionedDataSet
+class ResqmlIjkGridToVtkExplicitStructuredGrid : public ResqmlAbstractRepresentationToVtkPartitionedDataSet
 {
 public:
 	/**
 	 * Constructor
 	 */
-	explicit ResqmlIjkGridToVtkUnstructuredGrid(RESQML2_NS::AbstractIjkGridRepresentation *ijkGrid, int proc_number = 0, int max_proc = 1);
+	explicit ResqmlIjkGridToVtkExplicitStructuredGrid(RESQML2_NS::AbstractIjkGridRepresentation *ijkGrid, int proc_number = 0, int max_proc = 1);
 
 	/**
 	 * load vtkDataSet with resqml data

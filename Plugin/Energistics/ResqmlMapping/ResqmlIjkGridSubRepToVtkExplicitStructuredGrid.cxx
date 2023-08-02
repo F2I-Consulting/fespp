@@ -16,7 +16,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 -----------------------------------------------------------------------*/
-#include "ResqmlMapping/ResqmlIjkGridSubRepToVtkUnstructuredGrid.h"
+#include "ResqmlMapping/ResqmlIjkGridSubRepToVtkExplicitStructuredGrid.h"
 
 #include <array>
 
@@ -35,10 +35,10 @@ under the License.
 #include <fesapi/resqml2/LocalDepth3dCrs.h>
 
 // include FESPP
-#include "ResqmlIjkGridToVtkUnstructuredGrid.h"
+#include "ResqmlIjkGridToVtkExplicitStructuredGrid.h"
 
 //----------------------------------------------------------------------------
-ResqmlIjkGridSubRepToVtkUnstructuredGrid::ResqmlIjkGridSubRepToVtkUnstructuredGrid(RESQML2_NS::SubRepresentation *subRep, ResqmlIjkGridToVtkUnstructuredGrid *support, int proc_number, int max_proc)
+ResqmlIjkGridSubRepToVtkExplicitStructuredGrid::ResqmlIjkGridSubRepToVtkExplicitStructuredGrid(RESQML2_NS::SubRepresentation *subRep, ResqmlIjkGridToVtkExplicitStructuredGrid *support, int proc_number, int max_proc)
 	: ResqmlAbstractRepresentationToVtkPartitionedDataSet(subRep,
 											   proc_number,
 											   max_proc),
@@ -51,13 +51,13 @@ ResqmlIjkGridSubRepToVtkUnstructuredGrid::ResqmlIjkGridSubRepToVtkUnstructuredGr
 }
 
 //----------------------------------------------------------------------------
-RESQML2_NS::SubRepresentation const* ResqmlIjkGridSubRepToVtkUnstructuredGrid::getResqmlData() const
+RESQML2_NS::SubRepresentation const* ResqmlIjkGridSubRepToVtkExplicitStructuredGrid::getResqmlData() const
 {
 	return static_cast<RESQML2_NS::SubRepresentation const*>(resqmlData);
 }
 
 //----------------------------------------------------------------------------
-void ResqmlIjkGridSubRepToVtkUnstructuredGrid::loadVtkObject()
+void ResqmlIjkGridSubRepToVtkExplicitStructuredGrid::loadVtkObject()
 {
 	RESQML2_NS::SubRepresentation const* subRep = getResqmlData();
 	auto *supportingGrid = dynamic_cast<RESQML2_NS::AbstractIjkGridRepresentation *>(subRep->getSupportingRepresentation(0));
@@ -127,14 +127,14 @@ void ResqmlIjkGridSubRepToVtkUnstructuredGrid::loadVtkObject()
 }
 
 //----------------------------------------------------------------------------
-std::string ResqmlIjkGridSubRepToVtkUnstructuredGrid::unregisterToMapperSupportingGrid()
+std::string ResqmlIjkGridSubRepToVtkExplicitStructuredGrid::unregisterToMapperSupportingGrid()
 {
 	this->mapperIjkGrid->unregisterSubRep();
 	return this->mapperIjkGrid->getUuid();
 }
 
 //----------------------------------------------------------------------------
-vtkSmartPointer<vtkPoints> ResqmlIjkGridSubRepToVtkUnstructuredGrid::getMapperVtkPoint()
+vtkSmartPointer<vtkPoints> ResqmlIjkGridSubRepToVtkExplicitStructuredGrid::getMapperVtkPoint()
 {
 	this->mapperIjkGrid->registerSubRep();
 	return this->mapperIjkGrid->getVtkPoints();
