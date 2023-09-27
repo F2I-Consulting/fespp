@@ -21,7 +21,15 @@ under the License.
 #define ENUM_H
 
 enum TreeViewNodeType {
-  perforation,
+	Unknown,
+	Representation,
+	Properties,
+	WellboreTrajectory,
+	WellboreFrame,
+	WellboreChannel,
+	WellboreMarker,
+	WellboreCompletion,
+	Perforation,
 };
 
 #endif // ENUM_H

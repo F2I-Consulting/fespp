@@ -32,6 +32,8 @@ under the License.
 #include <fetpapi/etp/ClientSessionLaunchers.h>
 #endif
 
+#include "../Tools/enum.h"
+
 namespace common
 {
 	class DataObjectRepository;
@@ -97,7 +99,7 @@ private:
 	void selectNodeIdParent(int node);
 	void selectNodeIdChildren(int node);
 
-	void initMapper(const std::string &uuid, const int nbProcess, const int processId);
+	void initMapper(const TreeViewNodeType type, const std::string &uuid, const int nbProcess, const int processId);
 	void loadMapper(const std::string &uuid, double time);
 
 	bool markerOrientation;
