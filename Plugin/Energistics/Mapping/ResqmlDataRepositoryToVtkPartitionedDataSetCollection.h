@@ -68,7 +68,7 @@ public:
 	std::string addDataspace(const char *dataspace);
 
 	// for ETP connection
-	std::vector<std::string> connect(const std::string& etp_url, const std::string& data_partition, const std::string& auth_connection);
+	std::vector<std::string> connect(const std::string &etp_url, const std::string &data_partition, const std::string &auth_connection);
 	void disconnect();
 
 	// Wellbore Options
@@ -100,7 +100,7 @@ private:
 	void selectNodeIdChildren(int node);
 
 	void initMapper(const TreeViewNodeType type, const std::string &uuid, const int nbProcess, const int processId);
-	void loadMapper(const std::string &uuid, double time);
+	void loadMapper(const TreeViewNodeType type, const std::string &uuid, double time);
 
 	bool markerOrientation;
 	int markerSize;

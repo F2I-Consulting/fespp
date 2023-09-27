@@ -16,8 +16,8 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 -----------------------------------------------------------------------*/
-#ifndef __WitsmlWellboreCompletionToVtkPolyData_H_
-#define __WitsmlWellboreCompletionToVtkPolyData__H_
+#ifndef __WitsmlWellboreCompletionToVtkPartitionedDataSet_H_
+#define __WitsmlWellboreCompletionToVtkPartitionedDataSet__H_
 
 #include "Mapping/CommonAbstractObjectToVtkPartitionedDataSet.h"
 
@@ -31,13 +31,13 @@ namespace resqml
 	class WellboreTrajectoryRepresentation;
 }
 
-class WitsmlWellboreCompletionToVtkPolyData : public CommonAbstractObjectToVtkPartitionedDataSet
+class WitsmlWellboreCompletionToVtkPartitionedDataSet : public CommonAbstractObjectToVtkPartitionedDataSet
 {
 public:
 	/**
 	 * Constructor
 	 */
-	WitsmlWellboreCompletionToVtkPolyData(WITSML2_1_NS::WellboreCompletion *completion, int proc_number = 0, int max_proc = 1);
+	WitsmlWellboreCompletionToVtkPartitionedDataSet(WITSML2_1_NS::WellboreCompletion *completion, int proc_number = 0, int max_proc = 1);
 
 	/**
 	 * load vtkDataSet with resqml data

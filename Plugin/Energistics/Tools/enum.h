@@ -29,6 +29,7 @@ enum TreeViewNodeType {
 	WellboreChannel,
 	WellboreMarker,
 	WellboreCompletion,
+	TimeSeries,
 	Perforation,
 };
 

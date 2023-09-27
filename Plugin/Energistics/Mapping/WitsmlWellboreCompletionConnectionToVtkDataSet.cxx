@@ -16,7 +16,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 -----------------------------------------------------------------------*/
-#include "WitsmlWellboreCompletionToVtkPolyData.h"
+#include "WitsmlWellboreCompletionToVtkPartitionedDataSet.h"
 
 #include <vtkPolyData.h>
 #include <vtkPointData.h>
@@ -35,7 +35,7 @@ under the License.
 #include <fesapi/resqml2/WellboreTrajectoryRepresentation.h>
 
 //----------------------------------------------------------------------------
-WitsmlWellboreCompletionToVtkPolyData::WitsmlWellboreCompletionToVtkPolyData(WITSML2_1_NS::WellboreCompletion *completion, int proc_number, int max_proc)
+WitsmlWellboreCompletionToVtkPartitionedDataSet::WitsmlWellboreCompletionToVtkPartitionedDataSet(WITSML2_1_NS::WellboreCompletion *completion, int proc_number, int max_proc)
 	: CommonAbstractObjectToVtkPartitionedDataSet(completion,
 											   proc_number,
 											   max_proc)
@@ -53,7 +53,7 @@ WitsmlWellboreCompletionToVtkPolyData::WitsmlWellboreCompletionToVtkPolyData(WIT
 }
 
 //----------------------------------------------------------------------------
-WITSML2_1_NS::WellboreCompletion const* WitsmlWellboreCompletionToVtkPolyData::getResqmlData() const
+WITSML2_1_NS::WellboreCompletion const* WitsmlWellboreCompletionToVtkPartitionedDataSet::getResqmlData() const
 {
 	return static_cast<WITSML2_1_NS::WellboreCompletion const*>(resqmlData);
 }
@@ -67,7 +67,7 @@ WITSML2_1_NS::WellboreCompletion const* WitsmlWellboreCompletionToVtkPolyData::g
 //
 // Returns:
 //   The vtkPolyData object.
-void WitsmlWellboreCompletionToVtkPolyData::loadVtkObject() {
+void WitsmlWellboreCompletionToVtkPartitionedDataSet::loadVtkObject() {
 
 	// Check that the wellboreTrajectory is valid.
 	if (wellboreTrajectory == nullptr) {
