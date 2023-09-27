@@ -28,7 +28,7 @@ under the License.
 #include <vtkStringArray.h>
 
 #include "EnergisticsModule.h"
-#include "ResqmlMapping/ResqmlDataRepositoryToVtkPartitionedDataSetCollection.h"
+#include "Mapping/ResqmlDataRepositoryToVtkPartitionedDataSetCollection.h"
 
 class vtkDataAssembly;
 class vtkProperty;

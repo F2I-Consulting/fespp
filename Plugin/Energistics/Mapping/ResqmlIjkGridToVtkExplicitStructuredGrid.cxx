@@ -16,7 +16,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 -----------------------------------------------------------------------*/
-#include "ResqmlMapping/ResqmlIjkGridToVtkExplicitStructuredGrid.h"
+#include "Mapping/ResqmlIjkGridToVtkExplicitStructuredGrid.h"
 
 #include <array>
 

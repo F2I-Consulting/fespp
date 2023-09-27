@@ -25,7 +25,7 @@ under the License.
 // include system
 #include <string>
 
-#include "ResqmlMapping/ResqmlAbstractRepresentationToVtkPartitionedDataSet.h"
+#include "Mapping/ResqmlAbstractRepresentationToVtkPartitionedDataSet.h"
 
 namespace RESQML2_NS
 {

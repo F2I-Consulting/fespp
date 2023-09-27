@@ -16,7 +16,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 -----------------------------------------------------------------------*/
-#include "ResqmlMapping/ResqmlPolylineToVtkPolyData.h"
+#include "Mapping/ResqmlPolylineToVtkPolyData.h"
 
 // include VTK library
 #include <vtkPolyData.h>
@@ -31,7 +31,7 @@ under the License.
 #include <fesapi/resqml2/AbstractLocal3dCrs.h>
 
 // include F2i-consulting Energistics Standards ParaView Plugin
-#include "ResqmlMapping/ResqmlPropertyToVtkDataArray.h"
+#include "Mapping/ResqmlPropertyToVtkDataArray.h"
 
 //----------------------------------------------------------------------------
 ResqmlPolylineToVtkPolyData::ResqmlPolylineToVtkPolyData(RESQML2_NS::PolylineSetRepresentation *polyline, int proc_number, int max_proc)

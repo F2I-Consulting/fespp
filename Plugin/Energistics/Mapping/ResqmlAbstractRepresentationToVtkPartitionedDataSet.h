@@ -29,9 +29,12 @@ under the License.
 // include F2i-consulting Energistics Standards API
 #include <fesapi/resqml2/AbstractRepresentation.h>
 
+// include F2i-consulting Energistics Standards Paraview Plugin
+#include "CommonAbstractObjectToVtkPartitionedDataSet.h"
+
 /** @brief	transform a RESQML abstract representation to vtkPartitionedDataSet
  */
-class ResqmlAbstractRepresentationToVtkPartitionedDataSet
+class ResqmlAbstractRepresentationToVtkPartitionedDataSet : public CommonAbstractObjectToVtkPartitionedDataSet
 {
 public:
 	/**
@@ -48,10 +51,6 @@ public:
 	 * load VtkPartitionedDataSet with resqml data
 	 */
 	virtual void loadVtkObject() = 0;
-	/**
-	 * unload VtkPartitionedDataSet
-	 */
-	void unloadVtkObject();
 
 	/**
 	 * add a resqml property to VtkPartitionedDataSet
@@ -64,23 +63,11 @@ public:
 	void deleteDataArray(const std::string &uuid);
 
 	/**
-	 * return the vtkPartitionedDataSet of resqml representation
-	 */
-	vtkSmartPointer<vtkPartitionedDataSet> getOutput() const { return vtkData; }
-
-	/**
 	*
 	*/
 	void registerSubRep();
 	void unregisterSubRep();
 	unsigned int subRepLinkedCount();
-
-	/**
-	*
-	*/
-	std::string getUuid() const; 
-	std::string getTitle() const;
-	
 
 protected:
 
@@ -97,12 +84,8 @@ protected:
 
 	bool isHyperslabed = false;
 
-	int procNumber;
-	int maxProc;
-
 	RESQML2_NS::AbstractRepresentation * resqmlData;
 
-	vtkSmartPointer<vtkPartitionedDataSet> vtkData;
 	std::unordered_map<std::string, class ResqmlPropertyToVtkDataArray *> uuidToVtkDataArray;
 
 };

@@ -16,7 +16,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 -----------------------------------------------------------------------*/
-#include "ResqmlMapping/ResqmlAbstractRepresentationToVtkPartitionedDataSet.h"
+#include "Mapping/ResqmlAbstractRepresentationToVtkPartitionedDataSet.h"
 
 #include <algorithm>
 #include <array>
@@ -31,15 +31,15 @@ under the License.
 #include <fesapi/resqml2/UnstructuredGridRepresentation.h>
 
 // include F2i-consulting Energistics Paraview Plugin
-#include "ResqmlMapping/ResqmlPropertyToVtkDataArray.h"
+#include "Mapping/ResqmlPropertyToVtkDataArray.h"
 
 //----------------------------------------------------------------------------
-ResqmlAbstractRepresentationToVtkPartitionedDataSet::ResqmlAbstractRepresentationToVtkPartitionedDataSet(RESQML2_NS::AbstractRepresentation *abstract_representation, int proc_number, int max_proc):
+ResqmlAbstractRepresentationToVtkPartitionedDataSet::ResqmlAbstractRepresentationToVtkPartitionedDataSet(RESQML2_NS::AbstractRepresentation *abstract_representation, int proc_number, int max_proc)
+	: CommonAbstractObjectToVtkPartitionedDataSet(abstract_representation,
+		proc_number,
+		max_proc),
 	subrep_pointer_on_points_count(0),
-	procNumber(proc_number),
-	maxProc(max_proc),
 	resqmlData(abstract_representation),
-	vtkData(nullptr),
 	uuidToVtkDataArray()
 {
 }
@@ -110,11 +110,6 @@ void ResqmlAbstractRepresentationToVtkPartitionedDataSet::deleteDataArray(const 
 	}
 }
 
-void ResqmlAbstractRepresentationToVtkPartitionedDataSet::unloadVtkObject()
-{
-	this->vtkData = vtkSmartPointer<vtkPartitionedDataSet>::New();
-}
-
 void ResqmlAbstractRepresentationToVtkPartitionedDataSet::registerSubRep() 
 { 
 	++subrep_pointer_on_points_count; 
@@ -128,14 +123,4 @@ void ResqmlAbstractRepresentationToVtkPartitionedDataSet::unregisterSubRep()
 unsigned int ResqmlAbstractRepresentationToVtkPartitionedDataSet::subRepLinkedCount()
 { 
 	return subrep_pointer_on_points_count; 
-}
-
-std::string ResqmlAbstractRepresentationToVtkPartitionedDataSet::getUuid() const
-{
-	return this->getResqmlData()->getUuid();
-}
-
-std::string ResqmlAbstractRepresentationToVtkPartitionedDataSet::getTitle() const
-{
-	return this->getResqmlData()->getTitle();
 }

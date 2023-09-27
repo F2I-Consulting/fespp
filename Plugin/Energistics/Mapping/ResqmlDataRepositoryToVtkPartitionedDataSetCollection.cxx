@@ -16,6 +16,18 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 -----------------------------------------------------------------------*/
+
+/*
+Documentation:
+==============
+
+VtkAssembly => TreeView:
+    - each node required 2 attributes:
+        - id = uuid of resqml/witsml object
+        - label = name to display in TreeView
+    - optional attributes
+        - type = type
+*/
 #include "ResqmlDataRepositoryToVtkPartitionedDataSetCollection.h"
 
 #include <algorithm>
@@ -46,6 +58,9 @@ under the License.
 #include <fesapi/resqml2/AbstractFeatureInterpretation.h>
 #include <fesapi/resqml2/ContinuousProperty.h>
 #include <fesapi/resqml2/DiscreteProperty.h>
+#include <fesapi/resqml2/WellboreFeature.h>
+#include <fesapi/witsml2_1/WellboreCompletion.h>
+#include <fesapi/witsml2_1/WellCompletion.h>
 
 #ifdef WITH_ETP_SSL
 #include <thread>
@@ -59,6 +74,7 @@ under the License.
 #endif
 #include <fesapi/common/EpcDocument.h>
 
+#include "../Tools/enum.h"
 #include "ResqmlIjkGridToVtkExplicitStructuredGrid.h"
 #include "ResqmlIjkGridSubRepToVtkExplicitStructuredGrid.h"
 #include "ResqmlGrid2dToVtkStructuredGrid.h"
@@ -67,8 +83,11 @@ under the License.
 #include "ResqmlUnstructuredGridToVtkUnstructuredGrid.h"
 #include "ResqmlUnstructuredGridSubRepToVtkUnstructuredGrid.h"
 #include "ResqmlWellboreTrajectoryToVtkPolyData.h"
+#include "WitsmlWellboreCompletionToVtkPolyData.h"
 #include "ResqmlWellboreMarkerFrameToVtkPartitionedDataSet.h"
 #include "ResqmlWellboreFrameToVtkPartitionedDataSet.h"
+
+
 
 ResqmlDataRepositoryToVtkPartitionedDataSetCollection::ResqmlDataRepositoryToVtkPartitionedDataSetCollection() : markerOrientation(false),
                                                                                                                  markerSize(10),
@@ -116,7 +135,7 @@ std::vector<std::string> ResqmlDataRepositoryToVtkPartitionedDataSetCollection::
     }
     catch (const std::exception &e)
     {
-        vtkErrorMacro(<< " setDataspaceProtocolHandlers: " << e.what());
+        //vtkErrorMacro(<< " setDataspaceProtocolHandlers: " << e.what());
     }
     try
     {
@@ -124,7 +143,7 @@ std::vector<std::string> ResqmlDataRepositoryToVtkPartitionedDataSetCollection::
     }
     catch (const std::exception &e)
     {
-        vtkErrorMacro(<< "setDiscoveryProtocolHandlers: " << e.what());
+        //vtkErrorMacro(<< "setDiscoveryProtocolHandlers: " << e.what());
     }
     try
     {
@@ -132,7 +151,7 @@ std::vector<std::string> ResqmlDataRepositoryToVtkPartitionedDataSetCollection::
     }
     catch (const std::exception &e)
     {
-        vtkErrorMacro(<< "setStoreProtocolHandlers: " << e.what());
+        //vtkErrorMacro(<< "setStoreProtocolHandlers: " << e.what());
     }
     try
     {
@@ -140,7 +159,7 @@ std::vector<std::string> ResqmlDataRepositoryToVtkPartitionedDataSetCollection::
     }
     catch (const std::exception &e)
     {
-        vtkErrorMacro(<< "setDataArrayProtocolHandlers: " << e.what());
+        //vtkErrorMacro(<< "setDataArrayProtocolHandlers: " << e.what());
     }
 
     repository->setHdfProxyFactory(new ETP_NS::FesapiHdfProxyFactory(session.get()));
@@ -270,7 +289,6 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::buildDataAsse
                                           {
                                               return message += searchRepresentations(rep);
                                           });
-
     // get WellboreTrajectory + subrepresentation + property
     message += searchWellboreTrajectory(fileName);
 
@@ -405,7 +423,9 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchWellbor
                 const std::string wellboreTrajectoryVtkValidName = vtkDataAssembly::MakeValidNodeName((wellboreTrajectory->getXmlTag() + '_' + wellboreTrajectory->getTitle()).c_str());
                 idNode = data_assembly->AddNode(("_" + wellboreTrajectory->getUuid()).c_str(), 0 /* add to root*/);
                 data_assembly->SetAttribute(idNode, "label", wellboreTrajectoryVtkValidName.c_str());
+                /* to delete
                 data_assembly->SetAttribute(idNode, "is_checkable", 0);
+                */
             }
         }
         // wellboreFrame
@@ -441,6 +461,42 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchWellbor
                         int marker_idNode = data_assembly->AddNode(("_" + wellboreMarker->getUuid()).c_str(), markerFrame_idNode);
                         data_assembly->SetAttribute(marker_idNode, "label", wellboreMarkerVtkValidName.c_str());
                         data_assembly->SetAttribute(marker_idNode, "traj", idNode);
+                    }
+                }
+            }
+        }
+        // Wellbore Completion
+        const auto* wellboreFeature = dynamic_cast<RESQML2_NS::WellboreFeature*>(wellboreTrajectory->getInterpretation()->getInterpretedFeature());
+        if (wellboreFeature != nullptr)
+        {
+            const auto * witsmlWellbore = wellboreFeature->getWitsmlWellbore();
+            if (witsmlWellbore != nullptr) {
+                for (const auto* wellbore_completion : witsmlWellbore->getWellboreCompletionSet())
+                {
+                    const std::string wellboreCompletionVtkValidName = vtkDataAssembly::MakeValidNodeName((wellbore_completion->getXmlTag() + '_' + wellbore_completion->getTitle()).c_str());
+                    int idNode_completion = data_assembly->AddNode(("_" + wellbore_completion->getUuid()).c_str(), 0);
+                    data_assembly->SetAttribute(idNode_completion, "label", wellboreCompletionVtkValidName.c_str());
+                    // Iterate over the perforations.
+                    for (uint64_t perforationIndex = 0; perforationIndex < wellbore_completion->getConnectionCount(WITSML2_1_NS::WellboreCompletion::WellReservoirConnectionType::PERFORATION); ++perforationIndex) {
+                        std::string perforation_name = "Perfo";
+                        auto& extraMetadatas = wellbore_completion->getConnectionExtraMetadata(WITSML2_1_NS::WellboreCompletion::WellReservoirConnectionType::PERFORATION, perforationIndex, "Petrel:Name0");
+                        // arbitrarily select the first event name as perforation name
+                        if (extraMetadatas.size() > 0) {
+                            perforation_name += "_" + extraMetadatas[0];
+                        }
+                        else {
+                            extraMetadatas = wellbore_completion->getConnectionExtraMetadata(WITSML2_1_NS::WellboreCompletion::WellReservoirConnectionType::PERFORATION, perforationIndex, "Sismage-CIG:Name");
+                            if (extraMetadatas.size() > 0) {
+                                perforation_name += "_" + extraMetadatas[0];
+                            }
+                            else {
+                                perforation_name += "_" + wellbore_completion->getConnectionUid(WITSML2_1_NS::WellboreCompletion::WellReservoirConnectionType::PERFORATION, perforationIndex);
+                            }
+                        }
+                        const std::string perforation_VTK_validName = vtkDataAssembly::MakeValidNodeName((perforation_name).c_str());
+                        int idNode_perfo = data_assembly->AddNode(vtkDataAssembly::MakeValidNodeName(("_" + wellbore_completion->getConnectionUid(WITSML2_1_NS::WellboreCompletion::WellReservoirConnectionType::PERFORATION, perforationIndex)).c_str()).c_str(), idNode_completion);
+                        data_assembly->SetAttribute(idNode_perfo, "label", perforation_VTK_validName.c_str());
+                        data_assembly->SetAttribute(idNode_perfo, "type", std::to_string(TreeViewNodeType::perforation).c_str());
                     }
                 }
             }
@@ -580,7 +636,7 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::clearSelection()
 
 void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::initMapper(const std::string &uuid, const int nbProcess, const int processId)
 {
-    ResqmlAbstractRepresentationToVtkPartitionedDataSet *rep = nullptr;
+    CommonAbstractObjectToVtkPartitionedDataSet *rep = nullptr;
     if (uuid.length() == 36)
     {
 
@@ -635,6 +691,10 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::initMapper(const std
             {
                 rep = new ResqmlWellboreTrajectoryToVtkPolyData(static_cast<RESQML2_NS::WellboreTrajectoryRepresentation *>(result));
             }
+            else if (dynamic_cast<witsml2_1::WellboreCompletion*>(result) != nullptr)
+            {
+                rep = new WitsmlWellboreCompletionToVtkPolyData(static_cast<witsml2_1::WellboreCompletion*>(result));
+            }
             else if (dynamic_cast<RESQML2_NS::WellboreMarkerFrameRepresentation *>(result) != nullptr)
             {
                 rep = new ResqmlWellboreMarkerFrameToVtkPartitionedDataSet(static_cast<RESQML2_NS::WellboreMarkerFrameRepresentation *>(result));
@@ -669,7 +729,7 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::loadMapper(const std
             const int node_parent = assembly->GetParent(output->GetDataAssembly()->FindFirstNodeWithName(("_" + uuid).c_str()));
             if (nodeId_to_resqml[node_parent])
             {
-                nodeId_to_resqml[node_parent]->addDataArray(timeSeries_uuid_and_title_to_index_and_properties_uuid[ts_uuid][node_name][time]);
+                static_cast<ResqmlAbstractRepresentationToVtkPartitionedDataSet*>(nodeId_to_resqml[node_parent])->addDataArray(timeSeries_uuid_and_title_to_index_and_properties_uuid[ts_uuid][node_name][time]);
             }
             return;
         }
@@ -760,7 +820,7 @@ vtkPartitionedDataSetCollection *ResqmlDataRepositoryToVtkPartitionedDataSetColl
             const int node_parent = tmp_assembly->GetParent(tmp_assembly->FindFirstNodeWithName(("_" + uuid_unselect).c_str()));
             if (this->nodeId_to_resqml.find(node_parent) != this->nodeId_to_resqml.end())
             {
-                nodeId_to_resqml[node_parent]->deleteDataArray(timeSeries_uuid_and_title_to_index_and_properties_uuid[ts_uuid][node_name][time]);
+                static_cast<ResqmlWellboreMarkerFrameToVtkPartitionedDataSet*>(nodeId_to_resqml[node_parent])->deleteDataArray(timeSeries_uuid_and_title_to_index_and_properties_uuid[ts_uuid][node_name][time]);
             }
         }
         else
@@ -780,7 +840,7 @@ vtkPartitionedDataSetCollection *ResqmlDataRepositoryToVtkPartitionedDataSetColl
                     {
                         if (this->nodeId_to_resqml.find(node_parent) != this->nodeId_to_resqml.end())
                         {
-                            ResqmlAbstractRepresentationToVtkPartitionedDataSet *rep = this->nodeId_to_resqml[node_parent];
+                            ResqmlAbstractRepresentationToVtkPartitionedDataSet *rep = static_cast<ResqmlWellboreMarkerFrameToVtkPartitionedDataSet*>(this->nodeId_to_resqml[node_parent]);
                             rep->deleteDataArray(std::string(tmp_assembly->GetNodeName(selection)).substr(1));
                         }
                     }
@@ -828,7 +888,7 @@ vtkPartitionedDataSetCollection *ResqmlDataRepositoryToVtkPartitionedDataSetColl
                             {
                                 if (this->current_selection.find(node_parent) == this->current_selection.end())
                                 {
-                                    if (this->nodeId_to_resqml[node_parent]->subRepLinkedCount() == 0)
+                                    if (static_cast<ResqmlWellboreMarkerFrameToVtkPartitionedDataSet*>(this->nodeId_to_resqml[node_parent])->subRepLinkedCount() == 0)
                                     {
                                         this->nodeId_to_resqml.erase(node_parent);
                                     }
@@ -849,7 +909,7 @@ vtkPartitionedDataSetCollection *ResqmlDataRepositoryToVtkPartitionedDataSetColl
                 {
                     if (this->nodeId_to_resqml.find(selection) != this->nodeId_to_resqml.end())
                     {
-                        if (this->nodeId_to_resqml[selection]->subRepLinkedCount() == 0)
+                        if (static_cast<ResqmlWellboreMarkerFrameToVtkPartitionedDataSet*>(this->nodeId_to_resqml[selection])->subRepLinkedCount() == 0)
                         {
                             this->nodeId_to_resqml.erase(selection);
                         }
@@ -862,11 +922,13 @@ vtkPartitionedDataSetCollection *ResqmlDataRepositoryToVtkPartitionedDataSetColl
     // foreach selection node
     for (const int node_selection : this->current_selection)
     {
+        // initialize mapper
         if (this->nodeId_to_resqml.find(node_selection) == this->nodeId_to_resqml.end())
         {
             initMapper(std::string(tmp_assembly->GetNodeName(node_selection)).substr(1), nbProcess, processId);
         }
 
+        // load mapper representation
         if (this->nodeId_to_resqml.find(node_selection) != this->nodeId_to_resqml.end())
         {
             if (this->nodeId_to_resqml[node_selection]->getOutput()->GetNumberOfPartitions() < 1)

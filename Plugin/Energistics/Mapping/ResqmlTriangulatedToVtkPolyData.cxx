@@ -32,7 +32,7 @@ under the License.
 #include <fesapi/resqml2/AbstractLocal3dCrs.h>
 
 // include F2i-consulting Energistics Paraview Plugin
-#include "ResqmlMapping/ResqmlPropertyToVtkDataArray.h"
+#include "Mapping/ResqmlPropertyToVtkDataArray.h"
 
 //----------------------------------------------------------------------------
 ResqmlTriangulatedToVtkPolyData::ResqmlTriangulatedToVtkPolyData(RESQML2_NS::TriangulatedSetRepresentation * triangulated, uint32_t patch_index, int proc_number, int max_proc)

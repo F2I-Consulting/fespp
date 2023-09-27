@@ -31,8 +31,8 @@ under the License.
 #include <fesapi/resqml2/SubRepresentation.h>
 
 // include F2i-consulting Energistics Paraview Plugin
-#include "ResqmlMapping/ResqmlPropertyToVtkDataArray.h"
-#include "ResqmlMapping/ResqmlTriangulatedToVtkPolyData.h"
+#include "Mapping/ResqmlPropertyToVtkDataArray.h"
+#include "Mapping/ResqmlTriangulatedToVtkPolyData.h"
 
 //----------------------------------------------------------------------------
 ResqmlTriangulatedSetToVtkPartitionedDataSet::ResqmlTriangulatedSetToVtkPartitionedDataSet(RESQML2_NS::TriangulatedSetRepresentation *triangulated, int proc_number, int max_proc)

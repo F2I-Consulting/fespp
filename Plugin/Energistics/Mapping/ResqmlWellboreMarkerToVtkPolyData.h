@@ -16,38 +16,56 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 -----------------------------------------------------------------------*/
-#ifndef __ResqmlWellboreChannelToVtkPolyData_H_
-#define __ResqmlWellboreChannelToVtkPolyData__H_
+#ifndef _ResqmlWellboreMarkerToVtkPolyData_H_
+#define _ResqmlWellboreMarkerToVtkPolyData_H_
 
-#include "ResqmlMapping/ResqmlAbstractRepresentationToVtkPartitionedDataSet.h"
+#include "Mapping/ResqmlAbstractRepresentationToVtkPartitionedDataSet.h"
+
+#include <set>
 
 namespace RESQML2_NS
 {
-	class WellboreFrameRepresentation;
-	class AbstractValuesProperty;
+	class WellboreMarkerFrameRepresentation;
 }
 
-class ResqmlWellboreChannelToVtkPolyData : public ResqmlAbstractRepresentationToVtkPartitionedDataSet
+class ResqmlWellboreMarkerToVtkPolyData : public ResqmlAbstractRepresentationToVtkPartitionedDataSet
 {
 public:
 	/**
 	 * Constructor
 	 */
-	ResqmlWellboreChannelToVtkPolyData(RESQML2_NS::WellboreFrameRepresentation *frame, RESQML2_NS::AbstractValuesProperty *property, const std::string &uuid, int proc_number = 0, int max_proc = 1);
+	ResqmlWellboreMarkerToVtkPolyData(RESQML2_NS::WellboreMarkerFrameRepresentation *marker, std::string uuid, bool orientation, int size, int proc_number = 0, int max_proc = 1);
 
 	/**
 	 * load vtkDataSet with resqml data
 	 */
 	void loadVtkObject() override;
 
-	std::string getUuid() const { return this->uuid; }
-	std::string getTitle() const { return this->title; }
+	/**
+	 * @brief modify orientation & size + representation reload
+	 *
+	 * @param orientation
+	 * @param size
+	 */
+	void displayOption(bool orientation, int size);
+
+	/**
+	 * get uuid for verify
+	 */
+	std::string getUuid() { return this->uuid; }
+	std::string getTitle() { return this->title; }
+	bool getMarkerOrientation() { return this->orientation; }
+	int getMarkerSize() { return this->size; }
 
 protected:
-	RESQML2_NS::WellboreFrameRepresentation const* getResqmlData() const;
+	resqml2::WellboreMarkerFrameRepresentation const* getResqmlData() const;
 
 private:
-	RESQML2_NS::AbstractValuesProperty *abstractProperty;
+	void createDisk(unsigned int markerIndex);
+	void createSphere(unsigned int markerIndex);
+
+	bool orientation;
+	int size;
 
 	std::string uuid;
 	std::string title;

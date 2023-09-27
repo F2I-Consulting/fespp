@@ -40,9 +40,11 @@ namespace common
 namespace resqml2
 {
 	class AbstractRepresentation;
+	class AbstractObject;
 }
 
 class ResqmlAbstractRepresentationToVtkPartitionedDataSet;
+class CommonAbstractObjectToVtkPartitionedDataSet;
 
 /**
  * @brief	class description.
@@ -105,7 +107,7 @@ private:
 
 	vtkSmartPointer<vtkPartitionedDataSetCollection> output;
 
-	std::map<int, ResqmlAbstractRepresentationToVtkPartitionedDataSet *> nodeId_to_resqml; // index of VtkDataAssembly to ResqmlAbstractRepresentationToVtkPartitionedDataSet
+	std::map<int, CommonAbstractObjectToVtkPartitionedDataSet *> nodeId_to_resqml; // index of VtkDataAssembly to CommonAbstractObjectToVtkPartitionedDataSet
 
 	//\/          uuid             title            index        prop_uuid
 	std::map<std::string, std::map<std::string, std::map<double, std::string>>> timeSeries_uuid_and_title_to_index_and_properties_uuid;

@@ -16,7 +16,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 -----------------------------------------------------------------------*/
-#include "ResqmlMapping/ResqmlGrid2dToVtkStructuredGrid.h"
+#include "Mapping/ResqmlGrid2dToVtkStructuredGrid.h"
 
 // include VTK library
 #include <vtkSmartPointer.h>
@@ -28,7 +28,7 @@ under the License.
 #include <fesapi/resqml2/AbstractLocal3dCrs.h>
 
 // include F2i-consulting Energistics Paraview Plugin
-#include "ResqmlMapping/ResqmlPropertyToVtkDataArray.h"
+#include "Mapping/ResqmlPropertyToVtkDataArray.h"
 
 //----------------------------------------------------------------------------
 ResqmlGrid2dToVtkStructuredGrid::ResqmlGrid2dToVtkStructuredGrid(RESQML2_NS::Grid2dRepresentation *grid2D, int proc_number, int max_proc)

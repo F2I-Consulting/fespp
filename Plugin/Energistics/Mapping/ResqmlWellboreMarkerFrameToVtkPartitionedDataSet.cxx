@@ -16,7 +16,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 -----------------------------------------------------------------------*/
-#include "ResqmlMapping/ResqmlWellboreMarkerFrameToVtkPartitionedDataSet.h"
+#include "Mapping/ResqmlWellboreMarkerFrameToVtkPartitionedDataSet.h"
 
 #include <iostream>
 #include <string>
@@ -28,7 +28,7 @@ under the License.
 #include <fesapi/resqml2/WellboreMarkerFrameRepresentation.h>
 #include <fesapi/resqml2/AbstractLocal3dCrs.h>
 
-#include "ResqmlMapping/ResqmlWellboreMarkerToVtkPolyData.h"
+#include "Mapping/ResqmlWellboreMarkerToVtkPolyData.h"
 
 //----------------------------------------------------------------------------
 ResqmlWellboreMarkerFrameToVtkPartitionedDataSet::ResqmlWellboreMarkerFrameToVtkPartitionedDataSet(RESQML2_NS::WellboreMarkerFrameRepresentation *marker_frame, int proc_number, int max_proc)
