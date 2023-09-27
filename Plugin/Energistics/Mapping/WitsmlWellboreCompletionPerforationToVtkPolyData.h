@@ -31,13 +31,13 @@ namespace resqml
 	class WellboreTrajectoryRepresentation;
 }
 
-class WitsmlWellboreCompletionPerforationToVtkPolyData : public CommonAbstractObjectToVtkPartitionedDataSet
+class WitsmlWellboreCompletionPerforationToVtkPolydata : public CommonAbstractObjectToVtkPartitionedDataSet
 {
 public:
 	/**
 	 * Constructor
 	 */
-	WitsmlWellboreCompletionPerforationToVtkPolyData(const WITSML2_1_NS::WellboreCompletion *completion, const resqml2::WellboreTrajectoryRepresentation *trajectory, const std::string &connection_uid, int proc_number = 0, int max_proc = 1);
+	WitsmlWellboreCompletionPerforationToVtkPolydata(const WITSML2_1_NS::WellboreCompletion *completion, const resqml2::WellboreTrajectoryRepresentation *trajectory, const std::string &connection_uid, int proc_number = 0, int max_proc = 1);
 
 	/**
 	 * load vtkDataSet with resqml data

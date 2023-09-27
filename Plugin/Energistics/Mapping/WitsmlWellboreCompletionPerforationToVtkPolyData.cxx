@@ -16,7 +16,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 -----------------------------------------------------------------------*/
-#include "WitsmlWellboreCompletionPerforationToVtkPolyData.h"
+#include "WitsmlWellboreCompletionPerforationToVtkPolydata.h"
 
 #include <vtkPolyData.h>
 #include <vtkPointData.h>
@@ -36,7 +36,7 @@ under the License.
 #include <fesapi/resqml2/WellboreTrajectoryRepresentation.h>
 
 //----------------------------------------------------------------------------
-WitsmlWellboreCompletionPerforationToVtkPolyData::WitsmlWellboreCompletionPerforationToVtkPolyData(WITSML2_1_NS::WellboreCompletion *completion, resqml2::WellboreTrajectoryRepresentation *trajectory, const std::string &connection_uid, int proc_number, int max_proc)
+WitsmlWellboreCompletionPerforationToVtkPolydata::WitsmlWellboreCompletionPerforationToVtkPolydata(WITSML2_1_NS::WellboreCompletion *completion, resqml2::WellboreTrajectoryRepresentation *trajectory, const std::string &connection_uid, int proc_number, int max_proc)
 	: CommonAbstractObjectToVtkPartitionedDataSet(completion,
 												  proc_number,
 												  max_proc),
@@ -58,7 +58,7 @@ WitsmlWellboreCompletionPerforationToVtkPolyData::WitsmlWellboreCompletionPerfor
 	//
 	// Returns:
 	//   The vtkPolyData object.
-	void WitsmlWellboreCompletionPerforationToVtkPolyData::loadVtkObject() {
+	void WitsmlWellboreCompletionPerforationToVtkPolydata::loadVtkObject() {
 
 		// Check that the wellboreTrajectory is valid.
 		if (wellboreTrajectory == nullptr) {
