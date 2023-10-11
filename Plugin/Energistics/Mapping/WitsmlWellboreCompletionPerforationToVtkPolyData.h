@@ -17,40 +17,32 @@ specific language governing permissions and limitations
 under the License.
 -----------------------------------------------------------------------*/
 #ifndef __WitsmlWellboreCompletionPerforationToVtkPolyData_H_
-#define __WitsmlWellboreCompletionPerforationToVtkPolyData__H_
+#define __WitsmlWellboreCompletionPerforationToVtkPolyData_H_
 
-#include "Mapping/CommonAbstractObjectToVtkPartitionedDataSet.h"
+#include "Mapping/WitsmlWellboreCompletionConnectionToVtkDataSet.h"
 
-namespace WITSML2_1_NS
-{
-	class WellboreCompletion;
-}
+#include <vtkPolyData.h>
 
 namespace resqml
 {
 	class WellboreTrajectoryRepresentation;
 }
 
-class WitsmlWellboreCompletionPerforationToVtkPolydata : public CommonAbstractObjectToVtkPartitionedDataSet
+class WitsmlWellboreCompletionPerforationToVtkPolydata : public WitsmlWellboreCompletionConnectionToVtkDataSet
 {
 public:
 	/**
 	 * Constructor
 	 */
-	WitsmlWellboreCompletionPerforationToVtkPolydata(const WITSML2_1_NS::WellboreCompletion *completion, const resqml2::WellboreTrajectoryRepresentation *trajectory, const std::string &connection_uid, int proc_number = 0, int max_proc = 1);
+	static WitsmlWellboreCompletionPerforationToVtkPolydata* New();
 
-	/**
-	 * load vtkDataSet with resqml data
-	 */
-	void loadVtkObject() override;
-
-
+	void loadVtkObject(resqml::WellboreTrajectoryRepresentation* trajectory);
+	
 protected:
-	const WITSML2_1_NS::WellboreCompletion * WellboreCompletion;
+	WitsmlWellboreCompletionPerforationToVtkPolydata();
+	virtual ~WitsmlWellboreCompletionPerforationToVtkPolydata();
 
-	const resqml2::WellboreTrajectoryRepresentation * wellboreTrajectory;
-
-	const std::string &connectionUid;
-
+private:
+	vtkPolyData* polyData;
 };
 #endif

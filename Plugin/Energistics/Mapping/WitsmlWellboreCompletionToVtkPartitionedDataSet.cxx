@@ -26,8 +26,6 @@ under the License.
 #include <fesapi/resqml2/WellboreInterpretation.h>
 #include <fesapi/resqml2/WellboreTrajectoryRepresentation.h>
 
-#include "WitsmlWellboreCompletionPerforationToVtkPolyData.h"
-
 //----------------------------------------------------------------------------
 WitsmlWellboreCompletionToVtkPartitionedDataSet::WitsmlWellboreCompletionToVtkPartitionedDataSet(WITSML2_1_NS::WellboreCompletion *completion, int proc_number, int max_proc)
 	: CommonAbstractObjectToVtkPartitionedDataSet(completion,
@@ -61,29 +59,49 @@ resqml2::WellboreTrajectoryRepresentation const* WitsmlWellboreCompletionToVtkPa
 //----------------------------------------------------------------------------
 void WitsmlWellboreCompletionToVtkPartitionedDataSet::loadVtkObject()
 {
-	for (int idx = 0; idx < this->list_perforation.size(); ++idx)
+	for (int idx = 0; idx < this->connections.size(); ++idx)
 	{
-		this->vtkData->SetPartition(idx, this->list_perforation[idx]->getOutput()->GetPartitionAsDataObject(0));
-		this->vtkData->GetMetaData(idx)->Set(vtkCompositeDataSet::NAME(), this->list_perforation[idx]->getTitle().c_str());
+		this->vtkData->SetPartition(idx, this->connections[idx]);
+		this->vtkData->GetMetaData(idx)->Set(vtkCompositeDataSet::NAME(), this->connections[idx]->getType().c_str());
 	}
 }
 
-//----------------------------------------------------------------------------
-void WitsmlWellboreCompletionToVtkPartitionedDataSet::addPerforation(const std::string& uuid)
+void WitsmlWellboreCompletionToVtkPartitionedDataSet::addConnection(const std::string & connectionType)
 {
-	if (std::find_if(list_perforation.begin(), list_perforation.end(), [uuid](WitsmlWellboreCompletionPerforationToVtkPolyData const* perforation) { return perforation->getUuid() == uuid; }) == list_perforation.end())
-	{
-		this->list_perforation.push_back(new WitsmlWellboreCompletionPerforationToVtkPolyData(this->getResqmlData(), this->getWellboreTrajectory(), uuid));
-		this->loadVtkObject();
-	}
+    vtkOutputWindowDisplayErrorText("addConnection");
+    if (connectionType == "Perforation") 
+    {
+        // Iterate over the perforations.
+        for (uint64_t perforationIndex = 0; perforationIndex < this->getResqmlData()->getConnectionCount(WITSML2_1_NS::WellboreCompletion::WellReservoirConnectionType::PERFORATION); ++perforationIndex)
+        {
+            std::string perforation_name = "Perfo";
+            auto& extraMetadatas = this->getResqmlData()->getConnectionExtraMetadata(WITSML2_1_NS::WellboreCompletion::WellReservoirConnectionType::PERFORATION, perforationIndex, "Petrel:Name0");
+            // arbitrarily select the first event name as perforation name
+            if (extraMetadatas.size() > 0)
+            {
+                perforation_name += "_" + extraMetadatas[0];
+            }
+            else
+            {
+                extraMetadatas = this->getResqmlData()->getConnectionExtraMetadata(WITSML2_1_NS::WellboreCompletion::WellReservoirConnectionType::PERFORATION, perforationIndex, "Sismage-CIG:Name");
+                if (extraMetadatas.size() > 0)
+                {
+                    perforation_name += "_" + extraMetadatas[0];
+                }
+                else
+                {
+                    perforation_name += "_" + this->getResqmlData()->getConnectionUid(WITSML2_1_NS::WellboreCompletion::WellReservoirConnectionType::PERFORATION, perforationIndex);
+                }
+            }
+            // this->getResqmlData()->getConnectionUid(WITSML2_1_NS::WellboreCompletion::WellReservoirConnectionType::PERFORATION, perforationIndex)
+        }
+        //connections.push_back(connection);
+    }
 }
 
-//----------------------------------------------------------------------------
-void WitsmlWellboreCompletionToVtkPartitionedDataSet::removePerforation(const std::string& uuid)
+std::vector<WitsmlWellboreCompletionConnectionToVtkDataSet*> WitsmlWellboreCompletionToVtkPartitionedDataSet::getConnections()
 {
-	list_perforation.erase(
-		std::remove_if(list_perforation.begin(), list_perforation.end(), [uuid](WitsmlWellboreCompletionPerforationToVtkPolyData const* perforation) { return perforation->getUuid() == uuid; }),
-		list_perforation.end());
-	this->loadVtkObject();
+	return connections;
 }
+
 

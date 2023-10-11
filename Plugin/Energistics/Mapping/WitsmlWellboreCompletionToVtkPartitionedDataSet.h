@@ -17,10 +17,12 @@ specific language governing permissions and limitations
 under the License.
 -----------------------------------------------------------------------*/
 #ifndef __WitsmlWellboreCompletionToVtkPartitionedDataSet_H_
-#define __WitsmlWellboreCompletionToVtkPartitionedDataSet__H_
+#define __WitsmlWellboreCompletionToVtkPartitionedDataSet_H_
+
+#include <vector>
 
 #include "Mapping/CommonAbstractObjectToVtkPartitionedDataSet.h"
-#include "WitsmlWellboreCompletionPerforationToVtkPolydata.h"
+#include "Mapping/WitsmlWellboreCompletionConnectionToVtkDataSet.h"
 
 namespace WITSML2_1_NS
 {
@@ -45,9 +47,8 @@ public:
 	 */
 	void loadVtkObject() override;
 
-	void addPerforation(const std::string& perforation_uuid);
-	void removePerforation(const std::string& perforation_uuid);
-
+	void addConnection(const std::string& connectionuid);
+	std::vector<WitsmlWellboreCompletionConnectionToVtkDataSet*> getConnections();
 
 protected:
 	WITSML2_1_NS::WellboreCompletion const* getResqmlData() const;
@@ -56,7 +57,7 @@ protected:
 	resqml2::WellboreTrajectoryRepresentation * wellboreTrajectory;
 
 private:
-	std::vector<WitsmlWellboreCompletionPerforationToVtkPolydata*> list_perforation;
+	std::vector<WitsmlWellboreCompletionConnectionToVtkDataSet*> connections;
 
 };
 #endif

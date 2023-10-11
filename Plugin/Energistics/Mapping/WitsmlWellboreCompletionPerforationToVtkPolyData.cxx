@@ -36,49 +36,30 @@ under the License.
 #include <fesapi/resqml2/WellboreTrajectoryRepresentation.h>
 
 //----------------------------------------------------------------------------
-WitsmlWellboreCompletionPerforationToVtkPolydata::WitsmlWellboreCompletionPerforationToVtkPolydata(WITSML2_1_NS::WellboreCompletion *completion, resqml2::WellboreTrajectoryRepresentation *trajectory, const std::string &connection_uid, int proc_number, int max_proc)
-	: CommonAbstractObjectToVtkPartitionedDataSet(completion,
-												  proc_number,
-												  max_proc),
-	WellboreCompletion(completion),
-	wellboreTrajectory(trajectory),
-	connectionUid(connection_uid)
-{
+// This function loads a vtkPolyData object from a WITSML WellboreCompletion object.
+//
+// Args:
+//   wellboreTrajectory: The wellbore trajectory object.
+//   wellboreCompletion: The wellbore completion object.
+//
+// Returns:
+//   The vtkPolyData object.
+void WitsmlWellboreCompletionPerforationToVtkPolydata::loadVtkObject(resqml::WellboreTrajectoryRepresentation *trajectory) {
 
-	vtkOutputWindowDisplayErrorText(connection_uid.c_str());
-	this->vtkData = vtkSmartPointer<vtkPolyData>::New();
-	this->vtkData->Modified();
-}
+	// Check that the trajectory is valid.
+	if (trajectory == nullptr) {
+		vtkOutputWindowDisplayErrorText("Cannot compute the XYZ points of the frame without a valid wellbore trajectory.");
+		return;
+	}
 
-	// This function loads a vtkPolyData object from a WITSML WellboreCompletion object.
-	//
-	// Args:
-	//   wellboreTrajectory: The wellbore trajectory object.
-	//   wellboreCompletion: The wellbore completion object.
-	//
-	// Returns:
-	//   The vtkPolyData object.
-	void WitsmlWellboreCompletionPerforationToVtkPolydata::loadVtkObject() {
-
-		// Check that the wellboreTrajectory is valid.
-		if (wellboreTrajectory == nullptr) {
-			vtkOutputWindowDisplayErrorText("Cannot compute the XYZ points of the frame without a valid wellbore trajectory.");
-			return;
-		}
-
-		// Get the MD datum.
-		auto mdDatum = wellboreTrajectory->getMdDatum();
-		if (mdDatum == nullptr || mdDatum->isPartial()) {
-			vtkOutputWindowDisplayErrorText("Cannot compute the XYZ points of the frame without the MD datum.");
-			return;
-		}
-
-		// Get the wellbore completion object.
-		if (WellboreCompletion == nullptr) {
-			vtkOutputWindowDisplayErrorText("Cannot get the WITSML WellboreCompletion object.");
-			return;
-		}
-
+	/*
+	// Get the MD datum.
+	auto mdDatum = trajectory->getMdDatum();
+	if (mdDatum == nullptr || mdDatum->isPartial()) {
+		vtkOutputWindowDisplayErrorText("Cannot compute the XYZ points of the frame without the MD datum.");
+		return;
+	}
+	*/
 		// Create a vector to store the perforations.
 		std::vector<vtkSmartPointer<vtkPolyData>> perforationPolyDatas;
 /*
@@ -162,3 +143,4 @@ WitsmlWellboreCompletionPerforationToVtkPolydata::WitsmlWellboreCompletionPerfor
 		this->vtkData->Modified();
 		*/
 }
+

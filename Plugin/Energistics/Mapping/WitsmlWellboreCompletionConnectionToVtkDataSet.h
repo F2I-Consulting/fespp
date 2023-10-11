@@ -16,39 +16,31 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 -----------------------------------------------------------------------*/
-#ifndef __WitsmlWellboreCompletionToVtkPartitionedDataSet_H_
-#define __WitsmlWellboreCompletionToVtkPartitionedDataSet__H_
+#ifndef __WitsmlWellboreCompletionConnectionToVtkDataSet_H_
+#define __WitsmlWellboreCompletionConnectionToVtkDataSet_H_
 
-#include "Mapping/CommonAbstractObjectToVtkPartitionedDataSet.h"
+#include <vtkDataSet.h>
 
 namespace WITSML2_1_NS
 {
 	class WellboreCompletion;
 }
 
-namespace resqml
-{
-	class WellboreTrajectoryRepresentation;
-}
-
-class WitsmlWellboreCompletionToVtkPartitionedDataSet : public CommonAbstractObjectToVtkPartitionedDataSet
+class WitsmlWellboreCompletionConnectionToVtkDataSet : public vtkDataSet
 {
 public:
-	/**
-	 * Constructor
-	 */
-	WitsmlWellboreCompletionToVtkPartitionedDataSet(WITSML2_1_NS::WellboreCompletion *completion, int proc_number = 0, int max_proc = 1);
+	static WitsmlWellboreCompletionConnectionToVtkDataSet* New();
 
-	/**
-	 * load vtkDataSet with resqml data
-	 */
-	void loadVtkObject() override;
+	virtual double getDepth() = 0;
+	virtual std::string getType() = 0;
 
+	std::string getType() const;
 
 protected:
-	WITSML2_1_NS::WellboreCompletion const* getResqmlData() const;
+	WitsmlWellboreCompletionConnectionToVtkDataSet();
+	virtual ~WitsmlWellboreCompletionConnectionToVtkDataSet();
 
-	resqml2::WellboreTrajectoryRepresentation * wellboreTrajectory;
+	std::string type;
 
 };
 #endif

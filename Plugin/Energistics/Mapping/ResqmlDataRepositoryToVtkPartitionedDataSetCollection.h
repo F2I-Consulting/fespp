@@ -99,7 +99,7 @@ private:
 	void selectNodeIdParent(int node);
 	void selectNodeIdChildren(int node);
 
-	void initMapper(const TreeViewNodeType type, const std::string &uuid, const int nbProcess, const int processId);
+	void initMapper(const TreeViewNodeType type, const int node_id/*const std::string& uuid*/, const int nbProcess, const int processId);
 	void loadMapper(const TreeViewNodeType type, const std::string &uuid, double time);
 
 	bool markerOrientation;

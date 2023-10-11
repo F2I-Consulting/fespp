@@ -646,19 +646,22 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::clearSelection()
     this->current_selection.clear();
 }
 
-void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::initMapper(const TreeViewNodeType type, const std::string &uuid, const int nbProcess, const int processId)
+void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::initMapper(const TreeViewNodeType type, const int node_id/*const std::string& uuid*/, const int nbProcess, const int processId)
 {
     CommonAbstractObjectToVtkPartitionedDataSet *rep = nullptr;
+    const std::string uuid = std::string(output->GetDataAssembly()->GetNodeName(node_id)).substr(1);
+
     if (TreeViewNodeType::Perforation == type)
     {
-        vtkOutputWindowDisplayErrorText("perforation");
+        const std::string completion_uuid = std::string(output->GetDataAssembly()->GetNodeName(output->GetDataAssembly()->GetParent(node_id))).substr(1);
+        vtkOutputWindowDisplayErrorText(("index perforation: " + uuid + " / completion : " + completion_uuid).c_str());
         return;
     }
     else if (TreeViewNodeType::Representation == type || TreeViewNodeType::WellboreTrajectory == type || TreeViewNodeType::WellboreMarker == type || TreeViewNodeType::WellboreFrame == type || TreeViewNodeType::WellboreCompletion == type)
     {
 
-        if (uuid.length() == 36)
-        {
+        //if (uuid.length() == 36)
+        //{
             COMMON_NS::AbstractObject *const result = repository->getDataObjectByUuid(uuid);
 
             try
@@ -733,7 +736,7 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::initMapper(const Tre
             {
                 vtkOutputWindowDisplayErrorText(("Error when initialize uuid: " + uuid + "\n" + e.what()).c_str());
             }
-        }
+        //}
     }
 }
 
@@ -745,7 +748,8 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::loadMapper(const Tre
         const int node_parent = assembly->GetParent(output->GetDataAssembly()->FindFirstNodeWithName(("_" + uuid).c_str()));
         if (dynamic_cast<WitsmlWellboreCompletionToVtkPartitionedDataSet*>(nodeId_to_resqml[node_parent]) != nullptr)
         {
-            static_cast<WitsmlWellboreCompletionToVtkPartitionedDataSet*>(nodeId_to_resqml[node_parent])->addPerforation(uuid);
+            static_cast<WitsmlWellboreCompletionToVtkPartitionedDataSet*>(nodeId_to_resqml[node_parent])->addConnection(uuid);
+            vtkOutputWindowDisplayErrorText("add");
         }
         vtkOutputWindowDisplayErrorText("perforation");
     }
@@ -962,7 +966,7 @@ vtkPartitionedDataSetCollection *ResqmlDataRepositoryToVtkPartitionedDataSetColl
         // initialize mapper
         if (this->nodeId_to_resqml.find(node_selection) == this->nodeId_to_resqml.end())
         {
-            initMapper(static_cast<TreeViewNodeType>(value_type), uuid, nbProcess, processId);
+            initMapper(static_cast<TreeViewNodeType>(value_type), node_selection /*uuid*/, nbProcess, processId);
         }
 
         // load mapper representation
