@@ -22,7 +22,7 @@ under the License.
 #include <vector>
 
 #include "Mapping/CommonAbstractObjectToVtkPartitionedDataSet.h"
-#include "Mapping/WitsmlWellboreCompletionConnectionToVtkDataSet.h"
+#include "Mapping/WitsmlWellboreCompletionPerforationToVtkPolyData.h"
 
 namespace WITSML2_1_NS
 {
@@ -47,8 +47,8 @@ public:
 	 */
 	void loadVtkObject() override;
 
-	void addConnection(const std::string& connectionuid);
-	std::vector<WitsmlWellboreCompletionConnectionToVtkDataSet*> getConnections();
+	void addPerforation(const std::string& connectionuid, const std::string& name);
+	std::vector<WitsmlWellboreCompletionPerforationToVtkPolyData*> getPerforations();
 
 protected:
 	WITSML2_1_NS::WellboreCompletion const* getResqmlData() const;
@@ -57,7 +57,7 @@ protected:
 	resqml2::WellboreTrajectoryRepresentation * wellboreTrajectory;
 
 private:
-	std::vector<WitsmlWellboreCompletionConnectionToVtkDataSet*> connections;
+	std::vector<WitsmlWellboreCompletionPerforationToVtkPolyData*> perforations;
 
 };
 #endif

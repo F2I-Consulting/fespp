@@ -19,30 +19,39 @@ under the License.
 #ifndef __WitsmlWellboreCompletionPerforationToVtkPolyData_H_
 #define __WitsmlWellboreCompletionPerforationToVtkPolyData_H_
 
-#include "Mapping/WitsmlWellboreCompletionConnectionToVtkDataSet.h"
+#include <fesapi/resqml2/WellboreTrajectoryRepresentation.h>
+
+#include "Mapping/CommonAbstractObjectToVtkPartitionedDataSet.h"
 
 #include <vtkPolyData.h>
 
-namespace resqml
-{
-	class WellboreTrajectoryRepresentation;
-}
-
-class WitsmlWellboreCompletionPerforationToVtkPolydata : public WitsmlWellboreCompletionConnectionToVtkDataSet
+class WitsmlWellboreCompletionPerforationToVtkPolyData
 {
 public:
 	/**
 	 * Constructor
 	 */
-	static WitsmlWellboreCompletionPerforationToVtkPolydata* New();
+	WitsmlWellboreCompletionPerforationToVtkPolyData(const resqml2::WellboreTrajectoryRepresentation* wellboreTrajectory, const WITSML2_1_NS::WellboreCompletion *WellboreCompletion, const std::string& connectionuid, const std::string& title, int proc_number = 0, int max_proc = 1);
 
-	void loadVtkObject(resqml::WellboreTrajectoryRepresentation* trajectory);
+	/**
+ * load vtkDataSet with resqml data
+ */
+	void loadVtkObject();
+
+	/**
+* return the vtkPartitionedDataSet of resqml object
+*/
+	vtkSmartPointer<vtkPolyData> getOutput() const { return vtkData; }
+
+	std::string getTitle() const { return title; }
 	
 protected:
-	WitsmlWellboreCompletionPerforationToVtkPolydata();
-	virtual ~WitsmlWellboreCompletionPerforationToVtkPolydata();
 
-private:
-	vtkPolyData* polyData;
+	const WITSML2_1_NS::WellboreCompletion* wellboreCompletion;
+	const resqml2::WellboreTrajectoryRepresentation* wellboreTrajectory;
+	std::string title;
+	std::string connection;
+
+	vtkSmartPointer<vtkPolyData> vtkData;
 };
 #endif

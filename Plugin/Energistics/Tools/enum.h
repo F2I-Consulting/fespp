@@ -20,7 +20,9 @@ under the License.
 #ifndef ENUM_H
 #define ENUM_H
 
-enum TreeViewNodeType {
+#include <string>
+
+enum class TreeViewNodeType {
 	Unknown,
 	Representation,
 	Properties,
@@ -32,5 +34,6 @@ enum TreeViewNodeType {
 	TimeSeries,
 	Perforation,
 };
+
 
 #endif // ENUM_H

@@ -59,49 +59,22 @@ resqml2::WellboreTrajectoryRepresentation const* WitsmlWellboreCompletionToVtkPa
 //----------------------------------------------------------------------------
 void WitsmlWellboreCompletionToVtkPartitionedDataSet::loadVtkObject()
 {
-	for (int idx = 0; idx < this->connections.size(); ++idx)
+	for (int idx = 0; idx < this->perforations.size(); ++idx)
 	{
-		this->vtkData->SetPartition(idx, this->connections[idx]);
-		this->vtkData->GetMetaData(idx)->Set(vtkCompositeDataSet::NAME(), this->connections[idx]->getType().c_str());
+		this->vtkData->SetPartition(idx, this->perforations[idx]->getOutput());
+		this->vtkData->GetMetaData(idx)->Set(vtkCompositeDataSet::NAME(), this->perforations[idx]->getTitle().c_str());
 	}
 }
 
-void WitsmlWellboreCompletionToVtkPartitionedDataSet::addConnection(const std::string & connectionType)
+void WitsmlWellboreCompletionToVtkPartitionedDataSet::addPerforation(const std::string& connectionuid, const std::string& name)
 {
-    vtkOutputWindowDisplayErrorText("addConnection");
-    if (connectionType == "Perforation") 
-    {
-        // Iterate over the perforations.
-        for (uint64_t perforationIndex = 0; perforationIndex < this->getResqmlData()->getConnectionCount(WITSML2_1_NS::WellboreCompletion::WellReservoirConnectionType::PERFORATION); ++perforationIndex)
-        {
-            std::string perforation_name = "Perfo";
-            auto& extraMetadatas = this->getResqmlData()->getConnectionExtraMetadata(WITSML2_1_NS::WellboreCompletion::WellReservoirConnectionType::PERFORATION, perforationIndex, "Petrel:Name0");
-            // arbitrarily select the first event name as perforation name
-            if (extraMetadatas.size() > 0)
-            {
-                perforation_name += "_" + extraMetadatas[0];
-            }
-            else
-            {
-                extraMetadatas = this->getResqmlData()->getConnectionExtraMetadata(WITSML2_1_NS::WellboreCompletion::WellReservoirConnectionType::PERFORATION, perforationIndex, "Sismage-CIG:Name");
-                if (extraMetadatas.size() > 0)
-                {
-                    perforation_name += "_" + extraMetadatas[0];
-                }
-                else
-                {
-                    perforation_name += "_" + this->getResqmlData()->getConnectionUid(WITSML2_1_NS::WellboreCompletion::WellReservoirConnectionType::PERFORATION, perforationIndex);
-                }
-            }
-            // this->getResqmlData()->getConnectionUid(WITSML2_1_NS::WellboreCompletion::WellReservoirConnectionType::PERFORATION, perforationIndex)
-        }
-        //connections.push_back(connection);
-    }
+	this->perforations.push_back(new WitsmlWellboreCompletionPerforationToVtkPolyData(this->getWellboreTrajectory(), this->getResqmlData(), connectionuid, name));
+	this->loadVtkObject();
 }
 
-std::vector<WitsmlWellboreCompletionConnectionToVtkDataSet*> WitsmlWellboreCompletionToVtkPartitionedDataSet::getConnections()
+std::vector<WitsmlWellboreCompletionPerforationToVtkPolyData*> WitsmlWellboreCompletionToVtkPartitionedDataSet::getPerforations()
 {
-	return connections;
+	return perforations;
 }
 
 

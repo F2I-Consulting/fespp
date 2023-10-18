@@ -100,7 +100,7 @@ private:
 	void selectNodeIdChildren(int node);
 
 	void initMapper(const TreeViewNodeType type, const int node_id/*const std::string& uuid*/, const int nbProcess, const int processId);
-	void loadMapper(const TreeViewNodeType type, const std::string &uuid, double time);
+	void loadMapper(const TreeViewNodeType type, const int node_id/*const std::string& uuid*/, double time);
 
 	bool markerOrientation;
 	int markerSize;
@@ -109,7 +109,7 @@ private:
 
 	vtkSmartPointer<vtkPartitionedDataSetCollection> output;
 
-	std::map<int, CommonAbstractObjectToVtkPartitionedDataSet *> nodeId_to_resqml; // index of VtkDataAssembly to CommonAbstractObjectToVtkPartitionedDataSet
+	std::map<int, CommonAbstractObjectToVtkPartitionedDataSet *> nodeId_to_mapper; // index of VtkDataAssembly to CommonAbstractObjectToVtkPartitionedDataSet
 
 	//\/          uuid             title            index        prop_uuid
 	std::map<std::string, std::map<std::string, std::map<double, std::string>>> timeSeries_uuid_and_title_to_index_and_properties_uuid;
