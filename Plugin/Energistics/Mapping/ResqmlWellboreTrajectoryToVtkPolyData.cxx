@@ -31,7 +31,7 @@ under the License.
 #include <fesapi/resqml2/AbstractLocal3dCrs.h>
 
 //----------------------------------------------------------------------------
-ResqmlWellboreTrajectoryToVtkPolyData::ResqmlWellboreTrajectoryToVtkPolyData(resqml2::WellboreTrajectoryRepresentation *wellbore, int proc_number, int max_proc)
+ResqmlWellboreTrajectoryToVtkPolyData::ResqmlWellboreTrajectoryToVtkPolyData(const resqml2::WellboreTrajectoryRepresentation *wellbore, int proc_number, int max_proc)
 	: ResqmlAbstractRepresentationToVtkPartitionedDataSet(wellbore,
 											   proc_number,
 											   max_proc)
@@ -44,9 +44,9 @@ ResqmlWellboreTrajectoryToVtkPolyData::ResqmlWellboreTrajectoryToVtkPolyData(res
 }
 
 //----------------------------------------------------------------------------
-RESQML2_NS::WellboreTrajectoryRepresentation const* ResqmlWellboreTrajectoryToVtkPolyData::getResqmlData() const
+const RESQML2_NS::WellboreTrajectoryRepresentation const* ResqmlWellboreTrajectoryToVtkPolyData::getResqmlData() const
 {
-	return static_cast<RESQML2_NS::WellboreTrajectoryRepresentation const*>(resqmlData);
+	return static_cast<const RESQML2_NS::WellboreTrajectoryRepresentation const*>(resqmlData);
 }
 
 //----------------------------------------------------------------------------

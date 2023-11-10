@@ -34,7 +34,7 @@ under the License.
 #include "Mapping/ResqmlPropertyToVtkDataArray.h"
 
 //----------------------------------------------------------------------------
-ResqmlAbstractRepresentationToVtkPartitionedDataSet::ResqmlAbstractRepresentationToVtkPartitionedDataSet(RESQML2_NS::AbstractRepresentation *abstract_representation, int proc_number, int max_proc)
+ResqmlAbstractRepresentationToVtkPartitionedDataSet::ResqmlAbstractRepresentationToVtkPartitionedDataSet(const RESQML2_NS::AbstractRepresentation *abstract_representation, int proc_number, int max_proc)
 	: CommonAbstractObjectToVtkPartitionedDataSet(abstract_representation,
 		proc_number,
 		max_proc),

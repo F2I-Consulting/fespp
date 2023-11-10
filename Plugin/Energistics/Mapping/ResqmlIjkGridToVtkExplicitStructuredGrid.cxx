@@ -38,7 +38,7 @@ under the License.
 #include "ResqmlPropertyToVtkDataArray.h"
 
 //----------------------------------------------------------------------------
-ResqmlIjkGridToVtkExplicitStructuredGrid::ResqmlIjkGridToVtkExplicitStructuredGrid(RESQML2_NS::AbstractIjkGridRepresentation *ijkGrid, int proc_number, int max_proc)
+ResqmlIjkGridToVtkExplicitStructuredGrid::ResqmlIjkGridToVtkExplicitStructuredGrid(const RESQML2_NS::AbstractIjkGridRepresentation *ijkGrid, int proc_number, int max_proc)
 	: ResqmlAbstractRepresentationToVtkPartitionedDataSet(ijkGrid,
 											   proc_number,
 											   max_proc),
@@ -77,20 +77,20 @@ ResqmlIjkGridToVtkExplicitStructuredGrid::ResqmlIjkGridToVtkExplicitStructuredGr
 }
 
 //----------------------------------------------------------------------------
-RESQML2_NS::AbstractIjkGridRepresentation * ResqmlIjkGridToVtkExplicitStructuredGrid::getResqmlData() const
+const RESQML2_NS::AbstractIjkGridRepresentation * ResqmlIjkGridToVtkExplicitStructuredGrid::getResqmlData() const
 {
-	return static_cast<RESQML2_NS::AbstractIjkGridRepresentation *>(resqmlData);
+	return static_cast<const RESQML2_NS::AbstractIjkGridRepresentation *>(resqmlData);
 }
 
 //----------------------------------------------------------------------------
-void ResqmlIjkGridToVtkExplicitStructuredGrid::checkHyperslabingCapacity(RESQML2_NS::AbstractIjkGridRepresentation *ijkGrid)
+void ResqmlIjkGridToVtkExplicitStructuredGrid::checkHyperslabingCapacity(const RESQML2_NS::AbstractIjkGridRepresentation *ijkGrid)
 {
 	try
 	{
-		RESQML2_NS::AbstractIjkGridRepresentation * ijkGrid = getResqmlData();
+		const RESQML2_NS::AbstractIjkGridRepresentation * ijkGrid = getResqmlData();
 		const auto kInterfaceNodeCount = ijkGrid->getXyzPointCountOfKInterface();
 		std::unique_ptr<double[]> allXyzPoints(new double[kInterfaceNodeCount * 3]);
-		ijkGrid->getXyzPointsOfKInterface(0, allXyzPoints.get());
+		const_cast<RESQML2_NS::AbstractIjkGridRepresentation*>(ijkGrid)->getXyzPointsOfKInterface(0, allXyzPoints.get());
 		this->isHyperslabed = true;
 	}
 	catch (const std::exception &)
@@ -102,7 +102,7 @@ void ResqmlIjkGridToVtkExplicitStructuredGrid::checkHyperslabingCapacity(RESQML2
 //----------------------------------------------------------------------------
 void ResqmlIjkGridToVtkExplicitStructuredGrid::loadVtkObject()
 {
-	RESQML2_NS::AbstractIjkGridRepresentation* ijkGrid = getResqmlData();
+	const RESQML2_NS::AbstractIjkGridRepresentation* ijkGrid = getResqmlData();
 
 	vtkExplicitStructuredGrid* vtk_explicitStructuredGrid = vtkExplicitStructuredGrid::New();
 
@@ -126,7 +126,7 @@ void ResqmlIjkGridToVtkExplicitStructuredGrid::loadVtkObject()
 
 	const uint64_t translatePoint = ijkGrid->getXyzPointCountOfKInterface() * this->initKIndex;
 
-	ijkGrid->loadSplitInformation();
+	const_cast<RESQML2_NS::AbstractIjkGridRepresentation*>(ijkGrid)->loadSplitInformation();
 
 	uint64_t cellIndex = 0;
 	vtkSmartPointer<vtkIdList> nodes = vtkSmartPointer<vtkIdList>::New();
@@ -159,7 +159,7 @@ void ResqmlIjkGridToVtkExplicitStructuredGrid::loadVtkObject()
 		}
 	}
 
-	ijkGrid->unloadSplitInformation();
+	const_cast<RESQML2_NS::AbstractIjkGridRepresentation*>(ijkGrid)->unloadSplitInformation();
 
 	vtk_explicitStructuredGrid->CheckAndReorderFaces();
 	vtk_explicitStructuredGrid->ComputeFacesConnectivityFlagsArray();
@@ -182,7 +182,7 @@ vtkSmartPointer<vtkPoints> ResqmlIjkGridToVtkExplicitStructuredGrid::getVtkPoint
 //----------------------------------------------------------------------------
 void ResqmlIjkGridToVtkExplicitStructuredGrid::createPoints()
 {
-	RESQML2_NS::AbstractIjkGridRepresentation * ijkGrid = getResqmlData();
+	const RESQML2_NS::AbstractIjkGridRepresentation * ijkGrid = getResqmlData();
 
 	this->points->SetNumberOfPoints(this->pointCount);
 	size_t point_id = 0;
@@ -220,7 +220,7 @@ void ResqmlIjkGridToVtkExplicitStructuredGrid::createPoints()
 
 		for (uint_fast32_t kInterface = initKInterfaceIndex; kInterface <= maxKInterfaceIndex; ++kInterface)
 		{
-			ijkGrid->getXyzPointsOfKInterface(kInterface, allXyzPoints.get());
+			const_cast<RESQML2_NS::AbstractIjkGridRepresentation*>(ijkGrid)->getXyzPointsOfKInterface(kInterface, allXyzPoints.get());
 			auto const *crs = ijkGrid->getLocalCrs(0);
 			double xOffset = .0;
 			double yOffset = .0;

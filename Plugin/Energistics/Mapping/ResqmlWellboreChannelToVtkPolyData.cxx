@@ -31,7 +31,7 @@ under the License.
 #include <fesapi/resqml2/AbstractLocal3dCrs.h>
 
 //----------------------------------------------------------------------------
-ResqmlWellboreChannelToVtkPolyData::ResqmlWellboreChannelToVtkPolyData(RESQML2_NS::WellboreFrameRepresentation *frame, RESQML2_NS::AbstractValuesProperty *property, const std::string &uuid, int proc_number, int max_proc)
+ResqmlWellboreChannelToVtkPolyData::ResqmlWellboreChannelToVtkPolyData(const RESQML2_NS::WellboreFrameRepresentation *frame, const RESQML2_NS::AbstractValuesProperty *property, const std::string &uuid, int proc_number, int max_proc)
 	: ResqmlAbstractRepresentationToVtkPartitionedDataSet(frame,
 											   proc_number,
 											   max_proc),
@@ -45,9 +45,9 @@ ResqmlWellboreChannelToVtkPolyData::ResqmlWellboreChannelToVtkPolyData(RESQML2_N
 }
 
 //----------------------------------------------------------------------------
-RESQML2_NS::WellboreFrameRepresentation const* ResqmlWellboreChannelToVtkPolyData::getResqmlData() const
+const RESQML2_NS::WellboreFrameRepresentation const* ResqmlWellboreChannelToVtkPolyData::getResqmlData() const
 {
-	return static_cast<RESQML2_NS::WellboreFrameRepresentation const*>(resqmlData);
+	return static_cast<const RESQML2_NS::WellboreFrameRepresentation const*>(resqmlData);
 }
 
 //----------------------------------------------------------------------------
@@ -91,7 +91,7 @@ void ResqmlWellboreChannelToVtkPolyData::loadVtkObject()
 	auto tubeRadius = vtkSmartPointer<vtkDoubleArray>::New();
 	tubeRadius->SetName(this->abstractProperty->getTitle().c_str());
 	tubeRadius->SetNumberOfTuples(pointCount);
-	if (dynamic_cast<RESQML2_NS::ContinuousProperty *>(this->abstractProperty) != nullptr)
+	if (dynamic_cast<const RESQML2_NS::ContinuousProperty *>(this->abstractProperty) != nullptr)
 	{
 		std::unique_ptr<double[]> values(new double[pointCount]);
 		this->abstractProperty->getDoubleValuesOfPatch(0, values.get());
@@ -100,7 +100,7 @@ void ResqmlWellboreChannelToVtkPolyData::loadVtkObject()
 			tubeRadius->SetTuple1(i, values[i]);
 		}
 	}
-	else if (dynamic_cast<RESQML2_NS::DiscreteProperty *>(this->abstractProperty) != nullptr || dynamic_cast<RESQML2_NS::CategoricalProperty *>(this->abstractProperty) != nullptr)
+	else if (dynamic_cast<const RESQML2_NS::DiscreteProperty *>(this->abstractProperty) != nullptr || dynamic_cast<const RESQML2_NS::CategoricalProperty *>(this->abstractProperty) != nullptr)
 	{
 		std::unique_ptr<int[]> values(new int[pointCount]);
 		this->abstractProperty->getIntValuesOfPatch(0, values.get());

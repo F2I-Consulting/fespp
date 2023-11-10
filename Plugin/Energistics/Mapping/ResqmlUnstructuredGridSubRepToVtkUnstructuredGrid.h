@@ -43,7 +43,7 @@ public:
 	/**
 	 * Constructor
 	 */
-	ResqmlUnstructuredGridSubRepToVtkUnstructuredGrid(RESQML2_NS::SubRepresentation *unstructuredGridSubRep, ResqmlUnstructuredGridToVtkUnstructuredGrid *support, int proc_number = 0, int max_proc = 1);
+	ResqmlUnstructuredGridSubRepToVtkUnstructuredGrid(const RESQML2_NS::SubRepresentation *unstructuredGridSubRep, ResqmlUnstructuredGridToVtkUnstructuredGrid *support, int proc_number = 0, int max_proc = 1);
 
 	/**
 	 * load vtkDataSet with resqml data
@@ -56,7 +56,7 @@ public:
 	std::string unregisterToMapperSupportingGrid();
 
 protected:
-	RESQML2_NS::SubRepresentation const* getResqmlData() const;
+	const RESQML2_NS::SubRepresentation const* getResqmlData() const;
 	ResqmlUnstructuredGridToVtkUnstructuredGrid* mapperUnstructuredGrid;
 
 private:

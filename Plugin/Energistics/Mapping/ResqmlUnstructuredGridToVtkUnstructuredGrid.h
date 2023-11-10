@@ -39,7 +39,7 @@ public:
 	/**
 	 * Constructor
 	 */
-	explicit ResqmlUnstructuredGridToVtkUnstructuredGrid(RESQML2_NS::UnstructuredGridRepresentation *unstructuredGrid, int proc_number = 0, int max_proc = 1);
+	explicit ResqmlUnstructuredGridToVtkUnstructuredGrid(const RESQML2_NS::UnstructuredGridRepresentation *unstructuredGrid, int proc_number = 0, int max_proc = 1);
 
 	/**
 	 * load vtkDataSet with resqml data
@@ -53,7 +53,7 @@ public:
 
 
 protected:
-	RESQML2_NS::UnstructuredGridRepresentation * getResqmlData() const;
+	const RESQML2_NS::UnstructuredGridRepresentation * getResqmlData() const;
 	vtkSmartPointer<vtkPoints> points;
 	// Index of the nodes constituting a single VTK optimized cell
 	// The VTK HEXAGONALN PRISM is the VTK optimized cell containing the maximum number of nodes which is 12 as the size of this array.

@@ -35,7 +35,7 @@ under the License.
 #include "Mapping/ResqmlTriangulatedToVtkPolyData.h"
 
 //----------------------------------------------------------------------------
-ResqmlTriangulatedSetToVtkPartitionedDataSet::ResqmlTriangulatedSetToVtkPartitionedDataSet(RESQML2_NS::TriangulatedSetRepresentation *triangulated, int proc_number, int max_proc)
+ResqmlTriangulatedSetToVtkPartitionedDataSet::ResqmlTriangulatedSetToVtkPartitionedDataSet(const RESQML2_NS::TriangulatedSetRepresentation *triangulated, int proc_number, int max_proc)
 	: ResqmlAbstractRepresentationToVtkPartitionedDataSet(triangulated,
 											   proc_number,
 											   max_proc)
@@ -46,9 +46,9 @@ ResqmlTriangulatedSetToVtkPartitionedDataSet::ResqmlTriangulatedSetToVtkPartitio
 }
 
 //----------------------------------------------------------------------------
-RESQML2_NS::TriangulatedSetRepresentation * ResqmlTriangulatedSetToVtkPartitionedDataSet::getResqmlData() const
+const RESQML2_NS::TriangulatedSetRepresentation * ResqmlTriangulatedSetToVtkPartitionedDataSet::getResqmlData() const
 {
-	return static_cast<RESQML2_NS::TriangulatedSetRepresentation *>(resqmlData);
+	return static_cast<const RESQML2_NS::TriangulatedSetRepresentation *>(resqmlData);
 }
 
 //----------------------------------------------------------------------------
@@ -56,7 +56,7 @@ void ResqmlTriangulatedSetToVtkPartitionedDataSet::loadVtkObject()
 {
 	vtkSmartPointer<vtkPartitionedDataSet> partition = vtkSmartPointer<vtkPartitionedDataSet>::New();
 
-	RESQML2_NS::TriangulatedSetRepresentation * triangulatedSet = getResqmlData();
+	const RESQML2_NS::TriangulatedSetRepresentation * triangulatedSet = getResqmlData();
 	const unsigned int patchCount = triangulatedSet->getPatchCount();
 
 	for (unsigned int patchIndex = 0; patchIndex < patchCount; ++patchIndex)

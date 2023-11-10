@@ -29,7 +29,7 @@ under the License.
 #include "ResqmlWellboreChannelToVtkPolyData.h"
 
 //----------------------------------------------------------------------------
-ResqmlWellboreFrameToVtkPartitionedDataSet::ResqmlWellboreFrameToVtkPartitionedDataSet(resqml2::WellboreFrameRepresentation *frame, int proc_number, int max_proc)
+ResqmlWellboreFrameToVtkPartitionedDataSet::ResqmlWellboreFrameToVtkPartitionedDataSet(const resqml2::WellboreFrameRepresentation *frame, int proc_number, int max_proc)
 	: ResqmlAbstractRepresentationToVtkPartitionedDataSet(frame,
 											   proc_number,
 											   max_proc)
@@ -39,9 +39,9 @@ ResqmlWellboreFrameToVtkPartitionedDataSet::ResqmlWellboreFrameToVtkPartitionedD
 }
 
 //----------------------------------------------------------------------------
-RESQML2_NS::WellboreFrameRepresentation * ResqmlWellboreFrameToVtkPartitionedDataSet::getResqmlData() const
+const RESQML2_NS::WellboreFrameRepresentation * ResqmlWellboreFrameToVtkPartitionedDataSet::getResqmlData() const
 {
-	return static_cast<RESQML2_NS::WellboreFrameRepresentation *>(resqmlData);
+	return static_cast<const RESQML2_NS::WellboreFrameRepresentation *>(resqmlData);
 }
 
 //----------------------------------------------------------------------------

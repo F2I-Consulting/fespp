@@ -48,7 +48,7 @@ under the License.
 #include "ResqmlUnstructuredGridToVtkUnstructuredGrid.h"
 
 //----------------------------------------------------------------------------
-ResqmlUnstructuredGridSubRepToVtkUnstructuredGrid::ResqmlUnstructuredGridSubRepToVtkUnstructuredGrid(RESQML2_NS::SubRepresentation *subRep, ResqmlUnstructuredGridToVtkUnstructuredGrid *support, int proc_number, int max_proc)
+ResqmlUnstructuredGridSubRepToVtkUnstructuredGrid::ResqmlUnstructuredGridSubRepToVtkUnstructuredGrid(const RESQML2_NS::SubRepresentation *subRep, ResqmlUnstructuredGridToVtkUnstructuredGrid *support, int proc_number, int max_proc)
 	: ResqmlAbstractRepresentationToVtkPartitionedDataSet(subRep,
 														  proc_number,
 														  max_proc),
@@ -61,9 +61,9 @@ ResqmlUnstructuredGridSubRepToVtkUnstructuredGrid::ResqmlUnstructuredGridSubRepT
 }
 
 //----------------------------------------------------------------------------
-RESQML2_NS::SubRepresentation const* ResqmlUnstructuredGridSubRepToVtkUnstructuredGrid::getResqmlData() const
+const RESQML2_NS::SubRepresentation const* ResqmlUnstructuredGridSubRepToVtkUnstructuredGrid::getResqmlData() const
 {
-	return static_cast<RESQML2_NS::SubRepresentation const*>(resqmlData);
+	return static_cast<const RESQML2_NS::SubRepresentation const*>(resqmlData);
 }
 
 //----------------------------------------------------------------------------

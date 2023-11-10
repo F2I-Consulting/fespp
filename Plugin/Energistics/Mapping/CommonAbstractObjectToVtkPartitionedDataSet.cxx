@@ -19,25 +19,17 @@ under the License.
 #include "Mapping/CommonAbstractObjectToVtkPartitionedDataSet.h"
 
 //----------------------------------------------------------------------------
-CommonAbstractObjectToVtkPartitionedDataSet::CommonAbstractObjectToVtkPartitionedDataSet(COMMON_NS::AbstractObject *abstract_object, int proc_number, int max_proc):
+CommonAbstractObjectToVtkPartitionedDataSet::CommonAbstractObjectToVtkPartitionedDataSet(const COMMON_NS::AbstractObject *abstract_object, int proc_number, int max_proc):
 	procNumber(proc_number),
 	maxProc(max_proc),
 	resqmlData(abstract_object),
 	vtkData(nullptr)
 {
+	this->abs_uuid = this->getResqmlData()->getUuid();
+	this->abs_title = this->getResqmlData()->getTitle();
 }
 
 void CommonAbstractObjectToVtkPartitionedDataSet::unloadVtkObject()
 {
 	this->vtkData = vtkSmartPointer<vtkPartitionedDataSet>::New();
-}
-
-std::string CommonAbstractObjectToVtkPartitionedDataSet::getUuid() const
-{
-	return this->getResqmlData()->getUuid();
-}
-
-std::string CommonAbstractObjectToVtkPartitionedDataSet::getTitle() const
-{
-	return this->getResqmlData()->getTitle();
 }

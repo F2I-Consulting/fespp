@@ -33,7 +33,7 @@ public:
 	/**
 	 * Constructor
 	 */
-	ResqmlWellboreChannelToVtkPolyData(RESQML2_NS::WellboreFrameRepresentation *frame, RESQML2_NS::AbstractValuesProperty *property, const std::string &uuid, int proc_number = 0, int max_proc = 1);
+	ResqmlWellboreChannelToVtkPolyData(const RESQML2_NS::WellboreFrameRepresentation *frame, const RESQML2_NS::AbstractValuesProperty *property, const std::string &uuid, int proc_number = 0, int max_proc = 1);
 
 	/**
 	 * load vtkDataSet with resqml data
@@ -44,10 +44,10 @@ public:
 	std::string getTitle() const { return this->title; }
 
 protected:
-	RESQML2_NS::WellboreFrameRepresentation const* getResqmlData() const;
+	const RESQML2_NS::WellboreFrameRepresentation const* getResqmlData() const;
 
 private:
-	RESQML2_NS::AbstractValuesProperty *abstractProperty;
+	const RESQML2_NS::AbstractValuesProperty *abstractProperty;
 
 	std::string uuid;
 	std::string title;

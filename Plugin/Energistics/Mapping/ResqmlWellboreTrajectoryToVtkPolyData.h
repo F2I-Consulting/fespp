@@ -32,7 +32,7 @@ public:
 	/**
 	* Constructor
 	*/
-	explicit ResqmlWellboreTrajectoryToVtkPolyData(resqml2::WellboreTrajectoryRepresentation *wellbore, int proc_number = 0, int max_proc = 1);
+	explicit ResqmlWellboreTrajectoryToVtkPolyData(const resqml2::WellboreTrajectoryRepresentation *wellbore, int proc_number = 0, int max_proc = 1);
 	
 	/**
 	* load vtkDataSet with resqml data
@@ -41,7 +41,7 @@ public:
 	
 
 protected:
-	resqml2::WellboreTrajectoryRepresentation const* getResqmlData() const;
+	const resqml2::WellboreTrajectoryRepresentation const* getResqmlData() const;
 
 private:
 };

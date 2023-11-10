@@ -38,7 +38,7 @@ under the License.
 #include "ResqmlIjkGridToVtkExplicitStructuredGrid.h"
 
 //----------------------------------------------------------------------------
-ResqmlIjkGridSubRepToVtkExplicitStructuredGrid::ResqmlIjkGridSubRepToVtkExplicitStructuredGrid(RESQML2_NS::SubRepresentation *subRep, ResqmlIjkGridToVtkExplicitStructuredGrid *support, int proc_number, int max_proc)
+ResqmlIjkGridSubRepToVtkExplicitStructuredGrid::ResqmlIjkGridSubRepToVtkExplicitStructuredGrid(const RESQML2_NS::SubRepresentation *subRep, ResqmlIjkGridToVtkExplicitStructuredGrid *support, int proc_number, int max_proc)
 	: ResqmlAbstractRepresentationToVtkPartitionedDataSet(subRep,
 											   proc_number,
 											   max_proc),
@@ -51,9 +51,9 @@ ResqmlIjkGridSubRepToVtkExplicitStructuredGrid::ResqmlIjkGridSubRepToVtkExplicit
 }
 
 //----------------------------------------------------------------------------
-RESQML2_NS::SubRepresentation const* ResqmlIjkGridSubRepToVtkExplicitStructuredGrid::getResqmlData() const
+const RESQML2_NS::SubRepresentation const* ResqmlIjkGridSubRepToVtkExplicitStructuredGrid::getResqmlData() const
 {
-	return static_cast<RESQML2_NS::SubRepresentation const*>(resqmlData);
+	return static_cast<const RESQML2_NS::SubRepresentation const*>(resqmlData);
 }
 
 //----------------------------------------------------------------------------

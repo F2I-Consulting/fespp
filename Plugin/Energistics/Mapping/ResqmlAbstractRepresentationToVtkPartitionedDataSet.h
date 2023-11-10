@@ -40,7 +40,7 @@ public:
 	/**
 	 * Constructor
 	 */
-	ResqmlAbstractRepresentationToVtkPartitionedDataSet(RESQML2_NS::AbstractRepresentation *abstract_representation, int proc_number = 0, int max_proc = 1);
+	ResqmlAbstractRepresentationToVtkPartitionedDataSet(const RESQML2_NS::AbstractRepresentation *abstract_representation, int proc_number = 0, int max_proc = 1);
 
 	/**
 	 * Destructor
@@ -71,7 +71,7 @@ public:
 
 protected:
 
-	RESQML2_NS::AbstractRepresentation * getResqmlData() const { return resqmlData; }
+	const RESQML2_NS::AbstractRepresentation * getResqmlData() const { return resqmlData; }
 
 	unsigned int subrep_pointer_on_points_count;
 
@@ -84,7 +84,7 @@ protected:
 
 	bool isHyperslabed = false;
 
-	RESQML2_NS::AbstractRepresentation * resqmlData;
+	const RESQML2_NS::AbstractRepresentation * resqmlData;
 
 	std::unordered_map<std::string, class ResqmlPropertyToVtkDataArray *> uuidToVtkDataArray;
 

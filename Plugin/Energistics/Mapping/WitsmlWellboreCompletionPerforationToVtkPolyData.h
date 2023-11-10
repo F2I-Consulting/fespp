@@ -25,7 +25,7 @@ under the License.
 
 #include <vtkPolyData.h>
 
-class WitsmlWellboreCompletionPerforationToVtkPolyData
+class WitsmlWellboreCompletionPerforationToVtkPolyData : public CommonAbstractObjectToVtkPartitionedDataSet
 {
 public:
 	/**
@@ -41,17 +41,22 @@ public:
 	/**
 * return the vtkPartitionedDataSet of resqml object
 */
-	vtkSmartPointer<vtkPolyData> getOutput() const { return vtkData; }
+	//vtkSmartPointer<vtkPolyData> getOutput() const { return vtkData; }
 
 	std::string getTitle() const { return title; }
+	std::string getConnectionuid() const { return connectionuid; }
 	
+private:
+	void addSkin();
+
 protected:
 
 	const WITSML2_1_NS::WellboreCompletion* wellboreCompletion;
 	const resqml2::WellboreTrajectoryRepresentation* wellboreTrajectory;
 	std::string title;
-	std::string connection;
+	std::string connectionuid;
+	uint64_t index;
 
-	vtkSmartPointer<vtkPolyData> vtkData;
+	//vtkSmartPointer<vtkPolyData> vtkData;
 };
 #endif

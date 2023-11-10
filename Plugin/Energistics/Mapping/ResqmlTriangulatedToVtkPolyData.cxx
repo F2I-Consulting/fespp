@@ -35,7 +35,7 @@ under the License.
 #include "Mapping/ResqmlPropertyToVtkDataArray.h"
 
 //----------------------------------------------------------------------------
-ResqmlTriangulatedToVtkPolyData::ResqmlTriangulatedToVtkPolyData(RESQML2_NS::TriangulatedSetRepresentation * triangulated, uint32_t patch_index, int proc_number, int max_proc)
+ResqmlTriangulatedToVtkPolyData::ResqmlTriangulatedToVtkPolyData(const RESQML2_NS::TriangulatedSetRepresentation * triangulated, uint32_t patch_index, int proc_number, int max_proc)
 	: ResqmlAbstractRepresentationToVtkPartitionedDataSet(triangulated,
 											   proc_number,
 											   max_proc),
@@ -49,9 +49,9 @@ ResqmlTriangulatedToVtkPolyData::ResqmlTriangulatedToVtkPolyData(RESQML2_NS::Tri
 }
 
 //----------------------------------------------------------------------------
-RESQML2_NS::TriangulatedSetRepresentation const* ResqmlTriangulatedToVtkPolyData::getResqmlData() const
+const RESQML2_NS::TriangulatedSetRepresentation const* ResqmlTriangulatedToVtkPolyData::getResqmlData() const
 {
-	return static_cast<RESQML2_NS::TriangulatedSetRepresentation const*>(resqmlData);
+	return static_cast<const RESQML2_NS::TriangulatedSetRepresentation const*>(resqmlData);
 }
 
 uint32_t ResqmlTriangulatedToVtkPolyData::getPreviousPatchesNodeCount() const

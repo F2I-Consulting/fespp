@@ -37,7 +37,7 @@ public:
 	/**
 	 * Constructor
 	 */
-	CommonAbstractObjectToVtkPartitionedDataSet(COMMON_NS::AbstractObject *abstract_object, int proc_number = 0, int max_proc = 1);
+	CommonAbstractObjectToVtkPartitionedDataSet(const COMMON_NS::AbstractObject *abstract_object, int proc_number = 0, int max_proc = 1);
 
 	/**
 	 * Destructor
@@ -61,19 +61,25 @@ public:
 	/**
 	*
 	*/
-	std::string getUuid() const; 
-	std::string getTitle() const;
+	std::string getUuid() const { return abs_uuid; };
+	std::string getTitle() const { return abs_title; };
+	void setUuid(std::string new_uuid) { abs_uuid = new_uuid; }
+	void setTitle(std::string new_title) { abs_title = new_title; }
 	
 
 protected:
 
-	COMMON_NS::AbstractObject * getResqmlData() const { return resqmlData; }
+	const COMMON_NS::AbstractObject * getResqmlData() const { return resqmlData; }
 
 	int procNumber;
 	int maxProc;
 
-	COMMON_NS::AbstractObject * resqmlData;
+	const COMMON_NS::AbstractObject * resqmlData;
 
 	vtkSmartPointer<vtkPartitionedDataSet> vtkData;
+
+	std::string abs_uuid;
+	std::string abs_title;
+
 };
 #endif

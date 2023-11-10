@@ -20,6 +20,8 @@ under the License.
 
 #include <vtkInformation.h>
 
+#include <vtkFieldData.h>
+
 #include <fesapi/witsml2_1/WellboreCompletion.h>
 #include <fesapi/resqml2/MdDatum.h>
 #include <fesapi/resqml2/WellboreFeature.h>
@@ -27,7 +29,7 @@ under the License.
 #include <fesapi/resqml2/WellboreTrajectoryRepresentation.h>
 
 //----------------------------------------------------------------------------
-WitsmlWellboreCompletionToVtkPartitionedDataSet::WitsmlWellboreCompletionToVtkPartitionedDataSet(WITSML2_1_NS::WellboreCompletion *completion, int proc_number, int max_proc)
+WitsmlWellboreCompletionToVtkPartitionedDataSet::WitsmlWellboreCompletionToVtkPartitionedDataSet(const WITSML2_1_NS::WellboreCompletion *completion, int proc_number, int max_proc)
 	: CommonAbstractObjectToVtkPartitionedDataSet(completion,
 											   proc_number,
 											   max_proc)
@@ -45,9 +47,9 @@ WitsmlWellboreCompletionToVtkPartitionedDataSet::WitsmlWellboreCompletionToVtkPa
 }
 
 //----------------------------------------------------------------------------
-WITSML2_1_NS::WellboreCompletion const* WitsmlWellboreCompletionToVtkPartitionedDataSet::getResqmlData() const
+const WITSML2_1_NS::WellboreCompletion const* WitsmlWellboreCompletionToVtkPartitionedDataSet::getResqmlData() const
 {
-	return static_cast<WITSML2_1_NS::WellboreCompletion const*>(resqmlData);
+	return static_cast<const WITSML2_1_NS::WellboreCompletion const*>(resqmlData);
 }
 
 //----------------------------------------------------------------------------
@@ -63,7 +65,21 @@ void WitsmlWellboreCompletionToVtkPartitionedDataSet::loadVtkObject()
 	{
 		this->vtkData->SetPartition(idx, this->perforations[idx]->getOutput());
 		this->vtkData->GetMetaData(idx)->Set(vtkCompositeDataSet::NAME(), this->perforations[idx]->getTitle().c_str());
+
+		// Récupérer l'array des données de points
+		vtkDataSet* partition = this->vtkData->GetPartition(idx);
+		if (partition) {
+			vtkFieldData* fieldData = partition->GetFieldData();
+			if (fieldData) {
+				vtkDataArray* dataArray = fieldData->GetArray("Skin");
+				if (dataArray) {
+					std::cout << "L'array avec le nom 'Skin' a été trouvé dans les FieldData de la partition " << idx << "." << std::endl;
+				}
+			}
+		}
+
 	}
+	
 }
 
 void WitsmlWellboreCompletionToVtkPartitionedDataSet::addPerforation(const std::string& connectionuid, const std::string& name)

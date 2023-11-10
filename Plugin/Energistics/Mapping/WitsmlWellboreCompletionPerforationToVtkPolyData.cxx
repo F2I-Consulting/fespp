@@ -29,6 +29,7 @@ under the License.
 #include <vtkLineSource.h>
 #include <vtkDataAssembly.h>
 #include <vtkPoints.h>
+#include <vtkInformation.h>
 
 #include <fesapi/witsml2_1/WellboreCompletion.h>
 #include <fesapi/resqml2/MdDatum.h>
@@ -37,13 +38,35 @@ under the License.
 #include <fesapi/resqml2/WellboreTrajectoryRepresentation.h>
 
 WitsmlWellboreCompletionPerforationToVtkPolyData::WitsmlWellboreCompletionPerforationToVtkPolyData(const resqml2::WellboreTrajectoryRepresentation* wellboreTrajectory, const WITSML2_1_NS::WellboreCompletion *wellboreCompletion, const std::string &connectionuid, const std::string &title, int proc_number, int max_proc)
-	: wellboreCompletion(wellboreCompletion),
+	: CommonAbstractObjectToVtkPartitionedDataSet(wellboreCompletion,
+		proc_number,
+		max_proc),
+	wellboreCompletion(wellboreCompletion),
 	wellboreTrajectory(wellboreTrajectory),
 	title(title),
-	connection(connectionuid)
+	connectionuid(connectionuid)
 {
-	this->vtkData = vtkSmartPointer<vtkPolyData>::New();
+	// Check that the completion is valid.
+	if (wellboreCompletion == nullptr)
+	{
+		vtkOutputWindowDisplayErrorText("Cannot compute the XYZ points of the frame without a valid wellbore completion.");
+		return;
+	}
+
+	// Iterate over the perforations.
+	for (uint64_t perforationIndex = 0; perforationIndex < wellboreCompletion->getConnectionCount(WITSML2_1_NS::WellboreCompletion::WellReservoirConnectionType::PERFORATION); ++perforationIndex)
+	{
+		if (connectionuid == wellboreCompletion->getConnectionUid(WITSML2_1_NS::WellboreCompletion::WellReservoirConnectionType::PERFORATION, perforationIndex))
+		{
+			this->index = perforationIndex;
+		}
+	}
+
+	this->vtkData = vtkSmartPointer<vtkPartitionedDataSet>::New();
 	this->vtkData->Modified();
+
+	this->setUuid(connectionuid);
+	this->setTitle(title);
 
 	this->loadVtkObject();
 }
@@ -80,20 +103,15 @@ void WitsmlWellboreCompletionPerforationToVtkPolyData::loadVtkObject()
 		return;
 	}
 
-	// Iterate over the perforations.
-	for (uint64_t perforationIndex = 0; perforationIndex < this->wellboreCompletion->getConnectionCount(WITSML2_1_NS::WellboreCompletion::WellReservoirConnectionType::PERFORATION); ++perforationIndex)
-	{
-		if (this->connection == this->wellboreCompletion->getConnectionUid(WITSML2_1_NS::WellboreCompletion::WellReservoirConnectionType::PERFORATION, perforationIndex))
-		{
 			// Check that the perforation has an MD interval.
-			if (!this->wellboreCompletion->hasConnectionMdInterval(WITSML2_1_NS::WellboreCompletion::WellReservoirConnectionType::PERFORATION, perforationIndex))
+			if (!this->wellboreCompletion->hasConnectionMdInterval(WITSML2_1_NS::WellboreCompletion::WellReservoirConnectionType::PERFORATION, this->index))
 			{
-				continue;
+				return;
 			}
 
 			// Get the MD values for the top and bottom of the perforation.
-			const double top = this->wellboreCompletion->getConnectionTopMd(WITSML2_1_NS::WellboreCompletion::WellReservoirConnectionType::PERFORATION, perforationIndex);
-			const double base = this->wellboreCompletion->getConnectionBaseMd(WITSML2_1_NS::WellboreCompletion::WellReservoirConnectionType::PERFORATION, perforationIndex);
+			const double top = this->wellboreCompletion->getConnectionTopMd(WITSML2_1_NS::WellboreCompletion::WellReservoirConnectionType::PERFORATION, this->index);
+			const double base = this->wellboreCompletion->getConnectionBaseMd(WITSML2_1_NS::WellboreCompletion::WellReservoirConnectionType::PERFORATION, this->index);
 
 			// Convert the MD values to XYZ values.
 			std::array<double, 2> mdTrajValues = {top, base};
@@ -155,8 +173,52 @@ void WitsmlWellboreCompletionPerforationToVtkPolyData::loadVtkObject()
 			tubeFilter->Update();
 
 			// Add the perforationPolyData to the vector.
-			this->vtkData = tubeFilter->GetOutput();
+			//this->vtkData = tubeFilter->GetOutput();
+			this->vtkData->SetPartition(0, tubeFilter->GetOutput());
+			this->vtkData->GetMetaData((unsigned int)0)->Set(vtkCompositeDataSet::NAME(), (const char *)(this->connectionuid + "_"+ this->title).c_str());
 			this->vtkData->Modified();
+
+			this->addSkin();
+
+}
+
+void WitsmlWellboreCompletionPerforationToVtkPolyData::addSkin() {
+
+	int skin = 0;
+	auto& extraMetadatas = this->wellboreCompletion->getConnectionExtraMetadata(WITSML2_1_NS::WellboreCompletion::WellReservoirConnectionType::PERFORATION, this->index, "Petrel:Skin0");
+	if (extraMetadatas.size() > 0)
+	{
+		try {
+			skin = std::stod(extraMetadatas[0]);
+			vtkSmartPointer<vtkDoubleArray> array = vtkSmartPointer<vtkDoubleArray>::New();
+			array->SetName("Skin");
+			array->InsertNextValue(skin);
+			vtkOutputWindowDisplayText((std::to_string(this->index) + " " + extraMetadatas[0]).c_str());
+
+			this->vtkData->GetPartition(0)->GetFieldData()->AddArray(array);
+		}
+		catch (const std::exception& e) {
+			vtkOutputWindowDisplayErrorText(("skin value: " + extraMetadatas[0] + " is not numeric").c_str());
 		}
 	}
+	else {
+		extraMetadatas = this->wellboreCompletion->getConnectionExtraMetadata(WITSML2_1_NS::WellboreCompletion::WellReservoirConnectionType::PERFORATION, this->index, "Sismage-CIG:Skin");
+		if (extraMetadatas.size() > 0)
+		{
+			try {
+				skin = std::stod(extraMetadatas[0]);
+				vtkSmartPointer<vtkDoubleArray> array = vtkSmartPointer<vtkDoubleArray>::New();
+				array->SetName("Skin");
+				array->InsertNextValue(skin);
+				vtkOutputWindowDisplayText((std::to_string(this->index) + " " + extraMetadatas[0]).c_str());
+
+				this->vtkData->GetPartition(0)->GetFieldData()->AddArray(array);
+			}
+			catch (const std::exception& e) {
+				vtkOutputWindowDisplayErrorText(("skin value: " + extraMetadatas[0] + " is not numeric").c_str());
+			}
+		}
+	}
+
+
 }

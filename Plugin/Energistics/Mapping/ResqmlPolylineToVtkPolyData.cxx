@@ -34,7 +34,7 @@ under the License.
 #include "Mapping/ResqmlPropertyToVtkDataArray.h"
 
 //----------------------------------------------------------------------------
-ResqmlPolylineToVtkPolyData::ResqmlPolylineToVtkPolyData(RESQML2_NS::PolylineSetRepresentation *polyline, int proc_number, int max_proc)
+ResqmlPolylineToVtkPolyData::ResqmlPolylineToVtkPolyData(const RESQML2_NS::PolylineSetRepresentation *polyline, int proc_number, int max_proc)
 	: ResqmlAbstractRepresentationToVtkPartitionedDataSet(polyline,
 											   proc_number,
 											   max_proc)
@@ -47,9 +47,9 @@ ResqmlPolylineToVtkPolyData::ResqmlPolylineToVtkPolyData(RESQML2_NS::PolylineSet
 }
 
 //----------------------------------------------------------------------------
-RESQML2_NS::PolylineSetRepresentation const* ResqmlPolylineToVtkPolyData::getResqmlData() const
+const RESQML2_NS::PolylineSetRepresentation const* ResqmlPolylineToVtkPolyData::getResqmlData() const
 {
-	return static_cast<RESQML2_NS::PolylineSetRepresentation const*>(resqmlData);
+	return static_cast<const RESQML2_NS::PolylineSetRepresentation const*>(resqmlData);
 }
 
 

@@ -40,7 +40,7 @@ public:
 	/**
 	 * Constructor
 	 */
-	WitsmlWellboreCompletionToVtkPartitionedDataSet(WITSML2_1_NS::WellboreCompletion *completion, int proc_number = 0, int max_proc = 1);
+	WitsmlWellboreCompletionToVtkPartitionedDataSet(const WITSML2_1_NS::WellboreCompletion *completion, int proc_number = 0, int max_proc = 1);
 
 	/**
 	 * load vtkDataSet with resqml data
@@ -51,10 +51,10 @@ public:
 	std::vector<WitsmlWellboreCompletionPerforationToVtkPolyData*> getPerforations();
 
 protected:
-	WITSML2_1_NS::WellboreCompletion const* getResqmlData() const;
-	resqml2::WellboreTrajectoryRepresentation const* getWellboreTrajectory() const;
+	const WITSML2_1_NS::WellboreCompletion const* getResqmlData() const;
+	const resqml2::WellboreTrajectoryRepresentation const* getWellboreTrajectory() const;
 
-	resqml2::WellboreTrajectoryRepresentation * wellboreTrajectory;
+	const resqml2::WellboreTrajectoryRepresentation * wellboreTrajectory;
 
 private:
 	std::vector<WitsmlWellboreCompletionPerforationToVtkPolyData*> perforations;

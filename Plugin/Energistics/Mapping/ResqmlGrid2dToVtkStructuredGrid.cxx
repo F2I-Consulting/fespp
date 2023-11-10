@@ -31,7 +31,7 @@ under the License.
 #include "Mapping/ResqmlPropertyToVtkDataArray.h"
 
 //----------------------------------------------------------------------------
-ResqmlGrid2dToVtkStructuredGrid::ResqmlGrid2dToVtkStructuredGrid(RESQML2_NS::Grid2dRepresentation *grid2D, int proc_number, int max_proc)
+ResqmlGrid2dToVtkStructuredGrid::ResqmlGrid2dToVtkStructuredGrid(const RESQML2_NS::Grid2dRepresentation *grid2D, int proc_number, int max_proc)
 	: ResqmlAbstractRepresentationToVtkPartitionedDataSet(grid2D,
 											   proc_number,
 											   max_proc)
@@ -44,7 +44,7 @@ ResqmlGrid2dToVtkStructuredGrid::ResqmlGrid2dToVtkStructuredGrid(RESQML2_NS::Gri
 }
 
 //----------------------------------------------------------------------------
-RESQML2_NS::Grid2dRepresentation const* ResqmlGrid2dToVtkStructuredGrid::getResqmlData() const
+const RESQML2_NS::Grid2dRepresentation const* ResqmlGrid2dToVtkStructuredGrid::getResqmlData() const
 {
 	return static_cast<RESQML2_NS::Grid2dRepresentation const*>(resqmlData);
 }

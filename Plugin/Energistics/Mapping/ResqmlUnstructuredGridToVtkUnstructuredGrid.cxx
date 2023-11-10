@@ -39,7 +39,7 @@ under the License.
 #include <fesapi/resqml2/AbstractLocal3dCrs.h>
 
 //----------------------------------------------------------------------------
-ResqmlUnstructuredGridToVtkUnstructuredGrid::ResqmlUnstructuredGridToVtkUnstructuredGrid(RESQML2_NS::UnstructuredGridRepresentation *unstructuredGrid, int proc_number, int max_proc)
+ResqmlUnstructuredGridToVtkUnstructuredGrid::ResqmlUnstructuredGridToVtkUnstructuredGrid(const RESQML2_NS::UnstructuredGridRepresentation *unstructuredGrid, int proc_number, int max_proc)
 	: ResqmlAbstractRepresentationToVtkPartitionedDataSet(unstructuredGrid,
 											   proc_number,
 											   max_proc),
@@ -54,23 +54,23 @@ ResqmlUnstructuredGridToVtkUnstructuredGrid::ResqmlUnstructuredGridToVtkUnstruct
 }
 
 //----------------------------------------------------------------------------
-RESQML2_NS::UnstructuredGridRepresentation * ResqmlUnstructuredGridToVtkUnstructuredGrid::getResqmlData() const
+const RESQML2_NS::UnstructuredGridRepresentation * ResqmlUnstructuredGridToVtkUnstructuredGrid::getResqmlData() const
 {
-	return static_cast<RESQML2_NS::UnstructuredGridRepresentation *>(resqmlData);
+	return static_cast<const RESQML2_NS::UnstructuredGridRepresentation *>(resqmlData);
 }
 
 //----------------------------------------------------------------------------
 void ResqmlUnstructuredGridToVtkUnstructuredGrid::loadVtkObject()
 {
 	vtkSmartPointer<vtkUnstructuredGrid> vtk_unstructuredGrid = vtkSmartPointer<vtkUnstructuredGrid>::New();
-	RESQML2_NS::UnstructuredGridRepresentation * unstructuredGrid = getResqmlData();
+	const RESQML2_NS::UnstructuredGridRepresentation * unstructuredGrid = getResqmlData();
 
 	vtk_unstructuredGrid->AllocateExact(unstructuredGrid->getCellCount(), unstructuredGrid->getXyzPointCountOfAllPatches());
 
 	// POINTS
 	vtk_unstructuredGrid->SetPoints(this->getVtkPoints());
 
-	unstructuredGrid->loadGeometry();
+	const_cast<RESQML2_NS::UnstructuredGridRepresentation*>(unstructuredGrid)->loadGeometry();
 
 	const uint64_t cellCount = unstructuredGrid->getCellCount();
 	uint64_t const* cumulativeFaceCountPerCell = unstructuredGrid->isFaceCountOfCellsConstant()
@@ -143,7 +143,7 @@ void ResqmlUnstructuredGridToVtkUnstructuredGrid::loadVtkObject()
 		}
 	}
 
-	unstructuredGrid->unloadGeometry();
+	const_cast<RESQML2_NS::UnstructuredGridRepresentation*>(unstructuredGrid)->unloadGeometry();
 
 	this->vtkData->SetPartition(0, vtk_unstructuredGrid);
 	this->vtkData->Modified();
@@ -161,7 +161,7 @@ vtkSmartPointer<vtkPoints> ResqmlUnstructuredGridToVtkUnstructuredGrid::getVtkPo
 //----------------------------------------------------------------------------
 void ResqmlUnstructuredGridToVtkUnstructuredGrid::createPoints()
 {
-	RESQML2_NS::UnstructuredGridRepresentation * unstructuredGrid = getResqmlData();
+	const RESQML2_NS::UnstructuredGridRepresentation * unstructuredGrid = getResqmlData();
 
 	// POINTS
 	double *allXyzPoints = new double[this->pointCount * 3]; // Will be deleted by VTK;
@@ -545,7 +545,7 @@ bool ResqmlUnstructuredGridToVtkUnstructuredGrid::cellVtkPentagonalPrism(vtkSmar
 bool ResqmlUnstructuredGridToVtkUnstructuredGrid::cellVtkHexagonalPrism(vtkSmartPointer<vtkUnstructuredGrid> vtk_unstructuredGrid,
 	uint64_t const *cumulativeFaceCountPerCell, unsigned char const *cellFaceNormalOutwardlyDirected, uint64_t cellIndex)
 {
-	RESQML2_NS::UnstructuredGridRepresentation * unstructuredGrid = getResqmlData();
+	const RESQML2_NS::UnstructuredGridRepresentation * unstructuredGrid = getResqmlData();
 
 	// Found the base 5 nodes face
 	for (uint32_t localFaceIndex = 0; localFaceIndex < 8; ++localFaceIndex)

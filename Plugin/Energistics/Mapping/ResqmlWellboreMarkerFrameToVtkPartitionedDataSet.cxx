@@ -31,7 +31,7 @@ under the License.
 #include "Mapping/ResqmlWellboreMarkerToVtkPolyData.h"
 
 //----------------------------------------------------------------------------
-ResqmlWellboreMarkerFrameToVtkPartitionedDataSet::ResqmlWellboreMarkerFrameToVtkPartitionedDataSet(RESQML2_NS::WellboreMarkerFrameRepresentation *marker_frame, int proc_number, int max_proc)
+ResqmlWellboreMarkerFrameToVtkPartitionedDataSet::ResqmlWellboreMarkerFrameToVtkPartitionedDataSet(const RESQML2_NS::WellboreMarkerFrameRepresentation *marker_frame, int proc_number, int max_proc)
 	: ResqmlAbstractRepresentationToVtkPartitionedDataSet(marker_frame,
 											   proc_number,
 											   max_proc)
@@ -41,9 +41,9 @@ ResqmlWellboreMarkerFrameToVtkPartitionedDataSet::ResqmlWellboreMarkerFrameToVtk
 }
 
 //----------------------------------------------------------------------------
-RESQML2_NS::WellboreMarkerFrameRepresentation * ResqmlWellboreMarkerFrameToVtkPartitionedDataSet::getResqmlData() const
+const RESQML2_NS::WellboreMarkerFrameRepresentation * ResqmlWellboreMarkerFrameToVtkPartitionedDataSet::getResqmlData() const
 {
-	return static_cast<RESQML2_NS::WellboreMarkerFrameRepresentation *>(resqmlData);
+	return static_cast<const RESQML2_NS::WellboreMarkerFrameRepresentation *>(resqmlData);
 }
 
 //----------------------------------------------------------------------------
