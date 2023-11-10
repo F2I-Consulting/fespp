@@ -188,7 +188,7 @@ ResqmlPropertyToVtkDataArray::ResqmlPropertyToVtkDataArray(resqml2::AbstractValu
 			  static_cast<resqml2::CategoricalProperty const *>(valuesProperty)->getStringLookup() != nullptr))
 	{
 		int *values = new int[nbElement * elementCountPerValue]; // deleted by VTK data vtkSmartPointer
-		valuesProperty->getIntValuesOfPatch(patch_index, values);
+		valuesProperty->getInt32ValuesOfPatch(patch_index, values);
 
 		vtkSmartPointer<vtkIntArray> cellDataInt = vtkSmartPointer<vtkIntArray>::New();
 		cellDataInt->SetNumberOfComponents(elementCountPerValue);
