@@ -18,8 +18,6 @@ under the License.
 -----------------------------------------------------------------------*/
 #include "Mapping/WitsmlWellboreCompletionPerforationToVtkPolyData.h"
 
-#include <memory>
-
 #include <vtkPolyData.h>
 #include <vtkPointData.h>
 #include <vtkTubeFilter.h>
