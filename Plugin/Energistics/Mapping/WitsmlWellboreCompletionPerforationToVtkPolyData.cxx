@@ -16,7 +16,9 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 -----------------------------------------------------------------------*/
-#include "WitsmlWellboreCompletionPerforationToVtkPolydata.h"
+#include "Mapping/WitsmlWellboreCompletionPerforationToVtkPolyData.h"
+
+#include <array>
 
 #include <vtkPolyData.h>
 #include <vtkPointData.h>
@@ -102,10 +104,10 @@ void WitsmlWellboreCompletionPerforationToVtkPolyData::loadVtkObject()
 
 			// Get the MD and XYZ values for all the patches in the wellbore trajectory.
 			const uint64_t pointCount = this->wellboreTrajectory->getXyzPointCountOfAllPatches(); // std::vector<double> mdValues(wellboreTrajectory->getXyzPointCountOfAllPatches());
-			std::unique_ptr<double[]> mdValues = std::make_unique<double[]>(pointCount);
+			std::unique_ptr<double[]> mdValues(new double[pointCount]);
 			this->wellboreTrajectory->getMdValues(mdValues.get());
 
-			std::unique_ptr<double[]> xyzPoints = std::make_unique<double[]>(pointCount * 3);
+			std::unique_ptr<double[]> xyzPoints(new double[pointCount * 3]);
 			this->wellboreTrajectory->getXyzPointsOfAllPatchesInGlobalCrs(xyzPoints.get());
 
 			// Create a list of intermediate MD points.

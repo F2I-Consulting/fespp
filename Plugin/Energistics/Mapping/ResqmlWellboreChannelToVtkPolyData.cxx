@@ -103,7 +103,7 @@ void ResqmlWellboreChannelToVtkPolyData::loadVtkObject()
 	else if (dynamic_cast<RESQML2_NS::DiscreteProperty *>(this->abstractProperty) != nullptr || dynamic_cast<RESQML2_NS::CategoricalProperty *>(this->abstractProperty) != nullptr)
 	{
 		std::unique_ptr<int[]> values(new int[pointCount]);
-		this->abstractProperty->getIntValuesOfPatch(0, values.get());
+		this->abstractProperty->getInt32ValuesOfPatch(0, values.get());
 		for (unsigned int i = 0; i < pointCount; ++i)
 		{
 			tubeRadius->SetTuple1(i, values[i]);
