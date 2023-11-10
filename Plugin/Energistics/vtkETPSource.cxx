@@ -21,6 +21,7 @@ under the License.
 #include <exception>
 #include <iterator>
 #include <algorithm>
+#include <limits>
 
 #include <vtkIndent.h>
 #include <vtkInformation.h>
