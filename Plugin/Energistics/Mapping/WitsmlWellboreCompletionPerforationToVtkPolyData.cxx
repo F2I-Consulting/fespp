@@ -195,7 +195,6 @@ void WitsmlWellboreCompletionPerforationToVtkPolyData::addSkin() {
 			vtkSmartPointer<vtkDoubleArray> array = vtkSmartPointer<vtkDoubleArray>::New();
 			array->SetName("Skin");
 			array->InsertNextValue(skin);
-			vtkOutputWindowDisplayText((std::to_string(this->index) + " " + extraMetadatas[0]).c_str());
 
 			this->vtkData->GetPartition(0)->GetFieldData()->AddArray(array);
 		}
@@ -212,7 +211,6 @@ void WitsmlWellboreCompletionPerforationToVtkPolyData::addSkin() {
 				vtkSmartPointer<vtkDoubleArray> array = vtkSmartPointer<vtkDoubleArray>::New();
 				array->SetName("Skin");
 				array->InsertNextValue(skin);
-				vtkOutputWindowDisplayText((std::to_string(this->index) + " " + extraMetadatas[0]).c_str());
 
 				this->vtkData->GetPartition(0)->GetFieldData()->AddArray(array);
 			}

@@ -67,7 +67,6 @@ void WitsmlWellboreCompletionToVtkPartitionedDataSet::loadVtkObject()
 void WitsmlWellboreCompletionToVtkPartitionedDataSet::addPerforation(const std::string& connectionuid, const std::string& name)
 {
 	this->perforations.push_back(new WitsmlWellboreCompletionPerforationToVtkPolyData(this->getWellboreTrajectory(), this->getResqmlData(), connectionuid, name));
-	//this->loadVtkObject();
 }
 
 std::vector<WitsmlWellboreCompletionPerforationToVtkPolyData*> WitsmlWellboreCompletionToVtkPartitionedDataSet::getPerforations()

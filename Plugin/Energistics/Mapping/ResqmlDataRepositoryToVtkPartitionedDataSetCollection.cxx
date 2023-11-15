@@ -530,15 +530,7 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchWellbor
         if (wellboreFeature != nullptr)
         {   
             witsml2::Wellbore* witsmlWellbore = nullptr;
-            try 
-            {
-                const auto* witsmlWellbore = dynamic_cast<witsml2::Wellbore*>(wellboreFeature->getWitsmlWellbore());
-            }
-            catch (const std::exception& e)
-            {
-                vtkOutputWindowDisplayErrorText((std::string("fesapi error > ") + e.what()).c_str());
-            }
-            if (witsmlWellbore != nullptr)
+            if (const auto* witsmlWellbore = dynamic_cast<witsml2::Wellbore*>(wellboreFeature->getWitsmlWellbore()))
             {
                 for (const auto *wellbore_completion : witsmlWellbore->getWellboreCompletionSet())
                 {
@@ -772,7 +764,7 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::clearSelection()
     this->current_selection.clear();
 }
 
-void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::initMapper(const TreeViewNodeType type, const int node_id /*const std::string& uuid*/, const int nbProcess, const int processId)
+void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::initMapper(const TreeViewNodeType type, const int node_id, const int nbProcess, const int processId)
 {
     CommonAbstractObjectToVtkPartitionedDataSet *rep = nullptr;
     const std::string uuid = std::string(output->GetDataAssembly()->GetNodeName(node_id)).substr(1);
@@ -859,7 +851,6 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::initMapper(const Tre
                     {
                         if (perforation->getTitle() == std::string(name) && perforation->getConnectionuid() == std::string(value))
                         {
-                            vtkOutputWindowDisplayText((std::string(name) + std::string(value)).c_str());
                             rep = perforation;
                         }
                     }
@@ -901,25 +892,6 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::loadMapper(const Tre
 {
     auto const *assembly = this->output->GetDataAssembly();
     const std::string uuid = std::string(output->GetDataAssembly()->GetNodeName(node_id)).substr(1);
-    /*   if (type == TreeViewNodeType::Perforation)
-       {
-           const int node_parent = assembly->GetParent(node_id);
-           if (dynamic_cast<WitsmlWellboreCompletionToVtkPartitionedDataSet*>(nodeId_to_mapper[node_parent]) != nullptr)
-           {
-               const char* value;
-               assembly->GetAttribute(node_id, "connection", value);
-               const char* name;
-               assembly->GetAttribute(node_id, "label", name);
-               (static_cast<WitsmlWellboreCompletionToVtkPartitionedDataSet*>(nodeId_to_mapper[node_parent]))->addPerforation(value, name);
-               for (auto* perforation : (static_cast<WitsmlWellboreCompletionToVtkPartitionedDataSet*>(nodeId_to_mapper[node_parent]))->getPerforations()) {
-                   if (perforation->getTitle() == std::string(name) && perforation->getConnectionuid() == std::string(value)) {
-                       nodeId_to_mapper[node_id] = perforation;
-                       return;
-                   }
-               }
-           }
-       }
-       else */
     if (type == TreeViewNodeType::TimeSeries)
     {
         try
