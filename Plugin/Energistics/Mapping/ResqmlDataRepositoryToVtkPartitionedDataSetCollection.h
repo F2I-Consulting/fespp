@@ -102,6 +102,16 @@ private:
 	void initMapper(const TreeViewNodeType type, const int node_id/*const std::string& uuid*/, const int nbProcess, const int processId);
 	void loadMapper(const TreeViewNodeType type, const int node_id/*const std::string& uuid*/, double time);
 
+	// This function replaces the VTK function vtkDataAssembly::MakeValidNodeName(),
+	// which has a bug in the sorted_valid_chars array. The '.' character is placed
+	// before the '-' character, which is incorrect. This function uses a valid_chars
+	// array that correctly sorts the characters. The function checks if each character
+	// in the input string is valid, and adds it to the output string if it is valid.
+	// If the first character of the output string is not valid, an underscore is added
+	// to the beginning of the output string. This function is designed to create a valid
+	// node name from a given string.
+	std::string MakeValidNodeName(const char* name);
+
 	bool markerOrientation;
 	int markerSize;
 

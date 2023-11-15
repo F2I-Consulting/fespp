@@ -61,31 +61,13 @@ resqml2::WellboreTrajectoryRepresentation const* WitsmlWellboreCompletionToVtkPa
 //----------------------------------------------------------------------------
 void WitsmlWellboreCompletionToVtkPartitionedDataSet::loadVtkObject()
 {
-	for (int idx = 0; idx < this->perforations.size(); ++idx)
-	{
-		this->vtkData->SetPartition(idx, this->perforations[idx]->getOutput());
-		this->vtkData->GetMetaData(idx)->Set(vtkCompositeDataSet::NAME(), this->perforations[idx]->getTitle().c_str());
-
-		// Récupérer l'array des données de points
-		vtkDataSet* partition = this->vtkData->GetPartition(idx);
-		if (partition) {
-			vtkFieldData* fieldData = partition->GetFieldData();
-			if (fieldData) {
-				vtkDataArray* dataArray = fieldData->GetArray("Skin");
-				if (dataArray) {
-					std::cout << "L'array avec le nom 'Skin' a été trouvé dans les FieldData de la partition " << idx << "." << std::endl;
-				}
-			}
-		}
-
-	}
-	
+	/* no display completion but perforation per perforation */
 }
 
 void WitsmlWellboreCompletionToVtkPartitionedDataSet::addPerforation(const std::string& connectionuid, const std::string& name)
 {
 	this->perforations.push_back(new WitsmlWellboreCompletionPerforationToVtkPolyData(this->getWellboreTrajectory(), this->getResqmlData(), connectionuid, name));
-	this->loadVtkObject();
+	//this->loadVtkObject();
 }
 
 std::vector<WitsmlWellboreCompletionPerforationToVtkPolyData*> WitsmlWellboreCompletionToVtkPartitionedDataSet::getPerforations()

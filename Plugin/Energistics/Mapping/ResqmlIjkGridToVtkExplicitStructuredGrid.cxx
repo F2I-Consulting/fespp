@@ -182,81 +182,81 @@ vtkSmartPointer<vtkPoints> ResqmlIjkGridToVtkExplicitStructuredGrid::getVtkPoint
 //----------------------------------------------------------------------------
 void ResqmlIjkGridToVtkExplicitStructuredGrid::createPoints()
 {
-	const RESQML2_NS::AbstractIjkGridRepresentation * ijkGrid = getResqmlData();
+		const RESQML2_NS::AbstractIjkGridRepresentation* ijkGrid = getResqmlData();
 
-	this->points->SetNumberOfPoints(this->pointCount);
-	size_t point_id = 0;
+		this->points->SetNumberOfPoints(this->pointCount);
+		size_t point_id = 0;
 
-	if (this->isHyperslabed && !ijkGrid->isNodeGeometryCompressed())
-	{
-		// Take into account K gaps
-		const uint32_t kGapCount = ijkGrid->getKGapsCount();
-		uint32_t initKInterfaceIndex = this->initKIndex;
-		uint32_t maxKInterfaceIndex = this->maxKIndex;
-		if (kGapCount > 0)
+		if (this->isHyperslabed && !ijkGrid->isNodeGeometryCompressed())
 		{
-			std::unique_ptr<bool[]> gapAfterLayer(new bool[this->kCellCount - 1]); // gap after each layer except for the last k cell
-			ijkGrid->getKGaps(gapAfterLayer.get());
-			uint32_t kLayer = 0;
-			for (; kLayer < this->initKIndex; ++kLayer)
+			// Take into account K gaps
+			const uint32_t kGapCount = ijkGrid->getKGapsCount();
+			uint32_t initKInterfaceIndex = this->initKIndex;
+			uint32_t maxKInterfaceIndex = this->maxKIndex;
+			if (kGapCount > 0)
 			{
-				if (gapAfterLayer[kLayer])
+				std::unique_ptr<bool[]> gapAfterLayer(new bool[this->kCellCount - 1]); // gap after each layer except for the last k cell
+				ijkGrid->getKGaps(gapAfterLayer.get());
+				uint32_t kLayer = 0;
+				for (; kLayer < this->initKIndex; ++kLayer)
 				{
-					++initKInterfaceIndex;
-					++maxKInterfaceIndex;
+					if (gapAfterLayer[kLayer])
+					{
+						++initKInterfaceIndex;
+						++maxKInterfaceIndex;
+					}
+				}
+				for (; kLayer < this->kCellCount - 1 && kLayer < this->maxKIndex; ++kLayer)
+				{
+					if (gapAfterLayer[kLayer])
+					{
+						++maxKInterfaceIndex;
+					}
 				}
 			}
-			for (; kLayer < this->kCellCount - 1 && kLayer < this->maxKIndex; ++kLayer)
+
+			const uint64_t kInterfaceNodeCount = ijkGrid->getXyzPointCountOfKInterface();
+			std::unique_ptr<double[]> allXyzPoints(new double[kInterfaceNodeCount * 3]);
+
+			for (uint_fast32_t kInterface = initKInterfaceIndex; kInterface <= maxKInterfaceIndex; ++kInterface)
 			{
-				if (gapAfterLayer[kLayer])
+				const_cast<RESQML2_NS::AbstractIjkGridRepresentation*>(ijkGrid)->getXyzPointsOfKInterface(kInterface, allXyzPoints.get());
+				auto const* crs = ijkGrid->getLocalCrs(0);
+				double xOffset = .0;
+				double yOffset = .0;
+				double zOffset = .0;
+				double zIndice = allXyzPoints[2] > 0 ? -1. : 1.;
+				if (crs != nullptr && !crs->isPartial())
 				{
-					++maxKInterfaceIndex;
+					xOffset = crs->getOriginOrdinal1();
+					yOffset = crs->getOriginOrdinal2();
+					auto const* depthCrs = dynamic_cast<RESQML2_NS::LocalDepth3dCrs const*>(crs);
+					zOffset = depthCrs != nullptr ? depthCrs->getOriginDepthOrElevation() : 0;
+					zIndice = crs->isDepthOriented() ? -1. : 1.;
+				}
+				else
+				{
+					vtkOutputWindowDisplayWarningText("The CRS doesn't exist or is partial");
+				}
+				for (uint_fast64_t nodeIndex = 0; nodeIndex < kInterfaceNodeCount * 3; nodeIndex += 3)
+				{
+					this->points->SetPoint(point_id++, allXyzPoints[nodeIndex] + xOffset, allXyzPoints[nodeIndex + 1] + yOffset, (allXyzPoints[nodeIndex + 2] + zOffset) * zIndice);
 				}
 			}
 		}
-
-		const uint64_t kInterfaceNodeCount = ijkGrid->getXyzPointCountOfKInterface();
-		std::unique_ptr<double[]> allXyzPoints(new double[kInterfaceNodeCount * 3]);
-
-		for (uint_fast32_t kInterface = initKInterfaceIndex; kInterface <= maxKInterfaceIndex; ++kInterface)
+		else
 		{
-			const_cast<RESQML2_NS::AbstractIjkGridRepresentation*>(ijkGrid)->getXyzPointsOfKInterface(kInterface, allXyzPoints.get());
-			auto const *crs = ijkGrid->getLocalCrs(0);
-			double xOffset = .0;
-			double yOffset = .0;
-			double zOffset = .0;
-			double zIndice = allXyzPoints[2]>0?-1.:1.;
-			if (crs != nullptr && !crs->isPartial())
+			this->initKIndex = 0;
+			this->maxKIndex = this->kCellCount;
+
+			std::unique_ptr<double[]> allXyzPoints(new double[this->pointCount * 3]);
+			ijkGrid->getXyzPointsOfAllPatchesInGlobalCrs(allXyzPoints.get());
+			const size_t coordCount = this->pointCount * 3;
+
+			const double zIndice = ijkGrid->getLocalCrs(0)->isDepthOriented() ? -1 : 1;
+			for (uint_fast64_t pointIndex = 0; pointIndex < coordCount; pointIndex += 3)
 			{
-				xOffset = crs->getOriginOrdinal1();
-				yOffset = crs->getOriginOrdinal2();
-				auto const* depthCrs = dynamic_cast<RESQML2_NS::LocalDepth3dCrs const*>(crs);
-				zOffset = depthCrs != nullptr ? depthCrs->getOriginDepthOrElevation() : 0;
-				zIndice = crs->isDepthOriented() ? -1. : 1.;
-			}
-			else
-			{
-				vtkOutputWindowDisplayWarningText("The CRS doesn't exist or is partial");
-			}
-			for (uint_fast64_t nodeIndex = 0; nodeIndex < kInterfaceNodeCount * 3; nodeIndex += 3)
-			{
-				this->points->SetPoint(point_id++, allXyzPoints[nodeIndex] + xOffset, allXyzPoints[nodeIndex + 1] + yOffset, (allXyzPoints[nodeIndex + 2] + zOffset) * zIndice);
+				this->points->SetPoint(point_id++, allXyzPoints[pointIndex], allXyzPoints[pointIndex + 1], -allXyzPoints[pointIndex + 2] * zIndice);
 			}
 		}
-	}
-	else
-	{
-		this->initKIndex = 0;
-		this->maxKIndex = this->kCellCount;
-
-		std::unique_ptr<double[]> allXyzPoints(new double[this->pointCount * 3]);
-		ijkGrid->getXyzPointsOfAllPatchesInGlobalCrs(allXyzPoints.get());
-		const size_t coordCount = this->pointCount * 3;
-
-		const double zIndice = ijkGrid->getLocalCrs(0)->isDepthOriented() ? -1 : 1;
-		for (uint_fast64_t  pointIndex = 0; pointIndex < coordCount; pointIndex += 3)
-		{
-			this->points->SetPoint(point_id++, allXyzPoints[pointIndex], allXyzPoints[pointIndex + 1], -allXyzPoints[pointIndex + 2] * zIndice);
-		}
-	}
 }
