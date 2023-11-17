@@ -37,7 +37,7 @@ under the License.
 #include <vtkUnsignedCharArray.h>
 
 //----------------------------------------------------------------------------
-ResqmlPropertyToVtkDataArray::ResqmlPropertyToVtkDataArray(const RESQML2_NS::AbstractValuesProperty const *valuesProperty,
+ResqmlPropertyToVtkDataArray::ResqmlPropertyToVtkDataArray(const RESQML2_NS::AbstractValuesProperty *valuesProperty,
 														   uint64_t cellCount,
 														   uint64_t pointCount,
 														   uint32_t iCellCount,
