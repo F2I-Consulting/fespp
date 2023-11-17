@@ -187,7 +187,7 @@ void WitsmlWellboreCompletionPerforationToVtkPolyData::loadVtkObject()
 void WitsmlWellboreCompletionPerforationToVtkPolyData::addSkin() {
 
 	int skin = 0;
-	auto& extraMetadatas = this->wellboreCompletion->getConnectionExtraMetadata(WITSML2_1_NS::WellboreCompletion::WellReservoirConnectionType::PERFORATION, this->index, "Petrel:Skin0");
+	auto extraMetadatas = this->wellboreCompletion->getConnectionExtraMetadata(WITSML2_1_NS::WellboreCompletion::WellReservoirConnectionType::PERFORATION, this->index, "Petrel:Skin0");
 	if (extraMetadatas.size() > 0)
 	{
 		try {
