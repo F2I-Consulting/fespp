@@ -58,7 +58,7 @@ public:
 	int getMarkerSize() { return this->size; }
 
 protected:
-	const resqml2::WellboreMarkerFrameRepresentation const* getResqmlData() const;
+	const resqml2::WellboreMarkerFrameRepresentation* getResqmlData() const;
 
 private:
 	void createDisk(unsigned int markerIndex);

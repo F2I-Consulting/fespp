@@ -41,7 +41,7 @@ public:
 	
 
 protected:
-	const resqml2::WellboreTrajectoryRepresentation const* getResqmlData() const;
+	const resqml2::WellboreTrajectoryRepresentation* getResqmlData() const;
 
 private:
 };

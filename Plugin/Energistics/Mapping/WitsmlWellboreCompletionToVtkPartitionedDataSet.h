@@ -51,8 +51,8 @@ public:
 	std::vector<WitsmlWellboreCompletionPerforationToVtkPolyData*> getPerforations();
 
 protected:
-	const WITSML2_1_NS::WellboreCompletion const* getResqmlData() const;
-	const resqml2::WellboreTrajectoryRepresentation const* getWellboreTrajectory() const;
+	const WITSML2_1_NS::WellboreCompletion* getResqmlData() const;
+	const resqml2::WellboreTrajectoryRepresentation* getWellboreTrajectory() const;
 
 	const resqml2::WellboreTrajectoryRepresentation * wellboreTrajectory;
 

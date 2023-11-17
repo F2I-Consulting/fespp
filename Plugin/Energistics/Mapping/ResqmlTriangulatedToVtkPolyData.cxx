@@ -49,9 +49,9 @@ ResqmlTriangulatedToVtkPolyData::ResqmlTriangulatedToVtkPolyData(const RESQML2_N
 }
 
 //----------------------------------------------------------------------------
-const RESQML2_NS::TriangulatedSetRepresentation const* ResqmlTriangulatedToVtkPolyData::getResqmlData() const
+const RESQML2_NS::TriangulatedSetRepresentation* ResqmlTriangulatedToVtkPolyData::getResqmlData() const
 {
-	return static_cast<const RESQML2_NS::TriangulatedSetRepresentation const*>(resqmlData);
+	return static_cast<const RESQML2_NS::TriangulatedSetRepresentation*>(resqmlData);
 }
 
 uint32_t ResqmlTriangulatedToVtkPolyData::getPreviousPatchesNodeCount() const

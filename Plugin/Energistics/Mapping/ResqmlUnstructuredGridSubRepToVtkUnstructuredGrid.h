@@ -56,7 +56,7 @@ public:
 	std::string unregisterToMapperSupportingGrid();
 
 protected:
-	const RESQML2_NS::SubRepresentation const* getResqmlData() const;
+	const RESQML2_NS::SubRepresentation* getResqmlData() const;
 	ResqmlUnstructuredGridToVtkUnstructuredGrid* mapperUnstructuredGrid;
 
 private:

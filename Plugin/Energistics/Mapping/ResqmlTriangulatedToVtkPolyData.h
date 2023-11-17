@@ -52,7 +52,7 @@ protected:
 	*/
 	uint32_t getPreviousPatchesNodeCount() const;
 
-	const RESQML2_NS::TriangulatedSetRepresentation const* getResqmlData() const;
+	const RESQML2_NS::TriangulatedSetRepresentation* getResqmlData() const;
 	uint32_t patch_index;
 };
 #endif

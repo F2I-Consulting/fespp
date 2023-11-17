@@ -44,7 +44,7 @@ public:
 	std::string getTitle() const { return this->title; }
 
 protected:
-	const RESQML2_NS::WellboreFrameRepresentation const* getResqmlData() const;
+	const RESQML2_NS::WellboreFrameRepresentation* getResqmlData() const;
 
 private:
 	const RESQML2_NS::AbstractValuesProperty *abstractProperty;

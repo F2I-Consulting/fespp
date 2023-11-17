@@ -45,9 +45,9 @@ ResqmlWellboreChannelToVtkPolyData::ResqmlWellboreChannelToVtkPolyData(const RES
 }
 
 //----------------------------------------------------------------------------
-const RESQML2_NS::WellboreFrameRepresentation const* ResqmlWellboreChannelToVtkPolyData::getResqmlData() const
+const RESQML2_NS::WellboreFrameRepresentation* ResqmlWellboreChannelToVtkPolyData::getResqmlData() const
 {
-	return static_cast<const RESQML2_NS::WellboreFrameRepresentation const*>(resqmlData);
+	return static_cast<const RESQML2_NS::WellboreFrameRepresentation*>(resqmlData);
 }
 
 //----------------------------------------------------------------------------

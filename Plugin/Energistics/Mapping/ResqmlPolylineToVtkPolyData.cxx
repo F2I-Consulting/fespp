@@ -47,9 +47,9 @@ ResqmlPolylineToVtkPolyData::ResqmlPolylineToVtkPolyData(const RESQML2_NS::Polyl
 }
 
 //----------------------------------------------------------------------------
-const RESQML2_NS::PolylineSetRepresentation const* ResqmlPolylineToVtkPolyData::getResqmlData() const
+const RESQML2_NS::PolylineSetRepresentation* ResqmlPolylineToVtkPolyData::getResqmlData() const
 {
-	return static_cast<const RESQML2_NS::PolylineSetRepresentation const*>(resqmlData);
+	return static_cast<const RESQML2_NS::PolylineSetRepresentation*>(resqmlData);
 }
 
 

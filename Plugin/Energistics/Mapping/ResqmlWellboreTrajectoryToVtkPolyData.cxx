@@ -44,9 +44,9 @@ ResqmlWellboreTrajectoryToVtkPolyData::ResqmlWellboreTrajectoryToVtkPolyData(con
 }
 
 //----------------------------------------------------------------------------
-const RESQML2_NS::WellboreTrajectoryRepresentation const* ResqmlWellboreTrajectoryToVtkPolyData::getResqmlData() const
+const RESQML2_NS::WellboreTrajectoryRepresentation* ResqmlWellboreTrajectoryToVtkPolyData::getResqmlData() const
 {
-	return static_cast<const RESQML2_NS::WellboreTrajectoryRepresentation const*>(resqmlData);
+	return static_cast<const RESQML2_NS::WellboreTrajectoryRepresentation*>(resqmlData);
 }
 
 //----------------------------------------------------------------------------

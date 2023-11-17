@@ -44,9 +44,9 @@ ResqmlGrid2dToVtkStructuredGrid::ResqmlGrid2dToVtkStructuredGrid(const RESQML2_N
 }
 
 //----------------------------------------------------------------------------
-const RESQML2_NS::Grid2dRepresentation const* ResqmlGrid2dToVtkStructuredGrid::getResqmlData() const
+const RESQML2_NS::Grid2dRepresentation* ResqmlGrid2dToVtkStructuredGrid::getResqmlData() const
 {
-	return static_cast<RESQML2_NS::Grid2dRepresentation const*>(resqmlData);
+	return static_cast<const RESQML2_NS::Grid2dRepresentation*>(resqmlData);
 }
 
 //----------------------------------------------------------------------------

@@ -61,9 +61,9 @@ ResqmlUnstructuredGridSubRepToVtkUnstructuredGrid::ResqmlUnstructuredGridSubRepT
 }
 
 //----------------------------------------------------------------------------
-const RESQML2_NS::SubRepresentation const* ResqmlUnstructuredGridSubRepToVtkUnstructuredGrid::getResqmlData() const
+const RESQML2_NS::SubRepresentation* ResqmlUnstructuredGridSubRepToVtkUnstructuredGrid::getResqmlData() const
 {
-	return static_cast<const RESQML2_NS::SubRepresentation const*>(resqmlData);
+	return static_cast<const RESQML2_NS::SubRepresentation*>(resqmlData);
 }
 
 //----------------------------------------------------------------------------

@@ -43,6 +43,6 @@ public:
 	void loadVtkObject() override;
 
 protected:
-	const RESQML2_NS::PolylineSetRepresentation const* getResqmlData() const;
+	const RESQML2_NS::PolylineSetRepresentation* getResqmlData() const;
 };
 #endif

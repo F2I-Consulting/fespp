@@ -51,9 +51,9 @@ ResqmlIjkGridSubRepToVtkExplicitStructuredGrid::ResqmlIjkGridSubRepToVtkExplicit
 }
 
 //----------------------------------------------------------------------------
-const RESQML2_NS::SubRepresentation const* ResqmlIjkGridSubRepToVtkExplicitStructuredGrid::getResqmlData() const
+const RESQML2_NS::SubRepresentation* ResqmlIjkGridSubRepToVtkExplicitStructuredGrid::getResqmlData() const
 {
-	return static_cast<const RESQML2_NS::SubRepresentation const*>(resqmlData);
+	return static_cast<const RESQML2_NS::SubRepresentation*>(resqmlData);
 }
 
 //----------------------------------------------------------------------------

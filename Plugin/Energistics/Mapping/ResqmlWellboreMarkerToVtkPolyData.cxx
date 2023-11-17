@@ -48,9 +48,9 @@ ResqmlWellboreMarkerToVtkPolyData::ResqmlWellboreMarkerToVtkPolyData(const RESQM
 }
 
 //----------------------------------------------------------------------------
-const RESQML2_NS::WellboreMarkerFrameRepresentation const* ResqmlWellboreMarkerToVtkPolyData::getResqmlData() const
+const RESQML2_NS::WellboreMarkerFrameRepresentation* ResqmlWellboreMarkerToVtkPolyData::getResqmlData() const
 {
-	return static_cast<const RESQML2_NS::WellboreMarkerFrameRepresentation const*>(resqmlData);
+	return static_cast<const RESQML2_NS::WellboreMarkerFrameRepresentation*>(resqmlData);
 }
 
 //----------------------------------------------------------------------------

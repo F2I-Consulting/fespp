@@ -39,7 +39,7 @@ public:
 	/**
 	 * Constructor for multi-processor
 	 */
-	ResqmlPropertyToVtkDataArray(const RESQML2_NS::AbstractValuesProperty const *resqmlProperty,
+	ResqmlPropertyToVtkDataArray(const RESQML2_NS::AbstractValuesProperty *resqmlProperty,
 								 uint64_t cellCount,
 								 uint64_t pointCount,
 								 uint32_t iCellCount,

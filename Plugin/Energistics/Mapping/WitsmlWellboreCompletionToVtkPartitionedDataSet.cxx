@@ -47,9 +47,9 @@ WitsmlWellboreCompletionToVtkPartitionedDataSet::WitsmlWellboreCompletionToVtkPa
 }
 
 //----------------------------------------------------------------------------
-const WITSML2_1_NS::WellboreCompletion const* WitsmlWellboreCompletionToVtkPartitionedDataSet::getResqmlData() const
+const WITSML2_1_NS::WellboreCompletion* WitsmlWellboreCompletionToVtkPartitionedDataSet::getResqmlData() const
 {
-	return static_cast<const WITSML2_1_NS::WellboreCompletion const*>(resqmlData);
+	return static_cast<const WITSML2_1_NS::WellboreCompletion*>(resqmlData);
 }
 
 //----------------------------------------------------------------------------

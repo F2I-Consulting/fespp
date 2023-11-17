@@ -51,6 +51,6 @@ public:
 	void loadVtkObject() override;
 
 protected:
-	const RESQML2_NS::Grid2dRepresentation const* getResqmlData() const;
+	const RESQML2_NS::Grid2dRepresentation* getResqmlData() const;
 };
 #endif
