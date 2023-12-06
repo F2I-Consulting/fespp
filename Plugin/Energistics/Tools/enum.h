@@ -24,10 +24,11 @@ under the License.
 
 enum class TreeViewNodeType {
 	Unknown,
-	Folder,
+	Collection,
 	Representation,
 	SubRepresentation,
 	Properties,
+	Wellbore,
 	WellboreTrajectory,
 	WellboreFrame,
 	WellboreChannel,

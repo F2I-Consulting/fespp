@@ -48,6 +48,7 @@ VtkAssembly => TreeView:
 // FESAPI includes
 #include <fesapi/eml2/TimeSeries.h>
 #include <fesapi/resqml2/Grid2dRepresentation.h>
+#include <fesapi/resqml2/AbstractFeatureInterpretation.h>
 #include <fesapi/resqml2/AbstractIjkGridRepresentation.h>
 #include <fesapi/resqml2/PolylineSetRepresentation.h>
 #include <fesapi/resqml2/SubRepresentation.h>
@@ -60,6 +61,7 @@ VtkAssembly => TreeView:
 #include <fesapi/resqml2/ContinuousProperty.h>
 #include <fesapi/resqml2/DiscreteProperty.h>
 #include <fesapi/resqml2/WellboreFeature.h>
+#include <fesapi/resqml2/RepresentationSetRepresentation.h>
 #include <fesapi/witsml2_1/WellboreCompletion.h>
 #include <fesapi/witsml2_1/WellCompletion.h>
 #include <fesapi/witsml2_1/Well.h>
@@ -151,6 +153,23 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::MakeValidNode
         return "_" + result;
     }
     return result;
+}
+
+std::string SimplifyXmlTag(std::string type_representation)
+{
+    std::string suffix = "Representation";
+    std::string prefix = "Wellbore";
+
+    if (type_representation.size() >= suffix.size() && type_representation.substr(type_representation.size() - suffix.size()) == suffix)
+    {
+        type_representation = type_representation.substr(0, type_representation.size() - suffix.size());
+    }
+
+    if (type_representation.size() >= prefix.size() && type_representation.substr(0, prefix.size()) == prefix)
+    {
+        type_representation = type_representation.substr(prefix.size());
+    }
+    return type_representation;
 }
 
 //----------------------------------------------------------------------------
@@ -364,12 +383,8 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchReprese
 
             auto const *subrep = dynamic_cast<RESQML2_NS::SubRepresentation const *>(representation);
             // To shorten the xmlTag by removing �Representation� from the end.
-            std::string suffix = "Representation";
-            std::string type_representation = representation->getXmlTag();
-            if (type_representation.substr(type_representation.size() - suffix.length()) == suffix)
-            {
-                type_representation = type_representation.substr(0, type_representation.size() - suffix.length());
-            }
+
+            std::string type_representation = SimplifyXmlTag(representation->getXmlTag());
 
             const std::string representationVtkValidName = subrep == nullptr
                                                                ? this->MakeValidNodeName((type_representation + "_" + representation->getTitle()).c_str())
@@ -449,31 +464,68 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchPropert
     return "";
 }
 
+int ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchRepresentationSetRepresentation(resqml2::RepresentationSetRepresentation const* rsr, int idNode)
+{
+    vtkDataAssembly* data_assembly = _output->GetDataAssembly();
+
+    if (_output->GetDataAssembly()->FindFirstNodeWithName(("_" + rsr->getUuid()).c_str()) == -1)
+    { // verify uuid exist in treeview
+      // To shorten the xmlTag by removing �Representation� from the end.
+        for (resqml2::RepresentationSetRepresentation* rsr : rsr->getRepresentationSetRepresentationSet())
+        {
+            idNode = searchRepresentationSetRepresentation(rsr, idNode);
+        }
+        if (_output->GetDataAssembly()->FindFirstNodeWithName(("_" + rsr->getUuid()).c_str()) == -1)
+        {
+            const std::string rsrVtkValidName = this->MakeValidNodeName(("Collection_"+rsr->getTitle()).c_str());
+            idNode = data_assembly->AddNode(("_" + rsr->getUuid()).c_str(), idNode);
+            data_assembly->SetAttribute(idNode, "label", rsrVtkValidName.c_str());
+            data_assembly->SetAttribute(idNode, "type", std::to_string(static_cast<int>(TreeViewNodeType::Collection)).c_str());
+        }
+    }
+    else
+    {
+        return _output->GetDataAssembly()->FindFirstNodeWithName(("_" + rsr->getUuid()).c_str());
+    }
+    return idNode;
+}
+
 std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchWellboreTrajectory(const std::string &fileName)
 {
     std::string result;
 
     vtkDataAssembly *data_assembly = _output->GetDataAssembly();
 
-    int idNode = 0; // 0 is root's id
-
+    int idNode = 0;
     for (auto *wellboreTrajectory : repository->getWellboreTrajectoryRepresentationSet())
     {
+        int idNode = 0;
+        int idNodeInit = 0;
         if (_output->GetDataAssembly()->FindFirstNodeWithName(("_" + wellboreTrajectory->getUuid()).c_str()) == -1)
         { // verify uuid exist in treeview
           // To shorten the xmlTag by removing �Representation� from the end.
-            std::string suffix = "Representation";
-            std::string type_representation = wellboreTrajectory->getXmlTag();
-            if (type_representation.substr(type_representation.size() - suffix.length()) == suffix)
+
+            for (resqml2::RepresentationSetRepresentation* rsr : wellboreTrajectory->getRepresentationSetRepresentationSet())
             {
-                type_representation = type_representation.substr(0, type_representation.size() - suffix.length());
+                idNodeInit = searchRepresentationSetRepresentation(rsr);
+            }
+
+            auto* wellbore = wellboreTrajectory->getInterpretation()->getInterpretedFeature();
+            if (_output->GetDataAssembly()->FindFirstNodeWithName(("_" + wellbore->getUuid()).c_str()) == -1)
+            {
+                vtkOutputWindowDisplayDebugText(wellbore->getTitle().c_str());
+                const std::string wellboreVtkValidName = "Wellbore_"+this->MakeValidNodeName(wellbore->getTitle().c_str());
+                vtkOutputWindowDisplayDebugText(wellboreVtkValidName.c_str());
+                idNodeInit = data_assembly->AddNode(("_" + wellbore->getUuid()).c_str(), idNodeInit);
+                data_assembly->SetAttribute(idNodeInit, "label", wellboreVtkValidName.c_str());
+                data_assembly->SetAttribute(idNodeInit, "type", std::to_string(static_cast<int>(TreeViewNodeType::Wellbore)).c_str());
             }
 
             if (wellboreTrajectory->isPartial())
             {
                 // check if it has already been added
 
-                const std::string name_partial_representation = this->MakeValidNodeName((type_representation + "_" + wellboreTrajectory->getTitle()).c_str());
+                const std::string name_partial_representation = this->MakeValidNodeName((SimplifyXmlTag(wellboreTrajectory->getXmlTag()) + "_" + wellboreTrajectory->getTitle()).c_str());
                 bool uuid_exist = data_assembly->FindFirstNodeWithName(("_" + name_partial_representation).c_str()) != -1;
                 // not exist => not loaded
                 if (!uuid_exist)
@@ -484,8 +536,8 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchWellbor
             }
             else
             {
-                const std::string wellboreTrajectoryVtkValidName = this->MakeValidNodeName((type_representation + '_' + wellboreTrajectory->getTitle()).c_str());
-                idNode = data_assembly->AddNode(("_" + wellboreTrajectory->getUuid()).c_str(), 0 /* add to root*/);
+                const std::string wellboreTrajectoryVtkValidName = this->MakeValidNodeName((SimplifyXmlTag(wellboreTrajectory->getXmlTag()) + '_' + wellboreTrajectory->getTitle()).c_str());
+                idNode = data_assembly->AddNode(("_" + wellboreTrajectory->getUuid()).c_str(), idNodeInit);
                 data_assembly->SetAttribute(idNode, "label", wellboreTrajectoryVtkValidName.c_str());
                 data_assembly->SetAttribute(idNode, "type", std::to_string(static_cast<int>(TreeViewNodeType::WellboreTrajectory)).c_str());
 
@@ -499,9 +551,9 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchWellbor
                 auto *wellboreMarkerFrame = dynamic_cast<RESQML2_NS::WellboreMarkerFrameRepresentation const *>(wellboreFrame);
                 if (wellboreMarkerFrame == nullptr)
                 { // WellboreFrame
-                    wellboreFrame->setTitle(this->MakeValidNodeName((wellboreFrame->getXmlTag() + '_' + wellboreFrame->getTitle()).c_str()));
-                    const std::string wellboreFrameVtkValidName = this->MakeValidNodeName((wellboreFrame->getXmlTag() + '_' + wellboreFrame->getTitle()).c_str());
-                    int frame_idNode = data_assembly->AddNode(("_" + wellboreFrame->getUuid()).c_str(), 0 /* add to root*/);
+                    //wellboreFrame->setTitle(this->MakeValidNodeName((wellboreFrame->getXmlTag() + '_' + wellboreFrame->getTitle()).c_str()));
+                    const std::string wellboreFrameVtkValidName = this->MakeValidNodeName((SimplifyXmlTag(wellboreFrame->getXmlTag()) + '_' + wellboreFrame->getTitle()).c_str());
+                    int frame_idNode = data_assembly->AddNode(("_" + wellboreFrame->getUuid()).c_str(), idNodeInit);
                     data_assembly->SetAttribute(frame_idNode, "label", wellboreFrameVtkValidName.c_str());
                     data_assembly->SetAttribute(frame_idNode, "traj", idNode);
                     data_assembly->SetAttribute(frame_idNode, "type", std::to_string(static_cast<int>(TreeViewNodeType::WellboreFrame)).c_str());
@@ -516,8 +568,8 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchWellbor
                 }
                 else
                 { // WellboreMarkerFrame
-                    const std::string wellboreFrameVtkValidName = this->MakeValidNodeName((wellboreFrame->getXmlTag() + '_' + wellboreFrame->getTitle()).c_str());
-                    int markerFrame_idNode = data_assembly->AddNode(("_" + wellboreFrame->getUuid()).c_str(), 0 /* add to root*/);
+                    const std::string wellboreFrameVtkValidName = this->MakeValidNodeName((SimplifyXmlTag(wellboreFrame->getXmlTag()) + '_' + wellboreFrame->getTitle()).c_str());
+                    int markerFrame_idNode = data_assembly->AddNode(("_" + wellboreFrame->getUuid()).c_str(), idNodeInit);
                     data_assembly->SetAttribute(markerFrame_idNode, "label", wellboreFrameVtkValidName.c_str());
                     data_assembly->SetAttribute(markerFrame_idNode, "traj", idNode);
                     data_assembly->SetAttribute(markerFrame_idNode, "type", std::to_string(static_cast<int>(TreeViewNodeType::WellboreMarkerFrame)).c_str());
@@ -570,8 +622,8 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchWellbor
                 */
                 for (const auto *wellbore_completion : witsmlWellbore->getWellboreCompletionSet())
                 {
-                    const std::string wellboreCompletionVtkValidName = this->MakeValidNodeName((wellbore_completion->getXmlTag() + '_' + wellbore_completion->getTitle()).c_str());
-                    int idNode_completion = data_assembly->AddNode(("_" + wellbore_completion->getUuid()).c_str(), 0);
+                    const std::string wellboreCompletionVtkValidName = this->MakeValidNodeName((SimplifyXmlTag(wellbore_completion->getXmlTag()) + '_' + wellbore_completion->getTitle()).c_str());
+                    int idNode_completion = data_assembly->AddNode(("_" + wellbore_completion->getUuid()).c_str(), idNodeInit);
                     data_assembly->SetAttribute(idNode_completion, "label", wellboreCompletionVtkValidName.c_str());
                     data_assembly->SetAttribute(idNode_completion, "type", std::to_string(static_cast<int>(TreeViewNodeType::WellboreCompletion)).c_str());
                     // Iterate over the perforations.

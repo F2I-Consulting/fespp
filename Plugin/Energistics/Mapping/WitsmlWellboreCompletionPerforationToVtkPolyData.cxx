@@ -37,6 +37,10 @@ under the License.
 #include <vtkLookupTable.h>
 #include <vtkVariantArray.h>
 
+#include <vtkCellData.h>
+#include <vtkSMProxy.h>
+#include <vtkSMPropertyHelper.h>
+
 #include <fesapi/witsml2_1/WellboreCompletion.h>
 #include <fesapi/resqml2/MdDatum.h>
 #include <fesapi/resqml2/WellboreFeature.h>
@@ -184,7 +188,6 @@ void WitsmlWellboreCompletionPerforationToVtkPolyData::loadVtkObject()
 			tubeFilter->Update();
 
 			// Add the perforationPolyData to the vector.
-			//this->vtkData = tubeFilter->GetOutput();
 			this->vtkData->SetPartition(0, tubeFilter->GetOutput());
 			this->vtkData->GetMetaData((unsigned int)0)->Set(vtkCompositeDataSet::NAME(), (const char *)(this->connectionuid + "_"+ this->title).c_str());
 			this->vtkData->Modified();

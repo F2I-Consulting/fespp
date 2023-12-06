@@ -42,6 +42,7 @@ namespace common
 namespace resqml2
 {
 	class AbstractRepresentation;
+	class RepresentationSetRepresentation;
 	class AbstractObject;
 }
 
@@ -89,12 +90,11 @@ public:
 private:
 	std::string buildDataAssemblyFromDataObjectRepo(const char *fileName);
 
-	std::string searchWellboreTrajectory(const std::string &fileName);
+	std::string searchWellboreTrajectory(const std::string &fileName); // traj + frame + chanel + marker + completion + perforation
 	std::string searchRepresentations(resqml2::AbstractRepresentation const *representation, int idNode = 0 /* 0 is root's id*/);
-
+	int searchRepresentationSetRepresentation(resqml2::RepresentationSetRepresentation const* rsr, int idNode = 0 /* 0 is root's id*/);
 	std::string searchSubRepresentation(resqml2::AbstractRepresentation const *representation, vtkDataAssembly *assembly, int node_parent);
 	std::string searchTimeSeries(const std::string &fileName);
-
 	std::string searchProperties(resqml2::AbstractRepresentation const *representation, vtkDataAssembly *assembly, int node_parent);
 
 	void selectNodeIdParent(int node);
@@ -150,3 +150,4 @@ private:
 #endif
 };
 #endif
+
