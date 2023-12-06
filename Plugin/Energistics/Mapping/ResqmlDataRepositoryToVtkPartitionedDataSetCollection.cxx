@@ -35,6 +35,8 @@ VtkAssembly => TreeView:
 #include <list>
 #include <regex>
 #include <numeric>
+#include <cstdlib>
+#include <iostream>
 
 // VTK includes
 #include <vtkPartitionedDataSetCollection.h>
@@ -60,6 +62,7 @@ VtkAssembly => TreeView:
 #include <fesapi/resqml2/WellboreFeature.h>
 #include <fesapi/witsml2_1/WellboreCompletion.h>
 #include <fesapi/witsml2_1/WellCompletion.h>
+#include <fesapi/witsml2_1/Well.h>
 
 #ifdef WITH_ETP_SSL
 #include <thread>
@@ -73,37 +76,39 @@ VtkAssembly => TreeView:
 #endif
 #include <fesapi/common/EpcDocument.h>
 
-#include "ResqmlIjkGridToVtkExplicitStructuredGrid.h"
-#include "ResqmlIjkGridSubRepToVtkExplicitStructuredGrid.h"
-#include "ResqmlGrid2dToVtkStructuredGrid.h"
-#include "ResqmlPolylineToVtkPolyData.h"
-#include "ResqmlTriangulatedSetToVtkPartitionedDataSet.h"
-#include "ResqmlUnstructuredGridToVtkUnstructuredGrid.h"
-#include "ResqmlUnstructuredGridSubRepToVtkUnstructuredGrid.h"
-#include "ResqmlWellboreTrajectoryToVtkPolyData.h"
-#include "ResqmlWellboreMarkerFrameToVtkPartitionedDataSet.h"
-#include "ResqmlWellboreFrameToVtkPartitionedDataSet.h"
-#include "WitsmlWellboreCompletionToVtkPartitionedDataSet.h"
-#include "WitsmlWellboreCompletionPerforationToVtkPolyData.h"
+#include "Mapping/ResqmlIjkGridToVtkExplicitStructuredGrid.h"
+#include "Mapping/ResqmlIjkGridSubRepToVtkExplicitStructuredGrid.h"
+#include "Mapping/ResqmlGrid2dToVtkStructuredGrid.h"
+#include "Mapping/ResqmlPolylineToVtkPolyData.h"
+#include "Mapping/ResqmlTriangulatedSetToVtkPartitionedDataSet.h"
+#include "Mapping/ResqmlUnstructuredGridToVtkUnstructuredGrid.h"
+#include "Mapping/ResqmlUnstructuredGridSubRepToVtkUnstructuredGrid.h"
+#include "Mapping/ResqmlWellboreTrajectoryToVtkPolyData.h"
+#include "Mapping/ResqmlWellboreMarkerFrameToVtkPartitionedDataSet.h"
+#include "Mapping/ResqmlWellboreFrameToVtkPartitionedDataSet.h"
+#include "Mapping/WitsmlWellboreCompletionToVtkPartitionedDataSet.h"
+#include "Mapping/WitsmlWellboreCompletionPerforationToVtkPolyData.h"
+#include "Mapping/CommonAbstractObjectSetToVtkPartitionedDataSetSet.h"
 
 ResqmlDataRepositoryToVtkPartitionedDataSetCollection::ResqmlDataRepositoryToVtkPartitionedDataSetCollection() : markerOrientation(false),
                                                                                                                  markerSize(10),
                                                                                                                  repository(new common::DataObjectRepository()),
-                                                                                                                 output(vtkSmartPointer<vtkPartitionedDataSetCollection>::New()),
-                                                                                                                 nodeId_to_mapper(),
-                                                                                                                 current_selection(),
-                                                                                                                 old_selection()
+                                                                                                                 _output(vtkSmartPointer<vtkPartitionedDataSetCollection>::New()),
+                                                                                                                 _nodeIdToMapper(),
+                                                                                                                 _currentSelection(),
+                                                                                                                 _oldSelection()
 {
     auto assembly = vtkSmartPointer<vtkDataAssembly>::New();
     assembly->SetRootNodeName("data");
-    output->SetDataAssembly(assembly);
+
+    _output->SetDataAssembly(assembly);
     times_step.clear();
 }
 
 ResqmlDataRepositoryToVtkPartitionedDataSetCollection::~ResqmlDataRepositoryToVtkPartitionedDataSetCollection()
 {
     delete repository;
-    for (const auto &keyVal : nodeId_to_mapper)
+    for (const auto &keyVal : _nodeIdToMapper)
     {
         delete keyVal.second;
     }
@@ -117,7 +122,7 @@ ResqmlDataRepositoryToVtkPartitionedDataSetCollection::~ResqmlDataRepositoryToVt
 // If the first character of the output string is not valid, an underscore is added
 // to the beginning of the output string. This function is designed to create a valid
 // node name from a given string.
-std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::MakeValidNodeName(const char* name)
+std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::MakeValidNodeName(const char *name)
 {
     if (name == nullptr || name[0] == '\0')
     {
@@ -133,7 +138,7 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::MakeValidNode
     for (size_t cc = 0, max = strlen(name); cc < max; ++cc)
     {
         if (std::binary_search(
-            sorted_valid_chars, sorted_valid_chars + sorted_valid_chars_len, name[cc]))
+                sorted_valid_chars, sorted_valid_chars + sorted_valid_chars_len, name[cc]))
         {
             result += name[cc];
         }
@@ -141,7 +146,7 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::MakeValidNode
 
     if (result.empty() ||
         ((result[0] < 'a' || result[0] > 'z') && (result[0] < 'A' || result[0] > 'Z') &&
-            result[0] != '_'))
+         result[0] != '_'))
     {
         return "_" + result;
     }
@@ -337,7 +342,7 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::buildDataAsse
 std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchRepresentations(resqml2::AbstractRepresentation const *representation, int idNode)
 {
     std::string result;
-    vtkDataAssembly *data_assembly = output->GetDataAssembly();
+    vtkDataAssembly *data_assembly = _output->GetDataAssembly();
 
     if (representation->isPartial())
     {
@@ -352,7 +357,7 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchReprese
     {
         // The leading underscore is forced by VTK which does not support a node name starting with a digit (probably because it is a QNAME).
         const std::string nodeName = "_" + representation->getUuid();
-        const int existingNodeId = output->GetDataAssembly()->FindFirstNodeWithName(nodeName.c_str());
+        const int existingNodeId = _output->GetDataAssembly()->FindFirstNodeWithName(nodeName.c_str());
         if (existingNodeId == -1)
         {
             idNode = data_assembly->AddNode(nodeName.c_str(), idNode);
@@ -369,6 +374,11 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchReprese
             const std::string representationVtkValidName = subrep == nullptr
                                                                ? this->MakeValidNodeName((type_representation + "_" + representation->getTitle()).c_str())
                                                                : this->MakeValidNodeName((type_representation + "_" + subrep->getSupportingRepresentation(0)->getTitle() + "_" + representation->getTitle()).c_str());
+
+            const TreeViewNodeType w_type = subrep == nullptr
+                                                ? TreeViewNodeType::Representation
+                                                : TreeViewNodeType::SubRepresentation;
+
             data_assembly->SetAttribute(idNode, "label", representationVtkValidName.c_str());
             data_assembly->SetAttribute(idNode, "type", std::to_string(static_cast<int>(TreeViewNodeType::Representation)).c_str());
         }
@@ -423,7 +433,7 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchPropert
         {
             const std::string propertyVtkValidName = this->MakeValidNodeName((property->getXmlTag() + '_' + property->getTitle()).c_str());
 
-            if (output->GetDataAssembly()->FindFirstNodeWithName(("_" + property->getUuid()).c_str()) == -1)
+            if (_output->GetDataAssembly()->FindFirstNodeWithName(("_" + property->getUuid()).c_str()) == -1)
             { // verify uuid exist in treeview
                 int property_idNode = data_assembly->AddNode(("_" + property->getUuid()).c_str(), node_parent);
                 data_assembly->SetAttribute(property_idNode, "label", propertyVtkValidName.c_str());
@@ -443,15 +453,15 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchWellbor
 {
     std::string result;
 
-    vtkDataAssembly *data_assembly = output->GetDataAssembly();
+    vtkDataAssembly *data_assembly = _output->GetDataAssembly();
 
     int idNode = 0; // 0 is root's id
 
     for (auto *wellboreTrajectory : repository->getWellboreTrajectoryRepresentationSet())
     {
-        if (output->GetDataAssembly()->FindFirstNodeWithName(("_" + wellboreTrajectory->getUuid()).c_str()) == -1)
+        if (_output->GetDataAssembly()->FindFirstNodeWithName(("_" + wellboreTrajectory->getUuid()).c_str()) == -1)
         { // verify uuid exist in treeview
-                                        // To shorten the xmlTag by removing �Representation� from the end.
+          // To shorten the xmlTag by removing �Representation� from the end.
             std::string suffix = "Representation";
             std::string type_representation = wellboreTrajectory->getXmlTag();
             if (type_representation.substr(type_representation.size() - suffix.length()) == suffix)
@@ -479,15 +489,12 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchWellbor
                 data_assembly->SetAttribute(idNode, "label", wellboreTrajectoryVtkValidName.c_str());
                 data_assembly->SetAttribute(idNode, "type", std::to_string(static_cast<int>(TreeViewNodeType::WellboreTrajectory)).c_str());
 
-                /* to delete
-                data_assembly->SetAttribute(idNode, "is_checkable", 0);
-                */
             }
         }
         // wellboreFrame
         for (auto *wellboreFrame : wellboreTrajectory->getWellboreFrameRepresentationSet())
         {
-            if (output->GetDataAssembly()->FindFirstNodeWithName(("_" + wellboreFrame->getUuid()).c_str()) == -1)
+            if (_output->GetDataAssembly()->FindFirstNodeWithName(("_" + wellboreFrame->getUuid()).c_str()) == -1)
             { // verify uuid exist in treeview
                 auto *wellboreMarkerFrame = dynamic_cast<RESQML2_NS::WellboreMarkerFrameRepresentation const *>(wellboreFrame);
                 if (wellboreMarkerFrame == nullptr)
@@ -513,7 +520,7 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchWellbor
                     int markerFrame_idNode = data_assembly->AddNode(("_" + wellboreFrame->getUuid()).c_str(), 0 /* add to root*/);
                     data_assembly->SetAttribute(markerFrame_idNode, "label", wellboreFrameVtkValidName.c_str());
                     data_assembly->SetAttribute(markerFrame_idNode, "traj", idNode);
-                    data_assembly->SetAttribute(markerFrame_idNode, "type", std::to_string(static_cast<int>(TreeViewNodeType::WellboreFrame)).c_str());
+                    data_assembly->SetAttribute(markerFrame_idNode, "type", std::to_string(static_cast<int>(TreeViewNodeType::WellboreMarkerFrame)).c_str());
                     for (auto *wellboreMarker : wellboreMarkerFrame->getWellboreMarkerSet())
                     {
                         const std::string wellboreMarkerVtkValidName = this->MakeValidNodeName((wellboreMarker->getXmlTag() + '_' + wellboreMarker->getTitle()).c_str());
@@ -526,12 +533,41 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchWellbor
             }
         }
         // Wellbore Completion
-        const auto* wellboreFeature = dynamic_cast<RESQML2_NS::WellboreFeature*>(wellboreTrajectory->getInterpretation()->getInterpretedFeature());
+        const auto *wellboreFeature = dynamic_cast<RESQML2_NS::WellboreFeature *>(wellboreTrajectory->getInterpretation()->getInterpretedFeature());
         if (wellboreFeature != nullptr)
-        {   
-            witsml2::Wellbore* witsmlWellbore = nullptr;
-            if (const auto* witsmlWellbore = dynamic_cast<witsml2::Wellbore*>(wellboreFeature->getWitsmlWellbore()))
+        {
+            witsml2::Wellbore *witsmlWellbore = nullptr;
+            if (const auto *witsmlWellbore = dynamic_cast<witsml2::Wellbore *>(wellboreFeature->getWitsmlWellbore()))
             {
+                /*
+                witsml2::Well* well = witsmlWellbore->getWell();
+                gsoap_eml2_3::witsml21__WellFluid fluid = well->getFluidWell();
+                gsoap_eml2_3::witsml21__WellDirection direction = well->getDirectionWell();
+                WellboreStatut statut;
+                if (fluid == gsoap_eml2_3::witsml21__WellFluid::oil) {
+                    if (direction == gsoap_eml2_3::witsml21__WellDirection::injector) {
+                        statut = WellboreStatut::OilInjecter;
+                    } else if (direction == gsoap_eml2_3::witsml21__WellDirection::producer) {
+                        statut = WellboreStatut::OilProducer;
+                    }
+                }
+                else if (fluid == gsoap_eml2_3::witsml21__WellFluid::water) {
+                    if (direction == gsoap_eml2_3::witsml21__WellDirection::injector) {
+                        statut = WellboreStatut::WaterInjecter;
+                    }
+                    else if (direction == gsoap_eml2_3::witsml21__WellDirection::producer) {
+                        statut = WellboreStatut::WaterProducer;
+                    }
+                }
+                else if (fluid == gsoap_eml2_3::witsml21__WellFluid::gas) {
+                    if (direction == gsoap_eml2_3::witsml21__WellDirection::injector) {
+                        statut = WellboreStatut::GazInjecter;
+                    }
+                    else if (direction == gsoap_eml2_3::witsml21__WellDirection::producer) {
+                        statut = WellboreStatut::GazProducer;
+                    }
+                }
+                */
                 for (const auto *wellbore_completion : witsmlWellbore->getWellboreCompletionSet())
                 {
                     const std::string wellboreCompletionVtkValidName = this->MakeValidNodeName((wellbore_completion->getXmlTag() + '_' + wellbore_completion->getTitle()).c_str());
@@ -564,7 +600,7 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchWellbor
                                     vtkOutputWindowDisplayErrorText(("skin value: " + search_perforation_skin[0] + " is not numeric\n" + std::string("exception error > ") + e.what()).c_str());
                                 }
                             }
-                            //search diameter
+                            // search diameter
                             auto search_perforation_diam = wellbore_completion->getConnectionExtraMetadata(WITSML2_1_NS::WellboreCompletion::WellReservoirConnectionType::PERFORATION, perforationIndex, "Petrel:BoreholePerforatedSection0");
                             if (search_perforation_diam.size() > 0)
                             {
@@ -573,9 +609,9 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchWellbor
                                     perforation_diameter = search_perforation_diam[0];
                                     perforation_name = perforation_name + "__Diam_" + perforation_diameter;
                                 }
-                                catch (const std::exception& e)
+                                catch (const std::exception &e)
                                 {
-                                    vtkOutputWindowDisplayErrorText(("diameter value: " + search_perforation_diam[0] + " is not numeric\n"+ std::string("exception error > ") + e.what()).c_str());
+                                    vtkOutputWindowDisplayErrorText(("diameter value: " + search_perforation_diam[0] + " is not numeric\n" + std::string("exception error > ") + e.what()).c_str());
                                 }
                             }
                         }
@@ -598,7 +634,7 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchWellbor
                                         vtkOutputWindowDisplayErrorText(("skin value: " + search_perforation_skin[0] + " is not numeric\n" + std::string("exception error > ") + e.what()).c_str());
                                     }
                                 }
-                                //search diameter
+                                // search diameter
                                 auto search_perforation_diam = wellbore_completion->getConnectionExtraMetadata(WITSML2_1_NS::WellboreCompletion::WellReservoirConnectionType::PERFORATION, perforationIndex, "Petrel:CompletionDiameter");
                                 if (search_perforation_diam.size() > 0)
                                 {
@@ -607,7 +643,7 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchWellbor
                                         perforation_diameter = search_perforation_diam[0];
                                         perforation_name = perforation_name + "__Diam_" + perforation_diameter;
                                     }
-                                    catch (const std::exception& e)
+                                    catch (const std::exception &e)
                                     {
                                         vtkOutputWindowDisplayErrorText(("diameter value: " + search_perforation_diam[0] + " is not numeric\n" + std::string("exception error > ") + e.what()).c_str());
                                     }
@@ -618,7 +654,7 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchWellbor
                                 perforation_name += "_" + wellbore_completion->getConnectionUid(WITSML2_1_NS::WellboreCompletion::WellReservoirConnectionType::PERFORATION, perforationIndex);
                             }
                         }
-                         const std::string perforation_VTK_validName = this->MakeValidNodeName((perforation_name).c_str());
+                        const std::string perforation_VTK_validName = this->MakeValidNodeName((perforation_name).c_str());
                         int idNode_perfo = data_assembly->AddNode(this->MakeValidNodeName(("_" + wellbore_completion->getUuid() + "_" + wellbore_completion->getConnectionUid(WITSML2_1_NS::WellboreCompletion::WellReservoirConnectionType::PERFORATION, perforationIndex)).c_str()).c_str(), idNode_completion);
                         data_assembly->SetAttribute(idNode_perfo, "label", perforation_VTK_validName.c_str());
                         int nodeType = static_cast<int>(TreeViewNodeType::Perforation);
@@ -626,6 +662,7 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchWellbor
                         data_assembly->SetAttribute(idNode_perfo, "connection", wellbore_completion->getConnectionUid(WITSML2_1_NS::WellboreCompletion::WellReservoirConnectionType::PERFORATION, perforationIndex).c_str());
                         data_assembly->SetAttribute(idNode_perfo, "skin", perforation_skin.c_str());
                         data_assembly->SetAttribute(idNode_perfo, "diameter", perforation_diameter.c_str());
+                        data_assembly->SetAttribute(idNode_perfo, "statut", std::to_string(static_cast<int>(/*statut*/ WellboreStatut::GazProducer)).c_str());
                     }
                 }
             }
@@ -639,7 +676,7 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchTimeSer
     times_step.clear();
 
     std::string return_message = "";
-    auto *assembly = output->GetDataAssembly();
+    auto *assembly = _output->GetDataAssembly();
     std::vector<EML2_NS::TimeSeries *> timeSeriesSet;
     try
     {
@@ -666,7 +703,7 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchTimeSer
                 if (prop->getXmlTag() == RESQML2_NS::ContinuousProperty::XML_TAG ||
                     prop->getXmlTag() == RESQML2_NS::DiscreteProperty::XML_TAG)
                 {
-                    auto node_id = (output->GetDataAssembly()->FindFirstNodeWithName(("_" + prop->getUuid()).c_str()));
+                    auto node_id = (_output->GetDataAssembly()->FindFirstNodeWithName(("_" + prop->getUuid()).c_str()));
                     if (node_id == -1)
                     {
                         return_message = return_message + "The property " + prop->getUuid() + " is not supported and consequently cannot be associated to its time series.\n";
@@ -681,7 +718,7 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchTimeSer
                             propertyName_to_nodeSet[prop->getTitle()].push_back(node_id);
                             const size_t timeIndexInTimeSeries = timeSeries->getTimestampIndex(prop->getSingleTimestamp());
                             times_step.push_back(timeIndexInTimeSeries);
-                            timeSeries_uuid_and_title_to_index_and_properties_uuid[timeSeries->getUuid()][this->MakeValidNodeName((timeSeries->getXmlTag() + '_' + prop->getTitle()).c_str())][timeIndexInTimeSeries] = prop->getUuid();
+                            _timeSeriesUuidAndTitleToIndexAndPropertiesUuid[timeSeries->getUuid()][this->MakeValidNodeName((timeSeries->getXmlTag() + '_' + prop->getTitle()).c_str())][timeIndexInTimeSeries] = prop->getUuid();
                         }
                         else
                         {
@@ -703,13 +740,13 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchTimeSer
                 // erase property add to treeview for group by TimeSerie
                 for (auto node : property_node_set)
                 {
-                    nodeParent = output->GetDataAssembly()->GetParent(node);
-                    output->GetDataAssembly()->RemoveNode(node);
+                    nodeParent = _output->GetDataAssembly()->GetParent(node);
+                    _output->GetDataAssembly()->RemoveNode(node);
                 }
                 std::string name = this->MakeValidNodeName((timeSeries->getXmlTag() + '_' + myPair.first).c_str());
-                auto times_serie_node_id = output->GetDataAssembly()->AddNode(("_" + timeSeries->getUuid() + name).c_str(), nodeParent);
-                output->GetDataAssembly()->SetAttribute(times_serie_node_id, "label", name.c_str());
-                output->GetDataAssembly()->SetAttribute(times_serie_node_id, "type", std::to_string(static_cast<int>(TreeViewNodeType::TimeSeries)).c_str());
+                auto times_serie_node_id = _output->GetDataAssembly()->AddNode(("_" + timeSeries->getUuid() + name).c_str(), nodeParent);
+                _output->GetDataAssembly()->SetAttribute(times_serie_node_id, "label", name.c_str());
+                _output->GetDataAssembly()->SetAttribute(times_serie_node_id, "type", std::to_string(static_cast<int>(TreeViewNodeType::TimeSeries)).c_str());
             }
         }
         catch (const std::exception &e)
@@ -727,8 +764,8 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::selectNodeId(
     {
         this->selectNodeIdParent(node);
 
-        this->current_selection.insert(node);
-        this->old_selection.erase(node);
+        this->_currentSelection.insert(node);
+        _oldSelection.erase(node);
     }
     this->selectNodeIdChildren(node);
 
@@ -737,37 +774,37 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::selectNodeId(
 
 void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::selectNodeIdParent(int node)
 {
-    auto const *assembly = this->output->GetDataAssembly();
+    auto const *assembly = _output->GetDataAssembly();
 
     if (assembly->GetParent(node) > 0)
     {
-        this->current_selection.insert(assembly->GetParent(node));
-        this->old_selection.erase(assembly->GetParent(node));
+        this->_currentSelection.insert(assembly->GetParent(node));
+        _oldSelection.erase(assembly->GetParent(node));
         this->selectNodeIdParent(assembly->GetParent(node));
     }
 }
 void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::selectNodeIdChildren(int node)
 {
-    auto const *assembly = this->output->GetDataAssembly();
+    auto const *assembly = _output->GetDataAssembly();
 
     for (int index_child : assembly->GetChildNodes(node))
     {
-        this->current_selection.insert(index_child);
-        this->old_selection.erase(index_child);
+        this->_currentSelection.insert(index_child);
+        _oldSelection.erase(index_child);
         this->selectNodeIdChildren(index_child);
     }
 }
 
 void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::clearSelection()
 {
-    this->old_selection = this->current_selection;
-    this->current_selection.clear();
+    _oldSelection = this->_currentSelection;
+    this->_currentSelection.clear();
 }
 
 void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::initMapper(const TreeViewNodeType type, const int node_id, const int nbProcess, const int processId)
 {
     CommonAbstractObjectToVtkPartitionedDataSet *rep = nullptr;
-    const std::string uuid = std::string(output->GetDataAssembly()->GetNodeName(node_id)).substr(1);
+    const std::string uuid = std::string(_output->GetDataAssembly()->GetNodeName(node_id)).substr(1);
 
     try
     {
@@ -805,20 +842,20 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::initMapper(const Tre
                     if (dynamic_cast<RESQML2_NS::AbstractIjkGridRepresentation *>(subRep->getSupportingRepresentation(0)) != nullptr)
                     {
                         auto *supportingGrid = static_cast<RESQML2_NS::AbstractIjkGridRepresentation *>(subRep->getSupportingRepresentation(0));
-                        if (this->nodeId_to_mapper.find(output->GetDataAssembly()->FindFirstNodeWithName(("_" + supportingGrid->getUuid()).c_str())) == this->nodeId_to_mapper.end())
+                        if (_nodeIdToMapper.find(_output->GetDataAssembly()->FindFirstNodeWithName(("_" + supportingGrid->getUuid()).c_str())) == _nodeIdToMapper.end())
                         {
-                            this->nodeId_to_mapper[output->GetDataAssembly()->FindFirstNodeWithName(("_" + supportingGrid->getUuid()).c_str())] = new ResqmlIjkGridToVtkExplicitStructuredGrid(supportingGrid);
+                            _nodeIdToMapper[_output->GetDataAssembly()->FindFirstNodeWithName(("_" + supportingGrid->getUuid()).c_str())] = new ResqmlIjkGridToVtkExplicitStructuredGrid(supportingGrid);
                         }
-                        rep = new ResqmlIjkGridSubRepToVtkExplicitStructuredGrid(subRep, dynamic_cast<ResqmlIjkGridToVtkExplicitStructuredGrid *>(this->nodeId_to_mapper[output->GetDataAssembly()->FindFirstNodeWithName(("_" + supportingGrid->getUuid()).c_str())]));
+                        rep = new ResqmlIjkGridSubRepToVtkExplicitStructuredGrid(subRep, dynamic_cast<ResqmlIjkGridToVtkExplicitStructuredGrid *>(_nodeIdToMapper[_output->GetDataAssembly()->FindFirstNodeWithName(("_" + supportingGrid->getUuid()).c_str())]));
                     }
                     else if (dynamic_cast<RESQML2_NS::UnstructuredGridRepresentation *>(subRep->getSupportingRepresentation(0)) != nullptr)
                     {
                         auto *supportingGrid = static_cast<RESQML2_NS::UnstructuredGridRepresentation *>(subRep->getSupportingRepresentation(0));
-                        if (this->nodeId_to_mapper.find(output->GetDataAssembly()->FindFirstNodeWithName(("_" + supportingGrid->getUuid()).c_str())) == this->nodeId_to_mapper.end())
+                        if (_nodeIdToMapper.find(_output->GetDataAssembly()->FindFirstNodeWithName(("_" + supportingGrid->getUuid()).c_str())) == _nodeIdToMapper.end())
                         {
-                            this->nodeId_to_mapper[output->GetDataAssembly()->FindFirstNodeWithName(("_" + supportingGrid->getUuid()).c_str())] = new ResqmlUnstructuredGridToVtkUnstructuredGrid(supportingGrid);
+                            _nodeIdToMapper[_output->GetDataAssembly()->FindFirstNodeWithName(("_" + supportingGrid->getUuid()).c_str())] = new ResqmlUnstructuredGridToVtkUnstructuredGrid(supportingGrid);
                         }
-                        rep = new ResqmlUnstructuredGridSubRepToVtkUnstructuredGrid(subRep, dynamic_cast<ResqmlUnstructuredGridToVtkUnstructuredGrid *>(this->nodeId_to_mapper[output->GetDataAssembly()->FindFirstNodeWithName(("_" + supportingGrid->getUuid()).c_str())]));
+                        rep = new ResqmlUnstructuredGridSubRepToVtkUnstructuredGrid(subRep, dynamic_cast<ResqmlUnstructuredGridToVtkUnstructuredGrid *>(_nodeIdToMapper[_output->GetDataAssembly()->FindFirstNodeWithName(("_" + supportingGrid->getUuid()).c_str())]));
                     }
                 }
             }
@@ -832,28 +869,44 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::initMapper(const Tre
             }
             else if (TreeViewNodeType::WellboreCompletion == type)
             {
-                if (dynamic_cast<witsml2_1::WellboreCompletion *>(result) != nullptr)
+                if (dynamic_cast<witsml2_1::WellboreCompletion*>(result) != nullptr)
                 {
-                    rep = new WitsmlWellboreCompletionToVtkPartitionedDataSet(static_cast<witsml2_1::WellboreCompletion *>(result));
+                    _nodeIdToMapperSet[node_id] = new WitsmlWellboreCompletionToVtkPartitionedDataSet(static_cast<witsml2_1::WellboreCompletion*>(result));
                 }
             }
             else if (TreeViewNodeType::Perforation == type)
             {
-                const int node_parent = output->GetDataAssembly()->GetParent(node_id);
-                if (dynamic_cast<WitsmlWellboreCompletionToVtkPartitionedDataSet *>(nodeId_to_mapper[node_parent]) != nullptr)
+                const int node_parent = _output->GetDataAssembly()->GetParent(node_id);
+                if (static_cast<WitsmlWellboreCompletionToVtkPartitionedDataSet*>(_nodeIdToMapperSet[node_parent]))
                 {
-                    const char *value;
-                    output->GetDataAssembly()->GetAttribute(node_id, "connection", value);
+                    const char * p_connection;
+                    _output->GetDataAssembly()->GetAttribute(node_id, "connection", p_connection);
                     const char *name;
-                    output->GetDataAssembly()->GetAttribute(node_id, "label", name);
-                    (static_cast<WitsmlWellboreCompletionToVtkPartitionedDataSet *>(nodeId_to_mapper[node_parent]))->addPerforation(value, name);
-                    for (auto *perforation : (static_cast<WitsmlWellboreCompletionToVtkPartitionedDataSet *>(nodeId_to_mapper[node_parent]))->getPerforations())
+                    _output->GetDataAssembly()->GetAttribute(node_id, "label", name);
+                    const char *skin_s;
+                    _output->GetDataAssembly()->GetAttribute(node_id, "skin", skin_s);
+                    const double skin = std::strtod(skin_s, nullptr);
+                    /*
+                    const char* statut_s;
+                    output->GetDataAssembly()->GetAttribute(node_id, "statut", statut_s);
+                    const WellboreStatut statut = static_cast<WellboreStatut>(std::stoi(skin_s));
+                    */
+                    const WellboreStatut statut = WellboreStatut::GazInjecter;
+                    if(!_nodeIdToMapperSet[node_parent]->existUuid(p_connection))
                     {
+                        (static_cast<WitsmlWellboreCompletionToVtkPartitionedDataSet*>(_nodeIdToMapperSet[node_parent]))->addPerforation(p_connection, name, skin, statut);
+                    }
+                    return;
+  /*
+  for (auto item : (static_cast<WitsmlWellboreCompletionToVtkPartitionedDataSet*>(_nodeIdToMapperSet[node_parent]))->getMapperSet())
+                    {
+                        WitsmlWellboreCompletionPerforationToVtkPolyData* perforation = dynamic_cast<WitsmlWellboreCompletionPerforationToVtkPolyData*>(item);
                         if (perforation->getTitle() == std::string(name) && perforation->getConnectionuid() == std::string(value))
                         {
                             rep = perforation;
                         }
                     }
+                    */
                 }
             }
             else if (TreeViewNodeType::WellboreMarker == type)
@@ -878,7 +931,7 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::initMapper(const Tre
             {
                 return;
             }
-            this->nodeId_to_mapper[node_id] = rep;
+            _nodeIdToMapper[node_id] = rep;
             return;
         }
     }
@@ -890,8 +943,8 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::initMapper(const Tre
 
 void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::loadMapper(const TreeViewNodeType type, const int node_id /*const std::string& uuid*/, double time)
 {
-    auto const *assembly = this->output->GetDataAssembly();
-    const std::string uuid = std::string(output->GetDataAssembly()->GetNodeName(node_id)).substr(1);
+    auto const *assembly = _output->GetDataAssembly();
+    const std::string uuid = std::string(_output->GetDataAssembly()->GetNodeName(node_id)).substr(1);
     if (type == TreeViewNodeType::TimeSeries)
     {
         try
@@ -899,11 +952,11 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::loadMapper(const Tre
             std::string ts_uuid = uuid.substr(0, 36);
             std::string node_name = uuid.substr(36);
 
-            auto const *assembly = this->output->GetDataAssembly();
-            const int node_parent = assembly->GetParent(output->GetDataAssembly()->FindFirstNodeWithName(("_" + uuid).c_str()));
-            if (nodeId_to_mapper[node_parent])
+            auto const *assembly = _output->GetDataAssembly();
+            const int node_parent = assembly->GetParent(_output->GetDataAssembly()->FindFirstNodeWithName(("_" + uuid).c_str()));
+            if (_nodeIdToMapper[node_parent])
             {
-                static_cast<ResqmlAbstractRepresentationToVtkPartitionedDataSet *>(nodeId_to_mapper[node_parent])->addDataArray(timeSeries_uuid_and_title_to_index_and_properties_uuid[ts_uuid][node_name][time]);
+                static_cast<ResqmlAbstractRepresentationToVtkPartitionedDataSet *>(_nodeIdToMapper[node_parent])->addDataArray(_timeSeriesUuidAndTitleToIndexAndPropertiesUuid[ts_uuid][node_name][time]);
             }
             return;
         }
@@ -922,9 +975,9 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::loadMapper(const Tre
         { // load Wellbore Marker
             if (dynamic_cast<RESQML2_NS::WellboreMarker *>(result) != nullptr)
             {
-                auto const *assembly = this->output->GetDataAssembly();
-                const int node_parent = assembly->GetParent(output->GetDataAssembly()->FindFirstNodeWithName(("_" + uuid).c_str()));
-                static_cast<ResqmlWellboreMarkerFrameToVtkPartitionedDataSet *>(nodeId_to_mapper[node_parent])->addMarker(uuid, markerOrientation, markerSize);
+                auto const *assembly = _output->GetDataAssembly();
+                const int node_parent = assembly->GetParent(_output->GetDataAssembly()->FindFirstNodeWithName(("_" + uuid).c_str()));
+                static_cast<ResqmlWellboreMarkerFrameToVtkPartitionedDataSet *>(_nodeIdToMapper[node_parent])->addMarker(uuid, markerOrientation, markerSize);
                 return;
             }
         }
@@ -937,19 +990,19 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::loadMapper(const Tre
         { // load property
             if (dynamic_cast<RESQML2_NS::AbstractValuesProperty *>(result) != nullptr)
             {
-                auto const *assembly = this->output->GetDataAssembly();
+                auto const *assembly = _output->GetDataAssembly();
                 const int node_parent = assembly->GetParent(node_id); // node_id
-                if (dynamic_cast<ResqmlWellboreFrameToVtkPartitionedDataSet *>(nodeId_to_mapper[node_parent]) != nullptr)
+                if (dynamic_cast<ResqmlWellboreFrameToVtkPartitionedDataSet *>(_nodeIdToMapper[node_parent]) != nullptr)
                 {
-                    static_cast<ResqmlWellboreFrameToVtkPartitionedDataSet *>(nodeId_to_mapper[node_parent])->addChannel(uuid, static_cast<resqml2::AbstractValuesProperty *>(result));
+                    static_cast<ResqmlWellboreFrameToVtkPartitionedDataSet *>(_nodeIdToMapper[node_parent])->addChannel(uuid, static_cast<resqml2::AbstractValuesProperty *>(result));
                 }
-                else if (dynamic_cast<ResqmlTriangulatedSetToVtkPartitionedDataSet *>(nodeId_to_mapper[node_parent]) != nullptr)
+                else if (dynamic_cast<ResqmlTriangulatedSetToVtkPartitionedDataSet *>(_nodeIdToMapper[node_parent]) != nullptr)
                 {
-                    static_cast<ResqmlTriangulatedSetToVtkPartitionedDataSet *>(nodeId_to_mapper[node_parent])->addDataArray(uuid);
+                    static_cast<ResqmlTriangulatedSetToVtkPartitionedDataSet *>(_nodeIdToMapper[node_parent])->addDataArray(uuid);
                 }
                 else
                 {
-                    static_cast<ResqmlAbstractRepresentationToVtkPartitionedDataSet *>(nodeId_to_mapper[node_parent])->addDataArray(uuid);
+                    static_cast<ResqmlAbstractRepresentationToVtkPartitionedDataSet *>(_nodeIdToMapper[node_parent])->addDataArray(uuid);
                 }
                 return;
             }
@@ -963,7 +1016,7 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::loadMapper(const Tre
         try
         { // load representation
 
-            nodeId_to_mapper[node_id]->loadVtkObject(); // node_id
+            _nodeIdToMapper[node_id]->loadVtkObject(); // node_id
 
             return;
         }
@@ -975,157 +1028,244 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::loadMapper(const Tre
     }
 }
 
-vtkPartitionedDataSetCollection *ResqmlDataRepositoryToVtkPartitionedDataSetCollection::getVtkPartitionedDatasSetCollection(const double time, const int nbProcess, const int processId)
-{
-    // initialization the output (VtkPartitionedDatasSetCollection)
-    vtkSmartPointer<vtkDataAssembly> tmp_assembly = vtkSmartPointer<vtkDataAssembly>::New();
-    tmp_assembly->DeepCopy(this->output->GetDataAssembly());
-    this->output = vtkSmartPointer<vtkPartitionedDataSetCollection>::New();
-    this->output->SetDataAssembly(tmp_assembly);
 
-    unsigned int index = 0; // index for PartionedDatasSet
+/**
+* delete oldSelection mapper
+*/
+void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::deleteMapper(double p_time)
+{
+    // initialization the output (VtkPartitionedDatasSetCollection) with same vtkDataAssembly
+    vtkSmartPointer<vtkDataAssembly> w_Assembly = vtkSmartPointer<vtkDataAssembly>::New();
+    w_Assembly->DeepCopy(_output->GetDataAssembly());
+    _output = vtkSmartPointer<vtkPartitionedDataSetCollection>::New();
+    _output->SetDataAssembly(w_Assembly);
 
     // delete unchecked object
-    for (const int selection : this->old_selection)
+    for (const int w_nodeId : _oldSelection)
     {
-        const std::string uuid_unselect = std::string(tmp_assembly->GetNodeName(selection)).substr(1);
-        if (uuid_unselect.length() > 36) // uncheck Time Series
-        {                                // TimeSerie properties deselection
-            std::string ts_uuid = uuid_unselect.substr(0, 36);
-            std::string node_name = uuid_unselect.substr(36);
+        // retrieval of object type for nodeid
+        int w_valueType;
+        w_Assembly->GetAttribute(w_nodeId, "type", w_valueType);
+        TreeViewNodeType valueType = static_cast<TreeViewNodeType>(w_valueType);
 
-            const int node_parent = tmp_assembly->GetParent(tmp_assembly->FindFirstNodeWithName(("_" + uuid_unselect).c_str()));
-            if (this->nodeId_to_mapper.find(node_parent) != this->nodeId_to_mapper.end())
+        // retrieval of object UUID for nodeId
+        const std::string uuid_unselect = std::string(w_Assembly->GetNodeName(w_nodeId)).substr(1);
+
+        if (valueType == TreeViewNodeType::TimeSeries)
+        { // TimeSerie properties deselection
+            std::string w_timeSeriesuuid = uuid_unselect.substr(0, 36);
+            std::string w_nodeName = uuid_unselect.substr(36);
+
+            const int w_nodeParent = w_Assembly->GetParent(w_Assembly->FindFirstNodeWithName(("_" + uuid_unselect).c_str()));
+            if (_nodeIdToMapper.find(w_nodeParent) != _nodeIdToMapper.end())
             {
-                static_cast<ResqmlWellboreMarkerFrameToVtkPartitionedDataSet *>(nodeId_to_mapper[node_parent])->deleteDataArray(timeSeries_uuid_and_title_to_index_and_properties_uuid[ts_uuid][node_name][time]);
+                static_cast<ResqmlWellboreMarkerFrameToVtkPartitionedDataSet*>(_nodeIdToMapper[w_nodeParent])->deleteDataArray(_timeSeriesUuidAndTitleToIndexAndPropertiesUuid[w_timeSeriesuuid][w_nodeName][p_time]);
             }
         }
-        else
-        { // other deselection
-            COMMON_NS::AbstractObject *const result = repository->getDataObjectByUuid(uuid_unselect);
-
-            if (result == nullptr)
+        else if (valueType == TreeViewNodeType::Properties)
+        {
+            const int w_nodeParent = w_Assembly->GetParent(w_nodeId);
+            try
             {
-                vtkOutputWindowDisplayErrorText(("Error in deselection for uuid: " + uuid_unselect + "\n").c_str());
+                if (_nodeIdToMapper.find(w_nodeParent) != _nodeIdToMapper.end())
+                {
+                    ResqmlAbstractRepresentationToVtkPartitionedDataSet* abstractRepresentationMapper = static_cast<ResqmlAbstractRepresentationToVtkPartitionedDataSet*>(_nodeIdToMapper[w_nodeParent]);
+                    abstractRepresentationMapper->deleteDataArray(std::string(w_Assembly->GetNodeName(w_nodeId)).substr(1));
+                }
             }
-            else
+            catch (const std::exception& e)
             {
-                if (dynamic_cast<RESQML2_NS::AbstractValuesProperty *>(result) != nullptr)
+                vtkOutputWindowDisplayErrorText(("Error in property unload for uuid: " + uuid_unselect + "\n" + e.what()).c_str());
+            }
+        }
+        else if (valueType == TreeViewNodeType::WellboreMarker
+            )
+        {
+            const int w_nodeParent = w_Assembly->GetParent(w_nodeId);
+            try
+            {
+                if (_nodeIdToMapper.find(w_nodeParent) != _nodeIdToMapper.end())
                 {
-                    const int node_parent = tmp_assembly->GetParent(selection);
-                    try
-                    {
-                        if (this->nodeId_to_mapper.find(node_parent) != this->nodeId_to_mapper.end())
-                        {
-                            ResqmlAbstractRepresentationToVtkPartitionedDataSet *rep = static_cast<ResqmlWellboreMarkerFrameToVtkPartitionedDataSet *>(this->nodeId_to_mapper[node_parent]);
-                            rep->deleteDataArray(std::string(tmp_assembly->GetNodeName(selection)).substr(1));
-                        }
-                    }
-                    catch (const std::exception &e)
-                    {
-                        vtkOutputWindowDisplayErrorText(("Error in property unload for uuid: " + uuid_unselect + "\n" + e.what()).c_str());
-                    }
+                    ResqmlWellboreMarkerFrameToVtkPartitionedDataSet* markerFrame = static_cast<ResqmlWellboreMarkerFrameToVtkPartitionedDataSet*>(_nodeIdToMapper[w_nodeParent]);
+                    markerFrame->removeMarker(std::string(w_Assembly->GetNodeName(w_nodeId)).substr(1));
                 }
-                else if (dynamic_cast<RESQML2_NS::WellboreMarker *>(result) != nullptr)
+            }
+            catch (const std::exception& e)
+            {
+                vtkOutputWindowDisplayErrorText(("Error in property unload for uuid: " + uuid_unselect + "\n" + e.what()).c_str());
+            }
+        }
+        else if (valueType == TreeViewNodeType::SubRepresentation)
+        {
+            try
+            {
+                if (_nodeIdToMapper.find(w_nodeId) != _nodeIdToMapper.end())
                 {
-                    try
+                    std::string uuid_supporting_grid = "";
+                    if (dynamic_cast<ResqmlUnstructuredGridSubRepToVtkUnstructuredGrid*>(_nodeIdToMapper[w_nodeId]) != nullptr)
                     {
-                        const int node_parent = tmp_assembly->GetParent(selection);
-                        if (this->nodeId_to_mapper.find(node_parent) != this->nodeId_to_mapper.end())
-                        {
-                            ResqmlWellboreMarkerFrameToVtkPartitionedDataSet *rep = dynamic_cast<ResqmlWellboreMarkerFrameToVtkPartitionedDataSet *>(this->nodeId_to_mapper[node_parent]);
-                            rep->removeMarker(uuid_unselect);
-                        }
+                        uuid_supporting_grid = static_cast<ResqmlUnstructuredGridSubRepToVtkUnstructuredGrid*>(_nodeIdToMapper[w_nodeId])->unregisterToMapperSupportingGrid();
                     }
-                    catch (const std::exception &e)
+                    else if (dynamic_cast<ResqmlIjkGridSubRepToVtkExplicitStructuredGrid*>(_nodeIdToMapper[w_nodeId]) != nullptr)
                     {
-                        vtkOutputWindowDisplayErrorText(("Error in wellboremarker unload for uuid: " + uuid_unselect + "\n" + e.what()).c_str());
+                        uuid_supporting_grid = static_cast<ResqmlIjkGridSubRepToVtkExplicitStructuredGrid*>(_nodeIdToMapper[w_nodeId])->unregisterToMapperSupportingGrid();
                     }
-                }
-                else if (dynamic_cast<RESQML2_NS::SubRepresentation *>(result) != nullptr)
-                {
-                    try
-                    {
-                        if (this->nodeId_to_mapper.find(selection) != this->nodeId_to_mapper.end())
-                        {
-                            std::string uuid_supporting_grid = "";
-                            if (dynamic_cast<ResqmlUnstructuredGridSubRepToVtkUnstructuredGrid *>(this->nodeId_to_mapper[selection]) != nullptr)
-                            {
-                                uuid_supporting_grid = static_cast<ResqmlUnstructuredGridSubRepToVtkUnstructuredGrid *>(this->nodeId_to_mapper[selection])->unregisterToMapperSupportingGrid();
-                            }
-                            else if (dynamic_cast<ResqmlIjkGridSubRepToVtkExplicitStructuredGrid *>(this->nodeId_to_mapper[selection]) != nullptr)
-                            {
-                                uuid_supporting_grid = static_cast<ResqmlIjkGridSubRepToVtkExplicitStructuredGrid *>(this->nodeId_to_mapper[selection])->unregisterToMapperSupportingGrid();
-                            }
-                            // erase representation
-                            this->nodeId_to_mapper.erase(selection);
-                            // erase supporting grid ??
-                            const int node_parent = tmp_assembly->FindFirstNodeWithName(("_" + uuid_supporting_grid).c_str());
-                            if ((this->nodeId_to_mapper.find(node_parent) != this->nodeId_to_mapper.end()))
-                            {
-                                if (this->current_selection.find(node_parent) == this->current_selection.end())
-                                {
-                                    if (static_cast<ResqmlWellboreMarkerFrameToVtkPartitionedDataSet *>(this->nodeId_to_mapper[node_parent])->subRepLinkedCount() == 0)
-                                    {
-                                        this->nodeId_to_mapper.erase(node_parent);
-                                    }
-                                }
-                            }
-                        }
-                        else
-                        {
-                            vtkOutputWindowDisplayErrorText(("Error in deselection for uuid: " + uuid_unselect + "\n").c_str());
-                        }
-                    }
-                    catch (const std::exception &e)
-                    {
-                        vtkOutputWindowDisplayErrorText(("Error in subrepresentation unload for uuid: " + uuid_unselect + "\n" + e.what()).c_str());
-                    }
+                    delete _nodeIdToMapper[w_nodeId];
+                    _nodeIdToMapper.erase(w_nodeId);
                 }
                 else
                 {
-                    if (this->nodeId_to_mapper.find(selection) != this->nodeId_to_mapper.end())
+                    vtkOutputWindowDisplayErrorText(("Error in deselection for uuid: " + uuid_unselect + "\n").c_str());
+                }
+            }
+            catch (const std::exception& e)
+            {
+                vtkOutputWindowDisplayErrorText(("Error in subrepresentation unload for uuid: " + uuid_unselect + "\n" + e.what()).c_str());
+            }
+        }
+        else if (valueType == TreeViewNodeType::Representation ||
+            valueType == TreeViewNodeType::WellboreTrajectory ||
+            valueType == TreeViewNodeType::WellboreFrame ||
+            valueType == TreeViewNodeType::WellboreChannel ||
+            valueType == TreeViewNodeType::WellboreMarkerFrame
+            )
+        {
+            try
+            {
+                if (_nodeIdToMapper.find(w_nodeId) != _nodeIdToMapper.end())
+                {
+                    delete _nodeIdToMapper[w_nodeId];
+                    _nodeIdToMapper.erase(w_nodeId);
+                }
+            }
+            catch (const std::exception& e)
+            {
+                vtkOutputWindowDisplayErrorText(("Error for unload uuid: " + uuid_unselect + "\n" + e.what()).c_str());
+            }
+        }
+         else if (valueType == TreeViewNodeType::Perforation
+            )
+            // delete child of CommonAbstractObjectSetToVtkPartitionedDataSetSet
+            {
+                const int w_nodeParent = w_Assembly->GetParent(w_nodeId);
+                try
+                {
+                    if (_nodeIdToMapperSet.find(w_nodeParent) != _nodeIdToMapperSet.end())
                     {
-                        if (static_cast<ResqmlWellboreMarkerFrameToVtkPartitionedDataSet *>(this->nodeId_to_mapper[selection])->subRepLinkedCount() == 0)
-                        {
-                            this->nodeId_to_mapper.erase(selection);
-                        }
+                        const char* w_connection;
+                        _output->GetDataAssembly()->GetAttribute(w_nodeId, "connection", w_connection);
+                        _nodeIdToMapperSet[w_nodeParent]->removeCommonAbstractObjectToVtkPartitionedDataSet(w_connection);
                     }
+                }
+                catch (const std::exception& e)
+                {
+                    vtkOutputWindowDisplayErrorText(("Error in WellboreCompletion unload for uuid: " + uuid_unselect + "\n" + e.what()).c_str());
+                }
+                }
+         else if (valueType == TreeViewNodeType::WellboreCompletion
+             )
+             {
+                 try
+                 {
+                     if (_nodeIdToMapperSet.find(w_nodeId) != _nodeIdToMapperSet.end())
+                     {
+                         delete _nodeIdToMapperSet[w_nodeId];
+                         _nodeIdToMapperSet.erase(w_nodeId);
+                     }
+                 }
+                 catch (const std::exception& e)
+                 {
+                     vtkOutputWindowDisplayErrorText(("Error in WellboreCompletion unload for uuid: " + uuid_unselect + "\n" + e.what()).c_str());
+                 }
+                 }
+    }
+
+}
+
+vtkPartitionedDataSetCollection *ResqmlDataRepositoryToVtkPartitionedDataSetCollection::getVtkPartitionedDatasSetCollection(const double time, const int nbProcess, const int processId)
+{
+    deleteMapper(time);
+    // vtkParitionedDataSetCollection - hierarchy - build
+    // foreach selection node init objetc
+    for (const int node_selection : this->_currentSelection)
+    {
+        int value_type;
+        _output->GetDataAssembly()->GetAttribute(node_selection, "type", value_type);
+        TreeViewNodeType w_type = static_cast<TreeViewNodeType>(value_type);
+        const std::string uuid = std::string(_output->GetDataAssembly()->GetNodeName(node_selection)).substr(1);
+
+        if (w_type == TreeViewNodeType::WellboreCompletion)
+        {
+            // initialize mapper
+            if (_nodeIdToMapperSet.find(node_selection) == _nodeIdToMapperSet.end())
+            {
+                initMapper(w_type, node_selection /*uuid*/, nbProcess, processId);
+            }
+
+         }
+        else {
+            // initialize mapper
+            if (_nodeIdToMapper.find(node_selection) == _nodeIdToMapper.end())
+            {
+                initMapper(w_type, node_selection /*uuid*/, nbProcess, processId);
+            }
+        }
+    }
+
+    unsigned int index = 0; // index for PartionedDatasSet
+    // foreach selection node load object
+    for (const int node_selection : this->_currentSelection)
+    {
+        int value_type;
+        _output->GetDataAssembly()->GetAttribute(node_selection, "type", value_type);
+        TreeViewNodeType w_type = static_cast<TreeViewNodeType>(value_type);
+        const std::string uuid = std::string(_output->GetDataAssembly()->GetNodeName(node_selection)).substr(1);
+
+        if (w_type == TreeViewNodeType::WellboreCompletion)
+        {
+            // load mapper representation
+            if (_nodeIdToMapperSet.find(node_selection) != _nodeIdToMapperSet.end())
+            {
+                _nodeIdToMapperSet[node_selection]->loadVtkObject();
+                for (auto partition : _nodeIdToMapperSet[node_selection]->getMapperSet())
+                {
+                    _output->SetPartitionedDataSet(index, partition->getOutput());
+                    GetAssembly()->AddDataSetIndex(node_selection, index);
+                    _output->GetMetaData(index++)->Set(vtkCompositeDataSet::NAME(), partition->getTitle() + '(' + partition->getUuid() + ')');
                 }
             }
         }
-    }
-
-    // foreach selection node
-    for (const int node_selection : this->current_selection)
-    {
-        int value_type;
-        tmp_assembly->GetAttribute(node_selection, "type", value_type);
-        const std::string uuid = std::string(tmp_assembly->GetNodeName(node_selection)).substr(1);
-        // initialize mapper
-        if (this->nodeId_to_mapper.find(node_selection) == this->nodeId_to_mapper.end())
+        else if (w_type == TreeViewNodeType::Representation || 
+            w_type == TreeViewNodeType::SubRepresentation || 
+            w_type == TreeViewNodeType::Properties ||
+            w_type == TreeViewNodeType::WellboreTrajectory ||
+            w_type == TreeViewNodeType::WellboreFrame ||
+            w_type == TreeViewNodeType::WellboreChannel ||
+            w_type == TreeViewNodeType::WellboreMarkerFrame ||
+            w_type == TreeViewNodeType::WellboreMarker ||
+            w_type == TreeViewNodeType::TimeSeries 
+            )
         {
-            initMapper(static_cast<TreeViewNodeType>(value_type), node_selection /*uuid*/, nbProcess, processId);
-        }
-
-        // load mapper representation
-        if (this->nodeId_to_mapper.find(node_selection) != this->nodeId_to_mapper.end())
-        {
-            if (this->nodeId_to_mapper[node_selection]->getOutput()->GetNumberOfPartitions() < 1)
+            // load mapper representation
+            if (_nodeIdToMapper.find(node_selection) != _nodeIdToMapper.end())
+            {
+                if (_nodeIdToMapper[node_selection]->getOutput()->GetNumberOfPartitions() < 1)
+                {
+                    loadMapper(w_type, node_selection /*uuid*/, time);
+                }
+                _output->SetPartitionedDataSet(index, _nodeIdToMapper[node_selection]->getOutput());
+                GetAssembly()->AddDataSetIndex(node_selection, index);
+                _output->GetMetaData(index++)->Set(vtkCompositeDataSet::NAME(), _nodeIdToMapper[node_selection]->getTitle() + '(' + _nodeIdToMapper[node_selection]->getUuid() + ')');
+            }
+            else
             {
                 loadMapper(static_cast<TreeViewNodeType>(value_type), node_selection /*uuid*/, time);
             }
-            this->output->SetPartitionedDataSet(index, this->nodeId_to_mapper[node_selection]->getOutput());
-            this->output->GetMetaData(index++)->Set(vtkCompositeDataSet::NAME(), this->nodeId_to_mapper[node_selection]->getTitle() + '(' + this->nodeId_to_mapper[node_selection]->getUuid() + ')');
-        }
-        else
-        {
-            loadMapper(static_cast<TreeViewNodeType>(value_type), node_selection /*uuid*/, time);
         }
     }
 
-    this->output->Modified();
-    return this->output;
+    _output->Modified();
+    return _output;
 }
 
 void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::setMarkerOrientation(bool orientation)
@@ -1137,4 +1277,3 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::setMarkerSize(int si
 {
     markerSize = size;
 }
-

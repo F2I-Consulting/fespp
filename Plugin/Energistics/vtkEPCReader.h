@@ -143,6 +143,7 @@ private:
 
 	// files
 	vtkSmartPointer<vtkStringArray> Files;
+	char* FileName;
 	std::set<std::string> FilesList;
 	std::set<std::string> FileNamesLoaded;
 

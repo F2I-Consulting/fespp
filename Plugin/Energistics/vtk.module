@@ -10,5 +10,6 @@ DEPENDS
   VTK::FiltersGeneral
   VTK::FiltersSources
   VTK::ParallelCore
+  VTK::RenderingCore
 PRIVATE_DEPENDS
   VTK::vtksys

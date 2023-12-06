@@ -21,8 +21,10 @@ under the License.
 
 #include <vector>
 
-#include "Mapping/CommonAbstractObjectToVtkPartitionedDataSet.h"
+#include "Mapping/CommonAbstractObjectSetToVtkPartitionedDataSetSet.h"
 #include "Mapping/WitsmlWellboreCompletionPerforationToVtkPolyData.h"
+
+#include "../Tools/enum.h"
 
 namespace WITSML2_1_NS
 {
@@ -34,30 +36,21 @@ namespace resqml
 	class WellboreTrajectoryRepresentation;
 }
 
-class WitsmlWellboreCompletionToVtkPartitionedDataSet : public CommonAbstractObjectToVtkPartitionedDataSet
+class WitsmlWellboreCompletionToVtkPartitionedDataSet : public CommonAbstractObjectSetToVtkPartitionedDataSetSet
 {
 public:
 	/**
 	 * Constructor
 	 */
-	WitsmlWellboreCompletionToVtkPartitionedDataSet(const WITSML2_1_NS::WellboreCompletion *completion, int proc_number = 0, int max_proc = 1);
+	WitsmlWellboreCompletionToVtkPartitionedDataSet(const WITSML2_1_NS::WellboreCompletion* p_completion, int p_procNumber = 0, int p_maxProc = 1);
 
-	/**
-	 * load vtkDataSet with resqml data
-	 */
-	void loadVtkObject() override;
-
-	void addPerforation(const std::string& connectionuid, const std::string& name);
-	std::vector<WitsmlWellboreCompletionPerforationToVtkPolyData*> getPerforations();
+	void addPerforation(const std::string& p_connectionuid, const std::string& p_name, const double p_skin, const WellboreStatut p_statut);
 
 protected:
-	const WITSML2_1_NS::WellboreCompletion* getResqmlData() const;
-	const resqml2::WellboreTrajectoryRepresentation* getWellboreTrajectory() const;
-
-	const resqml2::WellboreTrajectoryRepresentation * wellboreTrajectory;
+	const resqml2::WellboreTrajectoryRepresentation* _wellboreTrajectory;
 
 private:
-	std::vector<WitsmlWellboreCompletionPerforationToVtkPolyData*> perforations;
+	//std::vector<WitsmlWellboreCompletionPerforationToVtkPolyData*> perforations;
 
 };
 #endif

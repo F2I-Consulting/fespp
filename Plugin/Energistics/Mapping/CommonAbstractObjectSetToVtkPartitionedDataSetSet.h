@@ -16,8 +16,8 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 -----------------------------------------------------------------------*/
-#ifndef __CommonAbstractObjectTovtkPartitionedDataSet__h__
-#define __CommonAbstractObjectTovtkPartitionedDataSet__h__
+#ifndef __CommonAbstractObjectSetToVtkPartitionedDataSetSet__h__
+#define __CommonAbstractObjectSetToVtkPartitionedDataSetSet__h__
 
 // include system
 #include <string>
@@ -29,53 +29,43 @@ under the License.
 // include F2i-consulting Energistics Standards API
 #include <fesapi/common/AbstractObject.h>
 
+// include F2i-consulting Energistics ParaView Plugin
+#include "Mapping/CommonAbstractObjectToVtkPartitionedDataSet.h"
+
 /** @brief	transform a RESQML abstract object to vtkPartitionedDataSet
  */
-class CommonAbstractObjectToVtkPartitionedDataSet
+class CommonAbstractObjectSetToVtkPartitionedDataSetSet
 {
 public:
-	/**
-	 * Constructor
-	 */
-	CommonAbstractObjectToVtkPartitionedDataSet(const COMMON_NS::AbstractObject *abstract_object, int proc_number = 0, int max_proc = 1);
+	// Constructor
+	CommonAbstractObjectSetToVtkPartitionedDataSetSet(const COMMON_NS::AbstractObject * p_abstractObject, int p_procNumber = 0, int p_maxProc = 1);
 
-	/**
-	 * Destructor
-	 */
-	virtual ~CommonAbstractObjectToVtkPartitionedDataSet() = default;
-
-	/**
-	 * load VtkPartitionedDataSet with resqml data
-	 */
-	virtual void loadVtkObject() = 0;
-
-	/**
-	 * return the vtkPartitionedDataSet of resqml object
-	 */
-	vtkSmartPointer<vtkPartitionedDataSet> getOutput() const { return vtkData; }
+	// destructor
+	~CommonAbstractObjectSetToVtkPartitionedDataSetSet();
 
 	/**
 	*
 	*/
-	std::string getUuid() const { return abs_uuid; };
-	std::string getTitle() const { return abs_title; };
-	void setUuid(std::string new_uuid) { abs_uuid = new_uuid; }
-	void setTitle(std::string new_title) { abs_title = new_title; }
-	
+	std::string getUuid() const { return _uuid; };
+	std::string getTitle() const { return _title; };
+
+	void loadVtkObject();
+	void removeCommonAbstractObjectToVtkPartitionedDataSet(const std::string& p_id);
+	std::vector<CommonAbstractObjectToVtkPartitionedDataSet*> getMapperSet() { return _mapperSet; }
+
+	bool existUuid(const std::string& p_id);
 
 protected:
+	const COMMON_NS::AbstractObject * _resqmlData;
+	
+	// for Multithreading
+	int _procNumber;
+	int _maxProc;
 
-	const COMMON_NS::AbstractObject * getResqmlData() const { return resqmlData; }
+	std::string _uuid;
+	std::string _title;
 
-	int procNumber;
-	int maxProc;
-
-	const COMMON_NS::AbstractObject * resqmlData;
-
-	vtkSmartPointer<vtkPartitionedDataSet> vtkData;
-
-	std::string abs_uuid;
-	std::string abs_title;
+	std::vector<CommonAbstractObjectToVtkPartitionedDataSet*> _mapperSet;
 
 };
 #endif

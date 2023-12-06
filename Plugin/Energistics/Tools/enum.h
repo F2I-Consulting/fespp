@@ -24,15 +24,27 @@ under the License.
 
 enum class TreeViewNodeType {
 	Unknown,
+	Folder,
 	Representation,
+	SubRepresentation,
 	Properties,
 	WellboreTrajectory,
 	WellboreFrame,
 	WellboreChannel,
+	WellboreMarkerFrame,
 	WellboreMarker,
 	WellboreCompletion,
 	TimeSeries,
 	Perforation,
+};
+
+enum class WellboreStatut {
+	OilInjecter,
+	OilProducer,
+	WaterInjecter,
+	WaterProducer,
+	GazInjecter,
+	GazProducer,
 };
 
 

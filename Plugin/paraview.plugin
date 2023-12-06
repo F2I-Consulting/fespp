@@ -4,6 +4,8 @@ DESCRIPTION
   F2i-consulting Energistics Standard Paraview Plugin Reader
 REQUIRES_MODULES
   ParaView::pqComponents
+  ParaView::RemotingViews
   VTK::CommonSystem
   VTK::CommonCore
+  VTK::RenderingCore
   

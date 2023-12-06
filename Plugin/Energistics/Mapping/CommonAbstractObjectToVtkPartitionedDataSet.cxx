@@ -28,8 +28,3 @@ CommonAbstractObjectToVtkPartitionedDataSet::CommonAbstractObjectToVtkPartitione
 	this->abs_uuid = this->getResqmlData()->getUuid();
 	this->abs_title = this->getResqmlData()->getTitle();
 }
-
-void CommonAbstractObjectToVtkPartitionedDataSet::unloadVtkObject()
-{
-	this->vtkData = vtkSmartPointer<vtkPartitionedDataSet>::New();
-}

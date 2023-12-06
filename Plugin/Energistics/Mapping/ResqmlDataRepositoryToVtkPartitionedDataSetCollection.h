@@ -46,6 +46,7 @@ namespace resqml2
 }
 
 class ResqmlAbstractRepresentationToVtkPartitionedDataSet;
+class CommonAbstractObjectSetToVtkPartitionedDataSetSet;
 class CommonAbstractObjectToVtkPartitionedDataSet;
 
 /**
@@ -57,7 +58,7 @@ public:
 	ResqmlDataRepositoryToVtkPartitionedDataSetCollection();
 	~ResqmlDataRepositoryToVtkPartitionedDataSetCollection();
 	// --------------- PART: TreeView ---------------------
-	vtkDataAssembly *GetAssembly() { return output->GetDataAssembly(); }
+	vtkDataAssembly *GetAssembly() { return _output->GetDataAssembly(); }
 
 	//---------------------------------
 
@@ -99,16 +100,30 @@ private:
 	void selectNodeIdParent(int node);
 	void selectNodeIdChildren(int node);
 
-	void initMapper(const TreeViewNodeType type, const int node_id/*const std::string& uuid*/, const int nbProcess, const int processId);
-	void loadMapper(const TreeViewNodeType type, const int node_id/*const std::string& uuid*/, double time);
+	/**
+	* delete _oldSelection mapper
+	*/
+	void deleteMapper(double p_time);
+	/**
+	* initialize _currentSelection mapper
+	*/
+	void initMapper(const TreeViewNodeType type, const int node_id, const int nbProcess, const int processId);
+	/**
+	* load vtkObject mapper
+	*/
+	void loadMapper(const TreeViewNodeType type, const int node_id, double time);
+	/**
+	* Attach vtkObject to _output
+	*/
+	void attachMapper();
 
 	// This function replaces the VTK function vtkDataAssembly::MakeValidNodeName(),
 	// which has a bug in the sorted_valid_chars array. The '.' character is placed
 	// before the '-' character, which is incorrect. This function uses a valid_chars
 	// array that correctly sorts the characters. The function checks if each character
-	// in the input string is valid, and adds it to the output string if it is valid.
-	// If the first character of the output string is not valid, an underscore is added
-	// to the beginning of the output string. This function is designed to create a valid
+	// in the input string is valid, and adds it to the _output string if it is valid.
+	// If the first character of the _output string is not valid, an underscore is added
+	// to the beginning of the _output string. This function is designed to create a valid
 	// node name from a given string.
 	std::string MakeValidNodeName(const char* name);
 
@@ -117,15 +132,16 @@ private:
 
 	common::DataObjectRepository *repository;
 
-	vtkSmartPointer<vtkPartitionedDataSetCollection> output;
+	vtkSmartPointer<vtkPartitionedDataSetCollection> _output;
 
-	std::map<int, CommonAbstractObjectToVtkPartitionedDataSet *> nodeId_to_mapper; // index of VtkDataAssembly to CommonAbstractObjectToVtkPartitionedDataSet
+	std::map<int, CommonAbstractObjectToVtkPartitionedDataSet*> _nodeIdToMapper; // index of VtkDataAssembly to CommonAbstractObjectToVtkPartitionedDataSet
+	std::map<int, CommonAbstractObjectSetToVtkPartitionedDataSetSet*> _nodeIdToMapperSet; // index of VtkDataAssembly to CommonAbstractObjectSetToVtkPartitionedDataSetSet
 
 	//\/          uuid             title            index        prop_uuid
-	std::map<std::string, std::map<std::string, std::map<double, std::string>>> timeSeries_uuid_and_title_to_index_and_properties_uuid;
+	std::map<std::string, std::map<std::string, std::map<double, std::string>>> _timeSeriesUuidAndTitleToIndexAndPropertiesUuid;
 
-	std::set<int> current_selection;
-	std::set<int> old_selection;
+	std::set<int> _currentSelection;
+	std::set<int> _oldSelection;
 
 	// time step values
 	std::vector<double> times_step;

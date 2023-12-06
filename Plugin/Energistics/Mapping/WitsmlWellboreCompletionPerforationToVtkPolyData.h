@@ -22,6 +22,7 @@ under the License.
 #include <fesapi/resqml2/WellboreTrajectoryRepresentation.h>
 
 #include "Mapping/CommonAbstractObjectToVtkPartitionedDataSet.h"
+#include "../Tools/enum.h"
 
 #include <vtkPolyData.h>
 
@@ -31,7 +32,7 @@ public:
 	/**
 	 * Constructor
 	 */
-	WitsmlWellboreCompletionPerforationToVtkPolyData(const resqml2::WellboreTrajectoryRepresentation* wellboreTrajectory, const WITSML2_1_NS::WellboreCompletion *WellboreCompletion, const std::string& connectionuid, const std::string& title, int proc_number = 0, int max_proc = 1);
+	WitsmlWellboreCompletionPerforationToVtkPolyData(const resqml2::WellboreTrajectoryRepresentation* wellboreTrajectory, const WITSML2_1_NS::WellboreCompletion *WellboreCompletion, const std::string& connectionuid, const std::string& title, const double skin, const WellboreStatut statut, const int proc_number = 0, int max_proc = 1);
 
 	/**
  * load vtkDataSet with resqml data
@@ -48,6 +49,7 @@ public:
 	
 private:
 	void addSkin();
+	void addStatus();
 
 protected:
 
@@ -55,6 +57,8 @@ protected:
 	const resqml2::WellboreTrajectoryRepresentation* wellboreTrajectory;
 	std::string title;
 	std::string connectionuid;
+	double skin;
+	WellboreStatut statut;
 	uint64_t index;
 
 	//vtkSmartPointer<vtkPolyData> vtkData;

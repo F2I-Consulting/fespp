@@ -32,21 +32,29 @@ under the License.
 #include <vtkDataAssembly.h>
 #include <vtkPoints.h>
 #include <vtkInformation.h>
+#include <vtkUnsignedIntArray.h>
+#include <vtkColorTransferFunction.h>
+#include <vtkLookupTable.h>
+#include <vtkVariantArray.h>
 
 #include <fesapi/witsml2_1/WellboreCompletion.h>
 #include <fesapi/resqml2/MdDatum.h>
 #include <fesapi/resqml2/WellboreFeature.h>
 #include <fesapi/resqml2/WellboreInterpretation.h>
 #include <fesapi/resqml2/WellboreTrajectoryRepresentation.h>
+#include <fesapi/resqml2/AbstractLocal3dCrs.h>
+#include <fesapi/eml2/GraphicalInformationSet.h>
 
-WitsmlWellboreCompletionPerforationToVtkPolyData::WitsmlWellboreCompletionPerforationToVtkPolyData(const resqml2::WellboreTrajectoryRepresentation* wellboreTrajectory, const WITSML2_1_NS::WellboreCompletion *wellboreCompletion, const std::string &connectionuid, const std::string &title, int proc_number, int max_proc)
+WitsmlWellboreCompletionPerforationToVtkPolyData::WitsmlWellboreCompletionPerforationToVtkPolyData(const resqml2::WellboreTrajectoryRepresentation* wellboreTrajectory, const WITSML2_1_NS::WellboreCompletion *wellboreCompletion, const std::string &connectionuid, const std::string &title, const double skin, const WellboreStatut statut, int proc_number, int max_proc)
 	: CommonAbstractObjectToVtkPartitionedDataSet(wellboreCompletion,
 		proc_number,
 		max_proc),
 	wellboreCompletion(wellboreCompletion),
 	wellboreTrajectory(wellboreTrajectory),
 	title(title),
-	connectionuid(connectionuid)
+	connectionuid(connectionuid),
+	skin(skin),
+	statut(statut)
 {
 	// Check that the completion is valid.
 	if (wellboreCompletion == nullptr)
@@ -70,7 +78,7 @@ WitsmlWellboreCompletionPerforationToVtkPolyData::WitsmlWellboreCompletionPerfor
 	this->setUuid(connectionuid);
 	this->setTitle(title);
 
-	this->loadVtkObject();
+	//this->loadVtkObject();
 }
 
 void WitsmlWellboreCompletionPerforationToVtkPolyData::loadVtkObject()
@@ -128,7 +136,7 @@ void WitsmlWellboreCompletionPerforationToVtkPolyData::loadVtkObject()
 			std::unique_ptr<double[]> xyzPoints(new double[pointCount * 3]);
 			this->wellboreTrajectory->getXyzPointsOfAllPatchesInGlobalCrs(xyzPoints.get());
 
-			// Create a list of intermediate MD points.
+						// Create a list of intermediate MD points.
 			std::vector<std::array<double, 3>> intermediateMdPoints;
 			for (size_t i = 0; i < pointCount; ++i)
 			{
@@ -138,20 +146,21 @@ void WitsmlWellboreCompletionPerforationToVtkPolyData::loadVtkObject()
 				}
 			}
 
+			const double depthOriented = wellboreTrajectory->getLocalCrs(0)->isDepthOriented() ? -1 : 1;
 			// Create a vtkPoints object.
 			vtkSmartPointer<vtkPoints> vtkPts = vtkSmartPointer<vtkPoints>::New();
 
 			// Add the top point.
-			vtkPts->InsertNextPoint(xyzTrajValues[0], xyzTrajValues[1], xyzTrajValues[2]);
+			vtkPts->InsertNextPoint(xyzTrajValues[0], xyzTrajValues[1], xyzTrajValues[2] * depthOriented);
 
 			// Add the intermediate points.
 			for (auto const &point : intermediateMdPoints)
 			{
-				vtkPts->InsertNextPoint(point[0], point[1], point[2]);
+				vtkPts->InsertNextPoint(point[0], point[1], point[2] * depthOriented);
 			}
 
 			// Add the base point.
-			vtkPts->InsertNextPoint(xyzTrajValues[3], xyzTrajValues[4], xyzTrajValues[5]);
+			vtkPts->InsertNextPoint(xyzTrajValues[3], xyzTrajValues[4], xyzTrajValues[5] * depthOriented);
 
 			// Create a vtkCellArray object.
 			vtkSmartPointer<vtkCellArray> lines = vtkSmartPointer<vtkCellArray>::New();
@@ -181,44 +190,61 @@ void WitsmlWellboreCompletionPerforationToVtkPolyData::loadVtkObject()
 			this->vtkData->Modified();
 
 			this->addSkin();
+			this->addStatus();
 
 }
 
 void WitsmlWellboreCompletionPerforationToVtkPolyData::addSkin() {
 
-	int skin = 0;
-	auto extraMetadatas = this->wellboreCompletion->getConnectionExtraMetadata(WITSML2_1_NS::WellboreCompletion::WellReservoirConnectionType::PERFORATION, this->index, "Petrel:Skin0");
-	if (extraMetadatas.size() > 0)
-	{
-		try {
-			skin = std::stod(extraMetadatas[0]);
-			vtkSmartPointer<vtkDoubleArray> array = vtkSmartPointer<vtkDoubleArray>::New();
-			array->SetName("Skin");
-			array->InsertNextValue(skin);
+		vtkSmartPointer<vtkDoubleArray> array = vtkSmartPointer<vtkDoubleArray>::New();
+		array->SetName("Skin");
+		array->InsertNextValue(this->skin);
 
-			this->vtkData->GetPartition(0)->GetFieldData()->AddArray(array);
-		}
-		catch (const std::exception& e) {
-			vtkOutputWindowDisplayErrorText(("skin value: " + extraMetadatas[0] + " is not numeric").c_str());
-		}
-	}
-	else {
-		extraMetadatas = this->wellboreCompletion->getConnectionExtraMetadata(WITSML2_1_NS::WellboreCompletion::WellReservoirConnectionType::PERFORATION, this->index, "Sismage-CIG:Skin");
-		if (extraMetadatas.size() > 0)
-		{
-			try {
-				skin = std::stod(extraMetadatas[0]);
-				vtkSmartPointer<vtkDoubleArray> array = vtkSmartPointer<vtkDoubleArray>::New();
-				array->SetName("Skin");
-				array->InsertNextValue(skin);
-
-				this->vtkData->GetPartition(0)->GetFieldData()->AddArray(array);
-			}
-			catch (const std::exception& e) {
-				vtkOutputWindowDisplayErrorText(("skin value: " + extraMetadatas[0] + " is not numeric").c_str());
-			}
-		}
-	}
-
-
+		this->vtkData->GetPartition(0)->GetFieldData()->AddArray(array);
 }
+
+void WitsmlWellboreCompletionPerforationToVtkPolyData::addStatus() {
+	auto repo = this->getResqmlData()->getRepository();
+	std::vector<eml2::GraphicalInformationSet*> gisSet = repo->getDataObjects<eml2::GraphicalInformationSet>();
+	for (auto gis : gisSet) {
+		gis->hasDefaultColor(this->getResqmlData());
+
+		//vtkOutputWindowDisplayText(std::string(gis->hasDefaultColor(this->getResqmlData()) ? "true\n" : "false\n").c_str());
+	}
+
+			vtkSmartPointer<vtkLookupTable> colorTable = vtkSmartPointer<vtkLookupTable>::New();
+			colorTable->SetTableRange(0, 5);
+			colorTable->Build();
+
+			colorTable->SetTableValue(0, 1.0, 0.0, 0.0);
+			colorTable->SetTableValue(1, 1.0, 0.5, 0.0);
+			colorTable->SetTableValue(2, 0.0, 0.0, 1.0);
+			colorTable->SetTableValue(3, 0.0, 0.5, 1.0);
+			colorTable->SetTableValue(4, 0.0, 1.0, 0.5);
+			colorTable->SetTableValue(5, 0.0, 1.0, 0.0);
+			
+
+			vtkNew<vtkVariantArray> values;
+			values->InsertNextValue(vtkVariant("Oil Injector"));
+			values->InsertNextValue(vtkVariant("Oil Producer"));
+			values->InsertNextValue(vtkVariant("Water Injector"));
+			values->InsertNextValue(vtkVariant("Water Producer"));
+			values->InsertNextValue(vtkVariant("Gaz Producer"));
+			values->InsertNextValue(vtkVariant("Gaz Producer"));
+
+			for (int i = 0; i < values->GetNumberOfTuples(); ++i)
+			{
+				colorTable->SetAnnotation(values->GetValue(i), values->GetValue(i).ToString());
+			}
+			
+			vtkSmartPointer<vtkIntArray> wellboreTypePoints = vtkSmartPointer<vtkIntArray>::New();
+			wellboreTypePoints->SetName("WellboreTypes");
+			for (vtkIdType i = 0; i < this->vtkData->GetPartition(0)->GetNumberOfPoints(); ++i) {
+
+				wellboreTypePoints->InsertNextValue(static_cast<int>(this->statut));
+			}
+			//this->vtkData->GetPartition(0)->GetPointData()->AddArray(wellboreTypePoints);
+			//this->vtkData->GetPartition(0)->GetPointData()->SetActiveScalars("wellboreTypePoints");
+			//this->vtkData->GetPartition(0)->GetPointData()->GetScalars()->SetLookupTable(colorTable);
+}
+
