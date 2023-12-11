@@ -4,11 +4,13 @@ cmake_minimum_required(VERSION 3.14.0)
 cmake_policy(SET CMP0048 NEW)
 
 project(Fespp
-	VERSION 3.0.0
+	VERSION 3.1.0
 	DESCRIPTION "Paraview plugin for importing EPC documents"
 	HOMEPAGE_URL "https://github.com/F2I-Consulting/fespp"
 	LANGUAGES C CXX
 )
+
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake/modules)
 
 # These five lines are required in order to set up installation directories
 # (which also control build directory locations) and enable shared builds
