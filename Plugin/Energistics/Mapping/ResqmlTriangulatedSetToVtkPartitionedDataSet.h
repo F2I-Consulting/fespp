@@ -39,23 +39,23 @@ class ResqmlTriangulatedSetToVtkPartitionedDataSet : public ResqmlAbstractRepres
 {
 public:
 	/**
-	* Constructor
-	*/
-	explicit ResqmlTriangulatedSetToVtkPartitionedDataSet(const RESQML2_NS::TriangulatedSetRepresentation *triangulated, int proc_number = 0, int max_proc = 1);
-	
+	 * Constructor
+	 */
+	explicit ResqmlTriangulatedSetToVtkPartitionedDataSet(const RESQML2_NS::TriangulatedSetRepresentation *triangulated, int p_procNumber = 0, int p_maxProc = 1);
+
 	/**
-	* load vtkDataSet with RESQML data
-	*/
+	 * load vtkDataSet with RESQML data
+	 */
 	void loadVtkObject() override;
 
 	/**
 	 * add a RESQML property to vtkDataSet
 	 */
-	void addDataArray(const std::string& uuid);
+	void addDataArray(const std::string &p_uuid);
 
 protected:
-	const RESQML2_NS::TriangulatedSetRepresentation * getResqmlData() const;
+	const RESQML2_NS::TriangulatedSetRepresentation *getResqmlData() const;
 
-	std::map<int, ResqmlTriangulatedToVtkPolyData*> patchIndex_to_ResqmlTriangulated;									// index of VtkDataAssembly to RESQML UUID
+	std::map<int, ResqmlTriangulatedToVtkPolyData *> patchIndex_to_ResqmlTriangulated; // index of VtkDataAssembly to RESQML UUID
 };
 #endif

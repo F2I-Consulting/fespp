@@ -44,7 +44,7 @@ ResqmlPropertyToVtkDataArray::ResqmlPropertyToVtkDataArray(const RESQML2_NS::Abs
 														   uint32_t jCellCount,
 														   uint32_t kCellCount,
 														   uint32_t initKIndex,
-															int patch_index)
+														   int patch_index)
 {
 	int nbElement = 0;
 
@@ -143,7 +143,7 @@ ResqmlPropertyToVtkDataArray::ResqmlPropertyToVtkDataArray(const RESQML2_NS::Abs
 ResqmlPropertyToVtkDataArray::ResqmlPropertyToVtkDataArray(resqml2::AbstractValuesProperty const *valuesProperty,
 														   long cellCount,
 														   long pointCount,
-															int patch_index)
+														   int patch_index)
 {
 	int nbElement = 0;
 
@@ -170,8 +170,7 @@ ResqmlPropertyToVtkDataArray::ResqmlPropertyToVtkDataArray(resqml2::AbstractValu
 		const unsigned int totalHDFElementcount = nbElement * elementCountPerValue;
 		if (totalHDFElementcount != valuesProperty->getValuesCountOfPatch(patch_index))
 		{
-			throw std::invalid_argument("Property values count of hdfDataset \"" + std::to_string(valuesProperty->getValuesCountOfPatch(patch_index))
-				+ "\" does not match the indexable element count in the supporting representation\"" + std::to_string(totalHDFElementcount) + "\"");
+			throw std::invalid_argument("Property values count of hdfDataset \"" + std::to_string(valuesProperty->getValuesCountOfPatch(patch_index)) + "\" does not match the indexable element count in the supporting representation\"" + std::to_string(totalHDFElementcount) + "\"");
 		}
 
 		double *valuesDoubleSet = new double[totalHDFElementcount]; // deleted by VTK data vtkSmartPointer

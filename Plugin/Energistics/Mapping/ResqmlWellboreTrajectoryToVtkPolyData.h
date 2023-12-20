@@ -30,18 +30,17 @@ class ResqmlWellboreTrajectoryToVtkPolyData : public ResqmlAbstractRepresentatio
 {
 public:
 	/**
-	* Constructor
-	*/
-	explicit ResqmlWellboreTrajectoryToVtkPolyData(const resqml2::WellboreTrajectoryRepresentation *wellbore, int proc_number = 0, int max_proc = 1);
-	
+	 * Constructor
+	 */
+	explicit ResqmlWellboreTrajectoryToVtkPolyData(const resqml2::WellboreTrajectoryRepresentation *wellbore, int p_procNumber = 0, int p_maxProc = 1);
+
 	/**
-	* load vtkDataSet with resqml data
-	*/
+	 * load vtkDataSet with resqml data
+	 */
 	void loadVtkObject() override;
-	
 
 protected:
-	const resqml2::WellboreTrajectoryRepresentation* getResqmlData() const;
+	const resqml2::WellboreTrajectoryRepresentation *getResqmlData() const;
 
 private:
 };

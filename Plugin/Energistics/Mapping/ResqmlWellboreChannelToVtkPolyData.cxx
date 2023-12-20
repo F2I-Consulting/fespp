@@ -31,37 +31,37 @@ under the License.
 #include <fesapi/resqml2/AbstractLocal3dCrs.h>
 
 //----------------------------------------------------------------------------
-ResqmlWellboreChannelToVtkPolyData::ResqmlWellboreChannelToVtkPolyData(const RESQML2_NS::WellboreFrameRepresentation *frame, const RESQML2_NS::AbstractValuesProperty *property, const std::string &uuid, int proc_number, int max_proc)
+ResqmlWellboreChannelToVtkPolyData::ResqmlWellboreChannelToVtkPolyData(const RESQML2_NS::WellboreFrameRepresentation *frame, const RESQML2_NS::AbstractValuesProperty *property, const std::string &p_uuid, int p_procNumber, int p_maxProc)
 	: ResqmlAbstractRepresentationToVtkPartitionedDataSet(frame,
-											   proc_number,
-											   max_proc),
+														  p_procNumber,
+														  p_maxProc),
 	  abstractProperty(property),
 	  uuid(uuid),
 	  title(property->getTitle())
 {
-	this->vtkData = vtkSmartPointer<vtkPartitionedDataSet>::New();
+	_vtkData = vtkSmartPointer<vtkPartitionedDataSet>::New();
 	this->loadVtkObject();
-	this->vtkData->Modified();
+	_vtkData->Modified();
 }
 
 //----------------------------------------------------------------------------
-const RESQML2_NS::WellboreFrameRepresentation* ResqmlWellboreChannelToVtkPolyData::getResqmlData() const
+const RESQML2_NS::WellboreFrameRepresentation *ResqmlWellboreChannelToVtkPolyData::getResqmlData() const
 {
-	return static_cast<const RESQML2_NS::WellboreFrameRepresentation*>(resqmlData);
+	return static_cast<const RESQML2_NS::WellboreFrameRepresentation *>(_resqmlData);
 }
 
 //----------------------------------------------------------------------------
 void ResqmlWellboreChannelToVtkPolyData::loadVtkObject()
 {
-	RESQML2_NS::WellboreFrameRepresentation const* frame = getResqmlData();
+	RESQML2_NS::WellboreFrameRepresentation const *frame = getResqmlData();
 
 	// We need to build first a polyline for the channel to support the vtk tube.
-	this->pointCount = frame->getXyzPointCountOfPatch(0);
-	double *allXyzPoints = new double[this->pointCount * 3]; // Will be deleted by VTK
+	_pointCount = frame->getXyzPointCountOfPatch(0);
+	double *allXyzPoints = new double[_pointCount * 3]; // Will be deleted by VTK
 	frame->getXyzPointsOfAllPatchesInGlobalCrs(allXyzPoints);
 
 	vtkSmartPointer<vtkPoints> vtkPts = vtkSmartPointer<vtkPoints>::New();
-	const size_t coordCount = pointCount * 3;
+	const size_t coordCount =_pointCount * 3;
 	if (frame->getLocalCrs(0)->isDepthOriented())
 	{
 		for (size_t zCoordIndex = 2; zCoordIndex < coordCount; zCoordIndex += 3)
@@ -77,8 +77,8 @@ void ResqmlWellboreChannelToVtkPolyData::loadVtkObject()
 	vtkPts->SetData(vtkUnderlyingArray);
 
 	auto lines = vtkSmartPointer<vtkCellArray>::New();
-	lines->InsertNextCell(pointCount);
-	for (unsigned int i = 0; i < pointCount; ++i)
+	lines->InsertNextCell(_pointCount);
+	for (unsigned int i = 0; i < _pointCount; ++i)
 	{
 		lines->InsertCellPoint(i);
 	}
@@ -90,21 +90,21 @@ void ResqmlWellboreChannelToVtkPolyData::loadVtkObject()
 	// Varying tube radius
 	auto tubeRadius = vtkSmartPointer<vtkDoubleArray>::New();
 	tubeRadius->SetName(this->abstractProperty->getTitle().c_str());
-	tubeRadius->SetNumberOfTuples(pointCount);
+	tubeRadius->SetNumberOfTuples(_pointCount);
 	if (dynamic_cast<const RESQML2_NS::ContinuousProperty *>(this->abstractProperty) != nullptr)
 	{
-		std::unique_ptr<double[]> values(new double[pointCount]);
+		std::unique_ptr<double[]> values(new double[_pointCount]);
 		this->abstractProperty->getDoubleValuesOfPatch(0, values.get());
-		for (unsigned int i = 0; i < pointCount; ++i)
+		for (unsigned int i = 0; i < _pointCount; ++i)
 		{
 			tubeRadius->SetTuple1(i, values[i]);
 		}
 	}
 	else if (dynamic_cast<const RESQML2_NS::DiscreteProperty *>(this->abstractProperty) != nullptr || dynamic_cast<const RESQML2_NS::CategoricalProperty *>(this->abstractProperty) != nullptr)
 	{
-		std::unique_ptr<int[]> values(new int[pointCount]);
+		std::unique_ptr<int[]> values(new int[_pointCount]);
 		this->abstractProperty->getInt32ValuesOfPatch(0, values.get());
-		for (unsigned int i = 0; i < pointCount; ++i)
+		for (unsigned int i = 0; i < _pointCount; ++i)
 		{
 			tubeRadius->SetTuple1(i, values[i]);
 		}
@@ -126,6 +126,6 @@ void ResqmlWellboreChannelToVtkPolyData::loadVtkObject()
 	tubeFilter->SetVaryRadiusToVaryRadiusByScalar();
 	tubeFilter->Update();
 
-	this->vtkData->SetPartition(0, tubeFilter->GetOutput());
-	this->vtkData->Modified();
+	_vtkData->SetPartition(0, tubeFilter->GetOutput());
+	_vtkData->Modified();
 }

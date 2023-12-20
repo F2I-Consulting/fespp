@@ -38,7 +38,7 @@ public:
 	/**
 	 * Constructor
 	 */
-	explicit ResqmlWellboreMarkerFrameToVtkPartitionedDataSet(const RESQML2_NS::WellboreMarkerFrameRepresentation *marker, int proc_number = 0, int max_proc = 1);
+	explicit ResqmlWellboreMarkerFrameToVtkPartitionedDataSet(const RESQML2_NS::WellboreMarkerFrameRepresentation *marker, int p_procNumber = 0, int p_maxProc = 1);
 
 	/**
 	 * load vtkDataSet with resqml data
@@ -49,7 +49,7 @@ public:
 	void removeMarker(std::string marker_uuid);
 
 protected:
-	const resqml2::WellboreMarkerFrameRepresentation * getResqmlData() const;
+	const resqml2::WellboreMarkerFrameRepresentation *getResqmlData() const;
 
 private:
 	bool orientation;

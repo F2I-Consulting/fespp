@@ -40,7 +40,7 @@ public:
 	/**
 	 * Constructor
 	 */
-	ResqmlAbstractRepresentationToVtkPartitionedDataSet(const RESQML2_NS::AbstractRepresentation *abstract_representation, int proc_number = 0, int max_proc = 1);
+	ResqmlAbstractRepresentationToVtkPartitionedDataSet(const RESQML2_NS::AbstractRepresentation *p_abstractRepresentation, int p_procNumber = 0, int p_maxProc = 1);
 
 	/**
 	 * Destructor
@@ -55,38 +55,36 @@ public:
 	/**
 	 * add a resqml property to VtkPartitionedDataSet
 	 */
-	void addDataArray(const std::string &uuid, int patch_index = 0);
+	void addDataArray(const std::string &p_uuid, int p_patchIndex = 0);
 
 	/**
 	 * remove a resqml property to VtkPartitionedDataSet
 	 */
-	void deleteDataArray(const std::string &uuid);
+	void deleteDataArray(const std::string &p_uuid);
 
 	/**
-	*
-	*/
+	 *
+	 */
 	void registerSubRep();
 	void unregisterSubRep();
 	unsigned int subRepLinkedCount();
 
 protected:
+	const RESQML2_NS::AbstractRepresentation *getResqmlData() const { return _resqmlData; }
 
-	const RESQML2_NS::AbstractRepresentation * getResqmlData() const { return resqmlData; }
+	unsigned int _subrepPointerOnPointsCount;
 
-	unsigned int subrep_pointer_on_points_count;
+	uint64_t _pointCount = 0;
+	uint32_t _iCellCount = 0; // = cellcount if not ijkGrid
+	uint32_t _jCellCount = 1;
+	uint32_t _kCellCount = 1;
+	uint32_t _initKIndex = 0;
+	uint32_t _maxKIndex = 0;
 
-	uint64_t pointCount = 0;
-	uint32_t iCellCount = 0; // = cellcount if not ijkGrid
-	uint32_t jCellCount = 1;
-	uint32_t kCellCount = 1;
-	uint32_t initKIndex = 0;
-	uint32_t maxKIndex = 0;
+	bool _isHyperslabed = false;
 
-	bool isHyperslabed = false;
+	const RESQML2_NS::AbstractRepresentation *_resqmlData;
 
-	const RESQML2_NS::AbstractRepresentation * resqmlData;
-
-	std::unordered_map<std::string, class ResqmlPropertyToVtkDataArray *> uuidToVtkDataArray;
-
+	std::unordered_map<std::string, class ResqmlPropertyToVtkDataArray *> _uuidToVtkDataArray;
 };
 #endif

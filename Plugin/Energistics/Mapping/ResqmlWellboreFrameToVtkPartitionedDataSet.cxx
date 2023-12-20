@@ -29,19 +29,19 @@ under the License.
 #include "ResqmlWellboreChannelToVtkPolyData.h"
 
 //----------------------------------------------------------------------------
-ResqmlWellboreFrameToVtkPartitionedDataSet::ResqmlWellboreFrameToVtkPartitionedDataSet(const resqml2::WellboreFrameRepresentation *frame, int proc_number, int max_proc)
+ResqmlWellboreFrameToVtkPartitionedDataSet::ResqmlWellboreFrameToVtkPartitionedDataSet(const resqml2::WellboreFrameRepresentation *frame, int p_procNumber, int p_maxProc)
 	: ResqmlAbstractRepresentationToVtkPartitionedDataSet(frame,
-											   proc_number,
-											   max_proc)
+														  p_procNumber,
+														  p_maxProc)
 {
-	this->vtkData = vtkSmartPointer<vtkPartitionedDataSet>::New();
+	_vtkData = vtkSmartPointer<vtkPartitionedDataSet>::New();
 	this->loadVtkObject();
 }
 
 //----------------------------------------------------------------------------
-const RESQML2_NS::WellboreFrameRepresentation * ResqmlWellboreFrameToVtkPartitionedDataSet::getResqmlData() const
+const RESQML2_NS::WellboreFrameRepresentation *ResqmlWellboreFrameToVtkPartitionedDataSet::getResqmlData() const
 {
-	return static_cast<const RESQML2_NS::WellboreFrameRepresentation *>(resqmlData);
+	return static_cast<const RESQML2_NS::WellboreFrameRepresentation *>(_resqmlData);
 }
 
 //----------------------------------------------------------------------------
@@ -49,26 +49,28 @@ void ResqmlWellboreFrameToVtkPartitionedDataSet::loadVtkObject()
 {
 	for (int idx = 0; idx < this->list_channel.size(); ++idx)
 	{
-		this->vtkData->SetPartition(idx, this->list_channel[idx]->getOutput()->GetPartitionAsDataObject(0));
-		this->vtkData->GetMetaData(idx)->Set(vtkCompositeDataSet::NAME(), this->list_channel[idx]->getTitle().c_str());
+		_vtkData->SetPartition(idx, this->list_channel[idx]->getOutput()->GetPartitionAsDataObject(0));
+		_vtkData->GetMetaData(idx)->Set(vtkCompositeDataSet::NAME(), this->list_channel[idx]->getTitle().c_str());
 	}
 }
 
 //----------------------------------------------------------------------------
-void ResqmlWellboreFrameToVtkPartitionedDataSet::addChannel(const std::string &uuid, resqml2::AbstractValuesProperty *property)
+void ResqmlWellboreFrameToVtkPartitionedDataSet::addChannel(const std::string &p_uuid, resqml2::AbstractValuesProperty *property)
 {
-	if (std::find_if(list_channel.begin(), list_channel.end(), [uuid](ResqmlWellboreChannelToVtkPolyData const *channel) { return channel->getUuid() == uuid; }) == list_channel.end())
+	if (std::find_if(list_channel.begin(), list_channel.end(), [p_uuid](ResqmlWellboreChannelToVtkPolyData const *channel)
+					 { return channel->getUuid() == p_uuid; }) == list_channel.end())
 	{
-		this->list_channel.push_back(new ResqmlWellboreChannelToVtkPolyData(getResqmlData(), property, uuid));
+		this->list_channel.push_back(new ResqmlWellboreChannelToVtkPolyData(getResqmlData(), property, p_uuid));
 		this->loadVtkObject();
 	}
 }
 
 //----------------------------------------------------------------------------
-void ResqmlWellboreFrameToVtkPartitionedDataSet::removeChannel(const std::string &uuid)
+void ResqmlWellboreFrameToVtkPartitionedDataSet::removeChannel(const std::string &p_uuid)
 {
 	list_channel.erase(
-		std::remove_if(list_channel.begin(), list_channel.end(), [uuid](ResqmlWellboreChannelToVtkPolyData const *channel) { return channel->getUuid() == uuid; }),
+		std::remove_if(list_channel.begin(), list_channel.end(), [p_uuid](ResqmlWellboreChannelToVtkPolyData const *channel)
+					   { return channel->getUuid() == p_uuid; }),
 		list_channel.end());
 	this->loadVtkObject();
 }

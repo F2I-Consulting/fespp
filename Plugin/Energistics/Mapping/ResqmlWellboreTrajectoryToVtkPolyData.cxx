@@ -31,22 +31,22 @@ under the License.
 #include <fesapi/resqml2/AbstractLocal3dCrs.h>
 
 //----------------------------------------------------------------------------
-ResqmlWellboreTrajectoryToVtkPolyData::ResqmlWellboreTrajectoryToVtkPolyData(const resqml2::WellboreTrajectoryRepresentation *wellbore, int proc_number, int max_proc)
+ResqmlWellboreTrajectoryToVtkPolyData::ResqmlWellboreTrajectoryToVtkPolyData(const resqml2::WellboreTrajectoryRepresentation *wellbore, int p_procNumber, int p_maxProc)
 	: ResqmlAbstractRepresentationToVtkPartitionedDataSet(wellbore,
-											   proc_number,
-											   max_proc)
+														  p_procNumber,
+														  p_maxProc)
 {
-	this->pointCount = wellbore->getXyzPointCountOfPatch(0);
+	_pointCount = wellbore->getXyzPointCountOfPatch(0);
 
-	this->vtkData = vtkSmartPointer<vtkPartitionedDataSet>::New();
+	_vtkData = vtkSmartPointer<vtkPartitionedDataSet>::New();
 
-	this->vtkData->Modified();
+	_vtkData->Modified();
 }
 
 //----------------------------------------------------------------------------
-const RESQML2_NS::WellboreTrajectoryRepresentation* ResqmlWellboreTrajectoryToVtkPolyData::getResqmlData() const
+const RESQML2_NS::WellboreTrajectoryRepresentation *ResqmlWellboreTrajectoryToVtkPolyData::getResqmlData() const
 {
-	return static_cast<const RESQML2_NS::WellboreTrajectoryRepresentation*>(resqmlData);
+	return static_cast<const RESQML2_NS::WellboreTrajectoryRepresentation *>(_resqmlData);
 }
 
 //----------------------------------------------------------------------------
@@ -56,14 +56,14 @@ void ResqmlWellboreTrajectoryToVtkPolyData::loadVtkObject()
 	{
 		// GEOMETRY
 		vtkSmartPointer<vtkPolyData> vtk_polydata = vtkSmartPointer<vtkPolyData>::New();
-		RESQML2_NS::WellboreTrajectoryRepresentation const* wellbore = getResqmlData();
+		RESQML2_NS::WellboreTrajectoryRepresentation const *wellbore = getResqmlData();
 
 		// POINT
-		double *allXyzPoints = new double[pointCount * 3]; // Will be deleted by VTK
+		double *allXyzPoints = new double[_pointCount * 3]; // Will be deleted by VTK
 		wellbore->getXyzPointsOfAllPatchesInGlobalCrs(allXyzPoints);
 		vtkSmartPointer<vtkPoints> vtkPts = vtkSmartPointer<vtkPoints>::New();
 
-		const size_t coordCount = pointCount * 3;
+		const size_t coordCount =_pointCount * 3;
 		if (wellbore->getLocalCrs(0)->isDepthOriented())
 		{
 			for (size_t zCoordIndex = 2; zCoordIndex < coordCount; zCoordIndex += 3)
@@ -81,8 +81,8 @@ void ResqmlWellboreTrajectoryToVtkPolyData::loadVtkObject()
 
 		// POLYLINE
 		vtkSmartPointer<vtkPolyLine> polylineRepresentation = vtkSmartPointer<vtkPolyLine>::New();
-		polylineRepresentation->GetPointIds()->SetNumberOfIds(pointCount);
-		for (unsigned int nodeIndex = 0; nodeIndex < pointCount; ++nodeIndex)
+		polylineRepresentation->GetPointIds()->SetNumberOfIds(_pointCount);
+		for (unsigned int nodeIndex = 0; nodeIndex < _pointCount; ++nodeIndex)
 		{
 			polylineRepresentation->GetPointIds()->SetId(nodeIndex, nodeIndex);
 		}
@@ -92,8 +92,8 @@ void ResqmlWellboreTrajectoryToVtkPolyData::loadVtkObject()
 
 		vtk_polydata->SetLines(setPolylineRepresentationLines);
 
-		this->vtkData->SetPartition(0, vtk_polydata);
-		this->vtkData->Modified();
+		_vtkData->SetPartition(0, vtk_polydata);
+		_vtkData->Modified();
 	}
 	catch (const std::exception &)
 	{

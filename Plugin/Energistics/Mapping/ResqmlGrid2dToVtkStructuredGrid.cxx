@@ -31,22 +31,22 @@ under the License.
 #include "Mapping/ResqmlPropertyToVtkDataArray.h"
 
 //----------------------------------------------------------------------------
-ResqmlGrid2dToVtkStructuredGrid::ResqmlGrid2dToVtkStructuredGrid(const RESQML2_NS::Grid2dRepresentation *grid2D, int proc_number, int max_proc)
+ResqmlGrid2dToVtkStructuredGrid::ResqmlGrid2dToVtkStructuredGrid(const RESQML2_NS::Grid2dRepresentation *grid2D, int p_procNumber, int p_maxProc)
 	: ResqmlAbstractRepresentationToVtkPartitionedDataSet(grid2D,
-											   proc_number,
-											   max_proc)
+														  p_procNumber,
+														  p_maxProc)
 {
-	this->pointCount = grid2D->getNodeCountAlongIAxis() * grid2D->getNodeCountAlongJAxis();
+	_pointCount = grid2D->getNodeCountAlongIAxis() * grid2D->getNodeCountAlongJAxis();
 
-	this->vtkData = vtkSmartPointer<vtkPartitionedDataSet>::New();
+	_vtkData = vtkSmartPointer<vtkPartitionedDataSet>::New();
 
-	this->vtkData->Modified();
+	_vtkData->Modified();
 }
 
 //----------------------------------------------------------------------------
-const RESQML2_NS::Grid2dRepresentation* ResqmlGrid2dToVtkStructuredGrid::getResqmlData() const
+const RESQML2_NS::Grid2dRepresentation *ResqmlGrid2dToVtkStructuredGrid::getResqmlData() const
 {
-	return static_cast<const RESQML2_NS::Grid2dRepresentation*>(resqmlData);
+	return static_cast<const RESQML2_NS::Grid2dRepresentation *>(_resqmlData);
 }
 
 //----------------------------------------------------------------------------
@@ -54,7 +54,7 @@ void ResqmlGrid2dToVtkStructuredGrid::loadVtkObject()
 {
 	vtkSmartPointer<vtkStructuredGrid> structuredGrid = vtkSmartPointer<vtkStructuredGrid>::New();
 
-	RESQML2_NS::Grid2dRepresentation const* grid2D = getResqmlData();
+	RESQML2_NS::Grid2dRepresentation const *grid2D = getResqmlData();
 
 	const double originX = grid2D->getXOriginInGlobalCrs();
 	const double originY = grid2D->getYOriginInGlobalCrs();
@@ -68,7 +68,7 @@ void ResqmlGrid2dToVtkStructuredGrid::loadVtkObject()
 
 	structuredGrid->SetDimensions(nbNodeI, nbNodeJ, 1);
 	// POINT
-	this->pointCount = nbNodeI * nbNodeJ;
+	_pointCount = nbNodeI * nbNodeJ;
 
 	std::unique_ptr<double[]> z(new double[nbNodeI * nbNodeJ]);
 	grid2D->getZValuesInGlobalCrs(z.get());
@@ -80,20 +80,15 @@ void ResqmlGrid2dToVtkStructuredGrid::loadVtkObject()
 		for (ULONG64 i = 0; i < nbNodeI; ++i)
 		{
 			const size_t ptId = i + j * nbNodeI;
-			//if (!isnan(z[ptId]))
-			//{
-				vtkIdType pid = points->InsertNextPoint(
-					originX + i * XIOffset + j * XJOffset,
-					originY + i * YIOffset + j * YJOffset,
-					z[ptId] * zIndice);
-				//vertices->InsertNextCell(1, &pid);
-			//}
+			vtkIdType pid = points->InsertNextPoint(
+				originX + i * XIOffset + j * XJOffset,
+				originY + i * YIOffset + j * YJOffset,
+				z[ptId] * zIndice);
 		}
 	}
 
 	structuredGrid->SetPoints(points);
-	//structuredGrid->SetVerts(vertices);
 
-	this->vtkData->SetPartition(0, structuredGrid);
-	this->vtkData->Modified();
+	_vtkData->SetPartition(0, structuredGrid);
+	_vtkData->Modified();
 }

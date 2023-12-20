@@ -24,7 +24,7 @@ under the License.
 
 #include "ResqmlAbstractRepresentationToVtkPartitionedDataSet.h"
 
- // include VTK
+// include VTK
 #include <vtkSmartPointer.h>
 #include <vtkUnstructuredGrid.h>
 
@@ -41,7 +41,7 @@ public:
 	/**
 	 * Constructor
 	 */
-	ResqmlIjkGridSubRepToVtkExplicitStructuredGrid(const RESQML2_NS::SubRepresentation *ijkGridSubRep, ResqmlIjkGridToVtkExplicitStructuredGrid* support, int proc_number = 0, int max_proc = 1);
+	ResqmlIjkGridSubRepToVtkExplicitStructuredGrid(const RESQML2_NS::SubRepresentation *ijkGridSubRep, ResqmlIjkGridToVtkExplicitStructuredGrid *support, int p_procNumber = 0, int p_maxProc = 1);
 
 	/**
 	 * load vtkDataSet with resqml data
@@ -49,18 +49,16 @@ public:
 	void loadVtkObject() override;
 
 	/**
-	*
-	*/
+	 *
+	 */
 	std::string unregisterToMapperSupportingGrid();
 
 protected:
-	const RESQML2_NS::SubRepresentation* getResqmlData() const;
+	const RESQML2_NS::SubRepresentation *getResqmlData() const;
 
-	ResqmlIjkGridToVtkExplicitStructuredGrid* mapperIjkGrid;
+	ResqmlIjkGridToVtkExplicitStructuredGrid *mapperIjkGrid;
 
 private:
-
 	vtkSmartPointer<vtkPoints> getMapperVtkPoint();
-
 };
 #endif

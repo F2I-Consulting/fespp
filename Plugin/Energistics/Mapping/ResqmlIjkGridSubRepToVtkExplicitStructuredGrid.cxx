@@ -38,28 +38,28 @@ under the License.
 #include "ResqmlIjkGridToVtkExplicitStructuredGrid.h"
 
 //----------------------------------------------------------------------------
-ResqmlIjkGridSubRepToVtkExplicitStructuredGrid::ResqmlIjkGridSubRepToVtkExplicitStructuredGrid(const RESQML2_NS::SubRepresentation *subRep, ResqmlIjkGridToVtkExplicitStructuredGrid *support, int proc_number, int max_proc)
+ResqmlIjkGridSubRepToVtkExplicitStructuredGrid::ResqmlIjkGridSubRepToVtkExplicitStructuredGrid(const RESQML2_NS::SubRepresentation *subRep, ResqmlIjkGridToVtkExplicitStructuredGrid *support, int p_procNumber, int p_maxProc)
 	: ResqmlAbstractRepresentationToVtkPartitionedDataSet(subRep,
-											   proc_number,
-											   max_proc),
+														  p_procNumber,
+														  p_maxProc),
 	  mapperIjkGrid(support)
 {
-	this->iCellCount = subRep->getElementCountOfPatch(0);
-	this->pointCount = subRep->getSupportingRepresentation(0)->getXyzPointCountOfAllPatches();
+	_iCellCount = subRep->getElementCountOfPatch(0);
+	_pointCount = subRep->getSupportingRepresentation(0)->getXyzPointCountOfAllPatches();
 
-	this->vtkData = vtkSmartPointer<vtkPartitionedDataSet>::New();
+	_vtkData = vtkSmartPointer<vtkPartitionedDataSet>::New();
 }
 
 //----------------------------------------------------------------------------
-const RESQML2_NS::SubRepresentation* ResqmlIjkGridSubRepToVtkExplicitStructuredGrid::getResqmlData() const
+const RESQML2_NS::SubRepresentation *ResqmlIjkGridSubRepToVtkExplicitStructuredGrid::getResqmlData() const
 {
-	return static_cast<const RESQML2_NS::SubRepresentation*>(resqmlData);
+	return static_cast<const RESQML2_NS::SubRepresentation *>(_resqmlData);
 }
 
 //----------------------------------------------------------------------------
 void ResqmlIjkGridSubRepToVtkExplicitStructuredGrid::loadVtkObject()
 {
-	RESQML2_NS::SubRepresentation const* subRep = getResqmlData();
+	RESQML2_NS::SubRepresentation const *subRep = getResqmlData();
 	auto *supportingGrid = dynamic_cast<RESQML2_NS::AbstractIjkGridRepresentation *>(subRep->getSupportingRepresentation(0));
 	if (supportingGrid != nullptr)
 	{
@@ -84,26 +84,26 @@ void ResqmlIjkGridSubRepToVtkExplicitStructuredGrid::loadVtkObject()
 		std::unique_ptr<uint64_t[]> elementIndices(new uint64_t[elementCountOfPatch]);
 		subRep->getElementIndicesOfPatch(0, 0, elementIndices.get());
 
-		iCellCount = supportingGrid->getICellCount();
-		jCellCount = supportingGrid->getJCellCount();
-		kCellCount = supportingGrid->getKCellCount();
+		_iCellCount = supportingGrid->getICellCount();
+		_jCellCount = supportingGrid->getJCellCount();
+		_kCellCount = supportingGrid->getKCellCount();
 
-		initKIndex = 0;
-		maxKIndex = kCellCount;
+		_initKIndex = 0;
+		_maxKIndex = _kCellCount;
 
 		size_t indice = 0;
 
-		for (uint_fast32_t  vtkKCellIndex = initKIndex; vtkKCellIndex < maxKIndex; ++vtkKCellIndex)
+		for (uint_fast32_t vtkKCellIndex = _initKIndex; vtkKCellIndex < _maxKIndex; ++vtkKCellIndex)
 		{
-			for (uint_fast32_t  vtkJCellIndex = 0; vtkJCellIndex < jCellCount; ++vtkJCellIndex)
+			for (uint_fast32_t vtkJCellIndex = 0; vtkJCellIndex < _jCellCount; ++vtkJCellIndex)
 			{
-				for (uint_fast32_t  vtkICellIndex = 0; vtkICellIndex < iCellCount; ++vtkICellIndex)
+				for (uint_fast32_t vtkICellIndex = 0; vtkICellIndex < _iCellCount; ++vtkICellIndex)
 				{
 					if (elementIndices[indice] == cellIndex)
 					{
 						vtkSmartPointer<vtkHexahedron> hex = vtkSmartPointer<vtkHexahedron>::New();
 
-						for (uint_fast8_t  cornerId = 0; cornerId < 8; ++cornerId)
+						for (uint_fast8_t cornerId = 0; cornerId < 8; ++cornerId)
 						{
 							hex->GetPointIds()->SetId(cornerId,
 													  supportingGrid->getXyzPointIndexFromCellCorner(vtkICellIndex, vtkJCellIndex, vtkKCellIndex, correspondingResqmlCornerId[cornerId]));
@@ -117,12 +117,12 @@ void ResqmlIjkGridSubRepToVtkExplicitStructuredGrid::loadVtkObject()
 		}
 
 		supportingGrid->unloadSplitInformation();
-		this->vtkData->SetPartition(0, vtk_unstructuredGrid);
-		this->vtkData->Modified();
+		_vtkData->SetPartition(0, vtk_unstructuredGrid);
+		_vtkData->Modified();
 	}
 	else
 	{
-		// TODO msg d'erreur
+		vtkOutputWindowDisplayWarningText(("SubRepresentation (" + subRep->getUuid() + ") has no suuport grid").c_str());
 	}
 }
 

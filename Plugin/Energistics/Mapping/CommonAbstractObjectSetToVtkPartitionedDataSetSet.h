@@ -32,32 +32,32 @@ under the License.
 // include F2i-consulting Energistics ParaView Plugin
 #include "Mapping/CommonAbstractObjectToVtkPartitionedDataSet.h"
 
-/** @brief	transform a RESQML abstract object to vtkPartitionedDataSet
+/** @brief	transform a RESQML abstract object set to vtkPartitionedDataSet set
  */
 class CommonAbstractObjectSetToVtkPartitionedDataSetSet
 {
 public:
 	// Constructor
-	CommonAbstractObjectSetToVtkPartitionedDataSetSet(const COMMON_NS::AbstractObject * p_abstractObject, int p_procNumber = 0, int p_maxProc = 1);
+	CommonAbstractObjectSetToVtkPartitionedDataSetSet(const COMMON_NS::AbstractObject *p_abstractObject, int p_procNumber = 0, int p_maxProc = 1);
 
 	// destructor
 	~CommonAbstractObjectSetToVtkPartitionedDataSetSet();
 
 	/**
-	*
-	*/
+	 *
+	 */
 	std::string getUuid() const { return _uuid; };
 	std::string getTitle() const { return _title; };
 
 	void loadVtkObject();
-	void removeCommonAbstractObjectToVtkPartitionedDataSet(const std::string& p_id);
-	std::vector<CommonAbstractObjectToVtkPartitionedDataSet*> getMapperSet() { return _mapperSet; }
+	void removeCommonAbstractObjectToVtkPartitionedDataSet(const std::string &p_id);
+	std::vector<CommonAbstractObjectToVtkPartitionedDataSet *> getMapperSet() { return _mapperSet; }
 
-	bool existUuid(const std::string& p_id);
+	bool existUuid(const std::string &p_id);
 
 protected:
-	const COMMON_NS::AbstractObject * _resqmlData;
-	
+	const COMMON_NS::AbstractObject *_resqmlData;
+
 	// for Multithreading
 	int _procNumber;
 	int _maxProc;
@@ -65,7 +65,6 @@ protected:
 	std::string _uuid;
 	std::string _title;
 
-	std::vector<CommonAbstractObjectToVtkPartitionedDataSet*> _mapperSet;
-
+	std::vector<CommonAbstractObjectToVtkPartitionedDataSet *> _mapperSet;
 };
 #endif

@@ -22,7 +22,8 @@ under the License.
 
 #include <string>
 
-enum class TreeViewNodeType {
+enum class TreeViewNodeType
+{
 	Unknown,
 	Collection,
 	Representation,
@@ -38,15 +39,5 @@ enum class TreeViewNodeType {
 	TimeSeries,
 	Perforation,
 };
-
-enum class WellboreStatut {
-	OilInjecter,
-	OilProducer,
-	WaterInjecter,
-	WaterProducer,
-	GazInjecter,
-	GazProducer,
-};
-
 
 #endif // ENUM_H

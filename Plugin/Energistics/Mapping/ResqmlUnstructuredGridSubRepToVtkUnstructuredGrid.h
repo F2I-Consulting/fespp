@@ -22,10 +22,9 @@ under the License.
 /** @brief	transform a resqml unstructured Subrepresentation to vtkUnstructuredGrid
  */
 
-
 #include "ResqmlAbstractRepresentationToVtkPartitionedDataSet.h"
 
- // include VTK
+// include VTK
 #include <vtkSmartPointer.h>
 #include <vtkUnstructuredGrid.h>
 
@@ -43,7 +42,7 @@ public:
 	/**
 	 * Constructor
 	 */
-	ResqmlUnstructuredGridSubRepToVtkUnstructuredGrid(const RESQML2_NS::SubRepresentation *unstructuredGridSubRep, ResqmlUnstructuredGridToVtkUnstructuredGrid *support, int proc_number = 0, int max_proc = 1);
+	ResqmlUnstructuredGridSubRepToVtkUnstructuredGrid(const RESQML2_NS::SubRepresentation *unstructuredGridSubRep, ResqmlUnstructuredGridToVtkUnstructuredGrid *support, int p_procNumber = 0, int p_maxProc = 1);
 
 	/**
 	 * load vtkDataSet with resqml data
@@ -56,12 +55,10 @@ public:
 	std::string unregisterToMapperSupportingGrid();
 
 protected:
-	const RESQML2_NS::SubRepresentation* getResqmlData() const;
-	ResqmlUnstructuredGridToVtkUnstructuredGrid* mapperUnstructuredGrid;
+	const RESQML2_NS::SubRepresentation *getResqmlData() const;
+	ResqmlUnstructuredGridToVtkUnstructuredGrid *mapperUnstructuredGrid;
 
 private:
-
 	vtkSmartPointer<vtkPoints> getMapperVtkPoint();
-
 };
 #endif

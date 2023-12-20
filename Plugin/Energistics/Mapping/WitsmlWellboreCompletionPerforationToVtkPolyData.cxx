@@ -49,16 +49,15 @@ under the License.
 #include <fesapi/resqml2/AbstractLocal3dCrs.h>
 #include <fesapi/eml2/GraphicalInformationSet.h>
 
-WitsmlWellboreCompletionPerforationToVtkPolyData::WitsmlWellboreCompletionPerforationToVtkPolyData(const resqml2::WellboreTrajectoryRepresentation* wellboreTrajectory, const WITSML2_1_NS::WellboreCompletion *wellboreCompletion, const std::string &connectionuid, const std::string &title, const double skin, const WellboreStatut statut, int proc_number, int max_proc)
+WitsmlWellboreCompletionPerforationToVtkPolyData::WitsmlWellboreCompletionPerforationToVtkPolyData(const resqml2::WellboreTrajectoryRepresentation *wellboreTrajectory, const WITSML2_1_NS::WellboreCompletion *wellboreCompletion, const std::string &connectionuid, const std::string &title, const double skin, int p_procNumber, int p_maxProc)
 	: CommonAbstractObjectToVtkPartitionedDataSet(wellboreCompletion,
-		proc_number,
-		max_proc),
-	wellboreCompletion(wellboreCompletion),
-	wellboreTrajectory(wellboreTrajectory),
-	title(title),
-	connectionuid(connectionuid),
-	skin(skin),
-	statut(statut)
+												  p_procNumber,
+												  p_maxProc),
+	  wellboreCompletion(wellboreCompletion),
+	  wellboreTrajectory(wellboreTrajectory),
+	  title(title),
+	  connectionuid(connectionuid),
+	  skin(skin)
 {
 	// Check that the completion is valid.
 	if (wellboreCompletion == nullptr)
@@ -76,13 +75,13 @@ WitsmlWellboreCompletionPerforationToVtkPolyData::WitsmlWellboreCompletionPerfor
 		}
 	}
 
-	this->vtkData = vtkSmartPointer<vtkPartitionedDataSet>::New();
-	this->vtkData->Modified();
+	_vtkData = vtkSmartPointer<vtkPartitionedDataSet>::New();
+	_vtkData->Modified();
 
 	this->setUuid(connectionuid);
 	this->setTitle(title);
 
-	//this->loadVtkObject();
+	// this->loadVtkObject();
 }
 
 void WitsmlWellboreCompletionPerforationToVtkPolyData::loadVtkObject()
@@ -117,137 +116,90 @@ void WitsmlWellboreCompletionPerforationToVtkPolyData::loadVtkObject()
 		return;
 	}
 
-			// Check that the perforation has an MD interval.
-			if (!this->wellboreCompletion->hasConnectionMdInterval(WITSML2_1_NS::WellboreCompletion::WellReservoirConnectionType::PERFORATION, this->index))
-			{
-				return;
-			}
-
-			// Get the MD values for the top and bottom of the perforation.
-			const double top = this->wellboreCompletion->getConnectionTopMd(WITSML2_1_NS::WellboreCompletion::WellReservoirConnectionType::PERFORATION, this->index);
-			const double base = this->wellboreCompletion->getConnectionBaseMd(WITSML2_1_NS::WellboreCompletion::WellReservoirConnectionType::PERFORATION, this->index);
-
-			// Convert the MD values to XYZ values.
-			std::array<double, 2> mdTrajValues = {top, base};
-			std::array<double, 3 * mdTrajValues.size()> xyzTrajValues;
-			this->wellboreTrajectory->convertMdValuesToXyzValues(mdTrajValues.data(), mdTrajValues.size(), xyzTrajValues.data());
-
-			// Get the MD and XYZ values for all the patches in the wellbore trajectory.
-			const uint64_t pointCount = this->wellboreTrajectory->getXyzPointCountOfAllPatches(); // std::vector<double> mdValues(wellboreTrajectory->getXyzPointCountOfAllPatches());
-			std::unique_ptr<double[]> mdValues(new double[pointCount]);
-			this->wellboreTrajectory->getMdValues(mdValues.get());
-
-			std::unique_ptr<double[]> xyzPoints(new double[pointCount * 3]);
-			this->wellboreTrajectory->getXyzPointsOfAllPatchesInGlobalCrs(xyzPoints.get());
-
-						// Create a list of intermediate MD points.
-			std::vector<std::array<double, 3>> intermediateMdPoints;
-			for (size_t i = 0; i < pointCount; ++i)
-			{
-				if (top <= mdValues[i] && mdValues[i] <= base)
-				{
-					intermediateMdPoints.push_back({{xyzPoints[i * 3], xyzPoints[i * 3 + 1], xyzPoints[i * 3 + 2]}});
-				}
-			}
-
-			const double depthOriented = wellboreTrajectory->getLocalCrs(0)->isDepthOriented() ? -1 : 1;
-			// Create a vtkPoints object.
-			vtkSmartPointer<vtkPoints> vtkPts = vtkSmartPointer<vtkPoints>::New();
-
-			// Add the top point.
-			vtkPts->InsertNextPoint(xyzTrajValues[0], xyzTrajValues[1], xyzTrajValues[2] * depthOriented);
-
-			// Add the intermediate points.
-			for (auto const &point : intermediateMdPoints)
-			{
-				vtkPts->InsertNextPoint(point[0], point[1], point[2] * depthOriented);
-			}
-
-			// Add the base point.
-			vtkPts->InsertNextPoint(xyzTrajValues[3], xyzTrajValues[4], xyzTrajValues[5] * depthOriented);
-
-			// Create a vtkCellArray object.
-			vtkSmartPointer<vtkCellArray> lines = vtkSmartPointer<vtkCellArray>::New();
-			lines->InsertNextCell(2 + intermediateMdPoints.size());
-			for (size_t i = 0; i < 2 + intermediateMdPoints.size(); ++i)
-			{
-				lines->InsertCellPoint(i);
-			}
-
-			// Create a vtkPolyData object for the perforation.
-			vtkSmartPointer<vtkPolyData> perforationPolyData = vtkSmartPointer<vtkPolyData>::New();
-			perforationPolyData->SetPoints(vtkPts);
-			perforationPolyData->SetLines(lines);
-
-			// Create a vtkTubeFilter object.
-			vtkSmartPointer<vtkTubeFilter> tubeFilter = vtkSmartPointer<vtkTubeFilter>::New();
-			tubeFilter->SetInputData(perforationPolyData);
-			tubeFilter->SetNumberOfSides(10);
-			tubeFilter->SetRadius(10);
-			tubeFilter->SetVaryRadiusToVaryRadiusByScalar();
-			tubeFilter->Update();
-
-			// Add the perforationPolyData to the vector.
-			this->vtkData->SetPartition(0, tubeFilter->GetOutput());
-			this->vtkData->GetMetaData((unsigned int)0)->Set(vtkCompositeDataSet::NAME(), (const char *)(this->connectionuid + "_"+ this->title).c_str());
-			this->vtkData->Modified();
-
-			this->addSkin();
-			this->addStatus();
-
-}
-
-void WitsmlWellboreCompletionPerforationToVtkPolyData::addSkin() {
-
-		vtkSmartPointer<vtkDoubleArray> array = vtkSmartPointer<vtkDoubleArray>::New();
-		array->SetName("Skin");
-		array->InsertNextValue(this->skin);
-
-		this->vtkData->GetPartition(0)->GetFieldData()->AddArray(array);
-}
-
-void WitsmlWellboreCompletionPerforationToVtkPolyData::addStatus() {
-	auto repo = this->getResqmlData()->getRepository();
-	std::vector<eml2::GraphicalInformationSet*> gisSet = repo->getDataObjects<eml2::GraphicalInformationSet>();
-	for (auto gis : gisSet) {
-		gis->hasDefaultColor(this->getResqmlData());
-
-		//vtkOutputWindowDisplayText(std::string(gis->hasDefaultColor(this->getResqmlData()) ? "true\n" : "false\n").c_str());
+	// Check that the perforation has an MD interval.
+	if (!this->wellboreCompletion->hasConnectionMdInterval(WITSML2_1_NS::WellboreCompletion::WellReservoirConnectionType::PERFORATION, this->index))
+	{
+		return;
 	}
 
-			vtkSmartPointer<vtkLookupTable> colorTable = vtkSmartPointer<vtkLookupTable>::New();
-			colorTable->SetTableRange(0, 5);
-			colorTable->Build();
+	// Get the MD values for the top and bottom of the perforation.
+	const double top = this->wellboreCompletion->getConnectionTopMd(WITSML2_1_NS::WellboreCompletion::WellReservoirConnectionType::PERFORATION, this->index);
+	const double base = this->wellboreCompletion->getConnectionBaseMd(WITSML2_1_NS::WellboreCompletion::WellReservoirConnectionType::PERFORATION, this->index);
 
-			colorTable->SetTableValue(0, 1.0, 0.0, 0.0);
-			colorTable->SetTableValue(1, 1.0, 0.5, 0.0);
-			colorTable->SetTableValue(2, 0.0, 0.0, 1.0);
-			colorTable->SetTableValue(3, 0.0, 0.5, 1.0);
-			colorTable->SetTableValue(4, 0.0, 1.0, 0.5);
-			colorTable->SetTableValue(5, 0.0, 1.0, 0.0);
-			
+	// Convert the MD values to XYZ values.
+	std::array<double, 2> mdTrajValues = {top, base};
+	std::array<double, 3 * mdTrajValues.size()> xyzTrajValues;
+	this->wellboreTrajectory->convertMdValuesToXyzValues(mdTrajValues.data(), mdTrajValues.size(), xyzTrajValues.data());
 
-			vtkNew<vtkVariantArray> values;
-			values->InsertNextValue(vtkVariant("Oil Injector"));
-			values->InsertNextValue(vtkVariant("Oil Producer"));
-			values->InsertNextValue(vtkVariant("Water Injector"));
-			values->InsertNextValue(vtkVariant("Water Producer"));
-			values->InsertNextValue(vtkVariant("Gaz Producer"));
-			values->InsertNextValue(vtkVariant("Gaz Producer"));
+	// Get the MD and XYZ values for all the patches in the wellbore trajectory.
+	const uint64_t w_pointCount = this->wellboreTrajectory->getXyzPointCountOfAllPatches(); // std::vector<double> mdValues(wellboreTrajectory->getXyzPointCountOfAllPatches());
+	std::unique_ptr<double[]> mdValues(new double[w_pointCount]);
+	this->wellboreTrajectory->getMdValues(mdValues.get());
 
-			for (int i = 0; i < values->GetNumberOfTuples(); ++i)
-			{
-				colorTable->SetAnnotation(values->GetValue(i), values->GetValue(i).ToString());
-			}
-			
-			vtkSmartPointer<vtkIntArray> wellboreTypePoints = vtkSmartPointer<vtkIntArray>::New();
-			wellboreTypePoints->SetName("WellboreTypes");
-			for (vtkIdType i = 0; i < this->vtkData->GetPartition(0)->GetNumberOfPoints(); ++i) {
+	std::unique_ptr<double[]> xyzPoints(new double[w_pointCount * 3]);
+	this->wellboreTrajectory->getXyzPointsOfAllPatchesInGlobalCrs(xyzPoints.get());
 
-				wellboreTypePoints->InsertNextValue(static_cast<int>(this->statut));
-			}
-			//this->vtkData->GetPartition(0)->GetPointData()->AddArray(wellboreTypePoints);
-			//this->vtkData->GetPartition(0)->GetPointData()->SetActiveScalars("wellboreTypePoints");
-			//this->vtkData->GetPartition(0)->GetPointData()->GetScalars()->SetLookupTable(colorTable);
+	// Create a list of intermediate MD points.
+	std::vector<std::array<double, 3>> intermediateMdPoints;
+	for (size_t i = 0; i < w_pointCount; ++i)
+	{
+		if (top <= mdValues[i] && mdValues[i] <= base)
+		{
+			intermediateMdPoints.push_back({{xyzPoints[i * 3], xyzPoints[i * 3 + 1], xyzPoints[i * 3 + 2]}});
+		}
+	}
+
+	const double depthOriented = wellboreTrajectory->getLocalCrs(0)->isDepthOriented() ? -1 : 1;
+	// Create a vtkPoints object.
+	vtkSmartPointer<vtkPoints> vtkPts = vtkSmartPointer<vtkPoints>::New();
+
+	// Add the top point.
+	vtkPts->InsertNextPoint(xyzTrajValues[0], xyzTrajValues[1], xyzTrajValues[2] * depthOriented);
+
+	// Add the intermediate points.
+	for (auto const &point : intermediateMdPoints)
+	{
+		vtkPts->InsertNextPoint(point[0], point[1], point[2] * depthOriented);
+	}
+
+	// Add the base point.
+	vtkPts->InsertNextPoint(xyzTrajValues[3], xyzTrajValues[4], xyzTrajValues[5] * depthOriented);
+
+	// Create a vtkCellArray object.
+	vtkSmartPointer<vtkCellArray> lines = vtkSmartPointer<vtkCellArray>::New();
+	lines->InsertNextCell(2 + intermediateMdPoints.size());
+	for (size_t i = 0; i < 2 + intermediateMdPoints.size(); ++i)
+	{
+		lines->InsertCellPoint(i);
+	}
+
+	// Create a vtkPolyData object for the perforation.
+	vtkSmartPointer<vtkPolyData> perforationPolyData = vtkSmartPointer<vtkPolyData>::New();
+	perforationPolyData->SetPoints(vtkPts);
+	perforationPolyData->SetLines(lines);
+
+	// Create a vtkTubeFilter object.
+	vtkSmartPointer<vtkTubeFilter> tubeFilter = vtkSmartPointer<vtkTubeFilter>::New();
+	tubeFilter->SetInputData(perforationPolyData);
+	tubeFilter->SetNumberOfSides(10);
+	tubeFilter->SetRadius(10);
+	tubeFilter->SetVaryRadiusToVaryRadiusByScalar();
+	tubeFilter->Update();
+
+	// Add the perforationPolyData to the vector.
+	_vtkData->SetPartition(0, tubeFilter->GetOutput());
+	_vtkData->GetMetaData((unsigned int)0)->Set(vtkCompositeDataSet::NAME(), (const char *)(this->connectionuid + "_" + this->title).c_str());
+	_vtkData->Modified();
+
+	this->addSkin();
 }
 
+void WitsmlWellboreCompletionPerforationToVtkPolyData::addSkin()
+{
+
+	vtkSmartPointer<vtkDoubleArray> array = vtkSmartPointer<vtkDoubleArray>::New();
+	array->SetName("Skin");
+	array->InsertNextValue(this->skin);
+
+	_vtkData->GetPartition(0)->GetFieldData()->AddArray(array);
+}

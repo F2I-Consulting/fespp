@@ -33,30 +33,30 @@ under the License.
 #include <fesapi/resqml2/AbstractLocal3dCrs.h>
 
 //----------------------------------------------------------------------------
-ResqmlWellboreMarkerToVtkPolyData::ResqmlWellboreMarkerToVtkPolyData(const RESQML2_NS::WellboreMarkerFrameRepresentation *marker_frame, std::string uuid, bool orientation, int size, int proc_number, int max_proc)
+ResqmlWellboreMarkerToVtkPolyData::ResqmlWellboreMarkerToVtkPolyData(const RESQML2_NS::WellboreMarkerFrameRepresentation *marker_frame, std::string uuid, bool orientation, int size, int p_procNumber, int p_maxProc)
 	: ResqmlAbstractRepresentationToVtkPartitionedDataSet(marker_frame,
-											   proc_number,
-											   max_proc),
+														  p_procNumber,
+														  p_maxProc),
 	  orientation(orientation),
 	  size(size),
 	  uuid(uuid),
 	  title("")
 {
-	this->vtkData = vtkSmartPointer<vtkPartitionedDataSet>::New();
+	_vtkData = vtkSmartPointer<vtkPartitionedDataSet>::New();
 	this->loadVtkObject();
-	this->vtkData->Modified();
+	_vtkData->Modified();
 }
 
 //----------------------------------------------------------------------------
-const RESQML2_NS::WellboreMarkerFrameRepresentation* ResqmlWellboreMarkerToVtkPolyData::getResqmlData() const
+const RESQML2_NS::WellboreMarkerFrameRepresentation *ResqmlWellboreMarkerToVtkPolyData::getResqmlData() const
 {
-	return static_cast<const RESQML2_NS::WellboreMarkerFrameRepresentation*>(resqmlData);
+	return static_cast<const RESQML2_NS::WellboreMarkerFrameRepresentation *>(_resqmlData);
 }
 
 //----------------------------------------------------------------------------
 void ResqmlWellboreMarkerToVtkPolyData::loadVtkObject()
 {
-	RESQML2_NS::WellboreMarkerFrameRepresentation const* marker_frame = getResqmlData();
+	RESQML2_NS::WellboreMarkerFrameRepresentation const *marker_frame = getResqmlData();
 
 	std::vector<RESQML2_NS::WellboreMarker *> markerSet = marker_frame->getWellboreMarkerSet();
 	// search Marker
@@ -98,7 +98,7 @@ void ResqmlWellboreMarkerToVtkPolyData::displayOption(bool orientation, int size
 {
 	this->orientation = orientation;
 	this->size = size;
-	this->vtkData = vtkSmartPointer<vtkPartitionedDataSet>::New();
+	_vtkData = vtkSmartPointer<vtkPartitionedDataSet>::New();
 	this->loadVtkObject();
 }
 
@@ -108,7 +108,6 @@ namespace
 	{
 		switch (uom)
 		{
-			//				case gsoap_eml2_3::eml23__PlaneAngleUom::0_x002e001_x0020seca:
 		case gsoap_eml2_3::eml23__PlaneAngleUom::ccgr:
 		case gsoap_eml2_3::eml23__PlaneAngleUom::cgr:
 			break;
@@ -144,7 +143,7 @@ namespace
 //----------------------------------------------------------------------------
 void ResqmlWellboreMarkerToVtkPolyData::createDisk(unsigned int markerIndex)
 {
-	RESQML2_NS::WellboreMarkerFrameRepresentation const* marker_frame = getResqmlData();
+	RESQML2_NS::WellboreMarkerFrameRepresentation const *marker_frame = getResqmlData();
 
 	std::unique_ptr<double[]> doublePositions(new double[marker_frame->getMdValuesCount() * 3]);
 	marker_frame->getXyzPointsOfPatch(0, doublePositions.get());
@@ -184,13 +183,13 @@ void ResqmlWellboreMarkerToVtkPolyData::createDisk(unsigned int markerIndex)
 	transformFilter->SetTransform(translation);
 	transformFilter->Update();
 
-	this->vtkData->SetPartition(0, transformFilter->GetOutput());
+	_vtkData->SetPartition(0, transformFilter->GetOutput());
 }
 
 //----------------------------------------------------------------------------
 void ResqmlWellboreMarkerToVtkPolyData::createSphere(unsigned int markerIndex)
 {
-	RESQML2_NS::WellboreMarkerFrameRepresentation const* marker_frame = getResqmlData();
+	RESQML2_NS::WellboreMarkerFrameRepresentation const *marker_frame = getResqmlData();
 
 	std::unique_ptr<double[]> doublePositions(new double[marker_frame->getMdValuesCount() * 3]);
 	marker_frame->getXyzPointsOfPatch(0, doublePositions.get());
@@ -204,5 +203,5 @@ void ResqmlWellboreMarkerToVtkPolyData::createSphere(unsigned int markerIndex)
 	sphereSource->SetRadius(size);
 	sphereSource->Update();
 
-	this->vtkData->SetPartition(0, sphereSource->GetOutput());
+	_vtkData->SetPartition(0, sphereSource->GetOutput());
 }

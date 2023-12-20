@@ -34,7 +34,7 @@ public:
 	/**
 	 * Constructor
 	 */
-	ResqmlWellboreMarkerToVtkPolyData(const RESQML2_NS::WellboreMarkerFrameRepresentation *marker, std::string uuid, bool orientation, int size, int proc_number = 0, int max_proc = 1);
+	ResqmlWellboreMarkerToVtkPolyData(const RESQML2_NS::WellboreMarkerFrameRepresentation *marker, std::string uuid, bool orientation, int size, int p_procNumber = 0, int p_maxProc = 1);
 
 	/**
 	 * load vtkDataSet with resqml data
@@ -58,7 +58,7 @@ public:
 	int getMarkerSize() { return this->size; }
 
 protected:
-	const resqml2::WellboreMarkerFrameRepresentation* getResqmlData() const;
+	const resqml2::WellboreMarkerFrameRepresentation *getResqmlData() const;
 
 private:
 	void createDisk(unsigned int markerIndex);

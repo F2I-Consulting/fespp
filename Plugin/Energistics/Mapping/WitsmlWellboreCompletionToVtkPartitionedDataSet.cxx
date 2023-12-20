@@ -29,22 +29,24 @@ under the License.
 #include <fesapi/resqml2/WellboreTrajectoryRepresentation.h>
 
 //----------------------------------------------------------------------------
-WitsmlWellboreCompletionToVtkPartitionedDataSet::WitsmlWellboreCompletionToVtkPartitionedDataSet(const WITSML2_1_NS::WellboreCompletion* p_completion, int p_procNumber, int p_maxProc)
+WitsmlWellboreCompletionToVtkPartitionedDataSet::WitsmlWellboreCompletionToVtkPartitionedDataSet(const WITSML2_1_NS::WellboreCompletion *p_completion, int p_procNumber, int p_maxProc)
 	: CommonAbstractObjectSetToVtkPartitionedDataSetSet(p_completion,
-											   p_procNumber,
-		p_maxProc)
+														p_procNumber,
+														p_maxProc)
 {
-	for (auto* interpretation : p_completion->getWellbore()->getResqmlWellboreFeature(0)->getInterpretationSet()) {
-		if (dynamic_cast<RESQML2_NS::WellboreInterpretation*>(interpretation) != nullptr) {
-			auto *wellbore_interpretation = static_cast<resqml2::WellboreInterpretation*>(interpretation);
+	for (auto *interpretation : p_completion->getWellbore()->getResqmlWellboreFeature(0)->getInterpretationSet())
+	{
+		if (dynamic_cast<RESQML2_NS::WellboreInterpretation *>(interpretation) != nullptr)
+		{
+			auto *wellbore_interpretation = static_cast<resqml2::WellboreInterpretation *>(interpretation);
 			_wellboreTrajectory = wellbore_interpretation->getWellboreTrajectoryRepresentation(0);
 			continue;
 		}
 	}
 }
 
-void WitsmlWellboreCompletionToVtkPartitionedDataSet::addPerforation(const std::string& p_connectionuid, const std::string& p_name, const double p_skin, const WellboreStatut p_statut)
+void WitsmlWellboreCompletionToVtkPartitionedDataSet::addPerforation(const std::string &p_connectionuid, const std::string &p_name, const double p_skin)
 {
-	const WITSML2_1_NS::WellboreCompletion* w_wellCompletion = dynamic_cast<const WITSML2_1_NS::WellboreCompletion*>(_resqmlData);
-	_mapperSet.push_back(new WitsmlWellboreCompletionPerforationToVtkPolyData(_wellboreTrajectory, w_wellCompletion, p_connectionuid, p_name, p_skin, p_statut));
+	const WITSML2_1_NS::WellboreCompletion *w_wellCompletion = dynamic_cast<const WITSML2_1_NS::WellboreCompletion *>(_resqmlData);
+	_mapperSet.push_back(new WitsmlWellboreCompletionPerforationToVtkPolyData(_wellboreTrajectory, w_wellCompletion, p_connectionuid, p_name, p_skin));
 }

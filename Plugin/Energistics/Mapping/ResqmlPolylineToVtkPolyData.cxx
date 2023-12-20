@@ -34,41 +34,40 @@ under the License.
 #include "Mapping/ResqmlPropertyToVtkDataArray.h"
 
 //----------------------------------------------------------------------------
-ResqmlPolylineToVtkPolyData::ResqmlPolylineToVtkPolyData(const RESQML2_NS::PolylineSetRepresentation *polyline, int proc_number, int max_proc)
+ResqmlPolylineToVtkPolyData::ResqmlPolylineToVtkPolyData(const RESQML2_NS::PolylineSetRepresentation *polyline, int p_procNumber, int p_maxProc)
 	: ResqmlAbstractRepresentationToVtkPartitionedDataSet(polyline,
-											   proc_number,
-											   max_proc)
+														  p_procNumber,
+														  p_maxProc)
 {
-	this->pointCount = polyline->getXyzPointCountOfPatch(0);
+	_pointCount = polyline->getXyzPointCountOfPatch(0);
 
-	this->vtkData = vtkSmartPointer<vtkPartitionedDataSet>::New();
+	_vtkData = vtkSmartPointer<vtkPartitionedDataSet>::New();
 
-	this->vtkData->Modified();
+	_vtkData->Modified();
 }
 
 //----------------------------------------------------------------------------
-const RESQML2_NS::PolylineSetRepresentation* ResqmlPolylineToVtkPolyData::getResqmlData() const
+const RESQML2_NS::PolylineSetRepresentation *ResqmlPolylineToVtkPolyData::getResqmlData() const
 {
-	return static_cast<const RESQML2_NS::PolylineSetRepresentation*>(resqmlData);
+	return static_cast<const RESQML2_NS::PolylineSetRepresentation *>(_resqmlData);
 }
-
 
 //----------------------------------------------------------------------------
 void ResqmlPolylineToVtkPolyData::loadVtkObject()
 {
-	RESQML2_NS::PolylineSetRepresentation const* polyline = getResqmlData();
+	RESQML2_NS::PolylineSetRepresentation const *polyline = getResqmlData();
 
 	// Create and set the list of points of the vtkPolyData
 	vtkSmartPointer<vtkPolyData> vtk_polydata = vtkSmartPointer<vtkPolyData>::New();
 
 	// POINT
-	double *allXyzPoints = new double[this->pointCount * 3]; // Will be deleted by VTK
-	this->resqmlData->getXyzPointsOfPatchInGlobalCrs(0, allXyzPoints);
+	double *allXyzPoints = new double[_pointCount * 3]; // Will be deleted by VTK
+	polyline->getXyzPointsOfPatchInGlobalCrs(0, allXyzPoints);
 
 	vtkSmartPointer<vtkPoints> vtkPts = vtkSmartPointer<vtkPoints>::New();
 
-	const size_t coordCount = this->pointCount * 3;
-	if (this->resqmlData->getLocalCrs(0)->isDepthOriented())
+	const size_t coordCount = _pointCount * 3;
+	if (polyline->getLocalCrs(0)->isDepthOriented())
 	{
 		for (size_t zCoordIndex = 2; zCoordIndex < coordCount; zCoordIndex += 3)
 		{
@@ -104,6 +103,6 @@ void ResqmlPolylineToVtkPolyData::loadVtkObject()
 		vtk_polydata->SetLines(setPolylineRepresentationLines);
 	}
 
-	this->vtkData->SetPartition(0, vtk_polydata);
-	this->vtkData->Modified();
+	_vtkData->SetPartition(0, vtk_polydata);
+	_vtkData->Modified();
 }

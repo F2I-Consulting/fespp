@@ -32,35 +32,25 @@ public:
 	/**
 	 * Constructor
 	 */
-	WitsmlWellboreCompletionPerforationToVtkPolyData(const resqml2::WellboreTrajectoryRepresentation* wellboreTrajectory, const WITSML2_1_NS::WellboreCompletion *WellboreCompletion, const std::string& connectionuid, const std::string& title, const double skin, const WellboreStatut statut, const int proc_number = 0, int max_proc = 1);
+	WitsmlWellboreCompletionPerforationToVtkPolyData(const resqml2::WellboreTrajectoryRepresentation *wellboreTrajectory, const WITSML2_1_NS::WellboreCompletion *WellboreCompletion, const std::string &connectionuid, const std::string &title, const double skin, const int p_procNumber = 0, int p_maxProc = 1);
 
 	/**
- * load vtkDataSet with resqml data
- */
+	 * load vtkDataSet with resqml data
+	 */
 	void loadVtkObject();
-
-	/**
-* return the vtkPartitionedDataSet of resqml object
-*/
-	//vtkSmartPointer<vtkPolyData> getOutput() const { return vtkData; }
 
 	std::string getTitle() const { return title; }
 	std::string getConnectionuid() const { return connectionuid; }
-	
+
 private:
 	void addSkin();
-	void addStatus();
 
 protected:
-
-	const WITSML2_1_NS::WellboreCompletion* wellboreCompletion;
-	const resqml2::WellboreTrajectoryRepresentation* wellboreTrajectory;
+	const WITSML2_1_NS::WellboreCompletion *wellboreCompletion;
+	const resqml2::WellboreTrajectoryRepresentation *wellboreTrajectory;
 	std::string title;
 	std::string connectionuid;
 	double skin;
-	WellboreStatut statut;
 	uint64_t index;
-
-	//vtkSmartPointer<vtkPolyData> vtkData;
 };
 #endif

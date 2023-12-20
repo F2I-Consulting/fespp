@@ -35,7 +35,7 @@ public:
 	/**
 	 * Constructor
 	 */
-	explicit ResqmlPolylineToVtkPolyData(const RESQML2_NS::PolylineSetRepresentation *polyline, int proc_number = 0, int max_proc = 1);
+	explicit ResqmlPolylineToVtkPolyData(const RESQML2_NS::PolylineSetRepresentation *polyline, int p_procNumber = 0, int p_maxProc = 1);
 
 	/**
 	 * load vtkDataSet with resqml data
@@ -43,6 +43,6 @@ public:
 	void loadVtkObject() override;
 
 protected:
-	const RESQML2_NS::PolylineSetRepresentation* getResqmlData() const;
+	const RESQML2_NS::PolylineSetRepresentation *getResqmlData() const;
 };
 #endif

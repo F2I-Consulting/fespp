@@ -27,7 +27,7 @@ under the License.
 #include <string>
 
 // include VTK
-#include <vtkSmartPointer.h> 
+#include <vtkSmartPointer.h>
 #include <vtkStructuredGrid.h>
 
 #include "ResqmlAbstractRepresentationToVtkPartitionedDataSet.h"
@@ -37,20 +37,20 @@ namespace RESQML2_NS
 	class Grid2dRepresentation;
 }
 
-class ResqmlGrid2dToVtkStructuredGrid : public ResqmlAbstractRepresentationToVtkPartitionedDataSet 
+class ResqmlGrid2dToVtkStructuredGrid : public ResqmlAbstractRepresentationToVtkPartitionedDataSet
 {
 public:
 	/**
-	* Constructor
-	*/
-	explicit ResqmlGrid2dToVtkStructuredGrid(const RESQML2_NS::Grid2dRepresentation * grid2D, int proc_number = 0, int max_proc = 1);
+	 * Constructor
+	 */
+	explicit ResqmlGrid2dToVtkStructuredGrid(const RESQML2_NS::Grid2dRepresentation *grid2D, int p_procNumber = 0, int p_maxProc = 1);
 
 	/**
-	* load vtkDataSet with resqml data
-	*/
+	 * load vtkDataSet with resqml data
+	 */
 	void loadVtkObject() override;
 
 protected:
-	const RESQML2_NS::Grid2dRepresentation* getResqmlData() const;
+	const RESQML2_NS::Grid2dRepresentation *getResqmlData() const;
 };
 #endif

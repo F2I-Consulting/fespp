@@ -37,7 +37,7 @@ public:
 	/**
 	 * Constructor
 	 */
-	CommonAbstractObjectToVtkPartitionedDataSet(const COMMON_NS::AbstractObject *abstract_object, int proc_number = 0, int max_proc = 1);
+	CommonAbstractObjectToVtkPartitionedDataSet(const COMMON_NS::AbstractObject *p_abstractObject, int p_procNumber = 0, int p_maxProc = 1);
 
 	/**
 	 * Destructor
@@ -52,30 +52,27 @@ public:
 	/**
 	 * return the vtkPartitionedDataSet of resqml object
 	 */
-	vtkSmartPointer<vtkPartitionedDataSet> getOutput() const { return vtkData; }
+	vtkSmartPointer<vtkPartitionedDataSet> getOutput() const { return  _vtkData; }
 
 	/**
-	*
-	*/
-	std::string getUuid() const { return abs_uuid; };
-	std::string getTitle() const { return abs_title; };
-	void setUuid(std::string new_uuid) { abs_uuid = new_uuid; }
-	void setTitle(std::string new_title) { abs_title = new_title; }
-	
+	 *
+	 */
+	std::string getUuid() const { return  _absUuid; };
+	std::string getTitle() const { return _absTitle; };
+	void setUuid(std::string p_newUuid) {  _absUuid = p_newUuid; }
+	void setTitle(std::string p_newTitle) { _absTitle = p_newTitle; }
 
 protected:
+	const COMMON_NS::AbstractObject *getResqmlData() const { return _resqmlData; }
 
-	const COMMON_NS::AbstractObject * getResqmlData() const { return resqmlData; }
+	int _procNumber;
+	int _maxProc;
 
-	int procNumber;
-	int maxProc;
+	const COMMON_NS::AbstractObject *_resqmlData;
 
-	const COMMON_NS::AbstractObject * resqmlData;
+	vtkSmartPointer<vtkPartitionedDataSet>  _vtkData;
 
-	vtkSmartPointer<vtkPartitionedDataSet> vtkData;
-
-	std::string abs_uuid;
-	std::string abs_title;
-
+	std::string  _absUuid;
+	std::string _absTitle;
 };
 #endif

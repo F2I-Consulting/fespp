@@ -34,93 +34,95 @@ under the License.
 #include "Mapping/ResqmlPropertyToVtkDataArray.h"
 
 //----------------------------------------------------------------------------
-ResqmlAbstractRepresentationToVtkPartitionedDataSet::ResqmlAbstractRepresentationToVtkPartitionedDataSet(const RESQML2_NS::AbstractRepresentation *abstract_representation, int proc_number, int max_proc)
-	: CommonAbstractObjectToVtkPartitionedDataSet(abstract_representation,
-		proc_number,
-		max_proc),
-	subrep_pointer_on_points_count(0),
-	resqmlData(abstract_representation),
-	uuidToVtkDataArray()
+ResqmlAbstractRepresentationToVtkPartitionedDataSet::ResqmlAbstractRepresentationToVtkPartitionedDataSet(const RESQML2_NS::AbstractRepresentation *p_abstractRepresentation, int p_procNumber, int p_maxProc)
+	: CommonAbstractObjectToVtkPartitionedDataSet(p_abstractRepresentation,
+												  p_procNumber,
+												  p_maxProc),
+	  _subrepPointerOnPointsCount(0),
+	  _resqmlData(p_abstractRepresentation),
+	  _uuidToVtkDataArray()
 {
 }
 
-void ResqmlAbstractRepresentationToVtkPartitionedDataSet::addDataArray(const std::string &uuid, int patch_index)
+void ResqmlAbstractRepresentationToVtkPartitionedDataSet::addDataArray(const std::string &p_uuid, int p_patchIndex)
 {
-	std::vector<RESQML2_NS::AbstractValuesProperty *> valuesPropertySet = this->getResqmlData()->getValuesPropertySet();
-	std::vector<RESQML2_NS::AbstractValuesProperty *>::iterator it = std::find_if(valuesPropertySet.begin(), valuesPropertySet.end(),
-																				  [&uuid](RESQML2_NS::AbstractValuesProperty const *property)
-																				  { return property->getUuid() == uuid; });
-	if (it != std::end(valuesPropertySet))
+	std::vector<RESQML2_NS::AbstractValuesProperty *> w_valuesPropertySet = getResqmlData()->getValuesPropertySet();
+	std::vector<RESQML2_NS::AbstractValuesProperty *>::iterator w_it = std::find_if(w_valuesPropertySet.begin(), w_valuesPropertySet.end(),
+																					[&p_uuid](RESQML2_NS::AbstractValuesProperty const *w_property)
+																					{ return w_property->getUuid() == p_uuid; });
+	if (w_it != std::end(w_valuesPropertySet))
 	{
-		auto const* const resqmlProp = *it;
-			ResqmlPropertyToVtkDataArray* fesppProperty = isHyperslabed
-				? new ResqmlPropertyToVtkDataArray(resqmlProp,
-					this->iCellCount * this->jCellCount * (this->maxKIndex - this->initKIndex),
-					this->pointCount,
-					this->iCellCount,
-					this->jCellCount,
-					this->maxKIndex - this->initKIndex,
-					this->initKIndex,
-					patch_index)
-				: new ResqmlPropertyToVtkDataArray(resqmlProp,
-					this->iCellCount * this->jCellCount * this->kCellCount,
-					this->pointCount,
-					patch_index);
-		switch (resqmlProp->getAttachmentKind())
+		auto const *const w_resqmlProp = *w_it;
+		ResqmlPropertyToVtkDataArray *w_fesppProperty = _isHyperslabed
+														  ? new ResqmlPropertyToVtkDataArray(w_resqmlProp,
+																							 _iCellCount * _jCellCount * (_maxKIndex - _initKIndex),
+																							 _pointCount,
+																							 _iCellCount,
+																							 _jCellCount,
+																							 _maxKIndex - _initKIndex,
+																							 _initKIndex,
+																							 p_patchIndex)
+														  : new ResqmlPropertyToVtkDataArray(w_resqmlProp,
+																							 _iCellCount * _jCellCount * _kCellCount,
+																							 _pointCount,
+																							 p_patchIndex);
+		switch (w_resqmlProp->getAttachmentKind())
 		{
 		case gsoap_eml2_3::eml23__IndexableElement::cells:
 		case gsoap_eml2_3::eml23__IndexableElement::triangles:
-			this->vtkData->GetPartition(0)->GetCellData()->AddArray(fesppProperty->getVtkData());
+			_vtkData->GetPartition(0)->GetCellData()->AddArray(w_fesppProperty->getVtkData());
 			break;
 		case gsoap_eml2_3::eml23__IndexableElement::nodes:
-			this->vtkData->GetPartition(0)->GetPointData()->AddArray(fesppProperty->getVtkData());
+			_vtkData->GetPartition(0)->GetPointData()->AddArray(w_fesppProperty->getVtkData());
 			break;
 		default:
-			throw std::invalid_argument("The property " + uuid + " is attached on a non supported topological element i.e. not cell, not point.");
+			throw std::invalid_argument("The property " + p_uuid + " is attached on a non supported topological element i.e. not cell, not point.");
 		}
-		uuidToVtkDataArray[uuid] = fesppProperty;
-		this->vtkData->Modified();
+		_uuidToVtkDataArray[p_uuid] = w_fesppProperty;
+		_vtkData->Modified();
 	}
 	else
 	{
-		throw std::invalid_argument("The property " + uuid + "cannot be added since it is not contained in the representation " + this->getResqmlData()->getUuid());
+		throw std::invalid_argument("The property " + p_uuid + "cannot be added since it is not contained in the representation " + getResqmlData()->getUuid());
 	}
 }
 
-void ResqmlAbstractRepresentationToVtkPartitionedDataSet::deleteDataArray(const std::string &uuid)
+void ResqmlAbstractRepresentationToVtkPartitionedDataSet::deleteDataArray(const std::string &p_uuid)
 {
-	ResqmlPropertyToVtkDataArray* vtkDataArray = uuidToVtkDataArray[uuid];
-	if (vtkDataArray != nullptr)
+	ResqmlPropertyToVtkDataArray *w_vtkDataArray = _uuidToVtkDataArray[p_uuid];
+	if (w_vtkDataArray != nullptr)
 	{
-		char* dataArrayName = vtkDataArray->getVtkData()->GetName();
-		if (vtkData->GetPartition(0)->GetCellData()->HasArray(dataArrayName)) {
-			vtkData->GetPartition(0)->GetCellData()->RemoveArray(dataArrayName);
+		char *w_dataArrayName = w_vtkDataArray->getVtkData()->GetName();
+		if (_vtkData->GetPartition(0)->GetCellData()->HasArray(w_dataArrayName))
+		{
+			_vtkData->GetPartition(0)->GetCellData()->RemoveArray(w_dataArrayName);
 		}
-		if (vtkData->GetPartition(0)->GetPointData()->HasArray(dataArrayName)) {
-			vtkData->GetPartition(0)->GetPointData()->RemoveArray(dataArrayName);
+		if (_vtkData->GetPartition(0)->GetPointData()->HasArray(w_dataArrayName))
+		{
+			_vtkData->GetPartition(0)->GetPointData()->RemoveArray(w_dataArrayName);
 		}
 
 		// Cleaning
-		delete vtkDataArray;
-		uuidToVtkDataArray.erase(uuid);
+		delete w_vtkDataArray;
+		_uuidToVtkDataArray.erase(p_uuid);
 	}
 	else
 	{
-		throw std::invalid_argument("The property " + uuid + "cannot be deleted from representation " + this->getResqmlData()->getUuid() + " since it has never been added");
+		throw std::invalid_argument("The property " + p_uuid + "cannot be deleted from representation " + getResqmlData()->getUuid() + " since it has never been added");
 	}
 }
 
-void ResqmlAbstractRepresentationToVtkPartitionedDataSet::registerSubRep() 
-{ 
-	++subrep_pointer_on_points_count; 
+void ResqmlAbstractRepresentationToVtkPartitionedDataSet::registerSubRep()
+{
+	++_subrepPointerOnPointsCount;
 }
 
-void ResqmlAbstractRepresentationToVtkPartitionedDataSet::unregisterSubRep() 
+void ResqmlAbstractRepresentationToVtkPartitionedDataSet::unregisterSubRep()
 {
-	--subrep_pointer_on_points_count; 
+	--_subrepPointerOnPointsCount;
 }
 
 unsigned int ResqmlAbstractRepresentationToVtkPartitionedDataSet::subRepLinkedCount()
-{ 
-	return subrep_pointer_on_points_count; 
+{
+	return _subrepPointerOnPointsCount;
 }
