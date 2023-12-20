@@ -76,7 +76,7 @@
 			<IntVectorProperty name="ConnectionTag" command="GetConnectionTag" information_only="1"></IntVectorProperty>
 			<IntVectorProperty name="DisconnectionTag" command="GetDisconnectionTag" information_only="1"></IntVectorProperty>
 
-			<StringVectorProperty command="setETPUrlConnection" default_values="wss://osdu-ship.msft-osdu-test.org:443/oetp/reservoir-ddms/" name="ETPUrl" label="ETP Url" number_of_elements="1" panel_visibility="default">
+			<StringVectorProperty command="setETPUrlConnection" default_values="ws://etp.f2i-consulting.com:9002/" name="ETPUrl" label="ETP Url" number_of_elements="1" panel_visibility="default">
 				<Documentation>This property specifies the string used to describe the ETP Url</Documentation>
 				<Hints>
 					<PropertyWidgetDecorator type="GenericDecorator" mode="enabled_state" property="ConnectionTag" value="0" inverse="1" />
@@ -89,7 +89,7 @@
 				</Hints>
 			</StringVectorProperty>
 
-			<IntVectorProperty name="Authentification" command="setAuthType" number_of_elements="1" default_values="0">
+			<IntVectorProperty name="Authentification" command="setAuthType" number_of_elements="1" default_values="1">
 				<EnumerationDomain name="enum">
 					<Entry value="0" text="Bearer"/>
 					<Entry value="1" text="Basic"/>
