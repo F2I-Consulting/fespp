@@ -19,8 +19,7 @@ under the License.
 #ifndef _ResqmlWellboreMarkerFrameToVtkPartitionedDataSet_H_
 #define _ResqmlWellboreMarkerFrameToVtkPartitionedDataSet_H_
 
-#include "ResqmlAbstractRepresentationToVtkPartitionedDataSet.h"
-#include "ResqmlWellboreMarkerToVtkPolyData.h"
+#include "Mapping/CommonAbstractObjectSetToVtkPartitionedDataSetSet.h"
 
 #include <vector>
 
@@ -32,7 +31,7 @@ namespace RESQML2_NS
 
 class ResqmlWellboreMarkerToVtkPolyData;
 
-class ResqmlWellboreMarkerFrameToVtkPartitionedDataSet : public ResqmlAbstractRepresentationToVtkPartitionedDataSet
+class ResqmlWellboreMarkerFrameToVtkPartitionedDataSet : public CommonAbstractObjectSetToVtkPartitionedDataSetSet
 {
 public:
 	/**
@@ -40,21 +39,12 @@ public:
 	 */
 	explicit ResqmlWellboreMarkerFrameToVtkPartitionedDataSet(const RESQML2_NS::WellboreMarkerFrameRepresentation *marker, int p_procNumber = 0, int p_maxProc = 1);
 
-	/**
-	 * load vtkDataSet with resqml data
-	 */
-	void loadVtkObject() override;
+	void addMarker(const RESQML2_NS::WellboreMarkerFrameRepresentation* marker, const std::string & p_uuid, bool orientation, int size);
 
-	void addMarker(std::string marker_uuid, bool orientation, int size);
-	void removeMarker(std::string marker_uuid);
-
-protected:
-	const resqml2::WellboreMarkerFrameRepresentation *getResqmlData() const;
+	void changeOrientationAndSize(const std::string& p_uuid, bool orientation, int size);
 
 private:
 	bool orientation;
 	int size;
-
-	std::vector<ResqmlWellboreMarkerToVtkPolyData *> list_marker;
 };
 #endif

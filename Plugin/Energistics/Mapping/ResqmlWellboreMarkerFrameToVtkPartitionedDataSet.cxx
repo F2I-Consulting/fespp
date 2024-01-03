@@ -31,72 +31,33 @@ under the License.
 #include "Mapping/ResqmlWellboreMarkerToVtkPolyData.h"
 
 //----------------------------------------------------------------------------
-ResqmlWellboreMarkerFrameToVtkPartitionedDataSet::ResqmlWellboreMarkerFrameToVtkPartitionedDataSet(const RESQML2_NS::WellboreMarkerFrameRepresentation *marker_frame, int p_procNumber, int p_maxProc)
-	: ResqmlAbstractRepresentationToVtkPartitionedDataSet(marker_frame,
-														  p_procNumber,
-														  p_maxProc)
+ResqmlWellboreMarkerFrameToVtkPartitionedDataSet::ResqmlWellboreMarkerFrameToVtkPartitionedDataSet(const RESQML2_NS::WellboreMarkerFrameRepresentation* p_markerFrame, int p_procNumber, int p_maxProc)
+	: CommonAbstractObjectSetToVtkPartitionedDataSetSet(p_markerFrame,
+		p_procNumber,
+		p_maxProc)
 {
-	_vtkData = vtkSmartPointer<vtkPartitionedDataSet>::New();
-	_vtkData->Modified();
 }
 
 //----------------------------------------------------------------------------
-const RESQML2_NS::WellboreMarkerFrameRepresentation *ResqmlWellboreMarkerFrameToVtkPartitionedDataSet::getResqmlData() const
+void ResqmlWellboreMarkerFrameToVtkPartitionedDataSet::addMarker(const RESQML2_NS::WellboreMarkerFrameRepresentation* p_marker, const std::string & p_uuid, bool p_orientation, int p_size)
 {
-	return static_cast<const RESQML2_NS::WellboreMarkerFrameRepresentation *>(_resqmlData);
+	_mapperSet.push_back(new ResqmlWellboreMarkerToVtkPolyData(p_marker, p_uuid, p_orientation, p_size));
 }
 
-//----------------------------------------------------------------------------
-void ResqmlWellboreMarkerFrameToVtkPartitionedDataSet::loadVtkObject()
+void ResqmlWellboreMarkerFrameToVtkPartitionedDataSet::changeOrientationAndSize(const std::string& p_uuid, bool p_orientation, int p_size)
 {
-	for (int idx = 0; idx < this->list_marker.size(); ++idx)
+	if ((static_cast<ResqmlWellboreMarkerToVtkPolyData*>(_mapperSet[0]))->getMarkerOrientation() != p_orientation ||
+		(static_cast<ResqmlWellboreMarkerToVtkPolyData*>(_mapperSet[0]))->getMarkerSize() != p_size)
 	{
-		_vtkData->SetPartition(idx, this->list_marker[idx]->getOutput()->GetPartitionAsDataObject(0));
-		_vtkData->GetMetaData(idx)->Set(vtkCompositeDataSet::NAME(), this->list_marker[idx]->getTitle().c_str());
-	}
-}
-
-//----------------------------------------------------------------------------
-void ResqmlWellboreMarkerFrameToVtkPartitionedDataSet::addMarker(std::string marker_uuid, bool orientation, int size)
-{
-	bool exist = false;
-	for (int idx = 0; idx < this->list_marker.size(); ++idx)
-	{
-		if (this->list_marker[idx]->getUuid() == marker_uuid)
+		for (auto* mapper : _mapperSet)
 		{
-			auto old_size = this->list_marker[idx]->getMarkerSize();
-			auto old_orientation = this->list_marker[idx]->getMarkerOrientation();
-			if (this->list_marker[idx]->getMarkerOrientation() != orientation || this->list_marker[idx]->getMarkerSize() != size)
+			if (mapper->getUuid() == p_uuid)
 			{
-				this->list_marker[idx]->displayOption(orientation, size);
-				this->loadVtkObject();
+				ResqmlWellboreMarkerToVtkPolyData* marker = static_cast<ResqmlWellboreMarkerToVtkPolyData*>(mapper);
+				marker->setMarkerOrientation(p_orientation);
+				marker->setMarkerOrientation(p_size);
+				marker->loadVtkObject();
 			}
-			exist = true;
 		}
 	}
-	if (!exist)
-	{
-		this->list_marker.push_back(new ResqmlWellboreMarkerToVtkPolyData(getResqmlData(), marker_uuid, orientation, size));
-		this->loadVtkObject();
-	}
-}
-
-//----------------------------------------------------------------------------
-void ResqmlWellboreMarkerFrameToVtkPartitionedDataSet::removeMarker(std::string marker_uuid)
-{
-	_vtkData = vtkSmartPointer<vtkPartitionedDataSet>::New();
-	for (auto it = this->list_marker.begin(); it != this->list_marker.end();)
-	{
-		ResqmlWellboreMarkerToVtkPolyData *marker = *it;
-		if (marker->getUuid() == marker_uuid)
-		{
-			_vtkData = vtkSmartPointer<vtkPartitionedDataSet>::New();
-			it = this->list_marker.erase(it);
-		}
-		else
-		{
-			++it;
-		}
-	}
-	this->loadVtkObject();
 }

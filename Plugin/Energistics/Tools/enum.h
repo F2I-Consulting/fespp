@@ -22,6 +22,14 @@ under the License.
 
 #include <string>
 
+enum class MapperType
+{
+	Folder,
+	Data,
+	Mapper,
+	MapperSet
+};
+
 enum class TreeViewNodeType
 {
 	Unknown,
@@ -37,7 +45,7 @@ enum class TreeViewNodeType
 	WellboreMarker,
 	WellboreCompletion,
 	TimeSeries,
-	Perforation,
+	Perforation
 };
 
 #endif // ENUM_H

@@ -28,6 +28,8 @@ under the License.
 #include <fesapi/resqml2/WellboreInterpretation.h>
 #include <fesapi/resqml2/WellboreTrajectoryRepresentation.h>
 
+#include "Mapping/WitsmlWellboreCompletionPerforationToVtkPolyData.h"
+
 //----------------------------------------------------------------------------
 WitsmlWellboreCompletionToVtkPartitionedDataSet::WitsmlWellboreCompletionToVtkPartitionedDataSet(const WITSML2_1_NS::WellboreCompletion *p_completion, int p_procNumber, int p_maxProc)
 	: CommonAbstractObjectSetToVtkPartitionedDataSetSet(p_completion,

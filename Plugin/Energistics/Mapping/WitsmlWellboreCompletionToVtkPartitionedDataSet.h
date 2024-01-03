@@ -22,9 +22,6 @@ under the License.
 #include <vector>
 
 #include "Mapping/CommonAbstractObjectSetToVtkPartitionedDataSetSet.h"
-#include "Mapping/WitsmlWellboreCompletionPerforationToVtkPolyData.h"
-
-#include "../Tools/enum.h"
 
 namespace WITSML2_1_NS
 {

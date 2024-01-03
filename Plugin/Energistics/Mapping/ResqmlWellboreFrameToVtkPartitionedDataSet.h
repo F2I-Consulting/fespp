@@ -19,7 +19,7 @@ under the License.
 #ifndef __ResqmlWellboreFrameToVtkPartitionedDataSet_H_
 #define __ResqmlWellboreFrameToVtkPartitionedDataSet_H_
 
-#include "ResqmlAbstractRepresentationToVtkPartitionedDataSet.h"
+#include "Mapping/CommonAbstractObjectSetToVtkPartitionedDataSetSet.h"
 
 namespace RESQML2_NS
 {
@@ -27,28 +27,14 @@ namespace RESQML2_NS
 	class AbstractValuesProperty;
 }
 
-class ResqmlWellboreChannelToVtkPolyData;
-
-class ResqmlWellboreFrameToVtkPartitionedDataSet : public ResqmlAbstractRepresentationToVtkPartitionedDataSet
+class ResqmlWellboreFrameToVtkPartitionedDataSet : public CommonAbstractObjectSetToVtkPartitionedDataSetSet
 {
 public:
 	/**
 	 * Constructor
 	 */
-	explicit ResqmlWellboreFrameToVtkPartitionedDataSet(const RESQML2_NS::WellboreFrameRepresentation *frame, int p_procNumber = 0, int p_maxProc = 1);
+	ResqmlWellboreFrameToVtkPartitionedDataSet(const RESQML2_NS::WellboreFrameRepresentation *frame, int p_procNumber = 0, int p_maxProc = 1);
 
-	/**
-	 * load vtkDataSet with resqml data
-	 */
-	void loadVtkObject() override;
-
-	void addChannel(const std::string &channel_uuid, RESQML2_NS::AbstractValuesProperty *property);
-	void removeChannel(const std::string &channel_uuid);
-
-protected:
-	const RESQML2_NS::WellboreFrameRepresentation *getResqmlData() const;
-
-private:
-	std::vector<ResqmlWellboreChannelToVtkPolyData *> list_channel;
+	void addChannel(const std::string& uuid, RESQML2_NS::AbstractValuesProperty* property);
 };
 #endif

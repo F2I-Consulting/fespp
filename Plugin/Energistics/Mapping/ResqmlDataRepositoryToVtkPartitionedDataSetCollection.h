@@ -67,7 +67,7 @@ public:
 	ResqmlDataRepositoryToVtkPartitionedDataSetCollection();
 	~ResqmlDataRepositoryToVtkPartitionedDataSetCollection();
 	// --------------- PART: TreeView ---------------------
-	vtkDataAssembly *GetAssembly() { return _output->GetDataAssembly(); }
+	vtkDataAssembly* GetAssembly() { return _output->GetDataAssembly(); };
 
 	//---------------------------------
 
@@ -87,7 +87,7 @@ public:
 
 	vtkPartitionedDataSetCollection *getVtkPartitionedDatasSetCollection(const double p_time, const int p_nbProcess = 1, const int p_processId = 0);
 
-	std::vector<double> getTimes() { return _timesStep; }
+	std::vector<double> getTimes() { return _timesStep; };
 
 	/**
 	 * @return selection parent
@@ -116,17 +116,19 @@ private:
 	 */
 	void deleteMapper(double p_time);
 	/**
-	 * initialize _currentSelection mapper
+	 * initialize _nodeIdToMapperSet
 	 */
-	void initMapper(const TreeViewNodeType p_type, const int p_nodeId, const int p_nbProcess, const int p_processId);
+	void initMapperSet(const TreeViewNodeType p_type, const int p_nodeId, const int p_nbProcess, const int p_processId);
 	/**
-	 * load vtkObject mapper
+	 * initialize and load _nodeIdToMapper
 	 */
-	void loadMapper(const TreeViewNodeType p_type, const int p_nodeId, double p_time);
+	void loadMapper(const TreeViewNodeType p_type, const int p_nodeId,const int p_nbProcess, const int p_processId);
+	void loadRepresentationMapper(const int p_nodeId, const int p_nbProcess, const int p_processId);
+	void loadWellboreTrajectoryMapper(const int p_nodeId);
 	/**
-	 * Attach vtkObject to _output
-	 */
-	void attachMapper();
+ * add data to parent nodeId
+ */
+	void addDataToParent(const TreeViewNodeType p_type, const int p_nodeId, const int p_nbProcess, const int p_processId, const double p_time);
 
 	// This function replaces the VTK function vtkDataAssembly::MakeValidNodeName(),
 	// which has a bug in the sorted_valid_chars array. The '.' character is placed

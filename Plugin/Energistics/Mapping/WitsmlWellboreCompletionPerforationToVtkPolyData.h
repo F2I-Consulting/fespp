@@ -22,7 +22,6 @@ under the License.
 #include <fesapi/resqml2/WellboreTrajectoryRepresentation.h>
 
 #include "Mapping/CommonAbstractObjectToVtkPartitionedDataSet.h"
-#include "../Tools/enum.h"
 
 #include <vtkPolyData.h>
 

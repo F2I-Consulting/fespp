@@ -33,18 +33,17 @@ under the License.
 #include <fesapi/resqml2/AbstractLocal3dCrs.h>
 
 //----------------------------------------------------------------------------
-ResqmlWellboreMarkerToVtkPolyData::ResqmlWellboreMarkerToVtkPolyData(const RESQML2_NS::WellboreMarkerFrameRepresentation *marker_frame, std::string uuid, bool orientation, int size, int p_procNumber, int p_maxProc)
-	: ResqmlAbstractRepresentationToVtkPartitionedDataSet(marker_frame,
+ResqmlWellboreMarkerToVtkPolyData::ResqmlWellboreMarkerToVtkPolyData(const resqml2::WellboreMarkerFrameRepresentation *p_markerFrame, std::string uuid, bool orientation, int size, int p_procNumber, int p_maxProc)
+	: ResqmlAbstractRepresentationToVtkPartitionedDataSet(p_markerFrame,
 														  p_procNumber,
 														  p_maxProc),
 	  orientation(orientation),
-	  size(size),
-	  uuid(uuid),
-	  title("")
+	  size(size)
 {
 	_vtkData = vtkSmartPointer<vtkPartitionedDataSet>::New();
-	this->loadVtkObject();
 	_vtkData->Modified();
+
+	setUuid(uuid);
 }
 
 //----------------------------------------------------------------------------
@@ -62,9 +61,9 @@ void ResqmlWellboreMarkerToVtkPolyData::loadVtkObject()
 	// search Marker
 	for (unsigned int mIndex = 0; mIndex < markerSet.size(); ++mIndex)
 	{
-		if (markerSet[mIndex]->getUuid() == this->uuid)
+		if (markerSet[mIndex]->getUuid() == getUuid())
 		{
-			this->title = markerSet[mIndex]->getTitle();
+			setTitle("Marker_"+markerSet[mIndex]->getTitle());
 			std::unique_ptr<double[]> doublePositions(new double[marker_frame->getMdValuesCount() * 3]);
 			marker_frame->getXyzPointsOfPatch(0, doublePositions.get());
 
@@ -91,15 +90,6 @@ void ResqmlWellboreMarkerToVtkPolyData::loadVtkObject()
 			}
 		}
 	}
-}
-
-//----------------------------------------------------------------------------
-void ResqmlWellboreMarkerToVtkPolyData::displayOption(bool orientation, int size)
-{
-	this->orientation = orientation;
-	this->size = size;
-	_vtkData = vtkSmartPointer<vtkPartitionedDataSet>::New();
-	this->loadVtkObject();
 }
 
 namespace

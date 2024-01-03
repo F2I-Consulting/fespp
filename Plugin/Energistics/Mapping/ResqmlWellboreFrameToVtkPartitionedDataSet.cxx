@@ -16,7 +16,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 -----------------------------------------------------------------------*/
-#include "ResqmlWellboreFrameToVtkPartitionedDataSet.h"
+#include "Mapping/ResqmlWellboreFrameToVtkPartitionedDataSet.h"
 
 #include <algorithm>
 
@@ -26,51 +26,19 @@ under the License.
 #include <fesapi/resqml2/AbstractValuesProperty.h>
 
 // include F2i-consulting Energistics Paraview Plugin
-#include "ResqmlWellboreChannelToVtkPolyData.h"
+#include "Mapping/ResqmlWellboreChannelToVtkPolyData.h"
 
 //----------------------------------------------------------------------------
-ResqmlWellboreFrameToVtkPartitionedDataSet::ResqmlWellboreFrameToVtkPartitionedDataSet(const resqml2::WellboreFrameRepresentation *frame, int p_procNumber, int p_maxProc)
-	: ResqmlAbstractRepresentationToVtkPartitionedDataSet(frame,
+ResqmlWellboreFrameToVtkPartitionedDataSet::ResqmlWellboreFrameToVtkPartitionedDataSet(const resqml2::WellboreFrameRepresentation *p_frame, int p_procNumber, int p_maxProc)
+	: CommonAbstractObjectSetToVtkPartitionedDataSetSet(p_frame,
 														  p_procNumber,
 														  p_maxProc)
 {
-	_vtkData = vtkSmartPointer<vtkPartitionedDataSet>::New();
-	this->loadVtkObject();
 }
 
 //----------------------------------------------------------------------------
-const RESQML2_NS::WellboreFrameRepresentation *ResqmlWellboreFrameToVtkPartitionedDataSet::getResqmlData() const
+void ResqmlWellboreFrameToVtkPartitionedDataSet::addChannel(const std::string& p_uuid, resqml2::AbstractValuesProperty* p_property)
 {
-	return static_cast<const RESQML2_NS::WellboreFrameRepresentation *>(_resqmlData);
-}
-
-//----------------------------------------------------------------------------
-void ResqmlWellboreFrameToVtkPartitionedDataSet::loadVtkObject()
-{
-	for (int idx = 0; idx < this->list_channel.size(); ++idx)
-	{
-		_vtkData->SetPartition(idx, this->list_channel[idx]->getOutput()->GetPartitionAsDataObject(0));
-		_vtkData->GetMetaData(idx)->Set(vtkCompositeDataSet::NAME(), this->list_channel[idx]->getTitle().c_str());
-	}
-}
-
-//----------------------------------------------------------------------------
-void ResqmlWellboreFrameToVtkPartitionedDataSet::addChannel(const std::string &p_uuid, resqml2::AbstractValuesProperty *property)
-{
-	if (std::find_if(list_channel.begin(), list_channel.end(), [p_uuid](ResqmlWellboreChannelToVtkPolyData const *channel)
-					 { return channel->getUuid() == p_uuid; }) == list_channel.end())
-	{
-		this->list_channel.push_back(new ResqmlWellboreChannelToVtkPolyData(getResqmlData(), property, p_uuid));
-		this->loadVtkObject();
-	}
-}
-
-//----------------------------------------------------------------------------
-void ResqmlWellboreFrameToVtkPartitionedDataSet::removeChannel(const std::string &p_uuid)
-{
-	list_channel.erase(
-		std::remove_if(list_channel.begin(), list_channel.end(), [p_uuid](ResqmlWellboreChannelToVtkPolyData const *channel)
-					   { return channel->getUuid() == p_uuid; }),
-		list_channel.end());
-	this->loadVtkObject();
+	const resqml2::WellboreFrameRepresentation* w_wellFrame = dynamic_cast<const resqml2::WellboreFrameRepresentation*>(_resqmlData);
+	_mapperSet.push_back(new ResqmlWellboreChannelToVtkPolyData(w_wellFrame, p_property, p_uuid));
 }

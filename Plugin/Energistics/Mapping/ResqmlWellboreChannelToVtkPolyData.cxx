@@ -22,6 +22,7 @@ under the License.
 #include <vtkTubeFilter.h>
 #include <vtkDoubleArray.h>
 #include <vtkPolyLine.h>
+#include <vtkInformation.h>
 
 #include <fesapi/resqml2/WellboreFrameRepresentation.h>
 #include <fesapi/resqml2/ContinuousProperty.h>
@@ -40,8 +41,10 @@ ResqmlWellboreChannelToVtkPolyData::ResqmlWellboreChannelToVtkPolyData(const RES
 	  title(property->getTitle())
 {
 	_vtkData = vtkSmartPointer<vtkPartitionedDataSet>::New();
-	this->loadVtkObject();
 	_vtkData->Modified();
+
+	setUuid(property->getUuid());
+	setTitle("Channel_"+property->getTitle());
 }
 
 //----------------------------------------------------------------------------
@@ -127,5 +130,6 @@ void ResqmlWellboreChannelToVtkPolyData::loadVtkObject()
 	tubeFilter->Update();
 
 	_vtkData->SetPartition(0, tubeFilter->GetOutput());
+	_vtkData->GetMetaData((unsigned int)0)->Set(vtkCompositeDataSet::NAME(), (const char*)(title+"("+uuid + ")").c_str());
 	_vtkData->Modified();
 }

@@ -78,8 +78,8 @@ WitsmlWellboreCompletionPerforationToVtkPolyData::WitsmlWellboreCompletionPerfor
 	_vtkData = vtkSmartPointer<vtkPartitionedDataSet>::New();
 	_vtkData->Modified();
 
-	this->setUuid(connectionuid);
-	this->setTitle(title);
+	setUuid(connectionuid);
+	setTitle(title);
 
 	// this->loadVtkObject();
 }
