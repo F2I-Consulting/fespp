@@ -24,11 +24,11 @@ You should fill in the following variables
  
 	- in the paraview_install/Plugins/Fespp folder on Linux:
 	   - libFesapiCpp.so (from FESAPI install lib directory)
-	   - libFesapiCpp.so.2.minor (from FESAPI install lib directory)
-	   - libFesapiCpp.so.2.minor.tweak.patch (from FESAPI install lib directory)
+	   - libFesapiCpp.so.2.9 (from FESAPI install lib directory)
+	   - libFesapiCpp.so.2.9.0.0 (from FESAPI install lib directory)
    
 	- in the paraview_install\Plugins\Fespp folder on Windows:
-	   - FesapiCpp.2.minor.tweak.patch.dll (from FESAPI install)
+	   - FesapiCpp.2.9.0.0.dll (from FESAPI install)
 
 - **Note 1** : If they exist (which probably not), you also need to copy FESAPI dependencies in this paraview_install\Plugins\Fespp folder. Or to put them in the (LD_LIBRARY_)PATH.
 - **Note 2** : On Linux at least, you need to build Paraview with VTK_MODULE_USE_EXTERNAL_VTK_hdf5=ON and VTK_MODULE_USE_EXTERNAL_VTK_zlib=ON for using the same HDF5 libraries in PV and Fespp. We use statically link HDF5 with FESAPI for our Windows build.
