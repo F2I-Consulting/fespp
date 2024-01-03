@@ -33,17 +33,17 @@ under the License.
 #include <fesapi/resqml2/AbstractLocal3dCrs.h>
 
 //----------------------------------------------------------------------------
-ResqmlWellboreMarkerToVtkPolyData::ResqmlWellboreMarkerToVtkPolyData(const resqml2::WellboreMarkerFrameRepresentation *p_markerFrame, std::string uuid, bool orientation, int size, int p_procNumber, int p_maxProc)
+ResqmlWellboreMarkerToVtkPolyData::ResqmlWellboreMarkerToVtkPolyData(const resqml2::WellboreMarkerFrameRepresentation *p_markerFrame, std::string p_uuid, bool p_orientation, int p_size, int p_procNumber, int p_maxProc)
 	: ResqmlAbstractRepresentationToVtkPartitionedDataSet(p_markerFrame,
 														  p_procNumber,
 														  p_maxProc),
-	  orientation(orientation),
-	  size(size)
+	  _orientation(p_orientation),
+	  _size(p_size)
 {
 	_vtkData = vtkSmartPointer<vtkPartitionedDataSet>::New();
 	_vtkData->Modified();
 
-	setUuid(uuid);
+	setUuid(p_uuid);
 }
 
 //----------------------------------------------------------------------------
@@ -55,38 +55,36 @@ const RESQML2_NS::WellboreMarkerFrameRepresentation *ResqmlWellboreMarkerToVtkPo
 //----------------------------------------------------------------------------
 void ResqmlWellboreMarkerToVtkPolyData::loadVtkObject()
 {
-	RESQML2_NS::WellboreMarkerFrameRepresentation const *marker_frame = getResqmlData();
-
-	std::vector<RESQML2_NS::WellboreMarker *> markerSet = marker_frame->getWellboreMarkerSet();
+	std::vector<RESQML2_NS::WellboreMarker *> w_markerSet = getResqmlData()->getWellboreMarkerSet();
 	// search Marker
-	for (unsigned int mIndex = 0; mIndex < markerSet.size(); ++mIndex)
+	for (unsigned int w_mIndex = 0; w_mIndex < w_markerSet.size(); ++w_mIndex)
 	{
-		if (markerSet[mIndex]->getUuid() == getUuid())
+		if (w_markerSet[w_mIndex]->getUuid() == getUuid())
 		{
-			setTitle("Marker_"+markerSet[mIndex]->getTitle());
-			std::unique_ptr<double[]> doublePositions(new double[marker_frame->getMdValuesCount() * 3]);
-			marker_frame->getXyzPointsOfPatch(0, doublePositions.get());
+			setTitle("Marker_"+ w_markerSet[w_mIndex]->getTitle());
+			std::unique_ptr<double[]> w_doublePositions(new double[getResqmlData()->getMdValuesCount() * 3]);
+			getResqmlData()->getXyzPointsOfPatch(0, w_doublePositions.get());
 
-			if (orientation)
+			if (_orientation)
 			{
-				if (!std::isnan(doublePositions[3 * mIndex]) &&
-					!std::isnan(doublePositions[3 * mIndex + 1]) &&
-					!std::isnan(doublePositions[3 * mIndex + 2]))
+				if (!std::isnan(w_doublePositions[3 * w_mIndex]) &&
+					!std::isnan(w_doublePositions[3 * w_mIndex + 1]) &&
+					!std::isnan(w_doublePositions[3 * w_mIndex + 2]))
 				{ // no NaN Value
-					if (markerSet[mIndex]->hasDipAngle() &&
-						markerSet[mIndex]->hasDipDirection())
+					if (w_markerSet[w_mIndex]->hasDipAngle() &&
+						w_markerSet[w_mIndex]->hasDipDirection())
 					{ // dips & direction exist
-						createDisk(mIndex);
+						createDisk(w_mIndex);
 					}
 					else
 					{
-						createSphere(mIndex);
+						createSphere(w_mIndex);
 					}
 				}
 			}
 			else
 			{
-				createSphere(mIndex);
+				createSphere(w_mIndex);
 			}
 		}
 	}
@@ -133,21 +131,19 @@ namespace
 //----------------------------------------------------------------------------
 void ResqmlWellboreMarkerToVtkPolyData::createDisk(unsigned int markerIndex)
 {
-	RESQML2_NS::WellboreMarkerFrameRepresentation const *marker_frame = getResqmlData();
-
-	std::unique_ptr<double[]> doublePositions(new double[marker_frame->getMdValuesCount() * 3]);
-	marker_frame->getXyzPointsOfPatch(0, doublePositions.get());
+	std::unique_ptr<double[]> doublePositions(new double[getResqmlData()->getMdValuesCount() * 3]);
+	getResqmlData()->getXyzPointsOfPatch(0, doublePositions.get());
 
 	// initialize a disk
 	vtkSmartPointer<vtkDiskSource> diskSource = vtkSmartPointer<vtkDiskSource>::New();
 	diskSource->SetInnerRadius(0);
-	diskSource->SetOuterRadius(this->size);
+	diskSource->SetOuterRadius(_size);
 	diskSource->Update();
 
 	vtkSmartPointer<vtkPolyData> vtkPolydata = diskSource->GetOutput();
 
 	// get markerSet
-	std::vector<RESQML2_NS::WellboreMarker *> markerSet = marker_frame->getWellboreMarkerSet();
+	std::vector<RESQML2_NS::WellboreMarker *> markerSet = getResqmlData()->getWellboreMarkerSet();
 
 	// disk orientation with dipAngle & dip Direction
 	vtkSmartPointer<vtkTransform> rotation = vtkSmartPointer<vtkTransform>::New();
@@ -164,7 +160,7 @@ void ResqmlWellboreMarkerToVtkPolyData::createDisk(unsigned int markerIndex)
 	vtkPolydata = transformFilter->GetOutput();
 
 	// disk translation with marker position
-	const double zIndice = marker_frame->getLocalCrs(0)->isDepthOriented() ? -1 : 1;
+	const double zIndice = getResqmlData()->getLocalCrs(0)->isDepthOriented() ? -1 : 1;
 	vtkSmartPointer<vtkTransform> translation = vtkSmartPointer<vtkTransform>::New();
 	translation->Translate(doublePositions[3 * markerIndex], doublePositions[3 * markerIndex + 1], zIndice * doublePositions[3 * markerIndex + 2]);
 
@@ -179,18 +175,16 @@ void ResqmlWellboreMarkerToVtkPolyData::createDisk(unsigned int markerIndex)
 //----------------------------------------------------------------------------
 void ResqmlWellboreMarkerToVtkPolyData::createSphere(unsigned int markerIndex)
 {
-	RESQML2_NS::WellboreMarkerFrameRepresentation const *marker_frame = getResqmlData();
-
-	std::unique_ptr<double[]> doublePositions(new double[marker_frame->getMdValuesCount() * 3]);
-	marker_frame->getXyzPointsOfPatch(0, doublePositions.get());
+	std::unique_ptr<double[]> doublePositions(new double[getResqmlData()->getMdValuesCount() * 3]);
+	getResqmlData()->getXyzPointsOfPatch(0, doublePositions.get());
 
 	// get markerSet
-	const double zIndice = marker_frame->getLocalCrs(0)->isDepthOriented() ? -1 : 1;
+	const double zIndice = getResqmlData()->getLocalCrs(0)->isDepthOriented() ? -1 : 1;
 
 	// create  sphere
 	vtkSmartPointer<vtkSphereSource> sphereSource = vtkSmartPointer<vtkSphereSource>::New();
 	sphereSource->SetCenter(doublePositions[3 * markerIndex], doublePositions[3 * markerIndex + 1], zIndice * doublePositions[3 * markerIndex + 2]);
-	sphereSource->SetRadius(size);
+	sphereSource->SetRadius(_size);
 	sphereSource->Update();
 
 	_vtkData->SetPartition(0, sphereSource->GetOutput());

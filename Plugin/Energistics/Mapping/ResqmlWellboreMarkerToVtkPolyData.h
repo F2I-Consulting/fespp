@@ -34,18 +34,18 @@ public:
 	/**
 	 * Constructor
 	 */
-	ResqmlWellboreMarkerToVtkPolyData(const RESQML2_NS::WellboreMarkerFrameRepresentation *marker, std::string uuid, bool orientation, int size, int p_procNumber = 0, int p_maxProc = 1);
+	ResqmlWellboreMarkerToVtkPolyData(const RESQML2_NS::WellboreMarkerFrameRepresentation *p_marker, std::string p_uuid, bool p_orientation, int p_size, int p_procNumber = 0, int p_maxProc = 1);
 
 	/**
 	 * load vtkDataSet with resqml data
 	 */
 	void loadVtkObject() override;
 
-	bool getMarkerOrientation() { return orientation; }
-	int getMarkerSize() { return size; }
+	bool getMarkerOrientation() { return _orientation; }
+	int getMarkerSize() { return _size; }
 
-	void setMarkerOrientation(bool p_orientation) { orientation = p_orientation; }
-	void setMarkerSize(int p_size) { size = p_size; }
+	void setMarkerOrientation(bool p_orientation) { _orientation = p_orientation; }
+	void setMarkerSize(int p_size) { _size = p_size; }
 
 protected:
 	const resqml2::WellboreMarkerFrameRepresentation *getResqmlData() const;
@@ -54,7 +54,7 @@ private:
 	void createDisk(unsigned int markerIndex);
 	void createSphere(unsigned int markerIndex);
 
-	bool orientation;
-	int size;
+	bool _orientation;
+	int _size;
 };
 #endif

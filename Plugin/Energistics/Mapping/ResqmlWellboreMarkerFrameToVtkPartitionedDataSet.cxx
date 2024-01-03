@@ -46,16 +46,18 @@ void ResqmlWellboreMarkerFrameToVtkPartitionedDataSet::addMarker(const RESQML2_N
 
 void ResqmlWellboreMarkerFrameToVtkPartitionedDataSet::changeOrientationAndSize(const std::string& p_uuid, bool p_orientation, int p_size)
 {
-	if ((static_cast<ResqmlWellboreMarkerToVtkPolyData*>(_mapperSet[0]))->getMarkerOrientation() != p_orientation ||
-		(static_cast<ResqmlWellboreMarkerToVtkPolyData*>(_mapperSet[0]))->getMarkerSize() != p_size)
+
+	for (auto* mapper : _mapperSet)
 	{
-		for (auto* mapper : _mapperSet)
+
+		if (mapper->getUuid() == p_uuid)
 		{
-			if (mapper->getUuid() == p_uuid)
+			ResqmlWellboreMarkerToVtkPolyData* marker = static_cast<ResqmlWellboreMarkerToVtkPolyData*>(mapper);
+			if (marker->getMarkerOrientation() != p_orientation ||
+				marker->getMarkerSize() != p_size)
 			{
-				ResqmlWellboreMarkerToVtkPolyData* marker = static_cast<ResqmlWellboreMarkerToVtkPolyData*>(mapper);
 				marker->setMarkerOrientation(p_orientation);
-				marker->setMarkerOrientation(p_size);
+				marker->setMarkerSize(p_size);
 				marker->loadVtkObject();
 			}
 		}
