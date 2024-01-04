@@ -11,14 +11,16 @@ endif (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
 # DEPENDENCIES
 # -----------------------------------------------------------------------------
 
-set (FESAPI_INCLUDE_DIR FESAPI_INCLUDE_DIR-NOTFOUND CACHE PATH "Path to the directory which contains the FESAPI header files")
-set (FESAPI_LIBRARY_RELEASE FESAPI_LIBRARY_RELEASE-NOTFOUND CACHE FILEPATH "Path to the FESAPI release library")
-set (FESAPI_LIBRARY_DEBUG FESAPI_LIBRARY_DEBUG-NOTFOUND CACHE FILEPATH "Path to the FESAPI debug library")
+find_package(FESAPI REQUIRED)
 
 set (WITH_ETP_SSL OFF CACHE BOOL "Only if FESAPI build with ETP support... for building Fespp with ETP support.")
 
 if (WITH_ETP_SSL)
-	find_package(Boost 1.66.0 REQUIRED system)
+	find_package(Boost 1.70)
+	if (NOT Boost_FOUND)
+		# Boost system is required for Beast untill version 1.70 : https://www.boost.org/doc/libs/1_69_0/libs/beast/doc/html/beast/introduction.html
+		find_package(Boost 1.66 REQUIRED system)
+	endif()
 	find_package( Threads )
 	if (NOT TARGET OpenSSL::SSL OR NOT TARGET OpenSSL::Crypto)
 		find_package(OpenSSL REQUIRED)
@@ -39,18 +41,7 @@ if (WITH_ETP_SSL)
 	endif ()
 
 	#AVRO
-	set (AVRO_INCLUDE_DIR AVRO_INCLUDE_DIR-NOTFOUND CACHE PATH "Path to the directory which contains the avro header files")
-	if (NOT IS_DIRECTORY ${AVRO_INCLUDE_DIR})
-		message(SEND_ERROR "The Avro include dir (AVRO_INCLUDE_DIR variable) does not look to be a valid directory. Please modify it.")
-	endif ()
-	set (AVRO_LIBRARY_RELEASE AVRO_LIBRARY_RELEASE-NOTFOUND CACHE FILEPATH "Path to the file which contains the avro library release")
-	if (NOT EXISTS ${AVRO_LIBRARY_RELEASE})
-		message(WARNING "The avro library (AVRO_LIBRARY_RELEASE variable) does not look to be a valid file. Please modify it.")
-	endif ()
-	set (AVRO_LIBRARY_DEBUG AVRO_LIBRARY_DEBUG-NOTFOUND CACHE FILEPATH "Path to the file which contains the AVRO library DEBUG")
-	if (NOT EXISTS ${AVRO_LIBRARY_DEBUG})
-		message(WARNING "The AVRO library (AVRO_LIBRARY_DEBUG variable) does not look to be a valid file. Please modify it.")
-	endif ()
+	find_package(AVRO REQUIRED)
 endif (WITH_ETP_SSL)
 
 # -----------------------------------------------------------------------------

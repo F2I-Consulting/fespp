@@ -21,6 +21,7 @@ under the License.
 #include <exception>
 #include <iterator>
 #include <algorithm>
+#include <limits>
 
 #include <vtkIndent.h>
 #include <vtkInformation.h>
@@ -104,11 +105,11 @@ void vtkETPSource::confirmConnectionClicked()
   try
   {
     const auto dataspaces = this->repository.connect(this->ETPUrl, this->DataPartition, this->Authentification + " " + this->AuthPwd);
-    this->AllDataspaces->InsertNextValue(vtkStdString(""));
     for (const std::string dataspace : dataspaces)
     {
       this->AllDataspaces->InsertNextValue(vtkStdString(dataspace));
     }
+    this->AllDataspaces->InsertNextValue(vtkStdString("eml:///"));
 
     this->ConnectionTag = 0;
     this->DisconnectionTag = 1;

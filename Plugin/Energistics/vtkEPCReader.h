@@ -28,7 +28,7 @@ under the License.
 #include <vtkStringArray.h>
 
 #include "EnergisticsModule.h"
-#include "ResqmlMapping/ResqmlDataRepositoryToVtkPartitionedDataSetCollection.h"
+#include "Mapping/ResqmlDataRepositoryToVtkPartitionedDataSetCollection.h"
 
 class vtkDataAssembly;
 class vtkProperty;
@@ -143,6 +143,7 @@ private:
 
 	// files
 	vtkSmartPointer<vtkStringArray> Files;
+	char* FileName;
 	std::set<std::string> FilesList;
 	std::set<std::string> FileNamesLoaded;
 

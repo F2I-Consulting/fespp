@@ -21,6 +21,7 @@ under the License.
 #include <exception>
 #include <iterator>
 #include <algorithm>
+#include <limits>
 
 #include <vtkIndent.h>
 #include <vtkInformation.h>
@@ -45,7 +46,7 @@ vtkEPCReader::vtkEPCReader() : Files(vtkStringArray::New()),
   SetNumberOfInputPorts(0);
   SetNumberOfOutputPorts(1);
 
-  this->SetController(vtkMultiProcessController::GetGlobalController());
+  SetController(vtkMultiProcessController::GetGlobalController());
 }
 
 //----------------------------------------------------------------------------
@@ -53,7 +54,7 @@ void vtkEPCReader::AddFileNameToFiles(const char *fname)
 {
   if (fname != nullptr)
   {
-    this->Files->InsertNextValue(fname);
+    Files->InsertNextValue(fname);
   }
 }
 
@@ -65,9 +66,9 @@ void vtkEPCReader::ClearFileName()
 //----------------------------------------------------------------------------
 const char *vtkEPCReader::GetFileName(int index) const
 {
-  if (this->Files->GetNumberOfValues() > index)
+  if (Files->GetNumberOfValues() > index)
   {
-    return this->Files->GetValue(index).c_str();
+    return Files->GetValue(index).c_str();
   }
   return nullptr;
 }
@@ -75,22 +76,22 @@ const char *vtkEPCReader::GetFileName(int index) const
 //----------------------------------------------------------------------------
 size_t vtkEPCReader::GetNumberOfFileNames() const
 {
-  return this->Files->GetNumberOfValues();
+  return Files->GetNumberOfValues();
 }
 
 //------------------------------------------------------------------------------
 vtkStringArray *vtkEPCReader::GetAllFiles() // call only by GUI
 {
-  if (this->Files->GetNumberOfValues() > 0)
+  if (Files->GetNumberOfValues() > 0)
   {
-      for (auto index = 0; index < this->Files->GetNumberOfValues(); index++)
+      for (auto index = 0; index < Files->GetNumberOfValues(); index++)
       {
-          auto file_property = this->Files->GetValue(index);
-          auto search = this->FileNamesLoaded.find(file_property);
-          if (search == this->FileNamesLoaded.end())
+          auto file_property = Files->GetValue(index);
+          auto search = FileNamesLoaded.find(file_property);
+          if (search == FileNamesLoaded.end())
           {
-              std::string msg = this->repository.addFile(file_property.c_str());
-              this->FileNamesLoaded.insert(file_property);
+              std::string msg = repository.addFile(file_property.c_str());
+              FileNamesLoaded.insert(file_property);
               // add selector
               for (auto selector : selectorNotLoaded)
               {
@@ -100,17 +101,17 @@ vtkStringArray *vtkEPCReader::GetAllFiles() // call only by GUI
                   }
               }
               
-              if (this->Controller->GetLocalProcessId() == 0 && !msg.empty())
+              if (Controller->GetLocalProcessId() == 0 && !msg.empty())
               {
                   vtkWarningMacro(<< msg);
               }
-              this->AssemblyTag++;
-              this->Modified();
-              this->Update();
+              AssemblyTag++;
+              Modified();
+              Update();
           }
       }
   }
-  return this->Files;
+  return Files;
 }
 
 //------------------------------------------------------------------------------
@@ -120,9 +121,9 @@ void vtkEPCReader::SetFiles(const std::string &file)
   if (file != "0")
   {
     bool exist = false;
-    for (auto index = 0; index < this->Files->GetNumberOfValues(); ++index)
+    for (auto index = 0; index < Files->GetNumberOfValues(); ++index)
     {
-      auto file_property = this->Files->GetValue(index);
+      auto file_property = Files->GetValue(index);
       if (file_property == file)
       {
         exist = true;
@@ -130,19 +131,19 @@ void vtkEPCReader::SetFiles(const std::string &file)
     }
     if (!exist)
     {
-      this->Files->InsertNextValue(file);
+      Files->InsertNextValue(file);
     }
   }
-  if (this->Controller->GetLocalProcessId() > 0) // pvserver without GUI
+  if (Controller->GetLocalProcessId() > 0) // pvserver without GUI
   {
-    this->GetAllFiles();
+    GetAllFiles();
   }
 }
 
 //----------------------------------------------------------------------------
 bool vtkEPCReader::AddSelector(const char *path)
 {
-  if (path != nullptr && this->selectors.insert(path).second)
+  if (path != nullptr && selectors.insert(path).second)
   {
     int node_id = GetAssembly()->GetFirstNodeByPath(path);
 
@@ -152,7 +153,7 @@ bool vtkEPCReader::AddSelector(const char *path)
     }
     else
     {
-      this->repository.selectNodeId(node_id);
+      repository.selectNodeId(node_id);
       /*
              if (GetAssembly()->HasAttribute(node_id, "traj"))
              {
@@ -169,11 +170,11 @@ bool vtkEPCReader::AddSelector(const char *path)
 //----------------------------------------------------------------------------
 void vtkEPCReader::ClearSelectors()
 {
-  this->repository.clearSelection();
-  if (!this->selectors.empty())
+  repository.clearSelection();
+  if (!selectors.empty())
   {
-    this->selectors.clear();
-    this->Modified();
+    selectors.clear();
+    Modified();
   }
 }
 
@@ -190,8 +191,8 @@ int vtkEPCReader::GetNumberOfSelectors() const
 //----------------------------------------------------------------------------
 void vtkEPCReader::SetSelector(const char *selector)
 {
-  this->ClearSelectors();
-  this->AddSelector(selector);
+  ClearSelectors();
+  AddSelector(selector);
 
   Modified();
 }
@@ -199,9 +200,9 @@ void vtkEPCReader::SetSelector(const char *selector)
 //----------------------------------------------------------------------------
 const char *vtkEPCReader::GetSelector(int index) const
 {
-  if (index >= 0 && index < this->GetNumberOfSelectors())
+  if (index >= 0 && index < GetNumberOfSelectors())
   {
-    auto iter = std::next(this->selectors.begin(), index);
+    auto iter = std::next(selectors.begin(), index);
     return iter->c_str();
   }
   return nullptr;
@@ -210,15 +211,15 @@ const char *vtkEPCReader::GetSelector(int index) const
 //----------------------------------------------------------------------------
 void vtkEPCReader::setMarkerOrientation(bool orientation)
 {
-  this->repository.setMarkerOrientation(orientation);
-  this->Modified();
+  repository.setMarkerOrientation(orientation);
+  Modified();
 }
 
 //----------------------------------------------------------------------------
 void vtkEPCReader::setMarkerSize(int size)
 {
-  this->repository.setMarkerSize(size);
-  this->Modified();
+  repository.setMarkerSize(size);
+  Modified();
 }
 
 //----------------------------------------------------------------------------
@@ -227,22 +228,22 @@ int vtkEPCReader::RequestData(vtkInformation *,
                               vtkInformationVector *outputVector)
 {
   // Load state (load selection in wait)
-  if (this->selectorNotLoaded.size() > 0)
+  if (selectorNotLoaded.size() > 0)
   {
-    for (auto path : this->selectorNotLoaded)
+    for (auto path : selectorNotLoaded)
     {
       int node_id = GetAssembly()->GetFirstNodeByPath(path.c_str());
       if (node_id > -1)
       {
-        this->repository.selectNodeId(node_id);
-        this->selectorNotLoaded.erase(path);
+        repository.selectNodeId(node_id);
+        selectorNotLoaded.erase(path);
       }
     }
   }
 
   auto *outInfo = outputVector->GetInformationObject(0);
   outInfo->Remove(vtkStreamingDemandDrivenPipeline::TIME_STEPS());
-  const std::vector<double> times = this->repository.getTimes();
+  const std::vector<double> times = repository.getTimes();
  
   if (times.size() > (std::numeric_limits<int>::max)())
   {
@@ -262,7 +263,7 @@ int vtkEPCReader::RequestData(vtkInformation *,
 
   try
   {
-    vtkPartitionedDataSetCollection::GetData(outInfo)->DeepCopy(this->repository.getVtkPartitionedDatasSetCollection(requestedTimeStep, this->Controller->GetNumberOfProcesses(), this->Controller->GetLocalProcessId()));
+    vtkPartitionedDataSetCollection::GetData(outInfo)->DeepCopy(repository.getVtkPartitionedDatasSetCollection(requestedTimeStep, Controller->GetNumberOfProcesses(), Controller->GetLocalProcessId()));
   }
   catch (const std::exception &e)
   {
@@ -275,7 +276,7 @@ int vtkEPCReader::RequestData(vtkInformation *,
 //----------------------------------------------------------------------------
 void vtkEPCReader::PrintSelf(ostream &os, vtkIndent indent)
 {
-  this->Superclass::PrintSelf(os, indent);
+  Superclass::PrintSelf(os, indent);
 }
 
 //----------------------------------------------------------------------------
@@ -283,7 +284,7 @@ vtkDataAssembly *vtkEPCReader::GetAssembly()
 {
   try
   {
-    return this->repository.GetAssembly();
+    return repository.GetAssembly();
   }
   catch (const std::exception &e)
   {
