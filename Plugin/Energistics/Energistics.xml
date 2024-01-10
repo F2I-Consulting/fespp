@@ -20,7 +20,7 @@
 				<StringArrayHelper />
 			</StringVectorProperty>
 			<StringVectorProperty name="Files" command="SetFiles" number_of_elements="1" repeat_command="1" label="all files loaded">
-				<ArraySelectionDomain  name="FilesList">
+				<ArraySelectionDomain name="FilesList">
 					<RequiredProperties>
 						<Property function="FilesInfo" name="FilesInfo" />
 					</RequiredProperties>
@@ -176,6 +176,24 @@
 				<Property name="MarkerSize" />
 			</PropertyGroup>
 		</SourceProxy>
+		<!-- ==================================================================== -->
+		<WriterProxy name="EPCWriter" class="vtkEPCWriter" extensions="epc" file_description="EPC files">
+			<InputProperty name="Input" command="SetInputConnection">
+				<ProxyGroupDomain name="groups">
+					<Group name="sources"/>
+					<Group name="filters"/>
+				</ProxyGroupDomain>
+				<DataTypeDomain name="input_type">
+					<DataType value="vtkUnstructuredGrid"/>
+				</DataTypeDomain>
+			</InputProperty>
+			<StringVectorProperty name="FileName" command="SetFileName" number_of_elements="1">
+				<FileListDomain name="files"/>
+				<Documentation>
+          The filename to be used by the writer.
+				</Documentation>
+			</StringVectorProperty>
+		</WriterProxy>
 	</ProxyGroup>
 	<!-- End Reader -->
 </ServerManagerConfiguration>
