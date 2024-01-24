@@ -430,6 +430,7 @@ bool ResqmlUnstructuredGridToVtkUnstructuredGrid::cellVtkHexahedron(vtkSmartPoin
 
 	for (unsigned int localFaceIndex = 0; localFaceIndex < 6; ++localFaceIndex)
 	{
+		int test = unstructuredGrid->getNodeCountOfFaceOfCell(cellIndex, localFaceIndex);
 		if (unstructuredGrid->getNodeCountOfFaceOfCell(cellIndex, localFaceIndex) != 4)
 		{
 			return false;

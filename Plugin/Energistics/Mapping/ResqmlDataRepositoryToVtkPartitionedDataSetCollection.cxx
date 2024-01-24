@@ -301,12 +301,23 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::disconnect()
 //----------------------------------------------------------------------------
 std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::addFile(const char *p_fileName)
 {
+
     COMMON_NS::EpcDocument w_pck(p_fileName);
     std::string w_message = w_pck.deserializeInto(*_repository);
     w_pck.close();
-
+    _files.insert(p_fileName);
     w_message += buildDataAssemblyFromDataObjectRepo(p_fileName);
     return w_message;
+}
+
+//----------------------------------------------------------------------------
+void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::closeFiles()
+{
+    for (const std::string w_filename : _files)
+    {
+        COMMON_NS::EpcDocument w_pck(w_filename);
+        w_pck.close();
+    }
 }
 
 //----------------------------------------------------------------------------

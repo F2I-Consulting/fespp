@@ -1,5 +1,6 @@
 set(classes
   vtkEPCReader
+  vtkEPCWriter
   vtkETPSource
 )
 

@@ -264,6 +264,7 @@ int vtkEPCReader::RequestData(vtkInformation *,
   try
   {
     vtkPartitionedDataSetCollection::GetData(outInfo)->DeepCopy(repository.getVtkPartitionedDatasSetCollection(requestedTimeStep, Controller->GetNumberOfProcesses(), Controller->GetLocalProcessId()));
+    repository.closeFiles();
   }
   catch (const std::exception &e)
   {
