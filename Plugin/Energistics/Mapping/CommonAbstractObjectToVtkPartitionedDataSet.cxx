@@ -16,15 +16,15 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 -----------------------------------------------------------------------*/
-#include "Mapping/CommonAbstractObjectToVtkPartitionedDataSet.h"
+#include "CommonAbstractObjectToVtkPartitionedDataSet.h"
 
 //----------------------------------------------------------------------------
-CommonAbstractObjectToVtkPartitionedDataSet::CommonAbstractObjectToVtkPartitionedDataSet(const COMMON_NS::AbstractObject *p_abstractObject, int p_procNumber, int p_maxProc)
-	: _procNumber(p_procNumber),
-	  _maxProc(p_maxProc),
-	  _resqmlData(p_abstractObject),
-	  _vtkData(nullptr)
+CommonAbstractObjectToVtkPartitionedDataSet::CommonAbstractObjectToVtkPartitionedDataSet(const COMMON_NS::AbstractObject* p_abstractObject, uint32_t p_procNumber, uint32_t p_maxProc):
+	_procNumber(p_procNumber),
+	_maxProc(p_maxProc),
+	_vtkData(nullptr),
+	_absUuid(p_abstractObject?p_abstractObject->getUuid():""),
+	_absTitle(p_abstractObject?p_abstractObject->getTitle():""),
+	_resqmlData(p_abstractObject)
 {
-	_absUuid = getResqmlData()->getUuid();
-	_absTitle = getResqmlData()->getTitle();
 }
