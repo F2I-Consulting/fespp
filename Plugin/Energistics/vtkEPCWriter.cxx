@@ -24,6 +24,7 @@ under the License.
 #include <vtkCellArray.h>
 #include <vtkCell.h>
 #include <vtkCellData.h>
+#include <vtkCellType.h>
 #include <vtkDataArray.h>
 #include <vtkDoubleArray.h>
 #include <vtkIdList.h>
@@ -39,6 +40,7 @@ under the License.
 #include "fesapi/resqml2_0_1/DiscreteProperty.h"
 #include "fesapi/resqml2/LocalDepth3dCrs.h"
 #include "fesapi/resqml2_0_1/ContinuousProperty.h"
+#include "fesapi/resqml2_0_1/PropertyKind.h"
 #include "fesapi/resqml2_0_1/UnstructuredGridRepresentation.h"
 
 /**
@@ -52,6 +54,12 @@ struct EPCWriterInternal
 {
 	vtkDataObject* input = nullptr;
 	vtkUnstructuredGrid* inputUnstructuredGrid = nullptr;
+
+	std::string inputUnstructuredGridName = "";
+
+	RESQML2_0_1_NS::PropertyKind* discretePropertyKind = nullptr;
+	RESQML2_0_1_NS::PropertyKind* continousPropertyKind = nullptr;
+
 	int dataType;
 };
 
@@ -107,8 +115,17 @@ void vtkEPCWriter::WriteData()
 	common::AbstractObject::setFormat("F2I-CONSULTING", "FESPP", FESPP_VERSION_STR);
 	eml2::AbstractHdfProxy* hdfProxy = repo.createHdfProxy("", "Hdf Proxy", epcDoc.getStorageDirectory(), epcDoc.getName() + ".h5", COMMON_NS::DataObjectRepository::openingMode::OVERWRITE);
 
-	resqml2::LocalDepth3dCrs* local3dCrs = repo.createLocalDepth3dCrs("", "Default local CRS", .0, .0, .0, .0, gsoap_resqml2_0_1::eml20__LengthUom::m, 23031, gsoap_resqml2_0_1::eml20__LengthUom::m, "Unknown", true);
+	resqml2::LocalDepth3dCrs* local3dCrs = repo.createLocalDepth3dCrs("", "Default local CRS", .0, .0, .0, .0, gsoap_resqml2_0_1::eml20__LengthUom::m, "ParaView does not support CRS", gsoap_resqml2_0_1::eml20__LengthUom::m, "ParaView does not support CRS", true);
 	repo.setDefaultCrs(local3dCrs);
+
+	if (!Internal->discretePropertyKind)
+	{
+		Internal->discretePropertyKind = repo.createPropertyKind("", "Discrete PropKind", "Fespp", gsoap_resqml2_0_1::resqml20__ResqmlUom::Euc, gsoap_resqml2_0_1::resqml20__ResqmlPropertyKind::discrete);
+	}
+	if (!Internal->continousPropertyKind)
+	{
+		Internal->continousPropertyKind = repo.createPropertyKind("", "Continous PropKind", "Fespp", gsoap_resqml2_0_1::resqml20__ResqmlUom::Euc, gsoap_resqml2_0_1::resqml20__ResqmlPropertyKind::continuous);
+	}
 
 	if (Internal->dataType == VTK_UNSTRUCTURED_GRID)
 	{
@@ -127,6 +144,7 @@ void vtkEPCWriter::WriteData()
 		{
 			if (w_vPDSC->GetPartitionAsDataObject(index, 0)->GetDataObjectType() == VTK_UNSTRUCTURED_GRID)
 			{
+				Internal->inputUnstructuredGridName = w_vPDSC->GetMetaData(index)->Get(vtkCompositeDataSet::NAME());
 				Internal->inputUnstructuredGrid = vtkUnstructuredGrid::SafeDownCast(w_vPDSC->GetPartitionAsDataObject(index, 0));
 				RESQML2_NS::UnstructuredGridRepresentation* w_unstructuredGridRepresentation = writeUnstructuredGrid(repo, hdfProxy, local3dCrs);
 				writeProperties(repo, hdfProxy, w_unstructuredGridRepresentation);
@@ -138,22 +156,24 @@ void vtkEPCWriter::WriteData()
 	epcDoc.serializeFrom(repo);
 }
 
-void vtkEPCWriter::writeProperties(COMMON_NS::DataObjectRepository& repo, EML2_NS::AbstractHdfProxy* hdfProxy, RESQML2_NS::UnstructuredGridRepresentation* p_resqmlUnstrucutredGrid)
+void vtkEPCWriter::writeProperties(COMMON_NS::DataObjectRepository& repo, EML2_NS::AbstractHdfProxy* hdfProxy, RESQML2_NS::UnstructuredGridRepresentation* p_resqmlUnstructuredGrid)
 {
+
+	// passer en vtkGenericDataArray pour le type
 	vtkPointData* w_pointData = Internal->inputUnstructuredGrid->GetPointData();
 	for (int i = 0; i < w_pointData->GetNumberOfArrays(); ++i)
 	{
 		vtkIntArray* w_array = vtkIntArray::SafeDownCast(Internal->inputUnstructuredGrid->GetPointData()->GetArray(i));
 		if (w_array)
 		{
-			RESQML2_NS::DiscreteProperty* w_prop = repo.createDiscreteProperty(p_resqmlUnstrucutredGrid, "", w_array->GetName(), 1, gsoap_eml2_3::eml23__IndexableElement::nodes, gsoap_resqml2_0_1::resqml20__ResqmlPropertyKind::length);
-			w_prop->pushBackInt64Hdf5Array1dOfValues(static_cast<int64_t*>(w_array->GetVoidPointer(0)), w_array->GetNumberOfValues(), hdfProxy, -1);
+			RESQML2_NS::DiscreteProperty* w_prop = repo.createDiscreteProperty(p_resqmlUnstructuredGrid, "", w_array->GetName(), 1, gsoap_eml2_3::eml23__IndexableElement::nodes, Internal->discretePropertyKind);
+			w_prop->pushBackInt32Hdf5Array1dOfValues(static_cast<int32_t*>(w_array->GetVoidPointer(0)), w_array->GetNumberOfValues(), hdfProxy, (std::numeric_limits<int32_t>::max)());
 		}
 		else {
 			vtkDoubleArray* w_array = vtkDoubleArray::SafeDownCast(Internal->inputUnstructuredGrid->GetPointData()->GetArray(i));
 			if (w_array)
 			{
-				RESQML2_NS::ContinuousProperty* w_prop = repo.createContinuousProperty(p_resqmlUnstrucutredGrid, "", w_array->GetName(), 1, gsoap_eml2_3::eml23__IndexableElement::nodes, gsoap_resqml2_0_1::resqml20__ResqmlUom::m, gsoap_resqml2_0_1::resqml20__ResqmlPropertyKind::length);
+				RESQML2_NS::ContinuousProperty* w_prop = repo.createContinuousProperty(p_resqmlUnstructuredGrid, "", w_array->GetName(), 1, gsoap_eml2_3::eml23__IndexableElement::nodes, gsoap_resqml2_0_1::resqml20__ResqmlUom::Euc, Internal->continousPropertyKind);
 				w_prop->pushBackDoubleHdf5Array1dOfValues(static_cast<double*>(w_array->GetVoidPointer(0)), w_array->GetNumberOfValues());
 			}
 			else
@@ -169,14 +189,14 @@ void vtkEPCWriter::writeProperties(COMMON_NS::DataObjectRepository& repo, EML2_N
 		vtkIntArray* w_array = vtkIntArray::SafeDownCast(Internal->inputUnstructuredGrid->GetCellData()->GetArray(i));
 		if (w_array)
 		{
-			RESQML2_NS::DiscreteProperty* w_prop = repo.createDiscreteProperty(p_resqmlUnstrucutredGrid, "", w_array->GetName(), 1, gsoap_eml2_3::eml23__IndexableElement::cells, gsoap_resqml2_0_1::resqml20__ResqmlPropertyKind::length);
-			w_prop->pushBackInt64Hdf5Array1dOfValues(static_cast<int64_t*>(w_array->GetVoidPointer(0)), w_array->GetNumberOfValues(), hdfProxy, -1);
+			RESQML2_NS::DiscreteProperty* w_prop = repo.createDiscreteProperty(p_resqmlUnstructuredGrid, "", w_array->GetName(), 1, gsoap_eml2_3::eml23__IndexableElement::cells, Internal->discretePropertyKind);
+			w_prop->pushBackInt32Hdf5Array1dOfValues(static_cast<int32_t*>(w_array->GetVoidPointer(0)), w_array->GetNumberOfValues(), hdfProxy, (std::numeric_limits<int32_t>::max)());
 		}
 		else {
 			vtkDoubleArray* w_array = vtkDoubleArray::SafeDownCast(Internal->inputUnstructuredGrid->GetCellData()->GetArray(i));
 			if (w_array)
 			{
-				RESQML2_NS::ContinuousProperty* w_prop = repo.createContinuousProperty(p_resqmlUnstrucutredGrid, "", w_array->GetName(), 1, gsoap_eml2_3::eml23__IndexableElement::cells, gsoap_resqml2_0_1::resqml20__ResqmlUom::m, gsoap_resqml2_0_1::resqml20__ResqmlPropertyKind::length);
+				RESQML2_NS::ContinuousProperty* w_prop = repo.createContinuousProperty(p_resqmlUnstructuredGrid, "", w_array->GetName(), 1, gsoap_eml2_3::eml23__IndexableElement::cells, gsoap_resqml2_0_1::resqml20__ResqmlUom::Euc, Internal->continousPropertyKind);
 				w_prop->pushBackDoubleHdf5Array1dOfValues(static_cast<double*>(w_array->GetVoidPointer(0)), w_array->GetNumberOfValues());
 			}
 			else
@@ -191,10 +211,11 @@ void vtkEPCWriter::writeProperties(COMMON_NS::DataObjectRepository& repo, EML2_N
 
 RESQML2_NS::UnstructuredGridRepresentation* vtkEPCWriter::writeUnstructuredGrid(COMMON_NS::DataObjectRepository& repo, EML2_NS::AbstractHdfProxy* hdfProxy, RESQML2_NS::LocalDepth3dCrs* local3dCrs)
 {
-	std::vector<double> points = getUnstructuredGridPoints();
 
-	std::vector<uint64_t> nodeIndicesPerFace;
-	std::vector<uint64_t> nodeIndicesCumulativeCountPerFace;
+	std::vector<double> w_points = getUnstructuredGridPoints();
+
+	std::vector<uint64_t> w_nodeIndicesPerFace;
+	std::vector<uint64_t> w_nodeIndicesCumulativeCountPerFace;
 	std::vector<uint64_t> faceIndicesPerCell;
 	std::vector<uint64_t> faceIndicesCumulativeCountPerCell;
 	std::vector<uint8_t> faceRightHandness;
@@ -205,46 +226,49 @@ RESQML2_NS::UnstructuredGridRepresentation* vtkEPCWriter::writeUnstructuredGrid(
 
 	for (vtkIdType cellId = 0; cellId < numberOfCells; ++cellId)
 	{
-		vtkCell* cell = Internal->inputUnstructuredGrid->GetCell(cellId);
-		if (cell->GetCellType() == VTK_TETRA)
+
+		vtkCell* const cell = Internal->inputUnstructuredGrid->GetCell(cellId);
+		int32_t const cellType = cell->GetCellType();
+		vtkIdType const* const ptsIds = cell->GetPointIds()->begin();
+		if (cellType == VTK_TETRA)
 		{
-			loadFacesForVTK_TETRA(cell, nodeIndicesPerFace, nodeIndicesCumulativeCountPerFace, faceIndicesPerCell, faceIndicesCumulativeCountPerCell, faceRightHandness);
+			loadFacesForVTK_TETRA(ptsIds, w_nodeIndicesPerFace, w_nodeIndicesCumulativeCountPerFace, faceIndicesPerCell, faceIndicesCumulativeCountPerCell, faceRightHandness);
 		}
-		else if (cell->GetCellType() == VTK_HEXAHEDRON)
+		else if (cellType == VTK_HEXAHEDRON)
 		{
-			loadFacesForVTK_HEXAHEDRON(cell, nodeIndicesPerFace, nodeIndicesCumulativeCountPerFace, faceIndicesPerCell, faceIndicesCumulativeCountPerCell, faceRightHandness);
+			loadFacesForVTK_HEXAHEDRON(ptsIds, w_nodeIndicesPerFace, w_nodeIndicesCumulativeCountPerFace, faceIndicesPerCell, faceIndicesCumulativeCountPerCell, faceRightHandness);
 		}
-		else if (cell->GetCellType() == VTK_WEDGE)
+		else if (cellType == VTK_WEDGE)
 		{
-			loadFacesForVTK_WEDGE(cell, nodeIndicesPerFace, nodeIndicesCumulativeCountPerFace, faceIndicesPerCell, faceIndicesCumulativeCountPerCell, faceRightHandness);
+			loadFacesForVTK_WEDGE(ptsIds, w_nodeIndicesPerFace, w_nodeIndicesCumulativeCountPerFace, faceIndicesPerCell, faceIndicesCumulativeCountPerCell, faceRightHandness);
 		}
-		else if (cell->GetCellType() == VTK_PYRAMID)
+		else if (cellType == VTK_PYRAMID)
 		{
-			loadFacesForVTK_PYRAMID(cell, nodeIndicesPerFace, nodeIndicesCumulativeCountPerFace, faceIndicesPerCell, faceIndicesCumulativeCountPerCell, faceRightHandness);
+			loadFacesForVTK_PYRAMID(ptsIds, w_nodeIndicesPerFace, w_nodeIndicesCumulativeCountPerFace, faceIndicesPerCell, faceIndicesCumulativeCountPerCell, faceRightHandness);
 		}
-		else if (cell->GetCellType() == VTK_PENTAGONAL_PRISM)
+		else if (cellType == VTK_PENTAGONAL_PRISM)
 		{
-			loadFacesForVTK_PENTAGONAL_PRISM(cell, nodeIndicesPerFace, nodeIndicesCumulativeCountPerFace, faceIndicesPerCell, faceIndicesCumulativeCountPerCell, faceRightHandness);
+			loadFacesForVTK_PENTAGONAL_PRISM(ptsIds, w_nodeIndicesPerFace, w_nodeIndicesCumulativeCountPerFace, faceIndicesPerCell, faceIndicesCumulativeCountPerCell, faceRightHandness);
 		}
-		else if (cell->GetCellType() == VTK_HEXAGONAL_PRISM)
+		else if (cellType == VTK_HEXAGONAL_PRISM)
 		{
-			loadFacesForVTK_HEXAGONAL_PRISM(cell, nodeIndicesPerFace, nodeIndicesCumulativeCountPerFace, faceIndicesPerCell, faceIndicesCumulativeCountPerCell, faceRightHandness);
+			loadFacesForVTK_HEXAGONAL_PRISM(ptsIds, w_nodeIndicesPerFace, w_nodeIndicesCumulativeCountPerFace, faceIndicesPerCell, faceIndicesCumulativeCountPerCell, faceRightHandness);
 		}
-		else if (cell->GetCellType() == VTK_VOXEL)
+		else if (cellType == VTK_VOXEL)
 		{
 			vtkOutputWindowDisplayErrorText("VTK_VOXEL in VtkUnstructuredGrid is not supported");
 			return nullptr;
 		}
 		else // vtkPolyhedron
 		{
-			vtkOutputWindowDisplayDebugText("vtkPolyhedron");
-			loadFacesForVTK_POLYHEDRON(cellId, nodeIndicesPerFace, nodeIndicesCumulativeCountPerFace, faceIndicesPerCell, faceIndicesCumulativeCountPerCell, faceRightHandness);
+			loadFacesForVTK_POLYHEDRON(cellId, w_nodeIndicesPerFace, w_nodeIndicesCumulativeCountPerFace, faceIndicesPerCell, faceIndicesCumulativeCountPerCell, faceRightHandness);
 		}
 	}
 
 	// creating the unstructured grid
-	RESQML2_NS::UnstructuredGridRepresentation* unstructuredGrid = repo.createUnstructuredGridRepresentation("", Internal->inputUnstructuredGrid->GetObjectName(), numberOfCells);
-	unstructuredGrid->setGeometry(faceRightHandness.data(), points.data(), points.size() / 3, hdfProxy, faceIndicesPerCell.data(), faceIndicesCumulativeCountPerCell.data(), faceIndicesPerCell.size() /* attention aux faces partagées */, nodeIndicesPerFace.data(), nodeIndicesCumulativeCountPerFace.data(), gsoap_resqml2_0_1::resqml20__CellShape::polyhedral, local3dCrs);
+	vtkOutputWindowDisplayDebugText((Internal->inputUnstructuredGrid->GetObjectName()).c_str());
+	RESQML2_NS::UnstructuredGridRepresentation* unstructuredGrid = repo.createUnstructuredGridRepresentation("", Internal->inputUnstructuredGridName, numberOfCells);
+	unstructuredGrid->setGeometry(faceRightHandness.data(), w_points.data(), w_points.size() / 3, nullptr, faceIndicesPerCell.data(), faceIndicesCumulativeCountPerCell.data(), faceIndicesPerCell.size() /* warning shared faces */, w_nodeIndicesPerFace.data(), w_nodeIndicesCumulativeCountPerFace.data(), gsoap_resqml2_0_1::resqml20__CellShape::polyhedral /*local3dCrs*/);
 
 	return unstructuredGrid;
 }
@@ -252,14 +276,14 @@ RESQML2_NS::UnstructuredGridRepresentation* vtkEPCWriter::writeUnstructuredGrid(
 //-----------------------------------------------------------------------------
 std::vector<double> vtkEPCWriter::getUnstructuredGridPoints()
 {
-	vtkSmartPointer<vtkPoints> points = Internal->inputUnstructuredGrid->GetPoints();
-	vtkIdType numberPoints = points->GetNumberOfPoints();
+	vtkSmartPointer<vtkPoints> w_points = Internal->inputUnstructuredGrid->GetPoints();
+	vtkIdType numberPoints = w_points->GetNumberOfPoints();
 	std::vector<double> unstructuredGridPoints;
 
 	for (vtkIdType i = 0; i < numberPoints; ++i)
 	{
 		double p[3];
-		points->GetPoint(i, p);
+		w_points->GetPoint(i, p);
 		unstructuredGridPoints.push_back(p[0]);
 		unstructuredGridPoints.push_back(p[1]);
 		unstructuredGridPoints.push_back(p[2]);
@@ -289,38 +313,40 @@ std::vector<double> vtkEPCWriter::getUnstructuredGridPoints()
 * F2: 1 - 2 - 3
 * F3: 0 - 2 - 3
 */
-void vtkEPCWriter::loadFacesForVTK_TETRA(vtkCell* cell, std::vector<uint64_t>& nodeIndicesPerFace, std::vector<uint64_t>& nodeIndicesCumulativeCountPerFace, std::vector<uint64_t>& faceIndicesPerCell, std::vector<uint64_t>& faceIndicesCumulativeCountPerCell, std::vector<uint8_t>& faceRightHandness)
+void vtkEPCWriter::loadFacesForVTK_TETRA(vtkIdType const* p_ptsIds, std::vector<uint64_t>& p_nodeIndicesPerFace, std::vector<uint64_t>& p_nodeIndicesCumulativeCountPerFace, std::vector<uint64_t>& faceIndicesPerCell, std::vector<uint64_t>& faceIndicesCumulativeCountPerCell, std::vector<uint8_t>& faceRightHandness)
 {
 	/*
 	* Nodes per face
 	*/
-	auto w_ptsIds = cell->GetPointIds();
+	//auto p_ptsIds = cell->GetPointIds();
 	uint64_t w_nodeIndicesForWedgeFaces[12] = {
 		//Face 0
-		static_cast<uint64_t>(w_ptsIds->GetId(0)),
-		static_cast<uint64_t>(w_ptsIds->GetId(1)),
-		static_cast<uint64_t>(w_ptsIds->GetId(2)),
+		static_cast<uint64_t>(p_ptsIds[0]),
+		static_cast<uint64_t>(p_ptsIds[1]),
+		static_cast<uint64_t>(p_ptsIds[2]),
 		//Face 1
-		static_cast<uint64_t>(w_ptsIds->GetId(0)),
-		static_cast<uint64_t>(w_ptsIds->GetId(1)),
-		static_cast<uint64_t>(w_ptsIds->GetId(3)),
+		static_cast<uint64_t>(p_ptsIds[0]),
+		static_cast<uint64_t>(p_ptsIds[1]),
+		static_cast<uint64_t>(p_ptsIds[3]),
 		//Face 2
-		static_cast<uint64_t>(w_ptsIds->GetId(1)),
-		static_cast<uint64_t>(w_ptsIds->GetId(2)),
-		static_cast<uint64_t>(w_ptsIds->GetId(3)),
+		static_cast<uint64_t>(p_ptsIds[1]),
+		static_cast<uint64_t>(p_ptsIds[2]),
+		static_cast<uint64_t>(p_ptsIds[3]),
 		//Face 3
-		static_cast<uint64_t>(w_ptsIds->GetId(0)),
-		static_cast<uint64_t>(w_ptsIds->GetId(2)),
-		static_cast<uint64_t>(w_ptsIds->GetId(3))
+		static_cast<uint64_t>(p_ptsIds[0]),
+		static_cast<uint64_t>(p_ptsIds[2]),
+		static_cast<uint64_t>(p_ptsIds[3])
 	};
-	nodeIndicesPerFace.insert(std::end(nodeIndicesPerFace), std::begin(w_nodeIndicesForWedgeFaces), std::end(w_nodeIndicesForWedgeFaces));
+	p_nodeIndicesPerFace.insert(std::end(p_nodeIndicesPerFace), std::begin(w_nodeIndicesForWedgeFaces), std::end(w_nodeIndicesForWedgeFaces));
 
 	/*
 	* Node cumulative count
 	*/
-	uint64_t initNodeIndicesCumulativeCountPerFace = nodeIndicesCumulativeCountPerFace.empty() ? 0 : nodeIndicesCumulativeCountPerFace.back();
+
+	// .reserve + .push_back
+	uint64_t initNodeIndicesCumulativeCountPerFace = p_nodeIndicesCumulativeCountPerFace.empty() ? 0 : p_nodeIndicesCumulativeCountPerFace.back();
 	uint64_t w_nodeIndicesCumulativeCountPerFace[4] = { initNodeIndicesCumulativeCountPerFace + 3, initNodeIndicesCumulativeCountPerFace + 6, initNodeIndicesCumulativeCountPerFace + 9, initNodeIndicesCumulativeCountPerFace + 12 };
-	nodeIndicesCumulativeCountPerFace.insert(std::end(nodeIndicesCumulativeCountPerFace), std::begin(w_nodeIndicesCumulativeCountPerFace), std::end(w_nodeIndicesCumulativeCountPerFace));
+	p_nodeIndicesCumulativeCountPerFace.insert(std::end(p_nodeIndicesCumulativeCountPerFace), std::begin(w_nodeIndicesCumulativeCountPerFace), std::end(w_nodeIndicesCumulativeCountPerFace));
 
 	/*
 	* face indices per cell
@@ -366,52 +392,51 @@ void vtkEPCWriter::loadFacesForVTK_TETRA(vtkCell* cell, std::vector<uint64_t>& n
 * F4: 2 - 6 - 7 - 3
 * F5: 3 - 7 - 4 - 0
 */
-void vtkEPCWriter::loadFacesForVTK_HEXAHEDRON(vtkCell* cell, std::vector<uint64_t>& nodeIndicesPerFace, std::vector<uint64_t>& nodeIndicesCumulativeCountPerFace, std::vector<uint64_t>& faceIndicesPerCell, std::vector<uint64_t>& faceIndicesCumulativeCountPerCell, std::vector<uint8_t>& faceRightHandness)
+void vtkEPCWriter::loadFacesForVTK_HEXAHEDRON(vtkIdType const* p_ptsIds, std::vector<uint64_t>& p_nodeIndicesPerFace, std::vector<uint64_t>& p_nodeIndicesCumulativeCountPerFace, std::vector<uint64_t>& faceIndicesPerCell, std::vector<uint64_t>& faceIndicesCumulativeCountPerCell, std::vector<uint8_t>& faceRightHandness)
 {
 	/*
 	* Nodes per face
 	*/
-	auto w_ptsIds = cell->GetPointIds();
 	uint64_t w_nodeIndicesForHexahedronFaces[24] = {
 		//Face 0
-		static_cast<uint64_t>(w_ptsIds->GetId(0)),
-		static_cast<uint64_t>(w_ptsIds->GetId(1)),
-		static_cast<uint64_t>(w_ptsIds->GetId(2)),
-		static_cast<uint64_t>(w_ptsIds->GetId(3)),
+		static_cast<uint64_t>(p_ptsIds[0]),
+		static_cast<uint64_t>(p_ptsIds[1]),
+		static_cast<uint64_t>(p_ptsIds[2]),
+		static_cast<uint64_t>(p_ptsIds[3]),
 		//Face 1
-		static_cast<uint64_t>(w_ptsIds->GetId(4)),
-		static_cast<uint64_t>(w_ptsIds->GetId(5)),
-		static_cast<uint64_t>(w_ptsIds->GetId(6)),
-		static_cast<uint64_t>(w_ptsIds->GetId(7)),
+		static_cast<uint64_t>(p_ptsIds[4]),
+		static_cast<uint64_t>(p_ptsIds[5]),
+		static_cast<uint64_t>(p_ptsIds[6]),
+		static_cast<uint64_t>(p_ptsIds[7]),
 		//Face 2
-		static_cast<uint64_t>(w_ptsIds->GetId(0)),
-		static_cast<uint64_t>(w_ptsIds->GetId(4)),
-		static_cast<uint64_t>(w_ptsIds->GetId(5)),
-		static_cast<uint64_t>(w_ptsIds->GetId(1)),
+		static_cast<uint64_t>(p_ptsIds[0]),
+		static_cast<uint64_t>(p_ptsIds[4]),
+		static_cast<uint64_t>(p_ptsIds[5]),
+		static_cast<uint64_t>(p_ptsIds[1]),
 		//Face 3
-		static_cast<uint64_t>(w_ptsIds->GetId(1)),
-		static_cast<uint64_t>(w_ptsIds->GetId(5)),
-		static_cast<uint64_t>(w_ptsIds->GetId(6)),
-		static_cast<uint64_t>(w_ptsIds->GetId(2)),
+		static_cast<uint64_t>(p_ptsIds[1]),
+		static_cast<uint64_t>(p_ptsIds[5]),
+		static_cast<uint64_t>(p_ptsIds[6]),
+		static_cast<uint64_t>(p_ptsIds[2]),
 		//Face 4
-		static_cast<uint64_t>(w_ptsIds->GetId(2)),
-		static_cast<uint64_t>(w_ptsIds->GetId(6)),
-		static_cast<uint64_t>(w_ptsIds->GetId(7)),
-		static_cast<uint64_t>(w_ptsIds->GetId(3)),
+		static_cast<uint64_t>(p_ptsIds[2]),
+		static_cast<uint64_t>(p_ptsIds[6]),
+		static_cast<uint64_t>(p_ptsIds[7]),
+		static_cast<uint64_t>(p_ptsIds[3]),
 		//Face 5
-		static_cast<uint64_t>(w_ptsIds->GetId(3)),
-		static_cast<uint64_t>(w_ptsIds->GetId(7)),
-		static_cast<uint64_t>(w_ptsIds->GetId(4)),
-		static_cast<uint64_t>(w_ptsIds->GetId(0))
+		static_cast<uint64_t>(p_ptsIds[3]),
+		static_cast<uint64_t>(p_ptsIds[7]),
+		static_cast<uint64_t>(p_ptsIds[4]),
+		static_cast<uint64_t>(p_ptsIds[0])
 	};
-	nodeIndicesPerFace.insert(std::end(nodeIndicesPerFace), std::begin(w_nodeIndicesForHexahedronFaces), std::end(w_nodeIndicesForHexahedronFaces));
+	p_nodeIndicesPerFace.insert(std::end(p_nodeIndicesPerFace), std::begin(w_nodeIndicesForHexahedronFaces), std::end(w_nodeIndicesForHexahedronFaces));
 
 	/*
 	* Node cumulative count
 	*/
-	uint64_t initNodeIndicesCumulativeCountPerFace = nodeIndicesCumulativeCountPerFace.empty() ? 0 : nodeIndicesCumulativeCountPerFace.back();
+	uint64_t initNodeIndicesCumulativeCountPerFace = p_nodeIndicesCumulativeCountPerFace.empty() ? 0 : p_nodeIndicesCumulativeCountPerFace.back();
 	uint64_t w_nodeIndicesCumulativeCountPerFace[6] = { initNodeIndicesCumulativeCountPerFace + 4, initNodeIndicesCumulativeCountPerFace + 8, initNodeIndicesCumulativeCountPerFace + 12, initNodeIndicesCumulativeCountPerFace + 16, initNodeIndicesCumulativeCountPerFace + 20, initNodeIndicesCumulativeCountPerFace + 24 };
-	nodeIndicesCumulativeCountPerFace.insert(std::end(nodeIndicesCumulativeCountPerFace), std::begin(w_nodeIndicesCumulativeCountPerFace), std::end(w_nodeIndicesCumulativeCountPerFace));
+	p_nodeIndicesCumulativeCountPerFace.insert(std::end(p_nodeIndicesCumulativeCountPerFace), std::begin(w_nodeIndicesCumulativeCountPerFace), std::end(w_nodeIndicesCumulativeCountPerFace));
 
 	/*
 	* face indices per cell
@@ -452,38 +477,37 @@ void vtkEPCWriter::loadFacesForVTK_HEXAHEDRON(vtkCell* cell, std::vector<uint64_
 * F3: 1 - 4 - 5 - 2
 * F4: 2 - 5 - 3 - 0
 */
-void vtkEPCWriter::loadFacesForVTK_WEDGE(vtkCell* cell, std::vector<uint64_t>& nodeIndicesPerFace, std::vector<uint64_t>& nodeIndicesCumulativeCountPerFace, std::vector<uint64_t>& faceIndicesPerCell, std::vector<uint64_t>& faceIndicesCumulativeCountPerCell, std::vector<uint8_t>& faceRightHandness)
+void vtkEPCWriter::loadFacesForVTK_WEDGE(vtkIdType const* p_ptsIds, std::vector<uint64_t>& p_nodeIndicesPerFace, std::vector<uint64_t>& nodeIndicesCumulativeCountPerFace, std::vector<uint64_t>& faceIndicesPerCell, std::vector<uint64_t>& faceIndicesCumulativeCountPerCell, std::vector<uint8_t>& faceRightHandness)
 {
 	/*
 	* Nodes per face
 	*/
-	auto w_ptsIds = cell->GetPointIds();
 	uint64_t w_nodeIndicesForWedgeFaces[18] = {
 		//Face 0
-		static_cast<uint64_t>(w_ptsIds->GetId(2)),
-		static_cast<uint64_t>(w_ptsIds->GetId(1)),
-		static_cast<uint64_t>(w_ptsIds->GetId(0)),
+		static_cast<uint64_t>(p_ptsIds[2]),
+		static_cast<uint64_t>(p_ptsIds[1]),
+		static_cast<uint64_t>(p_ptsIds[0]),
 		//Face 1
-		static_cast<uint64_t>(w_ptsIds->GetId(5)),
-		static_cast<uint64_t>(w_ptsIds->GetId(3)),
-		static_cast<uint64_t>(w_ptsIds->GetId(4)),
+		static_cast<uint64_t>(p_ptsIds[5]),
+		static_cast<uint64_t>(p_ptsIds[3]),
+		static_cast<uint64_t>(p_ptsIds[4]),
 		//Face 2
-		static_cast<uint64_t>(w_ptsIds->GetId(0)),
-		static_cast<uint64_t>(w_ptsIds->GetId(1)),
-		static_cast<uint64_t>(w_ptsIds->GetId(4)),
-		static_cast<uint64_t>(w_ptsIds->GetId(3)),
+		static_cast<uint64_t>(p_ptsIds[0]),
+		static_cast<uint64_t>(p_ptsIds[1]),
+		static_cast<uint64_t>(p_ptsIds[4]),
+		static_cast<uint64_t>(p_ptsIds[3]),
 		//Face 3
-		static_cast<uint64_t>(w_ptsIds->GetId(1)),
-		static_cast<uint64_t>(w_ptsIds->GetId(4)),
-		static_cast<uint64_t>(w_ptsIds->GetId(5)),
-		static_cast<uint64_t>(w_ptsIds->GetId(2)),
+		static_cast<uint64_t>(p_ptsIds[1]),
+		static_cast<uint64_t>(p_ptsIds[4]),
+		static_cast<uint64_t>(p_ptsIds[5]),
+		static_cast<uint64_t>(p_ptsIds[2]),
 		//Face 4
-		static_cast<uint64_t>(w_ptsIds->GetId(2)),
-		static_cast<uint64_t>(w_ptsIds->GetId(5)),
-		static_cast<uint64_t>(w_ptsIds->GetId(3)),
-		static_cast<uint64_t>(w_ptsIds->GetId(0))
+		static_cast<uint64_t>(p_ptsIds[2]),
+		static_cast<uint64_t>(p_ptsIds[5]),
+		static_cast<uint64_t>(p_ptsIds[3]),
+		static_cast<uint64_t>(p_ptsIds[0])
 	};
-	nodeIndicesPerFace.insert(std::end(nodeIndicesPerFace), std::begin(w_nodeIndicesForWedgeFaces), std::end(w_nodeIndicesForWedgeFaces));
+	p_nodeIndicesPerFace.insert(std::end(p_nodeIndicesPerFace), std::begin(w_nodeIndicesForWedgeFaces), std::end(w_nodeIndicesForWedgeFaces));
 
 	/*
 	* Node cumulative count
@@ -531,36 +555,35 @@ void vtkEPCWriter::loadFacesForVTK_WEDGE(vtkCell* cell, std::vector<uint64_t>& n
 * F3: 2 - 3 - 4
 * F4: 3 - 0 - 4
 */
-void vtkEPCWriter::loadFacesForVTK_PYRAMID(vtkCell* cell, std::vector<uint64_t>& nodeIndicesPerFace, std::vector<uint64_t>& nodeIndicesCumulativeCountPerFace, std::vector<uint64_t>& faceIndicesPerCell, std::vector<uint64_t>& faceIndicesCumulativeCountPerCell, std::vector<uint8_t>& faceRightHandness)
+void vtkEPCWriter::loadFacesForVTK_PYRAMID(vtkIdType const* p_ptsIds, std::vector<uint64_t>& p_nodeIndicesPerFace, std::vector<uint64_t>& nodeIndicesCumulativeCountPerFace, std::vector<uint64_t>& faceIndicesPerCell, std::vector<uint64_t>& faceIndicesCumulativeCountPerCell, std::vector<uint8_t>& faceRightHandness)
 {
 	/*
 	* Nodes per face
 	*/
-	auto w_ptsIds = cell->GetPointIds();
 	uint64_t w_nodeIndicesForWedgeFaces[16] = {
 		//Face 0
-		static_cast<uint64_t>(w_ptsIds->GetId(0)),
-		static_cast<uint64_t>(w_ptsIds->GetId(1)),
-		static_cast<uint64_t>(w_ptsIds->GetId(2)),
-		static_cast<uint64_t>(w_ptsIds->GetId(3)),
+		static_cast<uint64_t>(p_ptsIds[0]),
+		static_cast<uint64_t>(p_ptsIds[1]),
+		static_cast<uint64_t>(p_ptsIds[2]),
+		static_cast<uint64_t>(p_ptsIds[3]),
 		//Face 1
-		static_cast<uint64_t>(w_ptsIds->GetId(0)),
-		static_cast<uint64_t>(w_ptsIds->GetId(1)),
-		static_cast<uint64_t>(w_ptsIds->GetId(4)),
+		static_cast<uint64_t>(p_ptsIds[0]),
+		static_cast<uint64_t>(p_ptsIds[1]),
+		static_cast<uint64_t>(p_ptsIds[4]),
 		//Face 2
-		static_cast<uint64_t>(w_ptsIds->GetId(1)),
-		static_cast<uint64_t>(w_ptsIds->GetId(2)),
-		static_cast<uint64_t>(w_ptsIds->GetId(4)),
+		static_cast<uint64_t>(p_ptsIds[1]),
+		static_cast<uint64_t>(p_ptsIds[2]),
+		static_cast<uint64_t>(p_ptsIds[4]),
 		//Face 3
-		static_cast<uint64_t>(w_ptsIds->GetId(2)),
-		static_cast<uint64_t>(w_ptsIds->GetId(3)),
-		static_cast<uint64_t>(w_ptsIds->GetId(4)),
+		static_cast<uint64_t>(p_ptsIds[2]),
+		static_cast<uint64_t>(p_ptsIds[3]),
+		static_cast<uint64_t>(p_ptsIds[4]),
 		//Face 4
-		static_cast<uint64_t>(w_ptsIds->GetId(3)),
-		static_cast<uint64_t>(w_ptsIds->GetId(0)),
-		static_cast<uint64_t>(w_ptsIds->GetId(4))
+		static_cast<uint64_t>(p_ptsIds[3]),
+		static_cast<uint64_t>(p_ptsIds[0]),
+		static_cast<uint64_t>(p_ptsIds[4])
 	};
-	nodeIndicesPerFace.insert(std::end(nodeIndicesPerFace), std::begin(w_nodeIndicesForWedgeFaces), std::end(w_nodeIndicesForWedgeFaces));
+	p_nodeIndicesPerFace.insert(std::end(p_nodeIndicesPerFace), std::begin(w_nodeIndicesForWedgeFaces), std::end(w_nodeIndicesForWedgeFaces));
 
 	/*
 	* Node cumulative count
@@ -595,52 +618,51 @@ void vtkEPCWriter::loadFacesForVTK_PYRAMID(vtkCell* cell, std::vector<uint64_t>&
 * https://examples.vtk.org/site/VTKBook/05Chapter5/#Figure%205-2
 *
 */
-void vtkEPCWriter::loadFacesForVTK_PENTAGONAL_PRISM(vtkCell* cell, std::vector<uint64_t>& nodeIndicesPerFace, std::vector<uint64_t>& nodeIndicesCumulativeCountPerFace, std::vector<uint64_t>& faceIndicesPerCell, std::vector<uint64_t>& faceIndicesCumulativeCountPerCell, std::vector<uint8_t>& faceRightHandness)
+void vtkEPCWriter::loadFacesForVTK_PENTAGONAL_PRISM(vtkIdType const* p_ptsIds, std::vector<uint64_t>& p_nodeIndicesPerFace, std::vector<uint64_t>& nodeIndicesCumulativeCountPerFace, std::vector<uint64_t>& faceIndicesPerCell, std::vector<uint64_t>& faceIndicesCumulativeCountPerCell, std::vector<uint8_t>& faceRightHandness)
 {
 	/*
 * Nodes per face
 */
-	auto w_ptsIds = cell->GetPointIds();
 	uint64_t w_nodeIndicesForWedgeFaces[30] = {
 		//Face 0
-		static_cast<uint64_t>(w_ptsIds->GetId(0)),
-		static_cast<uint64_t>(w_ptsIds->GetId(1)),
-		static_cast<uint64_t>(w_ptsIds->GetId(2)),
-		static_cast<uint64_t>(w_ptsIds->GetId(3)),
-		static_cast<uint64_t>(w_ptsIds->GetId(4)),
+		static_cast<uint64_t>(p_ptsIds[0]),
+		static_cast<uint64_t>(p_ptsIds[1]),
+		static_cast<uint64_t>(p_ptsIds[2]),
+		static_cast<uint64_t>(p_ptsIds[3]),
+		static_cast<uint64_t>(p_ptsIds[4]),
 		//Face 1
-		static_cast<uint64_t>(w_ptsIds->GetId(5)),
-		static_cast<uint64_t>(w_ptsIds->GetId(6)),
-		static_cast<uint64_t>(w_ptsIds->GetId(7)),
-		static_cast<uint64_t>(w_ptsIds->GetId(8)),
-		static_cast<uint64_t>(w_ptsIds->GetId(9)),
+		static_cast<uint64_t>(p_ptsIds[5]),
+		static_cast<uint64_t>(p_ptsIds[6]),
+		static_cast<uint64_t>(p_ptsIds[7]),
+		static_cast<uint64_t>(p_ptsIds[8]),
+		static_cast<uint64_t>(p_ptsIds[9]),
 		//Face 2
-		static_cast<uint64_t>(w_ptsIds->GetId(0)),
-		static_cast<uint64_t>(w_ptsIds->GetId(5)),
-		static_cast<uint64_t>(w_ptsIds->GetId(6)),
-		static_cast<uint64_t>(w_ptsIds->GetId(1)),
+		static_cast<uint64_t>(p_ptsIds[0]),
+		static_cast<uint64_t>(p_ptsIds[5]),
+		static_cast<uint64_t>(p_ptsIds[6]),
+		static_cast<uint64_t>(p_ptsIds[1]),
 		//Face 3
-		static_cast<uint64_t>(w_ptsIds->GetId(1)),
-		static_cast<uint64_t>(w_ptsIds->GetId(6)),
-		static_cast<uint64_t>(w_ptsIds->GetId(7)),
-		static_cast<uint64_t>(w_ptsIds->GetId(2)),
+		static_cast<uint64_t>(p_ptsIds[1]),
+		static_cast<uint64_t>(p_ptsIds[6]),
+		static_cast<uint64_t>(p_ptsIds[7]),
+		static_cast<uint64_t>(p_ptsIds[2]),
 		//Face 4
-		static_cast<uint64_t>(w_ptsIds->GetId(2)),
-		static_cast<uint64_t>(w_ptsIds->GetId(7)),
-		static_cast<uint64_t>(w_ptsIds->GetId(8)),
-		static_cast<uint64_t>(w_ptsIds->GetId(3)),
+		static_cast<uint64_t>(p_ptsIds[2]),
+		static_cast<uint64_t>(p_ptsIds[7]),
+		static_cast<uint64_t>(p_ptsIds[8]),
+		static_cast<uint64_t>(p_ptsIds[3]),
 		//Face 5
-		static_cast<uint64_t>(w_ptsIds->GetId(3)),
-		static_cast<uint64_t>(w_ptsIds->GetId(8)),
-		static_cast<uint64_t>(w_ptsIds->GetId(9)),
-		static_cast<uint64_t>(w_ptsIds->GetId(4)),
+		static_cast<uint64_t>(p_ptsIds[3]),
+		static_cast<uint64_t>(p_ptsIds[8]),
+		static_cast<uint64_t>(p_ptsIds[9]),
+		static_cast<uint64_t>(p_ptsIds[4]),
 		//Face 6
-		static_cast<uint64_t>(w_ptsIds->GetId(4)),
-		static_cast<uint64_t>(w_ptsIds->GetId(9)),
-		static_cast<uint64_t>(w_ptsIds->GetId(5)),
-		static_cast<uint64_t>(w_ptsIds->GetId(0))
+		static_cast<uint64_t>(p_ptsIds[4]),
+		static_cast<uint64_t>(p_ptsIds[9]),
+		static_cast<uint64_t>(p_ptsIds[5]),
+		static_cast<uint64_t>(p_ptsIds[0])
 	};
-	nodeIndicesPerFace.insert(std::end(nodeIndicesPerFace), std::begin(w_nodeIndicesForWedgeFaces), std::end(w_nodeIndicesForWedgeFaces));
+	p_nodeIndicesPerFace.insert(std::end(p_nodeIndicesPerFace), std::begin(w_nodeIndicesForWedgeFaces), std::end(w_nodeIndicesForWedgeFaces));
 
 	/*
 	* Node cumulative count
@@ -675,59 +697,58 @@ void vtkEPCWriter::loadFacesForVTK_PENTAGONAL_PRISM(vtkCell* cell, std::vector<u
 * https://examples.vtk.org/site/VTKBook/05Chapter5/#Figure%205-2
 *
 */
-void vtkEPCWriter::loadFacesForVTK_HEXAGONAL_PRISM(vtkCell* cell, std::vector<uint64_t>& nodeIndicesPerFace, std::vector<uint64_t>& nodeIndicesCumulativeCountPerFace, std::vector<uint64_t>& faceIndicesPerCell, std::vector<uint64_t>& faceIndicesCumulativeCountPerCell, std::vector<uint8_t>& faceRightHandness)
+void vtkEPCWriter::loadFacesForVTK_HEXAGONAL_PRISM(vtkIdType const* p_ptsIds, std::vector<uint64_t>& p_nodeIndicesPerFace, std::vector<uint64_t>& nodeIndicesCumulativeCountPerFace, std::vector<uint64_t>& faceIndicesPerCell, std::vector<uint64_t>& faceIndicesCumulativeCountPerCell, std::vector<uint8_t>& faceRightHandness)
 {
 	/*
 * Nodes per face
 */
-	auto w_ptsIds = cell->GetPointIds();
 	uint64_t w_nodeIndicesForWedgeFaces[36] = {
 		//Face 0
-		static_cast<uint64_t>(w_ptsIds->GetId(0)),
-		static_cast<uint64_t>(w_ptsIds->GetId(1)),
-		static_cast<uint64_t>(w_ptsIds->GetId(2)),
-		static_cast<uint64_t>(w_ptsIds->GetId(3)),
-		static_cast<uint64_t>(w_ptsIds->GetId(4)),
-		static_cast<uint64_t>(w_ptsIds->GetId(5)),
+		static_cast<uint64_t>(p_ptsIds[0]),
+		static_cast<uint64_t>(p_ptsIds[1]),
+		static_cast<uint64_t>(p_ptsIds[2]),
+		static_cast<uint64_t>(p_ptsIds[3]),
+		static_cast<uint64_t>(p_ptsIds[4]),
+		static_cast<uint64_t>(p_ptsIds[5]),
 		//Face 1
-		static_cast<uint64_t>(w_ptsIds->GetId(6)),
-		static_cast<uint64_t>(w_ptsIds->GetId(7)),
-		static_cast<uint64_t>(w_ptsIds->GetId(8)),
-		static_cast<uint64_t>(w_ptsIds->GetId(9)),
-		static_cast<uint64_t>(w_ptsIds->GetId(10)),
-		static_cast<uint64_t>(w_ptsIds->GetId(11)),
+		static_cast<uint64_t>(p_ptsIds[6]),
+		static_cast<uint64_t>(p_ptsIds[7]),
+		static_cast<uint64_t>(p_ptsIds[8]),
+		static_cast<uint64_t>(p_ptsIds[9]),
+		static_cast<uint64_t>(p_ptsIds[10]),
+		static_cast<uint64_t>(p_ptsIds[11]),
 		//Face 2
-		static_cast<uint64_t>(w_ptsIds->GetId(0)),
-		static_cast<uint64_t>(w_ptsIds->GetId(6)),
-		static_cast<uint64_t>(w_ptsIds->GetId(7)),
-		static_cast<uint64_t>(w_ptsIds->GetId(1)),
+		static_cast<uint64_t>(p_ptsIds[0]),
+		static_cast<uint64_t>(p_ptsIds[6]),
+		static_cast<uint64_t>(p_ptsIds[7]),
+		static_cast<uint64_t>(p_ptsIds[1]),
 		//Face 3
-		static_cast<uint64_t>(w_ptsIds->GetId(1)),
-		static_cast<uint64_t>(w_ptsIds->GetId(7)),
-		static_cast<uint64_t>(w_ptsIds->GetId(8)),
-		static_cast<uint64_t>(w_ptsIds->GetId(2)),
+		static_cast<uint64_t>(p_ptsIds[1]),
+		static_cast<uint64_t>(p_ptsIds[7]),
+		static_cast<uint64_t>(p_ptsIds[8]),
+		static_cast<uint64_t>(p_ptsIds[2]),
 		//Face 4
-		static_cast<uint64_t>(w_ptsIds->GetId(2)),
-		static_cast<uint64_t>(w_ptsIds->GetId(8)),
-		static_cast<uint64_t>(w_ptsIds->GetId(9)),
-		static_cast<uint64_t>(w_ptsIds->GetId(3)),
+		static_cast<uint64_t>(p_ptsIds[2]),
+		static_cast<uint64_t>(p_ptsIds[8]),
+		static_cast<uint64_t>(p_ptsIds[9]),
+		static_cast<uint64_t>(p_ptsIds[3]),
 		//Face 5
-		static_cast<uint64_t>(w_ptsIds->GetId(3)),
-		static_cast<uint64_t>(w_ptsIds->GetId(9)),
-		static_cast<uint64_t>(w_ptsIds->GetId(10)),
-		static_cast<uint64_t>(w_ptsIds->GetId(4)),
+		static_cast<uint64_t>(p_ptsIds[3]),
+		static_cast<uint64_t>(p_ptsIds[9]),
+		static_cast<uint64_t>(p_ptsIds[10]),
+		static_cast<uint64_t>(p_ptsIds[4]),
 		//Face 6
-		static_cast<uint64_t>(w_ptsIds->GetId(4)),
-		static_cast<uint64_t>(w_ptsIds->GetId(10)),
-		static_cast<uint64_t>(w_ptsIds->GetId(11)),
-		static_cast<uint64_t>(w_ptsIds->GetId(5)),
+		static_cast<uint64_t>(p_ptsIds[4]),
+		static_cast<uint64_t>(p_ptsIds[10]),
+		static_cast<uint64_t>(p_ptsIds[11]),
+		static_cast<uint64_t>(p_ptsIds[5]),
 		//Face 7
-		static_cast<uint64_t>(w_ptsIds->GetId(5)),
-		static_cast<uint64_t>(w_ptsIds->GetId(11)),
-		static_cast<uint64_t>(w_ptsIds->GetId(6)),
-		static_cast<uint64_t>(w_ptsIds->GetId(0))
+		static_cast<uint64_t>(p_ptsIds[5]),
+		static_cast<uint64_t>(p_ptsIds[11]),
+		static_cast<uint64_t>(p_ptsIds[6]),
+		static_cast<uint64_t>(p_ptsIds[0])
 	};
-	nodeIndicesPerFace.insert(std::end(nodeIndicesPerFace), std::begin(w_nodeIndicesForWedgeFaces), std::end(w_nodeIndicesForWedgeFaces));
+	p_nodeIndicesPerFace.insert(std::end(p_nodeIndicesPerFace), std::begin(w_nodeIndicesForWedgeFaces), std::end(w_nodeIndicesForWedgeFaces));
 
 	/*
 	* Node cumulative count
@@ -762,91 +783,35 @@ void vtkEPCWriter::loadFacesForVTK_HEXAGONAL_PRISM(vtkCell* cell, std::vector<ui
 * https://examples.vtk.org/site/VTKBook/05Chapter5/#Figure%205-2
 *
 */
-void vtkEPCWriter::loadFacesForVTK_POLYHEDRON(vtkIdType cellId, std::vector<uint64_t>& nodeIndicesPerFace, std::vector<uint64_t>& nodeIndicesCumulativeCountPerFace, std::vector<uint64_t>& faceIndicesPerCell, std::vector<uint64_t>& faceIndicesCumulativeCountPerCell, std::vector<uint8_t>& faceRightHandness)
+void vtkEPCWriter::loadFacesForVTK_POLYHEDRON(vtkIdType cellId, std::vector<uint64_t>& p_nodeIndicesPerFace, std::vector<uint64_t>& nodeIndicesCumulativeCountPerFace, std::vector<uint64_t>& faceIndicesPerCell, std::vector<uint64_t>& faceIndicesCumulativeCountPerCell, std::vector<uint8_t>& faceRightHandness)
 {
-	vtkIdList* ptIds;
-	Internal->inputUnstructuredGrid->GetFaceStream(cellId, ptIds);
-	for (auto id = 0; id < ptIds->GetNumberOfIds(); ++id)
+	if (Internal->inputUnstructuredGrid->GetCellType(cellId) == VTK_POLYHEDRON)
 	{
-		vtkOutputWindowDisplayDebugText(std::to_string(ptIds->GetId(id)).c_str());
+		vtkIdType nfaces;
+		const vtkIdType* facePtIds;
+		Internal->inputUnstructuredGrid->GetFaceStream(cellId, nfaces, facePtIds);
+
+		uint64_t newNodeIndicesCumulativeCountPerFace = nodeIndicesCumulativeCountPerFace.empty() ? 0 : nodeIndicesCumulativeCountPerFace.back();
+		uint64_t initFaceId = faceIndicesPerCell.empty() ? 0 : faceIndicesPerCell.back() + 1;
+		uint64_t initFaceIndicesCumulative = faceIndicesCumulativeCountPerCell.empty() ? 0 : faceIndicesCumulativeCountPerCell.back();
+		faceIndicesCumulativeCountPerCell.push_back(initFaceIndicesCumulative + nfaces);
+		faceIndicesPerCell.reserve(nfaces);
+		for (vtkIdType id = 0; id < nfaces; ++id)
+		{
+			faceIndicesPerCell.push_back(initFaceId + id);
+			vtkIdType nbPoints = facePtIds[0];
+			newNodeIndicesCumulativeCountPerFace += nbPoints;
+			nodeIndicesCumulativeCountPerFace.push_back(newNodeIndicesCumulativeCountPerFace);
+			faceRightHandness.push_back(1);
+			p_nodeIndicesPerFace.reserve(nbPoints);
+				for (vtkIdType j = 1; j <= nbPoints; ++j)
+				{
+					double ptsIds = facePtIds[j];
+					p_nodeIndicesPerFace.push_back(facePtIds[j]);
+				}
+				facePtIds += nbPoints + 1;
+		}
 	}
-	/*
-	* Nodes per face
-	*/
-	/*
-	uint64_t w_nodeIndicesForWedgeFaces[36] = {
-		//Face 0
-		static_cast<uint64_t>(w_ptsIds->GetId(0)),
-		static_cast<uint64_t>(w_ptsIds->GetId(1)),
-		static_cast<uint64_t>(w_ptsIds->GetId(2)),
-		static_cast<uint64_t>(w_ptsIds->GetId(3)),
-		static_cast<uint64_t>(w_ptsIds->GetId(4)),
-		static_cast<uint64_t>(w_ptsIds->GetId(5)),
-		//Face 1
-		static_cast<uint64_t>(w_ptsIds->GetId(6)),
-		static_cast<uint64_t>(w_ptsIds->GetId(7)),
-		static_cast<uint64_t>(w_ptsIds->GetId(8)),
-		static_cast<uint64_t>(w_ptsIds->GetId(9)),
-		static_cast<uint64_t>(w_ptsIds->GetId(10)),
-		static_cast<uint64_t>(w_ptsIds->GetId(11)),
-		//Face 2
-		static_cast<uint64_t>(w_ptsIds->GetId(0)),
-		static_cast<uint64_t>(w_ptsIds->GetId(6)),
-		static_cast<uint64_t>(w_ptsIds->GetId(7)),
-		static_cast<uint64_t>(w_ptsIds->GetId(1)),
-		//Face 3
-		static_cast<uint64_t>(w_ptsIds->GetId(1)),
-		static_cast<uint64_t>(w_ptsIds->GetId(7)),
-		static_cast<uint64_t>(w_ptsIds->GetId(8)),
-		static_cast<uint64_t>(w_ptsIds->GetId(2)),
-		//Face 4
-		static_cast<uint64_t>(w_ptsIds->GetId(2)),
-		static_cast<uint64_t>(w_ptsIds->GetId(8)),
-		static_cast<uint64_t>(w_ptsIds->GetId(9)),
-		static_cast<uint64_t>(w_ptsIds->GetId(3)),
-		//Face 5
-		static_cast<uint64_t>(w_ptsIds->GetId(3)),
-		static_cast<uint64_t>(w_ptsIds->GetId(9)),
-		static_cast<uint64_t>(w_ptsIds->GetId(10)),
-		static_cast<uint64_t>(w_ptsIds->GetId(4)),
-		//Face 6
-		static_cast<uint64_t>(w_ptsIds->GetId(4)),
-		static_cast<uint64_t>(w_ptsIds->GetId(10)),
-		static_cast<uint64_t>(w_ptsIds->GetId(11)),
-		static_cast<uint64_t>(w_ptsIds->GetId(5)),
-		//Face 7
-		static_cast<uint64_t>(w_ptsIds->GetId(5)),
-		static_cast<uint64_t>(w_ptsIds->GetId(11)),
-		static_cast<uint64_t>(w_ptsIds->GetId(6)),
-		static_cast<uint64_t>(w_ptsIds->GetId(0))
-	};
-	nodeIndicesPerFace.insert(std::end(nodeIndicesPerFace), std::begin(w_nodeIndicesForWedgeFaces), std::end(w_nodeIndicesForWedgeFaces));
-	*/
-	/*
-	* Node cumulative count
-	*/
-	uint64_t initNodeIndicesCumulativeCountPerFace = nodeIndicesCumulativeCountPerFace.empty() ? 0 : nodeIndicesCumulativeCountPerFace.back();
-	uint64_t w_nodeIndicesCumulativeCountPerFace[8] = { initNodeIndicesCumulativeCountPerFace + 6, initNodeIndicesCumulativeCountPerFace + 12, initNodeIndicesCumulativeCountPerFace + 16, initNodeIndicesCumulativeCountPerFace + 20, initNodeIndicesCumulativeCountPerFace + 24, initNodeIndicesCumulativeCountPerFace + 28, initNodeIndicesCumulativeCountPerFace + 32, initNodeIndicesCumulativeCountPerFace + 36 };
-	nodeIndicesCumulativeCountPerFace.insert(std::end(nodeIndicesCumulativeCountPerFace), std::begin(w_nodeIndicesCumulativeCountPerFace), std::end(w_nodeIndicesCumulativeCountPerFace));
-
-	/*
-	* face indices per cell
-	*/
-	uint64_t initFaceId = faceIndicesPerCell.empty() ? 0 : faceIndicesPerCell.back() + 1;
-	uint64_t w_faceIndicesPerCell[8] = { initFaceId, initFaceId + 1, initFaceId + 2, initFaceId + 3, initFaceId + 4, initFaceId + 5, initFaceId + 6, initFaceId + 7 };
-	faceIndicesPerCell.insert(std::end(faceIndicesPerCell), std::begin(w_faceIndicesPerCell), std::end(w_faceIndicesPerCell));
-
-	/*
-	* face right handness
-	*/
-	uint8_t w_faceRightHandness[8] = { 0,0,1,1,1,1,1,1 };
-	faceRightHandness.insert(std::end(faceRightHandness), std::begin(w_faceRightHandness), std::end(w_faceRightHandness));
-
-	/*
-	* Face indices cumulative
-	*/
-	uint64_t initFaceIndicesCumulative = faceIndicesCumulativeCountPerCell.empty() ? 0 : faceIndicesCumulativeCountPerCell.back();
-	faceIndicesCumulativeCountPerCell.push_back(initFaceIndicesCumulative + 8);
 }
 
 void vtkEPCWriter::PrintSelf(ostream& os, vtkIndent indent)

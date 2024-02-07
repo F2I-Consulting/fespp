@@ -79,27 +79,27 @@ private:
 	/***
 	* VTK_TETRA
 	*/
-	void loadFacesForVTK_TETRA(vtkCell* cell, std::vector<uint64_t>& nodeIndicesPerFace, std::vector<uint64_t>& nodeIndicesCumulativeCountPerFace, std::vector<uint64_t>& faceIndicesPerCell, std::vector<uint64_t>& faceIndicesCumulativeCountPerCell, std::vector<uint8_t>& faceRightHandness);
+	void loadFacesForVTK_TETRA(vtkIdType const* ptsIds, std::vector<uint64_t>& nodeIndicesPerFace, std::vector<uint64_t>& nodeIndicesCumulativeCountPerFace, std::vector<uint64_t>& faceIndicesPerCell, std::vector<uint64_t>& faceIndicesCumulativeCountPerCell, std::vector<uint8_t>& faceRightHandness);
 	/***
 	* VTK_HEXAHEDRON
 	*/
-	void loadFacesForVTK_HEXAHEDRON(vtkCell* cell, std::vector<uint64_t>& nodeIndicesPerFace, std::vector<uint64_t>& nodeIndicesCumulativeCountPerFace, std::vector<uint64_t>& faceIndicesPerCell, std::vector<uint64_t>& faceIndicesCumulativeCountPerCell, std::vector<uint8_t>& faceRightHandness);
+	void loadFacesForVTK_HEXAHEDRON(vtkIdType const* ptsIds, std::vector<uint64_t>& nodeIndicesPerFace, std::vector<uint64_t>& nodeIndicesCumulativeCountPerFace, std::vector<uint64_t>& faceIndicesPerCell, std::vector<uint64_t>& faceIndicesCumulativeCountPerCell, std::vector<uint8_t>& faceRightHandness);
 	/***
 	* VTK_WEDGE
 	*/
-	void loadFacesForVTK_WEDGE(vtkCell* cell, std::vector<uint64_t>& nodeIndicesPerFace, std::vector<uint64_t>& nodeIndicesCumulativeCountPerFace, std::vector<uint64_t>& faceIndicesPerCell, std::vector<uint64_t>& faceIndicesCumulativeCountPerCell, std::vector<uint8_t>& faceRightHandness);
+	void loadFacesForVTK_WEDGE(vtkIdType const* ptsIds, std::vector<uint64_t>& nodeIndicesPerFace, std::vector<uint64_t>& nodeIndicesCumulativeCountPerFace, std::vector<uint64_t>& faceIndicesPerCell, std::vector<uint64_t>& faceIndicesCumulativeCountPerCell, std::vector<uint8_t>& faceRightHandness);
 	/***
 	* VTK_PYRAMID
 	*/
-	void loadFacesForVTK_PYRAMID(vtkCell* cell, std::vector<uint64_t>& nodeIndicesPerFace, std::vector<uint64_t>& nodeIndicesCumulativeCountPerFace, std::vector<uint64_t>& faceIndicesPerCell, std::vector<uint64_t>& faceIndicesCumulativeCountPerCell, std::vector<uint8_t>& faceRightHandness);
+	void loadFacesForVTK_PYRAMID(vtkIdType const* ptsIds, std::vector<uint64_t>& nodeIndicesPerFace, std::vector<uint64_t>& nodeIndicesCumulativeCountPerFace, std::vector<uint64_t>& faceIndicesPerCell, std::vector<uint64_t>& faceIndicesCumulativeCountPerCell, std::vector<uint8_t>& faceRightHandness);
 	/***
 	* VTK_PENTAGONAL_PRISM
 	*/
-	void loadFacesForVTK_PENTAGONAL_PRISM(vtkCell* cell, std::vector<uint64_t>& nodeIndicesPerFace, std::vector<uint64_t>& nodeIndicesCumulativeCountPerFace, std::vector<uint64_t>& faceIndicesPerCell, std::vector<uint64_t>& faceIndicesCumulativeCountPerCell, std::vector<uint8_t>& faceRightHandness);
+	void loadFacesForVTK_PENTAGONAL_PRISM(vtkIdType const* ptsIds, std::vector<uint64_t>& nodeIndicesPerFace, std::vector<uint64_t>& nodeIndicesCumulativeCountPerFace, std::vector<uint64_t>& faceIndicesPerCell, std::vector<uint64_t>& faceIndicesCumulativeCountPerCell, std::vector<uint8_t>& faceRightHandness);
 	/***
 	* VTK_HEXAGONAL_PRISM
 	*/
-	void loadFacesForVTK_HEXAGONAL_PRISM(vtkCell* cell, std::vector<uint64_t>& nodeIndicesPerFace, std::vector<uint64_t>& nodeIndicesCumulativeCountPerFace, std::vector<uint64_t>& faceIndicesPerCell, std::vector<uint64_t>& faceIndicesCumulativeCountPerCell, std::vector<uint8_t>& faceRightHandness);
+	void loadFacesForVTK_HEXAGONAL_PRISM(vtkIdType const* ptsIds, std::vector<uint64_t>& nodeIndicesPerFace, std::vector<uint64_t>& nodeIndicesCumulativeCountPerFace, std::vector<uint64_t>& faceIndicesPerCell, std::vector<uint64_t>& faceIndicesCumulativeCountPerCell, std::vector<uint8_t>& faceRightHandness);
 	/***
 	* VTK_POLYHEDRON
 	*/

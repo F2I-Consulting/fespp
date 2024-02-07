@@ -989,6 +989,9 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::loadRepresentationMa
             }
             w_caotvpds = new ResqmlUnstructuredGridSubRepToVtkUnstructuredGrid(w_subRep, dynamic_cast<ResqmlUnstructuredGridToVtkUnstructuredGrid*>(_nodeIdToMapper[_output->GetDataAssembly()->FindFirstNodeWithName(("_" + w_supportingGrid->getUuid()).c_str())]));
         }
+        else {
+            vtkOutputWindowDisplayWarningText(("FESPP only supports IJK Grid or UnstructuredGrid as supporting representation of subrepresentation  (for uuid: " + w_uuid +  ")\n").c_str());
+        }
     }
     _nodeIdToMapper[p_nodeId] = w_caotvpds;
     try
