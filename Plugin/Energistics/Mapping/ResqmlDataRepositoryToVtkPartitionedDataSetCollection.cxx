@@ -1067,7 +1067,7 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::addDataToParent(cons
     {
         try
         {
-            COMMON_NS::AbstractObject *const w_result = _repository->getDataObjectByUuid(w_uuid);
+            COMMON_NS::AbstractObject* const w_result = _repository->getDataObjectByUuid(w_uuid);
             if (static_cast<ResqmlWellboreFrameToVtkPartitionedDataSet*>(_nodeIdToMapperSet[w_nodeParent]))
             {
                 if (!_nodeIdToMapperSet[w_nodeParent]->existUuid(w_uuid))
@@ -1124,7 +1124,11 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::addDataToParent(cons
         {
             if (static_cast<ResqmlAbstractRepresentationToVtkPartitionedDataSet*>(_nodeIdToMapper[w_nodeParent]))
             {
-                    static_cast<ResqmlAbstractRepresentationToVtkPartitionedDataSet*>(_nodeIdToMapper[w_nodeParent])->addDataArray(w_uuid);
+                ResqmlAbstractRepresentationToVtkPartitionedDataSet* abstractRepresentation = static_cast<ResqmlAbstractRepresentationToVtkPartitionedDataSet*>(_nodeIdToMapper[w_nodeParent]);
+                if (abstractRepresentation->getOutput()->GetNumberOfPartitions() == 0) {
+                    abstractRepresentation->loadVtkObject();
+                }
+                abstractRepresentation->addDataArray(w_uuid);
             }
             else
             {
@@ -1146,7 +1150,11 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::addDataToParent(cons
             auto const* assembly = _output->GetDataAssembly();
             if (_nodeIdToMapper[w_nodeParent])
             {
-                static_cast<ResqmlAbstractRepresentationToVtkPartitionedDataSet*>(_nodeIdToMapper[w_nodeParent])->addDataArray(_timeSeriesUuidAndTitleToIndexAndPropertiesUuid[w_tsUuid][w_nodeName][p_time]);
+                ResqmlAbstractRepresentationToVtkPartitionedDataSet* abstractRepresentation = static_cast<ResqmlAbstractRepresentationToVtkPartitionedDataSet*>(_nodeIdToMapper[w_nodeParent]);
+                if (abstractRepresentation->getOutput()->GetNumberOfPartitions() == 0) {
+                    abstractRepresentation->loadVtkObject();
+                }
+                abstractRepresentation->addDataArray(_timeSeriesUuidAndTitleToIndexAndPropertiesUuid[w_tsUuid][w_nodeName][p_time]);
             }
         }
         catch (const std::exception& e)
