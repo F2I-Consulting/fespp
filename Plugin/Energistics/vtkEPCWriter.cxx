@@ -163,18 +163,19 @@ void vtkEPCWriter::writeProperties(COMMON_NS::DataObjectRepository& repo, EML2_N
 	vtkPointData* w_pointData = Internal->inputUnstructuredGrid->GetPointData();
 	for (int i = 0; i < w_pointData->GetNumberOfArrays(); ++i)
 	{
-		vtkIntArray* w_array = vtkIntArray::SafeDownCast(Internal->inputUnstructuredGrid->GetPointData()->GetArray(i));
-		if (w_array)
+		vtkDataArray* w_array = Internal->inputUnstructuredGrid->GetCellData()->GetArray(i);
+		vtkIntArray* w_intArray = vtkIntArray::SafeDownCast(Internal->inputUnstructuredGrid->GetPointData()->GetArray(i));
+		if (w_intArray)
 		{
-			RESQML2_NS::DiscreteProperty* w_prop = repo.createDiscreteProperty(p_resqmlUnstructuredGrid, "", w_array->GetName(), 1, gsoap_eml2_3::eml23__IndexableElement::nodes, Internal->discretePropertyKind);
-			w_prop->pushBackInt32Hdf5Array1dOfValues(static_cast<int32_t*>(w_array->GetVoidPointer(0)), w_array->GetNumberOfValues(), hdfProxy, (std::numeric_limits<int32_t>::max)());
+			RESQML2_NS::DiscreteProperty* w_prop = repo.createDiscreteProperty(p_resqmlUnstructuredGrid, "", w_intArray->GetName(), 1, gsoap_eml2_3::eml23__IndexableElement::nodes, Internal->discretePropertyKind);
+			w_prop->pushBackInt32Hdf5Array1dOfValues(static_cast<int32_t*>(w_intArray->GetVoidPointer(0)), w_intArray->GetNumberOfValues(), hdfProxy, (std::numeric_limits<int32_t>::max)());
 		}
 		else {
-			vtkDoubleArray* w_array = vtkDoubleArray::SafeDownCast(Internal->inputUnstructuredGrid->GetPointData()->GetArray(i));
-			if (w_array)
+			vtkDoubleArray* w_doubleArray = vtkDoubleArray::SafeDownCast(Internal->inputUnstructuredGrid->GetPointData()->GetArray(i));
+			if (w_doubleArray)
 			{
-				RESQML2_NS::ContinuousProperty* w_prop = repo.createContinuousProperty(p_resqmlUnstructuredGrid, "", w_array->GetName(), 1, gsoap_eml2_3::eml23__IndexableElement::nodes, gsoap_resqml2_0_1::resqml20__ResqmlUom::Euc, Internal->continousPropertyKind);
-				w_prop->pushBackDoubleHdf5Array1dOfValues(static_cast<double*>(w_array->GetVoidPointer(0)), w_array->GetNumberOfValues());
+				RESQML2_NS::ContinuousProperty* w_prop = repo.createContinuousProperty(p_resqmlUnstructuredGrid, "", w_doubleArray->GetName(), 1, gsoap_eml2_3::eml23__IndexableElement::nodes, gsoap_resqml2_0_1::resqml20__ResqmlUom::Euc, Internal->continousPropertyKind);
+				w_prop->pushBackDoubleHdf5Array1dOfValues(static_cast<double*>(w_doubleArray->GetVoidPointer(0)), w_doubleArray->GetNumberOfValues());
 			}
 			else
 			{
@@ -186,18 +187,19 @@ void vtkEPCWriter::writeProperties(COMMON_NS::DataObjectRepository& repo, EML2_N
 	vtkCellData* w_cellData = Internal->inputUnstructuredGrid->GetCellData();
 	for (int i = 0; i < w_cellData->GetNumberOfArrays(); i++)
 	{
-		vtkIntArray* w_array = vtkIntArray::SafeDownCast(Internal->inputUnstructuredGrid->GetCellData()->GetArray(i));
-		if (w_array)
+		vtkDataArray* w_array= Internal->inputUnstructuredGrid->GetCellData()->GetArray(i);
+		vtkIntArray* w_intArray = vtkIntArray::SafeDownCast(Internal->inputUnstructuredGrid->GetCellData()->GetArray(i));
+		if (w_intArray)
 		{
-			RESQML2_NS::DiscreteProperty* w_prop = repo.createDiscreteProperty(p_resqmlUnstructuredGrid, "", w_array->GetName(), 1, gsoap_eml2_3::eml23__IndexableElement::cells, Internal->discretePropertyKind);
-			w_prop->pushBackInt32Hdf5Array1dOfValues(static_cast<int32_t*>(w_array->GetVoidPointer(0)), w_array->GetNumberOfValues(), hdfProxy, (std::numeric_limits<int32_t>::max)());
+			RESQML2_NS::DiscreteProperty* w_prop = repo.createDiscreteProperty(p_resqmlUnstructuredGrid, "", w_intArray->GetName(), 1, gsoap_eml2_3::eml23__IndexableElement::cells, Internal->discretePropertyKind);
+			w_prop->pushBackInt32Hdf5Array1dOfValues(static_cast<int32_t*>(w_intArray->GetVoidPointer(0)), w_intArray->GetNumberOfValues(), hdfProxy, (std::numeric_limits<int32_t>::max)());
 		}
 		else {
-			vtkDoubleArray* w_array = vtkDoubleArray::SafeDownCast(Internal->inputUnstructuredGrid->GetCellData()->GetArray(i));
-			if (w_array)
+			vtkDoubleArray* w_doubleArray = vtkDoubleArray::SafeDownCast(Internal->inputUnstructuredGrid->GetCellData()->GetArray(i));
+			if (w_doubleArray)
 			{
-				RESQML2_NS::ContinuousProperty* w_prop = repo.createContinuousProperty(p_resqmlUnstructuredGrid, "", w_array->GetName(), 1, gsoap_eml2_3::eml23__IndexableElement::cells, gsoap_resqml2_0_1::resqml20__ResqmlUom::Euc, Internal->continousPropertyKind);
-				w_prop->pushBackDoubleHdf5Array1dOfValues(static_cast<double*>(w_array->GetVoidPointer(0)), w_array->GetNumberOfValues());
+				RESQML2_NS::ContinuousProperty* w_prop = repo.createContinuousProperty(p_resqmlUnstructuredGrid, "", w_doubleArray->GetName(), 1, gsoap_eml2_3::eml23__IndexableElement::cells, gsoap_resqml2_0_1::resqml20__ResqmlUom::Euc, Internal->continousPropertyKind);
+				w_prop->pushBackDoubleHdf5Array1dOfValues(static_cast<double*>(w_doubleArray->GetVoidPointer(0)), w_doubleArray->GetNumberOfValues());
 			}
 			else
 			{
