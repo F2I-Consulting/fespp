@@ -31,7 +31,7 @@ under the License.
 #include "Mapping/WitsmlWellboreCompletionPerforationToVtkPolyData.h"
 
 //----------------------------------------------------------------------------
-WitsmlWellboreCompletionToVtkPartitionedDataSet::WitsmlWellboreCompletionToVtkPartitionedDataSet(const WITSML2_1_NS::WellboreCompletion *p_completion, int p_procNumber, int p_maxProc)
+WitsmlWellboreCompletionToVtkPartitionedDataSet::WitsmlWellboreCompletionToVtkPartitionedDataSet(const WITSML2_1_NS::WellboreCompletion *p_completion, uint32_t p_procNumber, uint32_t p_maxProc)
 	: CommonAbstractObjectSetToVtkPartitionedDataSetSet(p_completion,
 														p_procNumber,
 														p_maxProc)

@@ -42,7 +42,7 @@ public:
 	/**
 	 * Constructor
 	 */
-	ResqmlUnstructuredGridSubRepToVtkUnstructuredGrid(const RESQML2_NS::SubRepresentation *unstructuredGridSubRep, ResqmlUnstructuredGridToVtkUnstructuredGrid *support, int p_procNumber = 0, int p_maxProc = 1);
+	ResqmlUnstructuredGridSubRepToVtkUnstructuredGrid(const RESQML2_NS::SubRepresentation *unstructuredGridSubRep, ResqmlUnstructuredGridToVtkUnstructuredGrid *support, uint32_t p_procNumber = 0, uint32_t p_maxProc = 1);
 
 	/**
 	 * load vtkDataSet with resqml data

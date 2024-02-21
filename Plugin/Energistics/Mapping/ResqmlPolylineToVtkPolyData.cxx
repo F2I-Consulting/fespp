@@ -34,7 +34,7 @@ under the License.
 #include "Mapping/ResqmlPropertyToVtkDataArray.h"
 
 //----------------------------------------------------------------------------
-ResqmlPolylineToVtkPolyData::ResqmlPolylineToVtkPolyData(const RESQML2_NS::PolylineSetRepresentation *polyline, int p_procNumber, int p_maxProc)
+ResqmlPolylineToVtkPolyData::ResqmlPolylineToVtkPolyData(const RESQML2_NS::PolylineSetRepresentation *polyline, uint32_t p_procNumber, uint32_t p_maxProc)
 	: ResqmlAbstractRepresentationToVtkPartitionedDataSet(polyline,
 														  p_procNumber,
 														  p_maxProc)
@@ -85,17 +85,17 @@ void ResqmlPolylineToVtkPolyData::loadVtkObject()
 	// POLYLINE
 	vtkSmartPointer<vtkCellArray> setPolylineRepresentationLines = vtkSmartPointer<vtkCellArray>::New();
 
-	unsigned int countPolyline = polyline->getPolylineCountOfPatch(0);
+	uint32_t countPolyline = polyline->getPolylineCountOfPatch(0);
 
-	std::unique_ptr<unsigned int[]> countNodePolylineInPatch(new unsigned int[countPolyline]);
+	std::unique_ptr<uint32_t[]> countNodePolylineInPatch(new uint32_t[countPolyline]);
 	polyline->getNodeCountPerPolylineInPatch(0, countNodePolylineInPatch.get());
 
 	vtkIdType idPoint = 0;
-	for (unsigned int polylineIndex = 0; polylineIndex < countPolyline; ++polylineIndex)
+	for (uint32_t polylineIndex = 0; polylineIndex < countPolyline; ++polylineIndex)
 	{
 		vtkSmartPointer<vtkPolyLine> polylineRepresentation = vtkSmartPointer<vtkPolyLine>::New();
 		polylineRepresentation->GetPointIds()->SetNumberOfIds(countNodePolylineInPatch[polylineIndex]);
-		for (unsigned int line = 0; line < countNodePolylineInPatch[polylineIndex]; ++line)
+		for (uint32_t line = 0; line < countNodePolylineInPatch[polylineIndex]; ++line)
 		{
 			polylineRepresentation->GetPointIds()->SetId(line, idPoint++);
 		}

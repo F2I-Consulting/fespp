@@ -31,7 +31,7 @@ under the License.
 #include "Mapping/ResqmlWellboreMarkerToVtkPolyData.h"
 
 //----------------------------------------------------------------------------
-ResqmlWellboreMarkerFrameToVtkPartitionedDataSet::ResqmlWellboreMarkerFrameToVtkPartitionedDataSet(const RESQML2_NS::WellboreMarkerFrameRepresentation* p_markerFrame, int p_procNumber, int p_maxProc)
+ResqmlWellboreMarkerFrameToVtkPartitionedDataSet::ResqmlWellboreMarkerFrameToVtkPartitionedDataSet(const RESQML2_NS::WellboreMarkerFrameRepresentation* p_markerFrame, uint32_t p_procNumber, uint32_t p_maxProc)
 	: CommonAbstractObjectSetToVtkPartitionedDataSetSet(p_markerFrame,
 		p_procNumber,
 		p_maxProc)
@@ -39,12 +39,12 @@ ResqmlWellboreMarkerFrameToVtkPartitionedDataSet::ResqmlWellboreMarkerFrameToVtk
 }
 
 //----------------------------------------------------------------------------
-void ResqmlWellboreMarkerFrameToVtkPartitionedDataSet::addMarker(const RESQML2_NS::WellboreMarkerFrameRepresentation* p_marker, const std::string & p_uuid, bool p_orientation, int p_size)
+void ResqmlWellboreMarkerFrameToVtkPartitionedDataSet::addMarker(const RESQML2_NS::WellboreMarkerFrameRepresentation* p_marker, const std::string & p_uuid, bool p_orientation, uint32_t p_size)
 {
 	_mapperSet.push_back(new ResqmlWellboreMarkerToVtkPolyData(p_marker, p_uuid, p_orientation, p_size));
 }
 
-void ResqmlWellboreMarkerFrameToVtkPartitionedDataSet::changeOrientationAndSize(const std::string& p_uuid, bool p_orientation, int p_size)
+void ResqmlWellboreMarkerFrameToVtkPartitionedDataSet::changeOrientationAndSize(const std::string& p_uuid, bool p_orientation, uint32_t p_size)
 {
 
 	for (auto* mapper : _mapperSet)

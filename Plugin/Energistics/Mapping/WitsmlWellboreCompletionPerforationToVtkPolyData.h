@@ -31,7 +31,7 @@ public:
 	/**
 	 * Constructor
 	 */
-	WitsmlWellboreCompletionPerforationToVtkPolyData(const resqml2::WellboreTrajectoryRepresentation *wellboreTrajectory, const WITSML2_1_NS::WellboreCompletion *WellboreCompletion, const std::string &connectionuid, const std::string &title, const double skin, const int p_procNumber = 0, int p_maxProc = 1);
+	WitsmlWellboreCompletionPerforationToVtkPolyData(const resqml2::WellboreTrajectoryRepresentation *wellboreTrajectory, const WITSML2_1_NS::WellboreCompletion *WellboreCompletion, const std::string &connectionuid, const std::string &title, const double skin, const uint32_t p_procNumber = 0, uint32_t p_maxProc = 1);
 
 	/**
 	 * load vtkDataSet with resqml data

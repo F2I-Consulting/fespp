@@ -37,7 +37,7 @@ public:
 	/**
 	 * Constructor
 	 */
-	CommonAbstractObjectToVtkPartitionedDataSet(const COMMON_NS::AbstractObject *p_abstractObject, int p_procNumber = 0, int p_maxProc = 1);
+	CommonAbstractObjectToVtkPartitionedDataSet(const COMMON_NS::AbstractObject *p_abstractObject, uint32_t p_procNumber = 0, uint32_t p_maxProc = 1);
 
 	/**
 	 * Destructor
@@ -65,8 +65,8 @@ public:
 protected:
 	const COMMON_NS::AbstractObject *getResqmlData() const { return _resqmlData; }
 
-	int _procNumber;
-	int _maxProc;
+	uint32_t _procNumber;
+	uint32_t _maxProc;
 
 	const COMMON_NS::AbstractObject *_resqmlData;
 

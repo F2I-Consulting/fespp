@@ -31,7 +31,7 @@ under the License.
 #include "Mapping/ResqmlPropertyToVtkDataArray.h"
 
 //----------------------------------------------------------------------------
-ResqmlGrid2dToVtkStructuredGrid::ResqmlGrid2dToVtkStructuredGrid(const RESQML2_NS::Grid2dRepresentation *grid2D, int p_procNumber, int p_maxProc)
+ResqmlGrid2dToVtkStructuredGrid::ResqmlGrid2dToVtkStructuredGrid(const RESQML2_NS::Grid2dRepresentation *grid2D, uint32_t p_procNumber, uint32_t p_maxProc)
 	: ResqmlAbstractRepresentationToVtkPartitionedDataSet(grid2D,
 														  p_procNumber,
 														  p_maxProc)
@@ -63,8 +63,8 @@ void ResqmlGrid2dToVtkStructuredGrid::loadVtkObject()
 	const double YIOffset = grid2D->getYIOffsetInGlobalCrs();
 	const double YJOffset = grid2D->getYJOffsetInGlobalCrs();
 	const double zIndice = grid2D->getLocalCrs(0)->isDepthOriented() ? -1 : 1;
-	const ULONG64 nbNodeI = grid2D->getNodeCountAlongIAxis();
-	const ULONG64 nbNodeJ = grid2D->getNodeCountAlongJAxis();
+	const uint64_t nbNodeI = grid2D->getNodeCountAlongIAxis();
+	const uint64_t nbNodeJ = grid2D->getNodeCountAlongJAxis();
 
 	structuredGrid->SetDimensions(nbNodeI, nbNodeJ, 1);
 	// POINT
@@ -75,9 +75,9 @@ void ResqmlGrid2dToVtkStructuredGrid::loadVtkObject()
 
 	vtkSmartPointer<vtkPoints> points = vtkSmartPointer<vtkPoints>::New();
 	vtkSmartPointer<vtkCellArray> vertices = vtkSmartPointer<vtkCellArray>::New();
-	for (ULONG64 j = 0; j < nbNodeJ; ++j)
+	for (uint64_t j = 0; j < nbNodeJ; ++j)
 	{
-		for (ULONG64 i = 0; i < nbNodeI; ++i)
+		for (uint64_t i = 0; i < nbNodeI; ++i)
 		{
 			const size_t ptId = i + j * nbNodeI;
 			vtkIdType pid = points->InsertNextPoint(

@@ -44,9 +44,9 @@ ResqmlPropertyToVtkDataArray::ResqmlPropertyToVtkDataArray(const RESQML2_NS::Abs
 														   uint32_t jCellCount,
 														   uint32_t kCellCount,
 														   uint32_t initKIndex,
-														   int patch_index)
+														   uint64_t patch_index)
 {
-	int nbElement = 0;
+	uint32_t nbElement = 0;
 
 	const gsoap_eml2_3::eml23__IndexableElement element = valuesProperty->getAttachmentKind();
 	if (element == gsoap_eml2_3::eml23__IndexableElement::cells ||
@@ -63,7 +63,7 @@ ResqmlPropertyToVtkDataArray::ResqmlPropertyToVtkDataArray(const RESQML2_NS::Abs
 		throw std::invalid_argument("Property indexable element must be points or cells.");
 	}
 
-	const unsigned int elementCountPerValue = valuesProperty->getElementCountPerValue();
+	const uint32_t elementCountPerValue = valuesProperty->getElementCountPerValue();
 	if (elementCountPerValue != 1)
 	{
 		vtkOutputWindowDisplayErrorText("does not support vectorial property yet\n");
@@ -96,7 +96,7 @@ ResqmlPropertyToVtkDataArray::ResqmlPropertyToVtkDataArray(const RESQML2_NS::Abs
 	else if (typeProperty == RESQML2_NS::DiscreteProperty::XML_TAG)
 	{
 		vtkSmartPointer<vtkIntArray> cellDataInt = vtkSmartPointer<vtkIntArray>::New();
-		int *valuesIntSet = new int[nbElement]; // deleted by VTK cellData vtkSmartPointer
+		int32_t *valuesIntSet = new int32_t[nbElement]; // deleted by VTK cellData vtkSmartPointer
 		if (valuesProperty->getDimensionsCountOfPatch(patch_index) == 3)
 		{
 			valuesProperty->getIntValuesOf3dPatch(patch_index, valuesIntSet, iCellCount, jCellCount, kCellCount, 0, 0, initKIndex);
@@ -116,7 +116,7 @@ ResqmlPropertyToVtkDataArray::ResqmlPropertyToVtkDataArray(const RESQML2_NS::Abs
 	else if (typeProperty == RESQML2_NS::CategoricalProperty::XML_TAG)
 	{
 		vtkSmartPointer<vtkIntArray> cellDataInt = vtkSmartPointer<vtkIntArray>::New();
-		int *valuesIntSet = new int[nbElement]; // deleted by VTK cellData vtkSmartPointer
+		int32_t*valuesIntSet = new int32_t[nbElement]; // deleted by VTK cellData vtkSmartPointer
 		if (valuesProperty->getDimensionsCountOfPatch(patch_index) == 3)
 		{
 			valuesProperty->getIntValuesOf3dPatch(patch_index, valuesIntSet, iCellCount, jCellCount, kCellCount, 0, 0, initKIndex);
@@ -141,11 +141,11 @@ ResqmlPropertyToVtkDataArray::ResqmlPropertyToVtkDataArray(const RESQML2_NS::Abs
 
 // -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 ResqmlPropertyToVtkDataArray::ResqmlPropertyToVtkDataArray(resqml2::AbstractValuesProperty const *valuesProperty,
-														   long cellCount,
-														   long pointCount,
-														   int patch_index)
+															uint64_t cellCount,
+															uint64_t pointCount,
+															uint64_t patch_index)	
 {
-	int nbElement = 0;
+	uint64_t nbElement = 0;
 
 	const gsoap_eml2_3::eml23__IndexableElement element = valuesProperty->getAttachmentKind();
 	if (element == gsoap_eml2_3::eml23__IndexableElement::cells ||
@@ -162,7 +162,7 @@ ResqmlPropertyToVtkDataArray::ResqmlPropertyToVtkDataArray(resqml2::AbstractValu
 		throw std::invalid_argument("Property indexable element must be points or cells.");
 	}
 
-	const unsigned int elementCountPerValue = valuesProperty->getElementCountPerValue();
+	const uint32_t elementCountPerValue = valuesProperty->getElementCountPerValue();
 	const std::string name = valuesProperty->getTitle();
 	if (valuesProperty->getXmlTag() == resqml2::ContinuousProperty::XML_TAG)
 	{
@@ -186,7 +186,7 @@ ResqmlPropertyToVtkDataArray::ResqmlPropertyToVtkDataArray(resqml2::AbstractValu
 			 (valuesProperty->getXmlTag() == resqml2::CategoricalProperty::XML_TAG &&
 			  static_cast<resqml2::CategoricalProperty const *>(valuesProperty)->getStringLookup() != nullptr))
 	{
-		int *values = new int[nbElement * elementCountPerValue]; // deleted by VTK data vtkSmartPointer
+		int32_t*values = new int32_t[nbElement * elementCountPerValue]; // deleted by VTK data vtkSmartPointer
 		valuesProperty->getInt32ValuesOfPatch(patch_index, values);
 
 		vtkSmartPointer<vtkIntArray> cellDataInt = vtkSmartPointer<vtkIntArray>::New();

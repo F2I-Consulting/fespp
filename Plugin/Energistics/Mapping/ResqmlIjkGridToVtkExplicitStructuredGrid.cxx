@@ -38,7 +38,7 @@ under the License.
 #include "ResqmlPropertyToVtkDataArray.h"
 
 //----------------------------------------------------------------------------
-ResqmlIjkGridToVtkExplicitStructuredGrid::ResqmlIjkGridToVtkExplicitStructuredGrid(const RESQML2_NS::AbstractIjkGridRepresentation *ijkGrid, int p_procNumber, int p_maxProc)
+ResqmlIjkGridToVtkExplicitStructuredGrid::ResqmlIjkGridToVtkExplicitStructuredGrid(const RESQML2_NS::AbstractIjkGridRepresentation *ijkGrid, uint32_t p_procNumber, uint32_t p_maxProc)
 	: ResqmlAbstractRepresentationToVtkPartitionedDataSet(ijkGrid,
 														  p_procNumber,
 														  p_maxProc),

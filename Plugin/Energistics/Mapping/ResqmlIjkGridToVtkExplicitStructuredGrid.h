@@ -42,7 +42,7 @@ public:
 	/**
 	 * Constructor
 	 */
-	explicit ResqmlIjkGridToVtkExplicitStructuredGrid(const RESQML2_NS::AbstractIjkGridRepresentation *ijkGrid, int p_procNumber = 0, int p_maxProc = 1);
+	explicit ResqmlIjkGridToVtkExplicitStructuredGrid(const RESQML2_NS::AbstractIjkGridRepresentation *ijkGrid, uint32_t p_procNumber = 0, uint32_t p_maxProc = 1);
 
 	/**
 	 * load vtkDataSet with resqml data
@@ -63,7 +63,7 @@ protected:
 	const RESQML2_NS::AbstractIjkGridRepresentation *getResqmlData() const;
 	vtkSmartPointer<vtkPoints> points;
 
-	unsigned int pointer_on_points;
+	uint32_t pointer_on_points;
 
 	/**
 	 * method : checkHyperslabingCapacity
