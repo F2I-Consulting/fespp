@@ -5,7 +5,7 @@
 ## BUILD dependencies
 - [FESAPI v2.9.0.0](https://github.com/F2I-Consulting/fesapi/releases/tag/v2.9.0.0)
 - ParaView with same HDF5 libraries used by FESAPI
-	 > known to work on Linux and Windows starting from ParaView 5.10.0
+	 > known to work on Linux and Windows starting from ParaView 5.11.0
 
 ## BUILD & INSTALL Fespp
 1. **CONFIGURE** Fespp with CMAKE

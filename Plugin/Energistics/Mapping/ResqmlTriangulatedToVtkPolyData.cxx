@@ -35,7 +35,7 @@ under the License.
 #include "Mapping/ResqmlPropertyToVtkDataArray.h"
 
 //----------------------------------------------------------------------------
-ResqmlTriangulatedToVtkPolyData::ResqmlTriangulatedToVtkPolyData(const RESQML2_NS::TriangulatedSetRepresentation *triangulated, uint32_t patch_index, int p_procNumber, int p_maxProc)
+ResqmlTriangulatedToVtkPolyData::ResqmlTriangulatedToVtkPolyData(const RESQML2_NS::TriangulatedSetRepresentation *triangulated, uint64_t patch_index, uint32_t p_procNumber, uint32_t p_maxProc)
 	: ResqmlAbstractRepresentationToVtkPartitionedDataSet(triangulated,
 														  p_procNumber,
 														  p_maxProc),
@@ -100,7 +100,7 @@ void ResqmlTriangulatedToVtkPolyData::loadVtkObject()
 	vtkSmartPointer<vtkCellArray> triangulatedRepresentationTriangles = vtkSmartPointer<vtkCellArray>::New();
 	std::unique_ptr<unsigned int[]> triangleIndices(new unsigned int[triangulated->getTriangleCountOfPatch(this->patch_index) * 3]);
 	triangulated->getTriangleNodeIndicesOfPatch(this->patch_index, triangleIndices.get());
-	for (unsigned int p = 0; p < triangulated->getTriangleCountOfPatch(this->patch_index); ++p)
+	for (auto p = 0; p < triangulated->getTriangleCountOfPatch(this->patch_index); ++p)
 	{
 		vtkSmartPointer<vtkTriangle> triangulatedRepresentationTriangle = vtkSmartPointer<vtkTriangle>::New();
 		triangulatedRepresentationTriangle->GetPointIds()->SetId(0, triangleIndices[p * 3] - previousPatchesNodeCount);

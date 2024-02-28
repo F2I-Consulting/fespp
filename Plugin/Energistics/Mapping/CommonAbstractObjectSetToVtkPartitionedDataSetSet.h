@@ -38,7 +38,7 @@ class CommonAbstractObjectSetToVtkPartitionedDataSetSet
 {
 public:
 	// Constructor
-	CommonAbstractObjectSetToVtkPartitionedDataSetSet(const COMMON_NS::AbstractObject *p_abstractObject, int p_procNumber = 0, int p_maxProc = 1);
+	CommonAbstractObjectSetToVtkPartitionedDataSetSet(const COMMON_NS::AbstractObject *p_abstractObject, uint32_t p_procNumber = 0, uint32_t p_maxProc = 1);
 
 	// destructor
 	~CommonAbstractObjectSetToVtkPartitionedDataSetSet();
@@ -59,8 +59,8 @@ protected:
 	const COMMON_NS::AbstractObject *_resqmlData;
 
 	// for Multithreading
-	int _procNumber;
-	int _maxProc;
+	uint32_t _procNumber;
+	uint32_t _maxProc;
 
 	std::string _uuid;
 	std::string _title;

@@ -34,7 +34,7 @@ under the License.
 #include "Mapping/ResqmlPropertyToVtkDataArray.h"
 
 //----------------------------------------------------------------------------
-ResqmlAbstractRepresentationToVtkPartitionedDataSet::ResqmlAbstractRepresentationToVtkPartitionedDataSet(const RESQML2_NS::AbstractRepresentation *p_abstractRepresentation, int p_procNumber, int p_maxProc)
+ResqmlAbstractRepresentationToVtkPartitionedDataSet::ResqmlAbstractRepresentationToVtkPartitionedDataSet(const RESQML2_NS::AbstractRepresentation *p_abstractRepresentation, uint32_t p_procNumber, uint32_t p_maxProc)
 	: CommonAbstractObjectToVtkPartitionedDataSet(p_abstractRepresentation,
 												  p_procNumber,
 												  p_maxProc),
@@ -44,7 +44,7 @@ ResqmlAbstractRepresentationToVtkPartitionedDataSet::ResqmlAbstractRepresentatio
 {
 }
 
-void ResqmlAbstractRepresentationToVtkPartitionedDataSet::addDataArray(const std::string &p_uuid, int p_patchIndex)
+void ResqmlAbstractRepresentationToVtkPartitionedDataSet::addDataArray(const std::string &p_uuid, uint32_t p_patchIndex)
 {
 	std::vector<RESQML2_NS::AbstractValuesProperty *> w_valuesPropertySet = getResqmlData()->getValuesPropertySet();
 	std::vector<RESQML2_NS::AbstractValuesProperty *>::iterator w_it = std::find_if(w_valuesPropertySet.begin(), w_valuesPropertySet.end(),

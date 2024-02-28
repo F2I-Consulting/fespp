@@ -38,7 +38,8 @@ under the License.
 #include "ResqmlIjkGridToVtkExplicitStructuredGrid.h"
 
 //----------------------------------------------------------------------------
-ResqmlIjkGridSubRepToVtkExplicitStructuredGrid::ResqmlIjkGridSubRepToVtkExplicitStructuredGrid(const RESQML2_NS::SubRepresentation* subRep, ResqmlIjkGridToVtkExplicitStructuredGrid* support, int p_procNumber, int p_maxProc)
+ResqmlIjkGridSubRepToVtkExplicitStructuredGrid::ResqmlIjkGridSubRepToVtkExplicitStructuredGrid(const RESQML2_NS::SubRepresentation* subRep, ResqmlIjkGridToVtkExplicitStructuredGrid* support, uint32_t p_procNumber, uint32_t p_maxProc)
+
 	: ResqmlAbstractRepresentationToVtkPartitionedDataSet(subRep,
 		p_procNumber,
 		p_maxProc),
@@ -61,8 +62,9 @@ void ResqmlIjkGridSubRepToVtkExplicitStructuredGrid::loadVtkObject()
 {
 	RESQML2_NS::SubRepresentation const* subRep = getResqmlData();
 	auto* supportingGrid = dynamic_cast<RESQML2_NS::AbstractIjkGridRepresentation*>(subRep->getSupportingRepresentation(0));
+
 	if (supportingGrid == nullptr) {
-		vtkOutputWindowDisplayWarningText(("SubRepresentation (" + subRep->getUuid() + ") has no suuport grid\n").c_str());
+		vtkOutputWindowDisplayWarningText(("SubRepresentation (" + subRep->getUuid() + ") has no support grid\n").c_str());
 		return;
 	}
 	if (subRep->areElementIndicesPairwise(0)) {

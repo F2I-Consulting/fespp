@@ -31,7 +31,7 @@ under the License.
 #include <fesapi/resqml2/AbstractLocal3dCrs.h>
 
 //----------------------------------------------------------------------------
-ResqmlWellboreTrajectoryToVtkPolyData::ResqmlWellboreTrajectoryToVtkPolyData(const resqml2::WellboreTrajectoryRepresentation *wellbore, int p_procNumber, int p_maxProc)
+ResqmlWellboreTrajectoryToVtkPolyData::ResqmlWellboreTrajectoryToVtkPolyData(const resqml2::WellboreTrajectoryRepresentation *wellbore, uint32_t p_procNumber, uint32_t p_maxProc)
 	: ResqmlAbstractRepresentationToVtkPartitionedDataSet(wellbore,
 														  p_procNumber,
 														  p_maxProc)
@@ -82,7 +82,7 @@ void ResqmlWellboreTrajectoryToVtkPolyData::loadVtkObject()
 		// POLYLINE
 		vtkSmartPointer<vtkPolyLine> polylineRepresentation = vtkSmartPointer<vtkPolyLine>::New();
 		polylineRepresentation->GetPointIds()->SetNumberOfIds(_pointCount);
-		for (unsigned int nodeIndex = 0; nodeIndex < _pointCount; ++nodeIndex)
+		for (uint64_t nodeIndex = 0; nodeIndex < _pointCount; ++nodeIndex)
 		{
 			polylineRepresentation->GetPointIds()->SetId(nodeIndex, nodeIndex);
 		}

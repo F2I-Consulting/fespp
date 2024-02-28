@@ -39,7 +39,7 @@ public:
 	/**
 	 * Constructor
 	 */
-	WitsmlWellboreCompletionToVtkPartitionedDataSet(const WITSML2_1_NS::WellboreCompletion *p_completion, int p_procNumber = 0, int p_maxProc = 1);
+	WitsmlWellboreCompletionToVtkPartitionedDataSet(const WITSML2_1_NS::WellboreCompletion *p_completion, uint32_t p_procNumber = 0, uint32_t p_maxProc = 1);
 
 	void addPerforation(const std::string &p_connectionuid, const std::string &p_name, const double p_skin);
 

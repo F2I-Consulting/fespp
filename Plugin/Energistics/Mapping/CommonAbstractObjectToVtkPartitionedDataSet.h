@@ -37,6 +37,7 @@ public:
 	/**
 	 * Constructor
 	 */
+
 	CommonAbstractObjectToVtkPartitionedDataSet(const COMMON_NS::AbstractObject* p_abstractObject, uint32_t p_procNumber = 0, uint32_t p_maxProc = 1);
 
 	/**

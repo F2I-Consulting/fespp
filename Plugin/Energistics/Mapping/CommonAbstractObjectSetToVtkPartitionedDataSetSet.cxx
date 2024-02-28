@@ -19,7 +19,7 @@ under the License.
 #include "Mapping/CommonAbstractObjectSetToVtkPartitionedDataSetSet.h"
 
 //----------------------------------------------------------------------------
-CommonAbstractObjectSetToVtkPartitionedDataSetSet::CommonAbstractObjectSetToVtkPartitionedDataSetSet(const COMMON_NS::AbstractObject *p_abstractObject, int p_procNumber, int p_maxProc)
+CommonAbstractObjectSetToVtkPartitionedDataSetSet::CommonAbstractObjectSetToVtkPartitionedDataSetSet(const COMMON_NS::AbstractObject *p_abstractObject, uint32_t p_procNumber, uint32_t p_maxProc)
 	: _procNumber(p_procNumber),
 	  _maxProc(p_maxProc),
 	  _resqmlData(p_abstractObject),
@@ -40,7 +40,7 @@ CommonAbstractObjectSetToVtkPartitionedDataSetSet::~CommonAbstractObjectSetToVtk
 
 void CommonAbstractObjectSetToVtkPartitionedDataSetSet::loadVtkObject()
 {
-	for (int w_i = _procNumber; w_i < _mapperSet.size(); w_i += _maxProc)
+	for (uint32_t w_i = _procNumber; w_i < _mapperSet.size(); w_i += _maxProc)
 	{
 		_mapperSet[w_i]->loadVtkObject();
 	}

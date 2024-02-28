@@ -33,7 +33,7 @@ public:
 	/**
 	 * Constructor
 	 */
-	ResqmlWellboreChannelToVtkPolyData(const RESQML2_NS::WellboreFrameRepresentation *frame, const RESQML2_NS::AbstractValuesProperty *property, const std::string &p_uuid, int p_procNumber = 0, int p_maxProc = 1);
+	ResqmlWellboreChannelToVtkPolyData(const RESQML2_NS::WellboreFrameRepresentation *frame, const RESQML2_NS::AbstractValuesProperty *property, const std::string &p_uuid, uint32_t p_procNumber = 0, uint32_t p_maxProc = 1);
 
 	/**
 	 * load vtkDataSet with resqml data

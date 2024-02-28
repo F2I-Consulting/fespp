@@ -31,7 +31,7 @@ under the License.
 #include "Mapping/ResqmlPropertyToVtkDataArray.h"
 
 //----------------------------------------------------------------------------
-ResqmlGrid2dToVtkStructuredGrid::ResqmlGrid2dToVtkStructuredGrid(const RESQML2_NS::Grid2dRepresentation *grid2D, int p_procNumber, int p_maxProc)
+ResqmlGrid2dToVtkStructuredGrid::ResqmlGrid2dToVtkStructuredGrid(const RESQML2_NS::Grid2dRepresentation *grid2D, uint32_t p_procNumber, uint32_t p_maxProc)
 	: ResqmlAbstractRepresentationToVtkPartitionedDataSet(grid2D,
 														  p_procNumber,
 														  p_maxProc)
@@ -77,6 +77,7 @@ void ResqmlGrid2dToVtkStructuredGrid::loadVtkObject()
 	vtkSmartPointer<vtkCellArray> vertices = vtkSmartPointer<vtkCellArray>::New();
 
 	std::vector< vtkIdType> blankPts;
+
 	for (uint64_t j = 0; j < nbNodeJ; ++j)
 	{
 		for (uint64_t i = 0; i < nbNodeI; ++i)

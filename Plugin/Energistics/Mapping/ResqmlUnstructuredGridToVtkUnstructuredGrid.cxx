@@ -39,7 +39,7 @@ under the License.
 #include <fesapi/resqml2/AbstractLocal3dCrs.h>
 
 //----------------------------------------------------------------------------
-ResqmlUnstructuredGridToVtkUnstructuredGrid::ResqmlUnstructuredGridToVtkUnstructuredGrid(const RESQML2_NS::UnstructuredGridRepresentation *unstructuredGrid, int p_procNumber, int p_maxProc)
+ResqmlUnstructuredGridToVtkUnstructuredGrid::ResqmlUnstructuredGridToVtkUnstructuredGrid(const RESQML2_NS::UnstructuredGridRepresentation *unstructuredGrid, uint32_t p_procNumber, uint32_t p_maxProc)
 	: ResqmlAbstractRepresentationToVtkPartitionedDataSet(unstructuredGrid,
 														  p_procNumber,
 														  p_maxProc),
@@ -430,6 +430,7 @@ bool ResqmlUnstructuredGridToVtkUnstructuredGrid::cellVtkHexahedron(vtkSmartPoin
 
 	for (unsigned int localFaceIndex = 0; localFaceIndex < 6; ++localFaceIndex)
 	{
+		int test = unstructuredGrid->getNodeCountOfFaceOfCell(cellIndex, localFaceIndex);
 		if (unstructuredGrid->getNodeCountOfFaceOfCell(cellIndex, localFaceIndex) != 4)
 		{
 			return false;

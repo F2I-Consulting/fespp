@@ -20,7 +20,7 @@
 				<StringArrayHelper />
 			</StringVectorProperty>
 			<StringVectorProperty name="Files" command="SetFiles" number_of_elements="1" repeat_command="1" label="all files loaded">
-				<ArraySelectionDomain  name="FilesList">
+				<ArraySelectionDomain name="FilesList">
 					<RequiredProperties>
 						<Property function="FilesInfo" name="FilesInfo" />
 					</RequiredProperties>
@@ -176,6 +176,33 @@
 				<Property name="MarkerSize" />
 			</PropertyGroup>
 		</SourceProxy>
+		<!-- ==================================================================== -->
+	</ProxyGroup>
+	<ProxyGroup name="writers">
+		<WriterProxy name="EPCWriter" class="vtkEPCWriter" base_proxygroup="writers">
+			<Documentation short_help="A reader for an Energistics standard data format used by	various geosciences applications.">A reader for an Energistics standard data format used by	various geosciences applications. The underlying format uses OPC to store XML documents and links to an HDF5 file which stores the numerical data arrays into HDF5 datasets.</Documentation>
+
+			<InputProperty name="Input" command="SetInputConnection">
+				<ProxyGroupDomain name="groups">
+					<Group name="sources"/>
+					<Group name="filters"/>
+				</ProxyGroupDomain>
+				<DataTypeDomain name="input_type" composite_data_supported="1">
+					<DataType value="vtkUnstructuredGrid"/>
+					<DataType value="vtkPartitionedDataSetCollection"/>
+				</DataTypeDomain>
+			</InputProperty>
+
+			<StringVectorProperty name="FileName" command="SetFileName" number_of_elements="1">
+				<FileListDomain name="files"/>
+				<Documentation>The name of the file to be written.</Documentation>
+			</StringVectorProperty>
+			<Hints>
+				<Property name="Input" show="0"/>
+				<Property name="FileName" show="0"/>
+				<WriterFactory extensions="epc" file_description="epc file format"/>
+			</Hints>
+		</WriterProxy>
 	</ProxyGroup>
 	<!-- End Reader -->
 </ServerManagerConfiguration>

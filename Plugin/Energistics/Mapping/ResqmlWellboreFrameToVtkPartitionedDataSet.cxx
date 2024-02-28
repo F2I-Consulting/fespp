@@ -29,7 +29,7 @@ under the License.
 #include "Mapping/ResqmlWellboreChannelToVtkPolyData.h"
 
 //----------------------------------------------------------------------------
-ResqmlWellboreFrameToVtkPartitionedDataSet::ResqmlWellboreFrameToVtkPartitionedDataSet(const resqml2::WellboreFrameRepresentation *p_frame, int p_procNumber, int p_maxProc)
+ResqmlWellboreFrameToVtkPartitionedDataSet::ResqmlWellboreFrameToVtkPartitionedDataSet(const resqml2::WellboreFrameRepresentation *p_frame, uint32_t p_procNumber, uint32_t p_maxProc)
 	: CommonAbstractObjectSetToVtkPartitionedDataSetSet(p_frame,
 														  p_procNumber,
 														  p_maxProc)

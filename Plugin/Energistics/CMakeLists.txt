@@ -1,5 +1,6 @@
 set(classes
   vtkEPCReader
+  vtkEPCWriter
   vtkETPSource
 )
 
@@ -89,6 +90,8 @@ if (WITH_ETP_SSL)
 	vtk_module_link (Energistics PRIVATE OpenSSL::SSL OpenSSL::Crypto)
 	vtk_module_link (Energistics PRIVATE ${FETPAPI_LIBRARY_RELEASE} ${AVRO_LIBRARY_RELEASE} ${Boost_SYSTEM_LIBRARY} ${CMAKE_THREAD_LIBS_INIT})
 endif(WITH_ETP_SSL)
+
+target_compile_definitions(Energistics PUBLIC PROJECT_VERSION="${Fespp_VERSION}")
 
 # ============================================================================
 # PARAVIEW SERVER MANAGER XML

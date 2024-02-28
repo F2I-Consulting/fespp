@@ -33,7 +33,7 @@ under the License.
 #include <fesapi/resqml2/AbstractLocal3dCrs.h>
 
 //----------------------------------------------------------------------------
-ResqmlWellboreMarkerToVtkPolyData::ResqmlWellboreMarkerToVtkPolyData(const resqml2::WellboreMarkerFrameRepresentation *p_markerFrame, std::string p_uuid, bool p_orientation, int p_size, int p_procNumber, int p_maxProc)
+ResqmlWellboreMarkerToVtkPolyData::ResqmlWellboreMarkerToVtkPolyData(const resqml2::WellboreMarkerFrameRepresentation *p_markerFrame, std::string p_uuid, bool p_orientation, uint32_t p_size, uint32_t p_procNumber, uint32_t p_maxProc)
 	: ResqmlAbstractRepresentationToVtkPartitionedDataSet(p_markerFrame,
 														  p_procNumber,
 														  p_maxProc),
@@ -129,7 +129,7 @@ namespace
 }
 
 //----------------------------------------------------------------------------
-void ResqmlWellboreMarkerToVtkPolyData::createDisk(unsigned int markerIndex)
+void ResqmlWellboreMarkerToVtkPolyData::createDisk(uint32_t markerIndex)
 {
 	std::unique_ptr<double[]> doublePositions(new double[getResqmlData()->getMdValuesCount() * 3]);
 	getResqmlData()->getXyzPointsOfPatch(0, doublePositions.get());
@@ -173,7 +173,7 @@ void ResqmlWellboreMarkerToVtkPolyData::createDisk(unsigned int markerIndex)
 }
 
 //----------------------------------------------------------------------------
-void ResqmlWellboreMarkerToVtkPolyData::createSphere(unsigned int markerIndex)
+void ResqmlWellboreMarkerToVtkPolyData::createSphere(uint32_t markerIndex)
 {
 	std::unique_ptr<double[]> doublePositions(new double[getResqmlData()->getMdValuesCount() * 3]);
 	getResqmlData()->getXyzPointsOfPatch(0, doublePositions.get());

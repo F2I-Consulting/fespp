@@ -37,14 +37,14 @@ public:
 	/**
 	 * Constructor
 	 */
-	explicit ResqmlWellboreMarkerFrameToVtkPartitionedDataSet(const RESQML2_NS::WellboreMarkerFrameRepresentation *marker, int p_procNumber = 0, int p_maxProc = 1);
+	explicit ResqmlWellboreMarkerFrameToVtkPartitionedDataSet(const RESQML2_NS::WellboreMarkerFrameRepresentation *marker, uint32_t p_procNumber = 0, uint32_t p_maxProc = 1);
 
-	void addMarker(const RESQML2_NS::WellboreMarkerFrameRepresentation* marker, const std::string & p_uuid, bool orientation, int size);
+	void addMarker(const RESQML2_NS::WellboreMarkerFrameRepresentation* marker, const std::string & p_uuid, bool orientation, uint32_t size);
 
-	void changeOrientationAndSize(const std::string& p_uuid, bool orientation, int size);
+	void changeOrientationAndSize(const std::string& p_uuid, bool orientation, uint32_t size);
 
 private:
 	bool orientation;
-	int size;
+	uint32_t size;
 };
 #endif

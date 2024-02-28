@@ -49,7 +49,7 @@ under the License.
 #include <fesapi/resqml2/AbstractLocal3dCrs.h>
 #include <fesapi/eml2/GraphicalInformationSet.h>
 
-WitsmlWellboreCompletionPerforationToVtkPolyData::WitsmlWellboreCompletionPerforationToVtkPolyData(const resqml2::WellboreTrajectoryRepresentation *wellboreTrajectory, const WITSML2_1_NS::WellboreCompletion *wellboreCompletion, const std::string &connectionuid, const std::string &title, const double skin, int p_procNumber, int p_maxProc)
+WitsmlWellboreCompletionPerforationToVtkPolyData::WitsmlWellboreCompletionPerforationToVtkPolyData(const resqml2::WellboreTrajectoryRepresentation *wellboreTrajectory, const WITSML2_1_NS::WellboreCompletion *wellboreCompletion, const std::string &connectionuid, const std::string &title, const double skin, uint32_t p_procNumber, uint32_t p_maxProc)
 	: CommonAbstractObjectToVtkPartitionedDataSet(wellboreCompletion,
 												  p_procNumber,
 												  p_maxProc),

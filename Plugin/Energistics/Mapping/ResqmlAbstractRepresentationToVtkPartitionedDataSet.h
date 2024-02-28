@@ -40,7 +40,7 @@ public:
 	/**
 	 * Constructor
 	 */
-	ResqmlAbstractRepresentationToVtkPartitionedDataSet(const RESQML2_NS::AbstractRepresentation *p_abstractRepresentation, int p_procNumber = 0, int p_maxProc = 1);
+	ResqmlAbstractRepresentationToVtkPartitionedDataSet(const RESQML2_NS::AbstractRepresentation *p_abstractRepresentation, uint32_t p_procNumber = 0, uint32_t p_maxProc = 1);
 
 	/**
 	 * Destructor
@@ -55,7 +55,7 @@ public:
 	/**
 	 * add a resqml property to VtkPartitionedDataSet
 	 */
-	void addDataArray(const std::string &p_uuid, int p_patchIndex = 0);
+	void addDataArray(const std::string &p_uuid, uint32_t p_patchIndex = 0);
 
 	/**
 	 * remove a resqml property to VtkPartitionedDataSet
@@ -67,12 +67,12 @@ public:
 	 */
 	void registerSubRep();
 	void unregisterSubRep();
-	unsigned int subRepLinkedCount();
+	uint32_t subRepLinkedCount();
 
 protected:
 	const RESQML2_NS::AbstractRepresentation *getResqmlData() const { return _resqmlData; }
 
-	unsigned int _subrepPointerOnPointsCount;
+	uint32_t _subrepPointerOnPointsCount;
 
 	uint64_t _pointCount = 0;
 	uint32_t _iCellCount = 0; // = cellcount if not ijkGrid

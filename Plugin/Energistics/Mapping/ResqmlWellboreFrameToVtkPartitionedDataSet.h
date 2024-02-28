@@ -33,7 +33,7 @@ public:
 	/**
 	 * Constructor
 	 */
-	ResqmlWellboreFrameToVtkPartitionedDataSet(const RESQML2_NS::WellboreFrameRepresentation *frame, int p_procNumber = 0, int p_maxProc = 1);
+	ResqmlWellboreFrameToVtkPartitionedDataSet(const RESQML2_NS::WellboreFrameRepresentation *frame, uint32_t p_procNumber = 0, uint32_t p_maxProc = 1);
 
 	void addChannel(const std::string& uuid, RESQML2_NS::AbstractValuesProperty* property);
 };
