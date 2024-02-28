@@ -75,19 +75,29 @@ void ResqmlGrid2dToVtkStructuredGrid::loadVtkObject()
 
 	vtkSmartPointer<vtkPoints> points = vtkSmartPointer<vtkPoints>::New();
 	vtkSmartPointer<vtkCellArray> vertices = vtkSmartPointer<vtkCellArray>::New();
+
+	std::vector< vtkIdType> blankPts;
+
 	for (uint64_t j = 0; j < nbNodeJ; ++j)
 	{
 		for (uint64_t i = 0; i < nbNodeI; ++i)
 		{
 			const size_t ptId = i + j * nbNodeI;
-			vtkIdType pid = points->InsertNextPoint(
-				originX + i * XIOffset + j * XJOffset,
-				originY + i * YIOffset + j * YJOffset,
-				z[ptId] * zIndice);
+
+				vtkIdType pid = points->InsertNextPoint(
+					originX + i * XIOffset + j * XJOffset,
+					originY + i * YIOffset + j * YJOffset,
+					z[ptId] * zIndice);
+				if (std::isnan(z[ptId])) {
+					blankPts.push_back(pid);
+				}
 		}
 	}
 
 	structuredGrid->SetPoints(points);
+	for (vtkIdType pid: blankPts) {
+		structuredGrid->BlankPoint(pid);
+	}
 
 	_vtkData->SetPartition(0, structuredGrid);
 	_vtkData->Modified();

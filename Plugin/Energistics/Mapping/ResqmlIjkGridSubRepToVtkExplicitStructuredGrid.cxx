@@ -39,6 +39,7 @@ under the License.
 
 //----------------------------------------------------------------------------
 ResqmlIjkGridSubRepToVtkExplicitStructuredGrid::ResqmlIjkGridSubRepToVtkExplicitStructuredGrid(const RESQML2_NS::SubRepresentation* subRep, ResqmlIjkGridToVtkExplicitStructuredGrid* support, uint32_t p_procNumber, uint32_t p_maxProc)
+
 	: ResqmlAbstractRepresentationToVtkPartitionedDataSet(subRep,
 		p_procNumber,
 		p_maxProc),
@@ -63,18 +64,19 @@ void ResqmlIjkGridSubRepToVtkExplicitStructuredGrid::loadVtkObject()
 	auto* supportingGrid = dynamic_cast<RESQML2_NS::AbstractIjkGridRepresentation*>(subRep->getSupportingRepresentation(0));
 
 	if (supportingGrid == nullptr) {
-		vtkOutputWindowDisplayWarningText(("SubRepresentation (" + subRep->getUuid() + ") has no suuport grid").c_str());
+		vtkOutputWindowDisplayWarningText(("SubRepresentation (" + subRep->getUuid() + ") has no support grid\n").c_str());
 		return;
 	}
 	if (subRep->areElementIndicesPairwise(0)) {
-		vtkOutputWindowDisplayWarningText(("SubRepresentation (" + subRep->getUuid() + ") has elements indices pairwise and is not yet implemented").c_str());
+		vtkOutputWindowDisplayWarningText(("SubRepresentation (" + subRep->getUuid() + ") has elements indices pairwise and is not yet implemented\n").c_str());
 		return;
 	}
 	auto elementType = subRep->getElementKindOfPatch(0, 0);
 	if (elementType != gsoap_eml2_3::eml23__IndexableElement::cells) {
-		vtkOutputWindowDisplayWarningText(("SubRepresentation (" + subRep->getUuid() + ") the kind elements and is not yet implemented. (only cells kind is supported for now").c_str());
+		vtkOutputWindowDisplayWarningText(("SubRepresentation (" + subRep->getUuid() + ") the kind elements and is not yet implemented. (only cells kind is supported for now)\n").c_str());
 		return;
 	}
+
 	// Create and set the list of points of the vtkUnstructuredGrid
 	vtkSmartPointer<vtkUnstructuredGrid> vtk_unstructuredGrid = vtkSmartPointer<vtkUnstructuredGrid>::New();
 
@@ -87,12 +89,10 @@ void ResqmlIjkGridSubRepToVtkExplicitStructuredGrid::loadVtkObject()
 		correspondingResqmlCornerId = { 4, 5, 6, 7, 0, 1, 2, 3 };
 	}
 
+	supportingGrid->loadSplitInformation();
+
 	// Create and set the list of hexahedra of the vtkUnstructuredGrid based on the list of points already set
 	uint64_t cellIndex = 0;
-
-
-
-	supportingGrid->loadSplitInformation();
 
 	uint64_t elementCountOfPatch = subRep->getElementCountOfPatch(0);
 	std::unique_ptr<uint64_t[]> elementIndices(new uint64_t[elementCountOfPatch]);
@@ -120,7 +120,7 @@ void ResqmlIjkGridSubRepToVtkExplicitStructuredGrid::loadVtkObject()
 							supportingGrid->getXyzPointIndexFromCellCorner(vtkICellIndex, vtkJCellIndex, vtkKCellIndex, correspondingResqmlCornerId[cornerId]));
 					}
 					vtk_unstructuredGrid->InsertNextCell(hex->GetCellType(), hex->GetPointIds());
-					++indice;
+					indice++;
 				}
 				++cellIndex;
 			}
