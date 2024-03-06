@@ -102,16 +102,24 @@ void ResqmlIjkGridToVtkExplicitStructuredGrid::checkHyperslabingCapacity(const R
 //----------------------------------------------------------------------------
 void ResqmlIjkGridToVtkExplicitStructuredGrid::loadVtkObject()
 {
-	const RESQML2_NS::AbstractIjkGridRepresentation *ijkGrid = getResqmlData();
+	// Preconditions
+	if (_iCellCount > static_cast<uint32_t>((std::numeric_limits<int>::max)())) {
+		throw std::out_of_range("too many iCellCount: " + std::to_string(_iCellCount));
+	}
+	if (_jCellCount > static_cast<uint32_t>((std::numeric_limits<int>::max)())) {
+		throw std::out_of_range("too many jCellCount: " + std::to_string(_jCellCount));
+	}
+	if (_maxKIndex > static_cast<uint32_t>((std::numeric_limits<int>::max)())) {
+		throw std::out_of_range("too many kLayer: " + std::to_string(_maxKIndex));
+	}
 
-	vtkExplicitStructuredGrid *vtk_explicitStructuredGrid = vtkExplicitStructuredGrid::New();
-
-	int extent[6] = {0, _iCellCount, 0, _jCellCount, _initKIndex, _maxKIndex};
+	vtkExplicitStructuredGrid* vtk_explicitStructuredGrid = vtkExplicitStructuredGrid::New();
+	int extent[6] = { 0, static_cast<int>(_iCellCount), 0, static_cast<int>(_jCellCount), static_cast<int>(_initKIndex), static_cast<int>(_maxKIndex) };
 	vtk_explicitStructuredGrid->SetExtent(extent);
-
 	vtk_explicitStructuredGrid->SetPoints(getVtkPoints());
 
 	// Check which cells have no geometry
+	const RESQML2_NS::AbstractIjkGridRepresentation* ijkGrid = getResqmlData();
 	const uint64_t cellCount = ijkGrid->getCellCount();
 	std::unique_ptr<bool[]> enabledCells(new bool[cellCount]);
 	if (ijkGrid->hasCellGeometryIsDefinedFlags())
@@ -128,9 +136,6 @@ void ResqmlIjkGridToVtkExplicitStructuredGrid::loadVtkObject()
 	const_cast<RESQML2_NS::AbstractIjkGridRepresentation *>(ijkGrid)->loadSplitInformation();
 
 	uint64_t cellIndex = 0;
-	vtkSmartPointer<vtkIdList> nodes = vtkSmartPointer<vtkIdList>::New();
-	nodes->SetNumberOfIds(8);
-
 	for (uint_fast32_t vtkKCellIndex = _initKIndex; vtkKCellIndex < _maxKIndex; ++vtkKCellIndex)
 	{
 		for (uint_fast32_t vtkJCellIndex = 0; vtkJCellIndex < _jCellCount; ++vtkJCellIndex)
