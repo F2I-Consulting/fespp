@@ -94,24 +94,24 @@ public:
 	/**
 	 * @return selection parent
 	 */
-	std::string selectNodeId(uint32_t p_nodeId);
+	std::string selectNodeId(int p_nodeId);
 	void clearSelection();
 
 private:
 	std::string buildDataAssemblyFromDataObjectRepo(const char *p_fileName);
 
 	std::string searchWellboreTrajectory(const std::string &p_fileName);												  // traj
-	std::string searchWellboreFrame(const resqml2::WellboreTrajectoryRepresentation *w_wellboreTrajectory, uint32_t p_nodeId); // frame/markerFrame + chanel + marker
-	std::string searchWellboreCompletion(const resqml2::WellboreFeature *w_wellboreTrajectory, uint32_t p_nodeId);			  // completion + perforation
-	std::string searchRepresentations(resqml2::AbstractRepresentation const *p_representation, uint32_t p_nodeId = 0 /* 0 is root's id*/);
-	int searchRepresentationSetRepresentation(resqml2::RepresentationSetRepresentation const *p_rsr, uint32_t p_nodeId = 0 /* 0 is root's id*/);
-	std::string searchSubRepresentation(resqml2::AbstractRepresentation const *p_representation, uint32_t p_nodeParent);
+	std::string searchWellboreFrame(const resqml2::WellboreTrajectoryRepresentation *w_wellboreTrajectory, int p_nodeId); // frame/markerFrame + chanel + marker
+	std::string searchWellboreCompletion(const resqml2::WellboreFeature *w_wellboreTrajectory, int p_nodeId);			  // completion + perforation
+	std::string searchRepresentations(resqml2::AbstractRepresentation const *p_representation, int p_nodeId = 0 /* 0 is root's id*/);
+	int searchRepresentationSetRepresentation(resqml2::RepresentationSetRepresentation const *p_rsr, int p_nodeId = 0 /* 0 is root's id*/);
+	std::string searchSubRepresentation(resqml2::AbstractRepresentation const *p_representation, int p_nodeParent);
 	std::string searchTimeSeries(const std::string &p_fileName);
-	int searchPropertySet(resqml2_0_1::PropertySet const *p_propSet, uint32_t p_nodeId);
-	std::string searchProperties(resqml2::AbstractRepresentation const *p_representation, uint32_t p_nodeParent);
+	int searchPropertySet(resqml2_0_1::PropertySet const *p_propSet, int p_nodeId);
+	std::string searchProperties(resqml2::AbstractRepresentation const *p_representation, int p_nodeParent);
 
-	void selectNodeIdParent(uint32_t p_nodeId);
-	void selectNodeIdChildren(uint32_t p_nodeId);
+	void selectNodeIdParent(int p_nodeId);
+	void selectNodeIdChildren(int p_nodeId);
 
 	/**
 	 * delete _oldSelection mapper
@@ -120,17 +120,17 @@ private:
 	/**
 	 * initialize _nodeIdToMapperSet
 	 */
-	void initMapperSet(const TreeViewNodeType p_type, const uint32_t p_nodeId, const uint32_t p_nbProcess, const uint32_t p_processId);
+	void initMapperSet(const TreeViewNodeType p_type, const int p_nodeId, const uint32_t p_nbProcess, const uint32_t p_processId);
 	/**
 	 * initialize and load _nodeIdToMapper
 	 */
-	void loadMapper(const TreeViewNodeType p_type, const uint32_t p_nodeId,const uint32_t p_nbProcess, const uint32_t p_processId);
-	void loadRepresentationMapper(const uint32_t p_nodeId, const uint32_t p_nbProcess, const uint32_t p_processId);
-	void loadWellboreTrajectoryMapper(const uint32_t p_nodeId);
+	void loadMapper(const TreeViewNodeType p_type, const int p_nodeId,const uint32_t p_nbProcess, const uint32_t p_processId);
+	void loadRepresentationMapper(const int p_nodeId, const uint32_t p_nbProcess, const uint32_t p_processId);
+	void loadWellboreTrajectoryMapper(const int p_nodeId);
 	/**
  * add data to parent nodeId
  */
-	void addDataToParent(const TreeViewNodeType p_type, const uint32_t p_nodeId, const uint32_t p_nbProcess, const uint32_t p_processId, const double p_time);
+	void addDataToParent(const TreeViewNodeType p_type, const int p_nodeId, const uint32_t p_nbProcess, const uint32_t p_processId, const double p_time);
 
 	// This function replaces the VTK function vtkDataAssembly::MakeValidNodeName(),
 	// which has a bug in the sorted_valid_chars array. The '.' character is placed
@@ -149,14 +149,14 @@ private:
 
 	vtkSmartPointer<vtkPartitionedDataSetCollection> _output;
 
-	std::map<uint32_t, CommonAbstractObjectToVtkPartitionedDataSet *> _nodeIdToMapper;		   // index of VtkDataAssembly to CommonAbstractObjectToVtkPartitionedDataSet
-	std::map<uint32_t, CommonAbstractObjectSetToVtkPartitionedDataSetSet *> _nodeIdToMapperSet; // index of VtkDataAssembly to CommonAbstractObjectSetToVtkPartitionedDataSetSet
+	std::map<int, CommonAbstractObjectToVtkPartitionedDataSet *> _nodeIdToMapper;		   // index of VtkDataAssembly to CommonAbstractObjectToVtkPartitionedDataSet
+	std::map<int, CommonAbstractObjectSetToVtkPartitionedDataSetSet *> _nodeIdToMapperSet; // index of VtkDataAssembly to CommonAbstractObjectSetToVtkPartitionedDataSetSet
 
 	//\/          uuid             title            index        prop_uuid
 	std::map<std::string, std::map<std::string, std::map<double, std::string>>> _timeSeriesUuidAndTitleToIndexAndPropertiesUuid;
 
-	std::set<uint32_t> _currentSelection;
-	std::set<uint32_t> _oldSelection;
+	std::set<int> _currentSelection;
+	std::set<int> _oldSelection;
 
 	std::set<std::string> _files;
 
