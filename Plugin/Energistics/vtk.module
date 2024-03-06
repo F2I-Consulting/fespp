@@ -3,7 +3,6 @@ NAME
 LIBRARY_NAME
   Energistics
 DEPENDS
-  ParaView::RemotingServerManager
   VTK::CommonCore
   VTK::CommonDataModel
   VTK::CommonExecutionModel

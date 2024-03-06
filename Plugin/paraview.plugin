@@ -3,7 +3,6 @@ NAME
 DESCRIPTION
   F2i-consulting Energistics Standard Paraview Plugin Reader
 REQUIRES_MODULES
-  ParaView::RemotingServerManager
   VTK::CommonCore
   VTK::CommonDataModel
   VTK::CommonExecutionModel
