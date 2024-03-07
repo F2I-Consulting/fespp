@@ -297,7 +297,6 @@ RESQML2_NS::UnstructuredGridRepresentation* vtkEPCWriter::writeUnstructuredGrid(
 	}
 
 	// creating the unstructured grid
-	vtkOutputWindowDisplayDebugText((Internal->inputUnstructuredGrid->GetObjectName()).c_str());
 	RESQML2_NS::UnstructuredGridRepresentation* unstructuredGrid = repo.createUnstructuredGridRepresentation("", Internal->inputUnstructuredGridName, numberOfCells);
 	unstructuredGrid->setGeometry(faceRightHandness.data(), w_points.data(), w_points.size() / 3, nullptr, faceIndicesPerCell.data(), faceIndicesCumulativeCountPerCell.data(), faceIndicesPerCell.size() /* warning shared faces */, w_nodeIndicesPerFace.data(), w_nodeIndicesCumulativeCountPerFace.data(), gsoap_resqml2_0_1::resqml20__CellShape::polyhedral /*local3dCrs*/);
 
