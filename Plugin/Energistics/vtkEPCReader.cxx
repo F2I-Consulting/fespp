@@ -264,7 +264,8 @@ int vtkEPCReader::RequestData(vtkInformation *,
   try
   {
     vtkPartitionedDataSetCollection::GetData(outInfo)->DeepCopy(repository.getVtkPartitionedDatasSetCollection(requestedTimeStep, Controller->GetNumberOfProcesses(), Controller->GetLocalProcessId()));
-    repository.closeFiles();
+    // close hdfProxies in case the system would want reuse hdf files
+    repository.closeHdfProxies();
   }
   catch (const std::exception &e)
   {

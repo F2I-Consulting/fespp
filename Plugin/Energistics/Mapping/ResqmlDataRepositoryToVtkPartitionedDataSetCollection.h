@@ -74,7 +74,7 @@ public:
 	// for EPC reader
 	std::string addFile(const char *p_file);
 	// for EPC reader
-	void closeFiles();
+	void closeHdfProxies();
 
 	// for ETP source
 	std::string addDataspace(const char *p_dataspace);

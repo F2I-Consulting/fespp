@@ -328,12 +328,10 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::addFile(const
 }
 
 //----------------------------------------------------------------------------
-void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::closeFiles()
+void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::closeHdfProxies()
 {
-    for (const std::string w_filename : _files)
-    {
-        COMMON_NS::EpcDocument w_pck(w_filename);
-        w_pck.close();
+    for (EML2_NS::AbstractHdfProxy* proxy : _repository->getDataObjects<EML2_NS::AbstractHdfProxy>()) {
+        proxy->close();
     }
 }
 
