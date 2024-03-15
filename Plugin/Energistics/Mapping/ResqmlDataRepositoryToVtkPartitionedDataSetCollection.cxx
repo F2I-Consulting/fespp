@@ -44,6 +44,8 @@ VtkAssembly => TreeView:
 #include <vtkInformation.h>
 #include <vtkDataAssembly.h>
 #include <vtkDataArraySelection.h>
+#include <vtkResourceFileLocator.h>
+#include <vtksys/SystemTools.hxx>
 
 // FESAPI includes
 #include <fesapi/common/DataObjectRepository.h>
@@ -95,10 +97,13 @@ VtkAssembly => TreeView:
 #include "Mapping/WitsmlWellboreCompletionPerforationToVtkPolyData.h"
 #include "Mapping/CommonAbstractObjectSetToVtkPartitionedDataSetSet.h"
 
+extern "C" const char * GetEnergisticsVersion() {
+    return PROJECT_VERSION;
+}
+
 ResqmlDataRepositoryToVtkPartitionedDataSetCollection::ResqmlDataRepositoryToVtkPartitionedDataSetCollection()
     : _markerOrientation(false),
       _markerSize(10),
-      _repository(new common::DataObjectRepository()),
       _output(vtkSmartPointer<vtkPartitionedDataSetCollection>::New()),
       _nodeIdToMapper(),
       _currentSelection(),
@@ -109,6 +114,18 @@ ResqmlDataRepositoryToVtkPartitionedDataSetCollection::ResqmlDataRepositoryToVtk
 
     _output->SetDataAssembly(w_assembly);
     _timesStep.clear();
+
+    auto energistics_libs = vtkGetLibraryPathForSymbol(GetEnergisticsVersion);
+    vtkNew<vtkResourceFileLocator> locator;
+    auto path = locator->Locate(energistics_libs, "PropertyKindMapping.xml");
+    if (path.empty())
+    {
+        vtkOutputWindowDisplayWarningText("Could not find PropertyKindMapping.xml\n");
+        _repository = new COMMON_NS::DataObjectRepository();
+    }
+    else {
+        _repository = new COMMON_NS::DataObjectRepository(path);
+    }
 }
 
 ResqmlDataRepositoryToVtkPartitionedDataSetCollection::~ResqmlDataRepositoryToVtkPartitionedDataSetCollection()
