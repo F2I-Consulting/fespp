@@ -164,16 +164,16 @@ ResqmlPropertyToVtkDataArray::ResqmlPropertyToVtkDataArray(resqml2::AbstractValu
 
 	const uint32_t elementCountPerValue = valuesProperty->getElementCountPerValue();
 	const std::string name = valuesProperty->getTitle();
-	if (valuesProperty->getXmlTag() == resqml2::ContinuousProperty::XML_TAG)
+	const std::string xmlTag = valuesProperty->getXmlTag();
+	if (xmlTag == resqml2::ContinuousProperty::XML_TAG)
 	{
-		// defensive code
-		const unsigned int totalHDFElementcount = nbElement * elementCountPerValue;
+		const uint64_t totalHDFElementcount = nbElement * elementCountPerValue;
 		if (totalHDFElementcount != valuesProperty->getValuesCountOfPatch(patch_index))
 		{
 			throw std::invalid_argument("Property values count of hdfDataset \"" + std::to_string(valuesProperty->getValuesCountOfPatch(patch_index)) + "\" does not match the indexable element count in the supporting representation\"" + std::to_string(totalHDFElementcount) + "\"");
 		}
 
-		double *valuesDoubleSet = new double[totalHDFElementcount]; // deleted by VTK data vtkSmartPointer
+		double* valuesDoubleSet = new double[totalHDFElementcount]; // deleted by VTK data vtkSmartPointer
 		valuesProperty->getDoubleValuesOfPatch(patch_index, valuesDoubleSet);
 
 		vtkSmartPointer<vtkDoubleArray> cellDataDouble = vtkSmartPointer<vtkDoubleArray>::New();
@@ -182,11 +182,11 @@ ResqmlPropertyToVtkDataArray::ResqmlPropertyToVtkDataArray(resqml2::AbstractValu
 		cellDataDouble->SetArray(valuesDoubleSet, nbElement * elementCountPerValue, 0, vtkAbstractArray::VTK_DATA_ARRAY_DELETE);
 		this->dataArray = cellDataDouble;
 	}
-	else if (valuesProperty->getXmlTag() == resqml2::DiscreteProperty::XML_TAG ||
-			 (valuesProperty->getXmlTag() == resqml2::CategoricalProperty::XML_TAG &&
+	else if (xmlTag == resqml2::DiscreteProperty::XML_TAG ||
+			 (xmlTag == resqml2::CategoricalProperty::XML_TAG &&
 			  static_cast<resqml2::CategoricalProperty const *>(valuesProperty)->getStringLookup() != nullptr))
 	{
-		int32_t*values = new int32_t[nbElement * elementCountPerValue]; // deleted by VTK data vtkSmartPointer
+		int32_t* values = new int32_t[nbElement * elementCountPerValue]; // deleted by VTK data vtkSmartPointer
 		valuesProperty->getInt32ValuesOfPatch(patch_index, values);
 
 		vtkSmartPointer<vtkIntArray> cellDataInt = vtkSmartPointer<vtkIntArray>::New();

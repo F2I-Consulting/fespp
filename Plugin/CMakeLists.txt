@@ -47,38 +47,13 @@ endif (WITH_ETP_SSL)
 # -----------------------------------------------------------------------------
 # Build the Paraview plugins
 # -----------------------------------------------------------------------------
-
-if (PARAVIEW_BUILD_QT_GUI)
-
-	# -----------------------------------------------------------------------------
-	# Identify all QT related source files
-	# -----------------------------------------------------------------------------
-	if (WIN32)	
-		find_package(Qt5 REQUIRED COMPONENTS Widgets)
-	else (WIN32)
-		find_package(Qt5 REQUIRED COMPONENTS Widgets X11Extras)
-	endif (WIN32)
-	
-	paraview_add_plugin(${PROJECT_NAME}
-		VERSION ${PROJECT_VERSION}
-		SOURCES ${FESPP_NO_QT_SOURCES}
-		MODULES Energistics
-		MODULE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/Energistics/vtk.module"
-		XML_DOCUMENTATION OFF
-	)
-
-else (PARAVIEW_BUILD_QT_GUI)
-
-	# create a Server plugin
-	paraview_add_plugin(${PROJECT_NAME}
-		REQUIRED_ON_SERVER
-		VERSION ${PROJECT_VERSION}
-		SOURCES ${FESPP_NO_QT_SOURCES}
-		MODULES Energistics
-		MODULE_FILES Energistics/vtk.module
-		XML_DOCUMENTATION OFF)
-
-endif (PARAVIEW_BUILD_QT_GUI)
+paraview_add_plugin(${PROJECT_NAME}
+	VERSION ${PROJECT_VERSION}
+	SOURCES ${FESPP_NO_QT_SOURCES}
+	MODULES Energistics
+	MODULE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/Energistics/vtk.module"
+	XML_DOCUMENTATION OFF
+)
 
 # ============================================================================
 # Compile definitions

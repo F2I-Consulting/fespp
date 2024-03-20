@@ -38,8 +38,6 @@ under the License.
 #include <vtkVariantArray.h>
 
 #include <vtkCellData.h>
-#include <vtkSMProxy.h>
-#include <vtkSMPropertyHelper.h>
 
 #include <fesapi/witsml2_1/WellboreCompletion.h>
 #include <fesapi/resqml2/MdDatum.h>

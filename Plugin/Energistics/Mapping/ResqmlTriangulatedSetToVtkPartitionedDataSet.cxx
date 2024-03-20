@@ -19,6 +19,7 @@ under the License.
 #include "ResqmlTriangulatedSetToVtkPartitionedDataSet.h"
 
 #include <sstream>
+#include <numeric>
 
 // include VTK library
 #include <vtkPartitionedDataSet.h>
@@ -57,9 +58,15 @@ void ResqmlTriangulatedSetToVtkPartitionedDataSet::loadVtkObject()
 	vtkSmartPointer<vtkPartitionedDataSet> partition = vtkSmartPointer<vtkPartitionedDataSet>::New();
 
 	const RESQML2_NS::TriangulatedSetRepresentation *triangulatedSet = getResqmlData();
-	const auto patchCount = triangulatedSet->getPatchCount();
 
-	for (auto patchIndex = 0; patchIndex < patchCount; ++patchIndex)
+ 	const auto auto_patchCount = triangulatedSet->getPatchCount();
+	// defensive code
+	if (auto_patchCount > std::numeric_limits<unsigned int>::max()) {
+  		throw std::runtime_error("too many patches");
+	}
+	const unsigned int patchCount = static_cast<const unsigned int>(auto_patchCount);
+
+	for (unsigned int patchIndex = 0; patchIndex < patchCount; ++patchIndex)
 	{
 		auto rep = new ResqmlTriangulatedToVtkPolyData(triangulatedSet, patchIndex, _procNumber, _maxProc);
 		partition->SetPartition(patchIndex, rep->getOutput()->GetPartitionAsDataObject(0));

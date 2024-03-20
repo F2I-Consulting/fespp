@@ -27,6 +27,8 @@ under the License.
 #ifndef __vtkEPCWriter_h
 #define __vtkEPCWriter_h
 
+#include <vector>
+
 #include "EnergisticsModule.h"
 #include "vtkWriter.h"
 

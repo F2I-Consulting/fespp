@@ -56,6 +56,6 @@ public:
 protected:
 	const RESQML2_NS::TriangulatedSetRepresentation *getResqmlData() const;
 
-	std::map<uint32_t, ResqmlTriangulatedToVtkPolyData *> patchIndex_to_ResqmlTriangulated; // index of VtkDataAssembly to RESQML UUID
+	std::map<unsigned int, ResqmlTriangulatedToVtkPolyData *> patchIndex_to_ResqmlTriangulated; // index of VtkDataAssembly to RESQML UUID
 };
 #endif
