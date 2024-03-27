@@ -76,20 +76,31 @@
 			<IntVectorProperty name="ConnectionTag" command="GetConnectionTag" information_only="1"></IntVectorProperty>
 			<IntVectorProperty name="DisconnectionTag" command="GetDisconnectionTag" information_only="1"></IntVectorProperty>
 
-			<StringVectorProperty command="setETPUrlConnection" default_values="ws://etp.f2i-consulting.com:9002/" name="ETPUrl" label="ETP Url" number_of_elements="1" panel_visibility="default">
+			<!-- URLs definitions -->
+			<StringVectorProperty command="setETPUrlConnection" default_values="wss://api.awsinterop.adopt.paas.47lining.com/api/reservoir-ddms-etp/v2" name="ETPUrl" label="ETP Url" number_of_elements="1" panel_visibility="default">
 				<Documentation>This property specifies the string used to describe the ETP Url</Documentation>
 				<Hints>
 					<PropertyWidgetDecorator type="GenericDecorator" mode="enabled_state" property="ConnectionTag" value="0" inverse="1" />
 				</Hints>
 			</StringVectorProperty>
 
-			<StringVectorProperty name="DataPartition" command="setDataPartition" number_of_elements="1" default_values="opendes">
+			<StringVectorProperty command="setProxyUrlConnection" default_values="" name="ProxyUrl" label="Proxy Url" number_of_elements="1" panel_visibility="default">
+				<Documentation>This property specifies the string used to describe the PROXY Url</Documentation>
 				<Hints>
 					<PropertyWidgetDecorator type="GenericDecorator" mode="enabled_state" property="ConnectionTag" value="0" inverse="1" />
 				</Hints>
 			</StringVectorProperty>
 
-			<IntVectorProperty name="Authentification" command="setAuthType" number_of_elements="1" default_values="1">
+			<!-- data partition definition -->
+			<StringVectorProperty name="OSDUDataPartition" command="setOSDUDataPartition" number_of_elements="1" default_values="osdu">
+				<Hints>
+					<PropertyWidgetDecorator type="GenericDecorator" mode="enabled_state" property="ConnectionTag" value="0" inverse="1" />
+				</Hints>
+			</StringVectorProperty>
+
+			<!-- authentifications definitions -->
+				<!-- types -->
+			<IntVectorProperty name="ETPTokenType" command="setETPTokenType" number_of_elements="1" default_values="0">
 				<EnumerationDomain name="enum">
 					<Entry value="0" text="Bearer"/>
 					<Entry value="1" text="Basic"/>
@@ -100,13 +111,32 @@
 				</Hints>
 			</IntVectorProperty>
 
-			<StringVectorProperty command="setAuthPwd" default_values="" name="AuthPwd" number_of_elements="1" panel_visibility="default">
+			<IntVectorProperty name="ProxyTokenType" command="setProxyTokenType" number_of_elements="1" default_values="1">
+				<EnumerationDomain name="enum">
+					<Entry value="0" text="Bearer"/>
+					<Entry value="1" text="Basic"/>
+				</EnumerationDomain>
+				<Documentation> This property indicates which authentification type mode will be used.</Documentation>
+				<Hints>
+					<PropertyWidgetDecorator type="GenericDecorator" mode="enabled_state" property="ConnectionTag" value="0" inverse="1" />
+				</Hints>
+			</IntVectorProperty>
+				<!-- pwd -->
+			<StringVectorProperty command="setETPToken" default_values="" name="ETPToken" number_of_elements="1" panel_visibility="default">
 				<Documentation>This property specifies the string used to describe the authorization.</Documentation>
 				<Hints>
 					<PropertyWidgetDecorator type="GenericDecorator" mode="enabled_state" property="ConnectionTag" value="0" inverse="1" />
 				</Hints>
 			</StringVectorProperty>
 
+			<StringVectorProperty command="setProxyToken" default_values="" name="ProxyToken" number_of_elements="1" panel_visibility="default">
+				<Documentation>This property specifies the string used to describe the authorization.</Documentation>
+				<Hints>
+					<PropertyWidgetDecorator type="GenericDecorator" mode="enabled_state" property="ConnectionTag" value="0" inverse="1" />
+				</Hints>
+			</StringVectorProperty>
+
+			<!-- action -->
 			<Property name="Connect" command="confirmConnectionClicked">
 				<Hints>
 					<PropertyWidgetDecorator type="GenericDecorator" mode="visibility" property="ConnectionTag" value="0" inverse="1" />
@@ -120,9 +150,16 @@
 
 			<PropertyGroup label="ETP Connection">
 				<Property name="ETPUrl" />
-				<Property name="DataPartition" />
-				<Property name="Authentification" />
-				<Property name="AuthPwd" />
+				<Property name="OSDUDataPartition" />
+				<Property name="ETPTokenType" />
+				<Property name="ETPToken" />
+			</PropertyGroup>
+			<PropertyGroup label="Proxy Connection">
+				<Property name="ProxyUrl" />
+				<Property name="ProxyTokenType" />
+				<Property name="ProxyToken" />
+			</PropertyGroup>
+			<PropertyGroup label="Connection">
 				<Property name="Connect" />
 				<Property name="Disconnect" />
 			</PropertyGroup>
