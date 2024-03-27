@@ -163,7 +163,7 @@ private:
 	// time step values
 	std::vector<double> _timesStep;
 #ifdef WITH_ETP_SSL
-	std::shared_ptr<ETP_NS::AbstractSession> _session;
+	std::shared_ptr<ETP_NS::ClientSession> _session;
 #endif
 };
 #endif
