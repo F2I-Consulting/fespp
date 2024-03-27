@@ -79,6 +79,9 @@ VtkAssembly => TreeView:
 #include <fetpapi/etp/ProtocolHandlers/DiscoveryHandlers.h>
 #include <fetpapi/etp/ProtocolHandlers/StoreHandlers.h>
 #include <fetpapi/etp/ProtocolHandlers/DataArrayHandlers.h>
+
+// boost includes
+#include <boost/uuid/random_generator.hpp>
 #endif
 
 #include "Mapping/ResqmlIjkGridToVtkExplicitStructuredGrid.h"
@@ -203,27 +206,20 @@ std::string SimplifyXmlTag(std::string p_typeRepresentation)
 }
 
 //----------------------------------------------------------------------------
-std::vector<std::string> ResqmlDataRepositoryToVtkPartitionedDataSetCollection::connect(const std::string &p_etpUrl, const std::string &p_dataPartition, const std::string &p_authConnection)
+std::vector<std::string> ResqmlDataRepositoryToVtkPartitionedDataSetCollection::connect(const std::string& p_etpUrl, const std::string& p_dataPartition, const std::string& p_authConnection)
 {
     std::vector<std::string> w_result;
 #ifdef WITH_ETP_SSL
     boost::uuids::random_generator w_gen;
-    ETP_NS::InitializationParameters w_initializationParams(w_gen(), p_etpUrl);
+    ETP_NS::InitializationParameters w_initializationParams(w_gen(), p_etpUrl /*, proxy*/);
+    w_initializationParams.setAdditionalHandshakeHeaderFields({ {"data-partition-id", p_dataPartition} });
 
-    std::map<std::string, std::string> w_additionalHandshakeHeaderFields = {{"data-partition-id", p_dataPartition}};
-    if (p_etpUrl.find("ws://") == 0)
-    {
-        _session = ETP_NS::ClientSessionLaunchers::createWsClientSession(&w_initializationParams, p_authConnection, w_additionalHandshakeHeaderFields);
-    }
-    else
-    {
-        _session = ETP_NS::ClientSessionLaunchers::createWssClientSession(&w_initializationParams, p_authConnection, w_additionalHandshakeHeaderFields);
-    }
+    _session = ETP_NS::ClientSessionLaunchers::createClientSession(&w_initializationParams, p_authConnection /*, proxy_auth*/);
     try
     {
         _session->setDataspaceProtocolHandlers(std::make_shared<ETP_NS::DataspaceHandlers>(_session.get()));
     }
-    catch (const std::exception &e)
+    catch (const std::exception& e)
     {
         vtkOutputWindowDisplayErrorText((std::string("fesapi error > ") + e.what()).c_str());
     }
@@ -231,7 +227,7 @@ std::vector<std::string> ResqmlDataRepositoryToVtkPartitionedDataSetCollection::
     {
         _session->setDiscoveryProtocolHandlers(std::make_shared<ETP_NS::DiscoveryHandlers>(_session.get()));
     }
-    catch (const std::exception &e)
+    catch (const std::exception& e)
     {
         vtkOutputWindowDisplayErrorText((std::string("fesapi error > ") + e.what()).c_str());
     }
@@ -239,7 +235,7 @@ std::vector<std::string> ResqmlDataRepositoryToVtkPartitionedDataSetCollection::
     {
         _session->setStoreProtocolHandlers(std::make_shared<ETP_NS::StoreHandlers>(_session.get()));
     }
-    catch (const std::exception &e)
+    catch (const std::exception& e)
     {
         vtkOutputWindowDisplayErrorText((std::string("fesapi error > ") + e.what()).c_str());
     }
@@ -247,26 +243,16 @@ std::vector<std::string> ResqmlDataRepositoryToVtkPartitionedDataSetCollection::
     {
         _session->setDataArrayProtocolHandlers(std::make_shared<ETP_NS::DataArrayHandlers>(_session.get()));
     }
-    catch (const std::exception &e)
+    catch (const std::exception& e)
     {
         vtkOutputWindowDisplayErrorText((std::string("fesapi error > ") + e.what()).c_str());
     }
 
     _repository->setHdfProxyFactory(new ETP_NS::FesapiHdfProxyFactory(_session.get()));
 
-    //
-    if (p_etpUrl.find("ws://") == 0)
-    {
-        auto w_plainSession = std::dynamic_pointer_cast<ETP_NS::PlainClientSession>(_session);
-        std::thread w_sessionThread(&ETP_NS::PlainClientSession::run, w_plainSession);
-        w_sessionThread.detach();
-    }
-    else
-    {
-        auto w_sslSession = std::dynamic_pointer_cast<ETP_NS::SslClientSession>(_session);
-        std::thread w_sessionThread(&ETP_NS::SslClientSession::run, w_sslSession);
-        w_sessionThread.detach();
-    }
+
+    std::thread w_sessionThread(&ETP_NS::ClientSession::run, _session);
+    w_sessionThread.detach();
 
     // Wait for the ETP session to be opened
     auto w_tStart = std::chrono::high_resolution_clock::now();
@@ -275,7 +261,7 @@ std::vector<std::string> ResqmlDataRepositoryToVtkPartitionedDataSetCollection::
         if (std::chrono::duration<double, std::milli>(std::chrono::high_resolution_clock::now() - w_tStart).count() > 5000)
         {
             throw std::invalid_argument("Did you forget to click apply button before to connect? Time out for websocket connection" +
-                                        std::to_string(std::chrono::duration<double, std::milli>(std::chrono::high_resolution_clock::now() - w_tStart).count()) + "ms.\n");
+                std::to_string(std::chrono::duration<double, std::milli>(std::chrono::high_resolution_clock::now() - w_tStart).count()) + "ms.\n");
         }
     }
 
@@ -283,8 +269,8 @@ std::vector<std::string> ResqmlDataRepositoryToVtkPartitionedDataSetCollection::
     const auto w_dataspaces = _session->getDataspaces();
 
     std::transform(w_dataspaces.begin(), w_dataspaces.end(), std::back_inserter(w_result),
-                   [](const Energistics::Etp::v12::Datatypes::Object::Dataspace &w_ds)
-                   { return w_ds.uri; });
+        [](const Energistics::Etp::v12::Datatypes::Object::Dataspace& w_ds)
+        { return w_ds.uri; });
 
 #endif
     return w_result;
