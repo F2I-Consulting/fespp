@@ -49,25 +49,41 @@ public:
 	/**
 	 * Set the Ip for ETP connection.
 	 */
-	void setETPUrlConnection(char *etp_url);
+	void setETPUrlConnection(char * ETPUrl);
+	///@}
+
+		///@{
+	/**
+	 * Set the Ip for ETP connection.
+	 */
+	void setProxyUrlConnection(char* ProxyUrl);
 	///@}
 
 	///@{
 	/**
 	 * Set the Port for ETP connection.
 	 */
-	void setDataPartition(char *data_partition);
+	void setOSDUDataPartition(char * OSDUDataPartition);
 	///@}
 
-	void setAuthType(int auth_type);
+	void setETPTokenType(int ETPTokenType);
+
+	void setProxyTokenType(int ProxyTokenType);
 
 	///@{
 	/**
 	 * Set the Auth for ETP connection.
 	 */
-	void setAuthPwd(char *auth_connection);
+	void setETPToken(char * ETPToken);
 	///@}
 
+	///@{
+	/**
+	 * Set the Auth for ETP connection.
+	 */
+	void setProxyToken(char* ProxyToken);
+	///@}
+	
 	void confirmConnectionClicked();
 
 	void disconnectionClicked();
@@ -142,9 +158,12 @@ private:
 	void operator=(const vtkETPSource &) = delete;
 
 	std::string ETPUrl;
-	std::string DataPartition;
-	std::string Authentification;
-	std::string AuthPwd;
+	std::string ProxyUrl;
+	std::string OSDUDataPartition;
+	std::string ETPTokenType;
+	std::string ProxyTokenType;
+	std::string ETPToken;
+	std::string ProxyToken;
 
 	// treeview
 	std::set<std::string> selectors;

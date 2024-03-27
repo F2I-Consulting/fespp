@@ -38,9 +38,12 @@ vtkStandardNewMacro(vtkETPSource);
 
 //----------------------------------------------------------------------------
 vtkETPSource::vtkETPSource() : ETPUrl("wss://osdu-ship.msft-osdu-test.org:443/oetp/reservoir-ddms/"),
-                               DataPartition("opendes"),
-                               Authentification("Bearer"),
-                               AuthPwd(""),
+                                ProxyUrl(""),
+                                OSDUDataPartition("osdu"),
+                                ETPTokenType("Bearer"),
+                                ProxyTokenType("Basic"),
+                                ETPToken(""),
+                                ProxyToken(""),
                                AllDataspaces(vtkStringArray::New()),
                                AssemblyTag(0),
                                ConnectionTag(1),
@@ -67,36 +70,65 @@ int vtkETPSource::RequestInformation(vtkInformation *vtkNotUsed(request),
 //----------------------------------------------------------------------------
 void vtkETPSource::setETPUrlConnection(char *etp_url)
 {
-  this->ETPUrl = std::string(etp_url);
+  ETPUrl = std::string(etp_url);
 }
 
 //----------------------------------------------------------------------------
-void vtkETPSource::setDataPartition(char *data_partition)
+void vtkETPSource::setProxyUrlConnection(char* etp_url)
 {
-  this->DataPartition = std::string(data_partition);
+    ProxyUrl = std::string(etp_url);
 }
 
 //----------------------------------------------------------------------------
-void vtkETPSource::setAuthType(int auth_type)
+void vtkETPSource::setOSDUDataPartition(char *data_partition)
+{
+    OSDUDataPartition = std::string(data_partition);
+}
+
+//----------------------------------------------------------------------------
+void vtkETPSource::setETPTokenType(int auth_type)
 {
   if (auth_type == 0)
   {
-    this->Authentification = "Bearer";
+    ETPTokenType = "Bearer";
   }
   else if (auth_type == 1)
   {
-    this->Authentification = "Basic";
+    ETPTokenType = "Basic";
   }
   else
   {
-    this->Authentification = "unknown";
+    ETPTokenType = "unknown";
   }
 }
 
 //----------------------------------------------------------------------------
-void vtkETPSource::setAuthPwd(char *auth_connection)
+void vtkETPSource::setProxyTokenType(int auth_type)
 {
-  this->AuthPwd = std::string(auth_connection);
+    if (auth_type == 0)
+    {
+        ProxyTokenType = "Bearer";
+    }
+    else if (auth_type == 1)
+    {
+        ProxyTokenType = "Basic";
+    }
+    else
+    {
+        ProxyTokenType = "unknown";
+    }
+}
+
+//----------------------------------------------------------------------------
+void vtkETPSource::setETPToken(char *auth_connection)
+{
+    ETPToken = std::string(auth_connection);
+}
+
+//----------------------------------------------------------------------------
+void vtkETPSource::setProxyToken(char* auth_connection)
+{
+    ProxyToken = std::string(auth_connection);
 }
 
 //----------------------------------------------------------------------------
@@ -104,7 +136,7 @@ void vtkETPSource::confirmConnectionClicked()
 {
   try
   {
-    const auto dataspaces = this->repository.connect(this->ETPUrl, this->DataPartition, this->Authentification + " " + this->AuthPwd);
+    const auto dataspaces = this->repository.connect(ETPUrl, OSDUDataPartition, ETPTokenType + " " + ETPToken);
     for (const std::string dataspace : dataspaces)
     {
       this->AllDataspaces->InsertNextValue(vtkStdString(dataspace));
