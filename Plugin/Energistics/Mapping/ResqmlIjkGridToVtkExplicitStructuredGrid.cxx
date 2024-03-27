@@ -258,7 +258,7 @@ void ResqmlIjkGridToVtkExplicitStructuredGrid::createPoints()
 			const double zIndice = ijkGrid->getLocalCrs(0)->isDepthOriented() ? -1 : 1;
 			for (uint_fast64_t pointIndex = 0; pointIndex < coordCount; pointIndex += 3)
 			{
-				this->points->SetPoint(point_id++, allXyzPoints[pointIndex], allXyzPoints[pointIndex + 1], -allXyzPoints[pointIndex + 2] * zIndice);
+				this->points->SetPoint(point_id++, allXyzPoints[pointIndex], allXyzPoints[pointIndex + 1], allXyzPoints[pointIndex + 2] * zIndice);
 			}
 		}
 		else
