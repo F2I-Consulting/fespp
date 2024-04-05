@@ -5,7 +5,7 @@ cmake_policy(SET CMP0048 NEW)
 
 # version mechanism
 set (Fespp_VERSION_MAJOR 3)
-set (Fespp_VERSION_MINOR 2)
+set (Fespp_VERSION_MINOR 3)
 set (Fespp_VERSION_PATCH 0)
 
 set (Fespp_VERSION ${Fespp_VERSION_MAJOR}.${Fespp_VERSION_MINOR}.${Fespp_VERSION_PATCH})
