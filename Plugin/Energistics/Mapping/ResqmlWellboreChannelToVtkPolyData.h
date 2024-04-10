@@ -40,16 +40,16 @@ public:
 	 */
 	void loadVtkObject() override;
 
-	std::string getUuid() const { return this->uuid; }
-	std::string getTitle() const { return this->title; }
+	std::string getUuid() const { return _uuid; }
+	std::string getTitle() const { return _title; }
 
 protected:
 	const RESQML2_NS::WellboreFrameRepresentation *getResqmlData() const;
 
 private:
-	const RESQML2_NS::AbstractValuesProperty *abstractProperty;
+	const RESQML2_NS::AbstractValuesProperty* _abstractProperty;
 
-	std::string uuid;
-	std::string title;
+	std::string _uuid;
+	std::string _title;
 };
 #endif
