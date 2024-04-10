@@ -36,9 +36,9 @@ ResqmlWellboreChannelToVtkPolyData::ResqmlWellboreChannelToVtkPolyData(const RES
 	: ResqmlAbstractRepresentationToVtkPartitionedDataSet(frame,
 														  p_procNumber,
 														  p_maxProc),
-	  abstractProperty(property),
-	  uuid(uuid),
-	  title(property->getTitle())
+	  _abstractProperty(property),
+	  _uuid(p_uuid),
+	  _title(property->getTitle())
 {
 	_vtkData = vtkSmartPointer<vtkPartitionedDataSet>::New();
 	_vtkData->Modified();
@@ -92,24 +92,41 @@ void ResqmlWellboreChannelToVtkPolyData::loadVtkObject()
 
 	// Varying tube radius
 	auto tubeRadius = vtkSmartPointer<vtkDoubleArray>::New();
-	tubeRadius->SetName(this->abstractProperty->getTitle().c_str());
+	tubeRadius->SetName(_abstractProperty->getTitle().c_str());
 	tubeRadius->SetNumberOfTuples(_pointCount);
-	if (dynamic_cast<const RESQML2_NS::ContinuousProperty *>(this->abstractProperty) != nullptr)
+	bool hasNANValue = false;
+	if (dynamic_cast<const RESQML2_NS::ContinuousProperty *>(_abstractProperty) != nullptr)
 	{
 		std::unique_ptr<double[]> values(new double[_pointCount]);
-		this->abstractProperty->getDoubleValuesOfPatch(0, values.get());
+		_abstractProperty->getDoubleValuesOfPatch(0, values.get());
 		for (unsigned int i = 0; i < _pointCount; ++i)
 		{
-			tubeRadius->SetTuple1(i, values[i]);
+			if (values[i] != values[i])
+			{
+				hasNANValue = true;
+				tubeRadius->SetTuple1(i, 0);
+			}
+			else 
+			{ 
+				tubeRadius->SetTuple1(i, values[i]);
+			}
 		}
 	}
-	else if (dynamic_cast<const RESQML2_NS::DiscreteProperty *>(this->abstractProperty) != nullptr || dynamic_cast<const RESQML2_NS::CategoricalProperty *>(this->abstractProperty) != nullptr)
+	else if (dynamic_cast<const RESQML2_NS::DiscreteProperty *>(_abstractProperty) != nullptr || dynamic_cast<const RESQML2_NS::CategoricalProperty *>(_abstractProperty) != nullptr)
 	{
 		std::unique_ptr<int[]> values(new int[_pointCount]);
-		this->abstractProperty->getInt32ValuesOfPatch(0, values.get());
+		_abstractProperty->getInt32ValuesOfPatch(0, values.get());
 		for (unsigned int i = 0; i < _pointCount; ++i)
 		{
-			tubeRadius->SetTuple1(i, values[i]);
+			if (values[i] > (std::numeric_limits<int>::max)())
+			{
+				hasNANValue = true;
+				tubeRadius->SetTuple1(i, 0);
+			}
+			else
+			{
+				tubeRadius->SetTuple1(i, values[i]);
+			}
 		}
 	}
 	else
@@ -117,9 +134,13 @@ void ResqmlWellboreChannelToVtkPolyData::loadVtkObject()
 		vtkOutputWindowDisplayErrorText("Cannot show a log which is not discrete, categorical no continuous.\n");
 		return;
 	}
+	if (hasNANValue)
+	{
+		vtkOutputWindowDisplayWarningText(("The log `" + _abstractProperty->getTitle() + "' has NaN values. NaN values are changed to 0.\n").c_str());
+	}
 
 	channelPolyline->GetPointData()->AddArray(tubeRadius);
-	channelPolyline->GetPointData()->SetActiveScalars(this->abstractProperty->getTitle().c_str());
+	channelPolyline->GetPointData()->SetActiveScalars(_abstractProperty->getTitle().c_str());
 
 	// Build the tube
 	vtkSmartPointer<vtkTubeFilter> tubeFilter = vtkSmartPointer<vtkTubeFilter>::New();
@@ -130,6 +151,6 @@ void ResqmlWellboreChannelToVtkPolyData::loadVtkObject()
 	tubeFilter->Update();
 
 	_vtkData->SetPartition(0, tubeFilter->GetOutput());
-	_vtkData->GetMetaData((unsigned int)0)->Set(vtkCompositeDataSet::NAME(), (const char*)(title+"("+uuid + ")").c_str());
+	_vtkData->GetMetaData((unsigned int)0)->Set(vtkCompositeDataSet::NAME(), (const char*)(_title+"("+_uuid + ")").c_str());
 	_vtkData->Modified();
 }
