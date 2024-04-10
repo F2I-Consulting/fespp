@@ -206,22 +206,23 @@ std::string SimplifyXmlTag(std::string p_typeRepresentation)
 }
 
 //----------------------------------------------------------------------------
-std::vector<std::string> ResqmlDataRepositoryToVtkPartitionedDataSetCollection::connect(const std::string& p_etpUrl, const std::string& p_dataPartition, const std::string& p_authConnection)
+std::vector<std::string> ResqmlDataRepositoryToVtkPartitionedDataSetCollection::connect(const std::string& p_etpUrl, const std::string& p_dataPartition, const std::string& p_authConnection, const std::string&  p_proxyUrl, const std::string& p_proxyAuthConnection)
 {
+
     std::vector<std::string> w_result;
 #ifdef WITH_ETP_SSL
     boost::uuids::random_generator w_gen;
-    ETP_NS::InitializationParameters w_initializationParams(w_gen(), p_etpUrl /*, proxy*/);
+    ETP_NS::InitializationParameters w_initializationParams(w_gen(), p_etpUrl, p_proxyUrl);
     w_initializationParams.setAdditionalHandshakeHeaderFields({ {"data-partition-id", p_dataPartition} });
 
-    _session = ETP_NS::ClientSessionLaunchers::createClientSession(&w_initializationParams, p_authConnection /*, proxy_auth*/);
+    _session = ETP_NS::ClientSessionLaunchers::createClientSession(&w_initializationParams, p_authConnection, p_proxyAuthConnection);
     try
     {
         _session->setDataspaceProtocolHandlers(std::make_shared<ETP_NS::DataspaceHandlers>(_session.get()));
     }
     catch (const std::exception& e)
     {
-        vtkOutputWindowDisplayErrorText((std::string("fesapi error > ") + e.what()).c_str());
+        vtkOutputWindowDisplayErrorText((std::string("FESAPI error > ") + e.what()).c_str());
     }
     try
     {
@@ -229,7 +230,7 @@ std::vector<std::string> ResqmlDataRepositoryToVtkPartitionedDataSetCollection::
     }
     catch (const std::exception& e)
     {
-        vtkOutputWindowDisplayErrorText((std::string("fesapi error > ") + e.what()).c_str());
+        vtkOutputWindowDisplayErrorText((std::string("FESAPI error > ") + e.what()).c_str());
     }
     try
     {
@@ -237,7 +238,7 @@ std::vector<std::string> ResqmlDataRepositoryToVtkPartitionedDataSetCollection::
     }
     catch (const std::exception& e)
     {
-        vtkOutputWindowDisplayErrorText((std::string("fesapi error > ") + e.what()).c_str());
+        vtkOutputWindowDisplayErrorText((std::string("FESAPI error > ") + e.what()).c_str());
     }
     try
     {
@@ -245,7 +246,7 @@ std::vector<std::string> ResqmlDataRepositoryToVtkPartitionedDataSetCollection::
     }
     catch (const std::exception& e)
     {
-        vtkOutputWindowDisplayErrorText((std::string("fesapi error > ") + e.what()).c_str());
+        vtkOutputWindowDisplayErrorText((std::string("FESAPI error > ") + e.what()).c_str());
     }
 
     _repository->setHdfProxyFactory(new ETP_NS::FesapiHdfProxyFactory(_session.get()));
@@ -273,6 +274,7 @@ std::vector<std::string> ResqmlDataRepositoryToVtkPartitionedDataSetCollection::
         { return w_ds.uri; });
 
 #endif
+
     return w_result;
 }
 
@@ -1381,17 +1383,18 @@ vtkPartitionedDataSetCollection *ResqmlDataRepositoryToVtkPartitionedDataSetColl
                 try
                 {
                     _nodeIdToMapperSet[w_nodeSelection]->loadVtkObject();
+
+                    for (auto partition : _nodeIdToMapperSet[w_nodeSelection]->getMapperSet())
+                    {
+                        _output->SetPartitionedDataSet(w_PartitionIndex, partition->getOutput());
+                        _output->GetMetaData(w_PartitionIndex)->Set(vtkCompositeDataSet::NAME(), partition->getTitle() + '(' + partition->getUuid() + ')');
+                        GetAssembly()->AddDataSetIndex(w_nodeSelection, w_PartitionIndex); // attach hierarchy to assembly
+                        w_PartitionIndex++;
+                    }
                 }
                 catch (const std::exception& e)
-                    {
-                        vtkOutputWindowDisplayErrorText(("Fesapi Error for uuid : " + std::string(_output->GetDataAssembly()->GetNodeName(w_nodeSelection)).substr(1) + "\n" + e.what()).c_str());
-                    }
-                for (auto partition : _nodeIdToMapperSet[w_nodeSelection]->getMapperSet())
                 {
-                    _output->SetPartitionedDataSet(w_PartitionIndex, partition->getOutput());
-                    _output->GetMetaData(w_PartitionIndex)->Set(vtkCompositeDataSet::NAME(), partition->getTitle() + '(' + partition->getUuid() + ')');
-                    GetAssembly()->AddDataSetIndex(w_nodeSelection, w_PartitionIndex + 1); // attach hierarchy to assembly
-                    w_PartitionIndex++;
+                        vtkOutputWindowDisplayErrorText(("FESAPI Error for uuid " + std::string(_output->GetDataAssembly()->GetNodeName(w_nodeSelection)).substr(1) + " : " + e.what() + "\n").c_str());
                 }
             }
         }
@@ -1402,7 +1405,7 @@ vtkPartitionedDataSetCollection *ResqmlDataRepositoryToVtkPartitionedDataSetColl
             {
                 _output->SetPartitionedDataSet(w_PartitionIndex, _nodeIdToMapper[w_nodeSelection]->getOutput());
                 _output->GetMetaData(w_PartitionIndex)->Set(vtkCompositeDataSet::NAME(), _nodeIdToMapper[w_nodeSelection]->getTitle() + '(' + _nodeIdToMapper[w_nodeSelection]->getUuid() + ')');
-                GetAssembly()->AddDataSetIndex(w_nodeSelection, w_PartitionIndex + 1); // attach hierarchy to assembly
+                GetAssembly()->AddDataSetIndex(w_nodeSelection, w_PartitionIndex); // attach hierarchy to assembly
                 w_PartitionIndex++;
             }
         }

@@ -80,7 +80,7 @@ public:
 	std::string addDataspace(const char *p_dataspace);
 
 	// for ETP connection
-	std::vector<std::string> connect(const std::string &p_etpUrl, const std::string &p_dataPartition, const std::string &p_authConnection);
+	std::vector<std::string> connect(const std::string &p_etpUrl, const std::string &p_dataPartition, const std::string &p_authConnection, const std::string& p_proxyUrl, const std::string& p_proxyConnection);
 	void disconnect();
 
 	// Wellbore Options
