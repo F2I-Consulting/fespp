@@ -4,8 +4,8 @@ set(classes
   vtkETPSource
 )
 
-FILE (GLOB FESPP_MAPPING_SOURCES Mapping/*.cxx)
-FILE (GLOB FESPP_MAPPING_HEADERS Mapping/*.h Tools/*.h)
+FILE (GLOB FESPP_MAPPING_SOURCES Mapping/*.cxx  VTK/*.cxx)
+FILE (GLOB FESPP_MAPPING_HEADERS Mapping/*.h Tools/*.h VTK/*.h)
 set (ENERGISTICS_SOURCES
 	${FESPP_MAPPING_SOURCES}
 )
