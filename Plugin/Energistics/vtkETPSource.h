@@ -24,6 +24,8 @@ under the License.
 #include <set>
 
 #include <vtkPartitionedDataSetCollectionAlgorithm.h>
+#include <vtkCommand.h>
+#include <vtkObject.h>
 #include <vtkSmartPointer.h>
 #include <vtkStringArray.h>
 
@@ -167,10 +169,11 @@ private:
 
 	// treeview
 	std::set<std::string> selectors;
+	bool _newSelection;
 	int AssemblyTag;
 	int ConnectionTag;
 	int DisconnectionTag;
-
+	
 	// Properties
 	bool MarkerOrientation;
 	int MarkerSize;
