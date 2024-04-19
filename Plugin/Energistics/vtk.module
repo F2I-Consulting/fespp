@@ -13,5 +13,6 @@ DEPENDS
   VTK::ParallelCore
   VTK::RenderingCore
   VTK::IOCore
+  VTK::InteractionWidgets
 PRIVATE_DEPENDS
   VTK::vtksys
