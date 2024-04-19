@@ -1,7 +1,7 @@
 NAME
   Fespp
 DESCRIPTION
-  F2i-consulting Energistics Standard Paraview Plugin Reader
+  F2i-consulting Energistics Standard Paraview Plugin
 REQUIRES_MODULES
   VTK::CommonCore
   VTK::CommonDataModel
