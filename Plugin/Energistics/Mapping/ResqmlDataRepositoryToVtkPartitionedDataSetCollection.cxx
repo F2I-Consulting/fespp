@@ -580,7 +580,7 @@ int ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchRepresentationS
 								double dR, dG, dB;
 								graphicalInformationSet->getDefaultRgbColor(targetObject, dR, dG, dB);
 								_commandColorPython += "'" + _output->GetDataAssembly()->GetNodePath(p_nodeId) + "','" + std::to_string(dR) + "','" + std::to_string(dG) + "','" + std::to_string(dB) + "',";
-								_output->GetDataAssembly()->SetAttribute(p_nodeId, "colorRGB", (std::to_string(R)+","+ std::to_string(G) + "," + std::to_string(B)).c_str());
+								_output->GetDataAssembly()->SetAttribute(p_nodeId, "colorRGB", (std::to_string(R) + "," + std::to_string(G) + "," + std::to_string(B)).c_str());
 							}
 						}
 
@@ -612,7 +612,7 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchWellbor
 		if (_output->GetDataAssembly()->FindFirstNodeWithName(("_" + w_wellboreTrajectory->getUuid()).c_str()) == -1)
 		{ // verify uuid exist in treeview
 		  // To shorten the xmlTag by removing �Representation� from the end.
-			
+
 			for (resqml2::RepresentationSetRepresentation* w_rsr : w_wellboreTrajectory->getRepresentationSetRepresentationSet())
 			{
 				w_initNodeId = searchRepresentationSetRepresentation(w_rsr);
@@ -1286,6 +1286,7 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::deleteMapper(double 
 				if (_nodeIdToMapperSet.find(w_nodeParent) != _nodeIdToMapperSet.end())
 				{
 					_nodeIdToMapperSet[w_nodeParent]->removeCommonAbstractObjectToVtkPartitionedDataSet(std::string(w_Assembly->GetNodeName(w_nodeId)).substr(1));
+					GetAssembly()->RemoveAllDataSetIndices(w_nodeId);
 				}
 			}
 			catch (const std::exception& e)
@@ -1310,6 +1311,7 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::deleteMapper(double 
 					}
 					delete _nodeIdToMapper[w_nodeId];
 					_nodeIdToMapper.erase(w_nodeId);
+					GetAssembly()->RemoveAllDataSetIndices(w_nodeId);
 				}
 				else
 				{
@@ -1330,6 +1332,7 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::deleteMapper(double 
 				{
 					delete _nodeIdToMapper[w_nodeId];
 					_nodeIdToMapper.erase(w_nodeId);
+					GetAssembly()->RemoveAllDataSetIndices(w_nodeId);
 				}
 			}
 			catch (const std::exception& e)
@@ -1348,6 +1351,7 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::deleteMapper(double 
 					const char* w_connection;
 					_output->GetDataAssembly()->GetAttribute(w_nodeId, "connection", w_connection);
 					_nodeIdToMapperSet[w_nodeParent]->removeCommonAbstractObjectToVtkPartitionedDataSet(w_connection);
+					GetAssembly()->RemoveAllDataSetIndices(w_nodeId);
 				}
 			}
 			catch (const std::exception& e)
@@ -1365,6 +1369,7 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::deleteMapper(double 
 				{
 					delete _nodeIdToMapperSet[w_nodeId];
 					_nodeIdToMapperSet.erase(w_nodeId);
+					GetAssembly()->RemoveAllDataSetIndices(w_nodeId);
 				}
 			}
 			catch (const std::exception& e)
@@ -1439,7 +1444,18 @@ vtkPartitionedDataSetCollection* ResqmlDataRepositoryToVtkPartitionedDataSetColl
 					{
 						_output->SetPartitionedDataSet(w_PartitionIndex, partition->getOutput());
 						_output->GetMetaData(w_PartitionIndex)->Set(vtkCompositeDataSet::NAME(), partition->getTitle() + '(' + partition->getUuid() + ')');
-						GetAssembly()->AddDataSetIndex(w_nodeSelection, w_PartitionIndex); // attach hierarchy to assembly
+						if (w_type == TreeViewNodeType::WellboreCompletion)
+						{
+							std::string idName = std::string(GetAssembly()->GetNodeName(w_nodeSelection)) + "_" + partition->getUuid();
+							int id = GetAssembly()->FindFirstNodeWithName(idName.c_str());
+							GetAssembly()->AddDataSetIndex(id, w_PartitionIndex); // attach hierarchy to assembly
+						}
+						else if (w_type == TreeViewNodeType::WellboreFrame || w_type == TreeViewNodeType::WellboreMarkerFrame)
+						{
+							std::string idName = "_" + partition->getUuid();
+							int id = GetAssembly()->FindFirstNodeWithName(idName.c_str());
+							GetAssembly()->AddDataSetIndex(id, w_PartitionIndex); // attach hierarchy to assembly
+						}
 						w_PartitionIndex++;
 					}
 				}
