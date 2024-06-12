@@ -1103,11 +1103,7 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::addDataToParent(cons
 				if (!_nodeIdToMapperSet[w_nodeParent]->existUuid(w_connection))
 				{
 					(static_cast<WitsmlWellboreCompletionToVtkPartitionedDataSet*>(_nodeIdToMapperSet[w_nodeParent]))->addPerforation(w_connection, w_name, w_skin);
-				}
-				else
-				{
-					vtkOutputWindowDisplayErrorText(("Error object type in vtkDataAssembly for uuid: " + w_uuid + "\n").c_str());
-				}
+				} // else perforation already exist
 			}
 		}
 		catch (const std::exception& e)
