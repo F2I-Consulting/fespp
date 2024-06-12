@@ -22,6 +22,7 @@ under the License.
 #include <iterator>
 #include <algorithm>
 #include <limits>
+#include <thread>
 
 #include <vtkIndent.h>
 #include <vtkInformation.h>
@@ -54,7 +55,8 @@ vtkETPSource::vtkETPSource() :
 	ConnectionTag(1),
 	DisconnectionTag(0),
 	MarkerOrientation(true),
-	MarkerSize(10)
+	MarkerSize(10),
+	colorApplyLoading(false)
 {
 	SetNumberOfInputPorts(0);
 	SetNumberOfOutputPorts(1);
@@ -329,6 +331,13 @@ int vtkETPSource::RequestData(vtkInformation*,
 			vtkPartitionedDataSetCollection::GetData(outInfo)->DeepCopy(repository.getVtkPartitionedDatasSetCollection(requestedTimeStep));
 
 			_newSelection = false;
+			
+			if (vtkPartitionedDataSetCollection::GetData(outInfo)->GetNumberOfPartitionedDataSets() > 0 && !colorApplyLoading) {
+				colorApplyLoading = true;
+				repository.addResqmlColor();
+				colorApplyLoading = false;
+			}
+
 			progressBar->setIndeterminate(false);
 		}
 		catch (const std::exception& e)

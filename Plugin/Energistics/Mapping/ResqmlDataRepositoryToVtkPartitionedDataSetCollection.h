@@ -90,6 +90,7 @@ public:
 	vtkPartitionedDataSetCollection *getVtkPartitionedDatasSetCollection(const double p_time, const uint32_t p_nbProcess = 1, const uint32_t p_processId = 0);
 
 	std::vector<double> getTimes() { return _timesStep; };
+	void addResqmlColor();
 
 	/**
 	 * @return selection parent
@@ -112,6 +113,7 @@ private:
 
 	void selectNodeIdParent(int p_nodeId);
 	void selectNodeIdChildren(int p_nodeId);
+
 
 	/**
 	 * delete _oldSelection mapper
@@ -162,6 +164,9 @@ private:
 
 	// time step values
 	std::vector<double> _timesStep;
+
+	std::string _commandColorPython;
+
 #ifdef WITH_ETP_SSL
 	std::shared_ptr<ETP_NS::ClientSession> _session;
 #endif

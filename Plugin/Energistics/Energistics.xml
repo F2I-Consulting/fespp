@@ -19,7 +19,8 @@
 			<StringVectorProperty command="GetAllFiles" information_only="1" name="FilesInfo">
 				<StringArrayHelper />
 			</StringVectorProperty>
-			<StringVectorProperty name="Files" command="SetFiles" number_of_elements="1" repeat_command="1" label="all files loaded">
+			<StringVectorProperty name="Files" command="SetFiles" number_of_elements="1" repeat_command="1" label="all files loaded">				<!-- panel_widget="file_list"> 
+			<FileListDomain name="files"/> -->
 				<ArraySelectionDomain name="FilesList">
 					<RequiredProperties>
 						<Property function="FilesInfo" name="FilesInfo" />
@@ -51,7 +52,6 @@
 				</Hints>
 			</StringVectorProperty>
 
-
 			<!-- Wellbore marker properties: -->
 			<!-- enable/disable Marker orientation -->
 			<IntVectorProperty name="MarkerOrientation" command="setMarkerOrientation" number_of_elements="1" default_values="1">
@@ -63,6 +63,7 @@
 				<Property name="MarkerOrientation" />
 				<Property name="MarkerSize" />
 			</PropertyGroup>
+
 		</SourceProxy>
 		<!-- ==================================================================== -->
 		<SourceProxy name="ETPsource" class="vtkETPSource" label="ETP1.2 Store">
@@ -99,7 +100,7 @@
 			</StringVectorProperty>
 
 			<!-- authentifications definitions -->
-				<!-- types -->
+			<!-- types -->
 			<IntVectorProperty name="ETPTokenType" command="setETPTokenType" number_of_elements="1" default_values="0">
 				<EnumerationDomain name="enum">
 					<Entry value="0" text="Bearer"/>
@@ -121,7 +122,7 @@
 					<PropertyWidgetDecorator type="GenericDecorator" mode="enabled_state" property="ConnectionTag" value="0" inverse="1" />
 				</Hints>
 			</IntVectorProperty>
-				<!-- pwd -->
+			<!-- pwd -->
 			<StringVectorProperty command="setETPToken" default_values="" name="ETPToken" number_of_elements="1" panel_visibility="default">
 				<Documentation>This property specifies the string used to describe the authorization.</Documentation>
 				<Hints>

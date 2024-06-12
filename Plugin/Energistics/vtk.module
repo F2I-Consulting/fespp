@@ -14,5 +14,8 @@ DEPENDS
   VTK::RenderingCore
   VTK::IOCore
   VTK::InteractionWidgets
+  VTK::Python
+  VTK::WrappingPythonCore
+  VTK::PythonInterpreter
 PRIVATE_DEPENDS
   VTK::vtksys

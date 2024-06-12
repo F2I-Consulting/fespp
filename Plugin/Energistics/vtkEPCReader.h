@@ -112,7 +112,6 @@ public:
    */
 	bool AddSelector(const char *selector);
 	void ClearSelectors();
-	void SetSelector(const char* selector);
 	///@}
 
 	///@{
@@ -160,6 +159,7 @@ private:
 	bool MarkerOrientation;
 	int MarkerSize;
 
+	bool colorApplyLoading;
 	ResqmlDataRepositoryToVtkPartitionedDataSetCollection repository;
 };
 #endif

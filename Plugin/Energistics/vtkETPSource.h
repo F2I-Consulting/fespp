@@ -178,6 +178,7 @@ private:
 	bool MarkerOrientation;
 	int MarkerSize;
 
+	bool colorApplyLoading;
 	ResqmlDataRepositoryToVtkPartitionedDataSetCollection repository;
 };
 #endif

@@ -46,6 +46,9 @@ VtkAssembly => TreeView:
 #include <vtkDataArraySelection.h>
 #include <vtkResourceFileLocator.h>
 #include <vtksys/SystemTools.hxx>
+#include <vtkPython.h>
+#include <vtkPythonCompatibility.h>
+#include <vtkPythonInterpreter.h>
 
 // FESAPI includes
 #include <fesapi/common/DataObjectRepository.h>
@@ -71,6 +74,7 @@ VtkAssembly => TreeView:
 #include <fesapi/witsml2_1/WellboreCompletion.h>
 #include <fesapi/witsml2_1/WellCompletion.h>
 #include <fesapi/witsml2_1/Well.h>
+#include <fesapi/eml2_3/GraphicalInformationSet.h>
 
 #ifdef WITH_ETP_SSL
 #include <thread>
@@ -110,7 +114,8 @@ ResqmlDataRepositoryToVtkPartitionedDataSetCollection::ResqmlDataRepositoryToVtk
 	_output(vtkSmartPointer<vtkPartitionedDataSetCollection>::New()),
 	_nodeIdToMapper(),
 	_currentSelection(),
-	_oldSelection()
+	_oldSelection(),
+	_commandColorPython("")
 {
 	auto w_assembly = vtkSmartPointer<vtkDataAssembly>::New();
 	w_assembly->SetRootNodeName("data");
@@ -546,6 +551,7 @@ int ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchRepresentationS
 	if (_output->GetDataAssembly()->FindFirstNodeWithName(("_" + p_rsr->getUuid()).c_str()) == -1)
 	{ // verify uuid exist in treeview
 	  // To shorten the xmlTag by removing �Representation� from the end.
+
 		for (resqml2::RepresentationSetRepresentation* w_rsr : p_rsr->getRepresentationSetRepresentationSet())
 		{
 			p_nodeId = searchRepresentationSetRepresentation(w_rsr, p_nodeId);
@@ -556,6 +562,32 @@ int ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchRepresentationS
 			p_nodeId = _output->GetDataAssembly()->AddNode(("_" + p_rsr->getUuid()).c_str(), p_nodeId);
 			_output->GetDataAssembly()->SetAttribute(p_nodeId, "label", w_vtkValidName.c_str());
 			_output->GetDataAssembly()->SetAttribute(p_nodeId, "type", std::to_string(static_cast<int>(TreeViewNodeType::Collection)).c_str());
+
+			// COLORS
+			std::vector<EML2_3_NS::GraphicalInformationSet*> gisSet = _repository->getDataObjects<EML2_3_NS::GraphicalInformationSet>();
+			for (unsigned int gisIndex = 0; gisIndex < gisSet.size(); ++gisIndex) {
+				EML2_3_NS::GraphicalInformationSet* graphicalInformationSet = gisSet[gisIndex];
+				for (unsigned int i = 0; i < graphicalInformationSet->getGraphicalInformationSetCount(); ++i)
+				{
+					for (unsigned int targetIndex = 0; targetIndex < graphicalInformationSet->getTargetObjectCount(i); ++targetIndex)
+					{
+						COMMON_NS::AbstractObject const* targetObject = graphicalInformationSet->getTargetObject(i, targetIndex);
+						if (targetObject->getUuid() == p_rsr->getUuid())
+						{
+							if (graphicalInformationSet->hasDefaultColor(targetObject)) {
+								unsigned int R, G, B;
+								graphicalInformationSet->getDefaultRgbColor(targetObject, R, G, B);
+								double dR, dG, dB;
+								graphicalInformationSet->getDefaultRgbColor(targetObject, dR, dG, dB);
+								_commandColorPython += "'" + _output->GetDataAssembly()->GetNodePath(p_nodeId) + "','" + std::to_string(dR) + "','" + std::to_string(dG) + "','" + std::to_string(dB) + "',";
+								_output->GetDataAssembly()->SetAttribute(p_nodeId, "colorRGB", (std::to_string(R)+","+ std::to_string(G) + "," + std::to_string(B)).c_str());
+							}
+						}
+
+					}
+				}
+			}
+			//
 		}
 	}
 	else
@@ -570,6 +602,7 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchWellbor
 	std::string w_result;
 
 	int w_nodeId = 0;
+	_commandColorPython = "colorepcDisplay.BlockColors = [";
 	for (auto* w_wellboreTrajectory : _repository->getWellboreTrajectoryRepresentationSet())
 	{
 		const auto* w_wellboreFeature = dynamic_cast<RESQML2_NS::WellboreFeature*>(w_wellboreTrajectory->getInterpretation()->getInterpretedFeature());
@@ -579,6 +612,7 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchWellbor
 		if (_output->GetDataAssembly()->FindFirstNodeWithName(("_" + w_wellboreTrajectory->getUuid()).c_str()) == -1)
 		{ // verify uuid exist in treeview
 		  // To shorten the xmlTag by removing �Representation� from the end.
+			
 			for (resqml2::RepresentationSetRepresentation* w_rsr : w_wellboreTrajectory->getRepresentationSetRepresentationSet())
 			{
 				w_initNodeId = searchRepresentationSetRepresentation(w_rsr);
@@ -615,6 +649,7 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchWellbor
 		w_result += searchWellboreFrame(w_wellboreTrajectory, w_initNodeId);
 		w_result += searchWellboreCompletion(w_wellboreFeature, w_initNodeId);
 	}
+	_commandColorPython += "]";
 	return w_result;
 }
 
@@ -709,13 +744,13 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchWellbor
 						{
 							w_perforationName += "_" + w_sismageName[0];
 							// skin
-							auto w_sismageSkin = w_wellboreCompletion->getConnectionExtraMetadata(WITSML2_1_NS::WellboreCompletion::WellReservoirConnectionType::PERFORATION, w_perforationIndex, "Sismage-CIG:Skin");
+							auto w_sismageSkin = w_wellboreCompletion->getConnectionExtraMetadata(WITSML2_1_NS::WellboreCompletion::WellReservoirConnectionType::PERFORATION, w_perforationIndex, "Sismage-CIG:Skin0");
 							if (w_sismageSkin.size() > 0)
 							{
 								w_perforationSkin = w_sismageSkin[0];
 							}
 							// diameter
-							auto w_sismageDiam = w_wellboreCompletion->getConnectionExtraMetadata(WITSML2_1_NS::WellboreCompletion::WellReservoirConnectionType::PERFORATION, w_perforationIndex, "Petrel:CompletionDiameter");
+							auto w_sismageDiam = w_wellboreCompletion->getConnectionExtraMetadata(WITSML2_1_NS::WellboreCompletion::WellReservoirConnectionType::PERFORATION, w_perforationIndex, "Sismage-CIG:CompletionDiameter");
 							if (w_sismageDiam.size() > 0)
 							{
 								w_perforationDiameter = w_sismageDiam[0];
@@ -1439,4 +1474,18 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::setMarkerOrientation
 void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::setMarkerSize(uint32_t size)
 {
 	_markerSize = size;
+}
+
+void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::addResqmlColor()
+{
+	std::ostringstream loadPython;
+	loadPython << "from paraview.simple import *\n"
+		<< "colorepc = GetActiveSource()\n"
+		<< "SetActiveSource(colorepc)\n"
+		<< "renderView1 = GetActiveViewOrCreate('RenderView')\n"
+		<< "colorepcDisplay = GetDisplayProperties(colorepc, view=renderView1)\n"
+		<< _commandColorPython;
+
+	vtkPythonInterpreter::Initialize();
+	vtkPythonInterpreter::RunSimpleString(loadPython.str().c_str());
 }
