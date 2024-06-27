@@ -35,8 +35,8 @@ under the License.
 #include <vtkIdList.h>
 
 // FESAPI
+#include <fesapi/eml2/AbstractLocal3dCrs.h>
 #include <fesapi/resqml2/UnstructuredGridRepresentation.h>
-#include <fesapi/resqml2/AbstractLocal3dCrs.h>
 
 //----------------------------------------------------------------------------
 ResqmlUnstructuredGridToVtkUnstructuredGrid::ResqmlUnstructuredGridToVtkUnstructuredGrid(const RESQML2_NS::UnstructuredGridRepresentation *unstructuredGrid, uint32_t p_procNumber, uint32_t p_maxProc)

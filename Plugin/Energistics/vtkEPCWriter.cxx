@@ -1,4 +1,4 @@
-﻿/*---------------------vtkEPCReader--------------------------------------------------
+﻿/*---------------------vtkEPCWriter--------------------------------------------------
 Licensed to the Apache Software Foundation (ASF) under one
 or more contributor license agreements.  See the NOTICE file
 distributed with this work for additional information
@@ -35,12 +35,12 @@ under the License.
 #include <vtkPointData.h>
 #include <vtkUnstructuredGrid.h>
 
+#include "fesapi/common/DataObjectRepository.h"
 #include "fesapi/common/EpcDocument.h"
 #include "fesapi/eml2/AbstractHdfProxy.h"
-#include "fesapi/common/DataObjectRepository.h"
-#include "fesapi/resqml2_0_1/DiscreteProperty.h"
-#include "fesapi/resqml2/LocalDepth3dCrs.h"
+#include "fesapi/eml2/AbstractLocal3dCrs.h"
 #include "fesapi/resqml2_0_1/ContinuousProperty.h"
+#include "fesapi/resqml2_0_1/DiscreteProperty.h"
 #include "fesapi/resqml2_0_1/PropertyKind.h"
 #include "fesapi/resqml2_0_1/UnstructuredGridRepresentation.h"
 
@@ -104,13 +104,13 @@ int vtkEPCWriter::RequestData(
 //------------------------------------------------------------------------------
 void vtkEPCWriter::WriteData()
 {
-	common::EpcDocument epcDoc(FileName);
-	common::DataObjectRepository repo;
+	COMMON_NS::EpcDocument epcDoc(FileName);
+	COMMON_NS::DataObjectRepository repo;
 
-	common::AbstractObject::setFormat("F2I-CONSULTING", "FESPP", PROJECT_VERSION);
-	eml2::AbstractHdfProxy* hdfProxy = repo.createHdfProxy("", "Hdf Proxy", epcDoc.getStorageDirectory(), epcDoc.getName() + ".h5", COMMON_NS::DataObjectRepository::openingMode::OVERWRITE);
+	COMMON_NS::AbstractObject::setFormat("F2I-CONSULTING", "FESPP", PROJECT_VERSION);
+	EML2_NS::AbstractHdfProxy* hdfProxy = repo.createHdfProxy("", "Hdf Proxy", epcDoc.getStorageDirectory(), epcDoc.getName() + ".h5", COMMON_NS::DataObjectRepository::openingMode::OVERWRITE);
 
-	resqml2::LocalDepth3dCrs* local3dCrs = repo.createLocalDepth3dCrs("", "Default local CRS", .0, .0, .0, .0, gsoap_resqml2_0_1::eml20__LengthUom::m, "ParaView does not support CRS", gsoap_resqml2_0_1::eml20__LengthUom::m, "ParaView does not support CRS", true);
+	EML2_NS::AbstractLocal3dCrs* local3dCrs = repo.createLocalDepth3dCrs("", "Default local CRS", .0, .0, .0, .0, gsoap_resqml2_0_1::eml20__LengthUom::m, "ParaView does not support CRS", gsoap_resqml2_0_1::eml20__LengthUom::m, "ParaView does not support CRS", true);
 	repo.setDefaultCrs(local3dCrs);
 
 	if (!Internal->discretePropertyKind)
@@ -236,9 +236,8 @@ void vtkEPCWriter::writeProperties(COMMON_NS::DataObjectRepository& repo, EML2_N
 }
 
 
-RESQML2_NS::UnstructuredGridRepresentation* vtkEPCWriter::writeUnstructuredGrid(COMMON_NS::DataObjectRepository& repo, EML2_NS::AbstractHdfProxy* hdfProxy, RESQML2_NS::LocalDepth3dCrs* local3dCrs)
+RESQML2_NS::UnstructuredGridRepresentation* vtkEPCWriter::writeUnstructuredGrid(COMMON_NS::DataObjectRepository& repo, EML2_NS::AbstractHdfProxy* hdfProxy, EML2_NS::AbstractLocal3dCrs* local3dCrs)
 {
-
 	std::vector<double> w_points = getUnstructuredGridPoints();
 
 	std::vector<uint64_t> w_nodeIndicesPerFace;
@@ -247,13 +246,10 @@ RESQML2_NS::UnstructuredGridRepresentation* vtkEPCWriter::writeUnstructuredGrid(
 	std::vector<uint64_t> faceIndicesCumulativeCountPerCell;
 	std::vector<uint8_t> faceRightHandness;
 
-
-
 	uint64_t numberOfCells = Internal->inputUnstructuredGrid->GetNumberOfCells();
 
 	for (vtkIdType cellId = 0; cellId < numberOfCells; ++cellId)
 	{
-
 		vtkCell* const cell = Internal->inputUnstructuredGrid->GetCell(cellId);
 		int32_t const cellType = cell->GetCellType();
 		vtkIdType const* const ptsIds = cell->GetPointIds()->begin();

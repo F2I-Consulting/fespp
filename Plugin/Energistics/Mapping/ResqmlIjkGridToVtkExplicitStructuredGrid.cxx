@@ -31,8 +31,8 @@ under the License.
 #include "vtkPointData.h"
 
 // include FESAPI
+#include <fesapi/eml2/AbstractLocal3dCrs.h>
 #include <fesapi/resqml2/AbstractIjkGridRepresentation.h>
-#include <fesapi/resqml2/LocalDepth3dCrs.h>
 
 // include FESPP
 #include "ResqmlPropertyToVtkDataArray.h"
@@ -234,8 +234,7 @@ void ResqmlIjkGridToVtkExplicitStructuredGrid::createPoints()
 			{
 				xOffset = crs->getOriginOrdinal1();
 				yOffset = crs->getOriginOrdinal2();
-				auto const *depthCrs = dynamic_cast<RESQML2_NS::LocalDepth3dCrs const *>(crs);
-				zOffset = depthCrs != nullptr ? depthCrs->getOriginDepthOrElevation() : 0;
+				zOffset = crs->isATimeCrs() ? 0 : crs->getOriginDepthOrElevation();
 				zIndice = crs->isDepthOriented() ? -1. : 1.;
 			}
 			else

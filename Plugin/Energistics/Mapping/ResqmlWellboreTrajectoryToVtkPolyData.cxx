@@ -27,8 +27,8 @@ under the License.
 #include <vtkDoubleArray.h>
 
 // include F2i-consulting Energistics Standards API
+#include <fesapi/eml2/AbstractLocal3dCrs.h>
 #include <fesapi/resqml2/WellboreTrajectoryRepresentation.h>
-#include <fesapi/resqml2/AbstractLocal3dCrs.h>
 
 //----------------------------------------------------------------------------
 ResqmlWellboreTrajectoryToVtkPolyData::ResqmlWellboreTrajectoryToVtkPolyData(const resqml2::WellboreTrajectoryRepresentation *wellbore, uint32_t p_procNumber, uint32_t p_maxProc)

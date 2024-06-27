@@ -41,9 +41,9 @@ namespace common {
 }
 namespace eml2 {
 	class AbstractHdfProxy;
+	class AbstractLocal3dCrs;
 }
 namespace resqml2 {
-	class LocalDepth3dCrs;
 	class UnstructuredGridRepresentation;
 }
 
@@ -70,7 +70,7 @@ protected:
 	int RequestData(vtkInformation*, vtkInformationVector**, vtkInformationVector*) override;
 	void WriteData() override;
 
-	resqml2::UnstructuredGridRepresentation* writeUnstructuredGrid(common::DataObjectRepository&, eml2::AbstractHdfProxy*, resqml2::LocalDepth3dCrs*);
+	resqml2::UnstructuredGridRepresentation* writeUnstructuredGrid(common::DataObjectRepository&, eml2::AbstractHdfProxy*, eml2::AbstractLocal3dCrs*);
 	void writeProperties(common::DataObjectRepository&, eml2::AbstractHdfProxy*, resqml2::UnstructuredGridRepresentation*);
 
 	char* FileName = nullptr;

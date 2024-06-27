@@ -27,7 +27,6 @@ under the License.
 
 // include F2i-consulting Energistics Standards API
 #include <fesapi/resqml2/TriangulatedSetRepresentation.h>
-#include <fesapi/resqml2/AbstractLocal3dCrs.h>
 #include <fesapi/resqml2/AbstractValuesProperty.h>
 #include <fesapi/resqml2/SubRepresentation.h>
 

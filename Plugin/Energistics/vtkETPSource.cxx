@@ -18,23 +18,23 @@ under the License.
 -----------------------------------------------------------------------*/
 #include "vtkETPSource.h"
 
+#include <algorithm>
 #include <exception>
 #include <iterator>
-#include <algorithm>
 #include <limits>
 #include <thread>
 
+#include <vtkDataAssembly.h>
+#include <vtkDataObject.h>
 #include <vtkIndent.h>
 #include <vtkInformation.h>
 #include <vtkInformationVector.h>
-#include <vtkPartitionedDataSetCollection.h>
-#include <vtkDataAssembly.h>
-#include <vtkObjectFactory.h>
 #include <vtkMultiProcessController.h>
-#include <vtkStreamingDemandDrivenPipeline.h>
-#include <vtkDataObject.h>
-#include <vtkStdString.h>
+#include <vtkObjectFactory.h>
 #include <vtkPartitionedDataSet.h>
+#include <vtkPartitionedDataSetCollection.h>
+#include <vtkStdString.h>
+#include <vtkStreamingDemandDrivenPipeline.h>
 
 #include <VTK/vtkCustomProgressBar.h>
 
