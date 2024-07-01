@@ -120,7 +120,7 @@ vtkStringArray* vtkEPCReader::GetAllFiles() // call only by GUI
 
 void vtkEPCReader::SetFiles(const std::string& file)
 {
-	if (file != "0")
+	if (file != "0" && file != "1") //  => ArraySelectionDomain <= state of file
 	{
 		bool exist = false;
 		for (auto index = 0; index < Files->GetNumberOfValues(); ++index)

@@ -26,6 +26,7 @@ under the License.
 #include <vtkPartitionedDataSetCollectionAlgorithm.h>
 #include <vtkSmartPointer.h>
 #include <vtkStringArray.h>
+#include "vtkCommand.h" // For UserEvent
 
 #include "EnergisticsModule.h"
 #include "Mapping/ResqmlDataRepositoryToVtkPartitionedDataSetCollection.h"
@@ -33,6 +34,8 @@ under the License.
 class vtkDataAssembly;
 class vtkProperty;
 class vtkMultiProcessController;
+class vtkCallbackCommand;
+class vtkSMProxy;
 
 /**
  * A VTK reader for EPC document.
@@ -48,13 +51,27 @@ public:
 
 	///@{
 	/**
-    * API to set the filenames.
-    */
-	void AddFileNameToFiles(const char *fname);
+	* API to set the filenames.
+	*/
+	void AddFileNameToFiles(const char* fname);
 	void ClearFileName();
-	const char *GetFileName(int index) const;
+	const char* GetFileName(int index) const;
 	size_t GetNumberOfFileNames() const;
 	///@}
+
+	 ///@{
+  /**
+   * Get/Set the scene to be used by the reader
+   */
+	void SetFiles(const std::string& file);
+	///@}
+
+   /**
+	 * Get a list all file names as a vtkStringArray.
+	 */
+	vtkStringArray* GetAllFiles();
+
+	///@{
 
 
 	// --------------- PART: Multi-Processor -------------
@@ -69,19 +86,6 @@ public:
 	void SetController(vtkMultiProcessController *controller);
 	///@}
 
- ///@{
-  /**
-   * Get/Set the scene to be used by the reader
-   */
-  void SetFiles(const std::string& file);
-  ///@}
-	
- /**
-   * Get a list all file names as a vtkStringArray.
-   */
-  vtkStringArray* GetAllFiles();
-
-///@{
   /**
    * Assemblies provide yet another way of selection blocks/sets to load, if
    * available in the dataset. If a block (or set) is enabled either in the
