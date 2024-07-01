@@ -575,7 +575,7 @@ int ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchRepresentationS
 						if (targetObject->getUuid() == p_rsr->getUuid())
 						{
 							if (graphicalInformationSet->hasDefaultColor(targetObject)) {
-								unsigned int R, G, B;
+								uint8_t R, G, B;
 								graphicalInformationSet->getDefaultRgbColor(targetObject, R, G, B);
 								double dR, dG, dB;
 								graphicalInformationSet->getDefaultRgbColor(targetObject, dR, dG, dB);
