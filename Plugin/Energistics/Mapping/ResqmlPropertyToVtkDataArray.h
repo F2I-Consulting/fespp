@@ -29,6 +29,12 @@ namespace RESQML2_NS
 {
 	class AbstractValuesProperty;
 }
+namespace eml2
+{
+	class PropertyKind;
+}
+
+class vtkScalarsToColors;
 
 /** @brief	the data table of a property
  */
@@ -39,28 +45,34 @@ public:
 	/**
 	 * Constructor for multi-processor
 	 */
-	ResqmlPropertyToVtkDataArray(const RESQML2_NS::AbstractValuesProperty *resqmlProperty,
-								 uint64_t cellCount,
-								 uint64_t pointCount,
-								 uint32_t iCellCount,
-								 uint32_t jCellCount,
-								 uint32_t kCellCount,
-								 uint32_t initKIndex,
-								 uint64_t patch_index);
+	ResqmlPropertyToVtkDataArray(const RESQML2_NS::AbstractValuesProperty* resqmlProperty,
+		uint64_t cellCount,
+		uint64_t pointCount,
+		uint32_t iCellCount,
+		uint32_t jCellCount,
+		uint32_t kCellCount,
+		uint32_t initKIndex,
+		uint64_t patch_index);
 
 	/**
 	 * Constructor
 	 */
-	ResqmlPropertyToVtkDataArray(RESQML2_NS::AbstractValuesProperty const *resqmlProperty,
-								 uint64_t cellCount,
-								 uint64_t pointCount,
-								 uint64_t patch_index);
+	ResqmlPropertyToVtkDataArray(RESQML2_NS::AbstractValuesProperty const* resqmlProperty,
+		uint64_t cellCount,
+		uint64_t pointCount,
+		uint64_t patch_index);
 
 	~ResqmlPropertyToVtkDataArray() = default;
 
 	vtkSmartPointer<vtkDataArray> getVtkData() { return dataArray; }
 
 private:
+	uint64_t isSupported(RESQML2_NS::AbstractValuesProperty const* resqmlProperty,
+		uint64_t cellCount,
+		uint64_t pointCount);
+
+	void applyResqmlPropKindColorMapToVtkDataArray(eml2::PropertyKind* propertyKind);
+
 	vtkSmartPointer<vtkDataArray> dataArray;
 };
 #endif

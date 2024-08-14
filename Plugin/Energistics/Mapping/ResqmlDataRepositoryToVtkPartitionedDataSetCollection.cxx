@@ -563,7 +563,7 @@ int ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchRepresentationS
 			_output->GetDataAssembly()->SetAttribute(p_nodeId, "label", w_vtkValidName.c_str());
 			_output->GetDataAssembly()->SetAttribute(p_nodeId, "type", std::to_string(static_cast<int>(TreeViewNodeType::Collection)).c_str());
 
-			// COLORS
+			// DefaultGraphicalInformation
 			std::vector<EML2_3_NS::GraphicalInformationSet*> gisSet = _repository->getDataObjects<EML2_3_NS::GraphicalInformationSet>();
 			for (unsigned int gisIndex = 0; gisIndex < gisSet.size(); ++gisIndex) {
 				EML2_3_NS::GraphicalInformationSet* graphicalInformationSet = gisSet[gisIndex];
