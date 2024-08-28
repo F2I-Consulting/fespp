@@ -267,7 +267,6 @@ void ResqmlPropertyToVtkDataArray::applyResqmlPropKindColorMapToVtkDataArray(eml
 				{
 					if (graphicalInformationSet->hasContinuousColorMap(targetObject))
 					{
-						RESQML2_NS::ContinuousColorMap* continuousColorMap = graphicalInformationSet->getContinuousColorMap(targetObject);
 						vtkSMSessionProxyManager* activeSessionProxyManager = vtkSMProxyManager::GetProxyManager()->GetActiveSessionProxyManager();
 						if (!activeSessionProxyManager)
 						{
@@ -284,33 +283,105 @@ void ResqmlPropertyToVtkDataArray::applyResqmlPropKindColorMapToVtkDataArray(eml
 							}
 							else
 							{
-								/*
-								<resqml22:UseLogarithmicMapping xmlns : xsd = "http://www.w3.org/2001/XMLSchema" xsi : type = "xsd:boolean">false< / resqml22:UseLogarithmicMapping>
+								/* GIS
+									<resqml22:UseLogarithmicMapping xmlns : xsd = "http://www.w3.org/2001/XMLSchema" xsi : type = "xsd:boolean">false< / resqml22:UseLogarithmicMapping>
 									<resqml22:UseReverseMapping xmlns : xsd = "http://www.w3.org/2001/XMLSchema" xsi : type = "xsd:boolean">false< / resqml22:UseReverseMapping>
-
-										<resqml22:NullColor xsi:type="resqml22:HsvColor">
-											<resqml22:InterpolationMethod xsi:type="resqml22:InterpolationMethod">linear</resqml22:InterpolationMethod>
-									*/
+								*/
 								double* range;
 								if (graphicalInformationSet->hasColorMapMinMax(targetObject)) {
 									range[0] = graphicalInformationSet->getColorMapMin(targetObject);
 									range[1] = graphicalInformationSet->getColorMapMax(targetObject);
 								}
 								else { // get range data values
-									double* range = dataArray->GetRange();
+									range = dataArray->GetRange();
 								}
 
+								RESQML2_NS::ContinuousColorMap* continuousColorMap = graphicalInformationSet->getContinuousColorMap(targetObject);
 
+								double nanColor[3] = { 1.0 /*RED*/, 1.0 /*GREEN*/, 0.0 /*BLUE*/ }; //default paraview value
+								if (continuousColorMap->hasNullColor())
+								{
+									continuousColorMap->getNullRgbColor(nanColor[0], nanColor[1], nanColor[2]);
 
+									vtkSMPropertyHelper(lutProxy, "NanColor").Set(0, nanColor[0]);
+									vtkSMPropertyHelper(lutProxy, "NanColor").Set(1, nanColor[1]);
+									vtkSMPropertyHelper(lutProxy, "NanColor").Set(2, nanColor[2]);
+									
+									vtkSMPropertyHelper(lutProxy, "NanOpacity").Set(continuousColorMap->getNullAlpha());
+								}
+
+								/* name="ColorSpace"
+								        <EnumerationDomain name="enum">
+											<Entry text="RGB" value="0" />
+											<Entry text="HSV" value="1" />
+											<Entry text="Lab" value="2" />
+											<Entry text="Diverging" value="3" />
+											<Entry text="Lab/CIEDE2000" value="4" />
+											<Entry text="Step" value="5" />
+										</EnumerationDomain>
+								*/
+								if (continuousColorMap->getInterpolationDomain() == gsoap_eml2_3::resqml22__InterpolationDomain::hsv)
+								{
+									vtkSMPropertyHelper(lutProxy, "ColorSpace").Set(1);
+								}
+								else if (continuousColorMap->getInterpolationDomain() == gsoap_eml2_3::resqml22__InterpolationDomain::rgb)
+								{
+									vtkSMPropertyHelper(lutProxy, "ColorSpace").Set(0);
+								}
+
+								std::vector<double> colors;
+								std::vector<double> opacities;
+								colors.reserve(continuousColorMap->getColorCount() * 4);
+								opacities.reserve(continuousColorMap->getColorCount() * 2);
+								double color[3] = { 0.0 /*RED*/, 0.0 /*GREEN*/, 0.0 /*BLUE*/ };
+								for (unsigned int colorIndex = 0; colorIndex < continuousColorMap->getColorCount(); ++colorIndex) {
+									int64_t location = continuousColorMap->getColorLocationInColorMap(colorIndex);
+									continuousColorMap->getRgbColor(colorIndex, color[0], color[1], color[2]);
+
+									colors.push_back(continuousColorMap->getColorLocationInColorMap(colorIndex));
+									colors.push_back(color[0]);
+									colors.push_back(color[1]);
+									colors.push_back(color[2]);
+
+									opacities.push_back(continuousColorMap->getColorLocationInColorMap(colorIndex));
+									opacities.push_back(continuousColorMap->getAlpha(colorIndex));
+									opacities.push_back(0.5);
+									opacities.push_back(0.0);
+								}
+
+								/* name = "AutomaticRescaleRangeMode"
+									<EnumerationDomain name = "enum">
+										<Entry value = "-1" text = "Never" / >
+										<Entry value = "0" text = "Grow and update on 'Apply'" / >
+										<Entry value = "1" text = "Grow and update every timestep" / >
+										<Entry value = "2" text = "Update on 'Apply'" / >
+										<Entry value = "3" text = "Clamp and update every timestep" / >
+									< / EnumerationDomain>
+								*/
+								vtkSMPropertyHelper(lutProxy, "AutomaticRescaleRangeMode").Set(-1); 
+								vtkSMPropertyHelper(lutProxy, "RGBPoints").Set(colors.data(), colors.size());
+								
+								vtkSMTransferFunctionProxy* opacityProxy = vtkSMTransferFunctionProxy::SafeDownCast(mgr->GetOpacityTransferFunction(dataArray->GetName(), activeSessionProxyManager));
+								if (!opacityProxy)
+								{
+									vtkOutputWindowDisplayErrorText((std::string(dataArray->GetName()) + " not found.\n").c_str());
+								}
+								else
+								{
+									vtkSMPropertyHelper(lutProxy, "EnableOpacityMapping").Set(1);
+
+									vtkSMPropertyHelper(opacityProxy, "Points").Set(opacities.data(), opacities.size());
+									
+									opacityProxy->UpdateVTKObjects();
+								}
 								lutProxy->UpdateVTKObjects();
+
 							}
 						}
 					}
 					else if (graphicalInformationSet->hasDiscreteColorMap(targetObject))
 					{
 					
-						RESQML2_NS::DiscreteColorMap* discreteColorMap = graphicalInformationSet->getDiscreteColorMap(targetObject);
-
 						vtkSMSessionProxyManager* activeSessionProxyManager = vtkSMProxyManager::GetProxyManager()->GetActiveSessionProxyManager();
 						if (!activeSessionProxyManager)
 						{
@@ -327,8 +398,9 @@ void ResqmlPropertyToVtkDataArray::applyResqmlPropKindColorMapToVtkDataArray(eml
 							}
 							else
 							{
+								RESQML2_NS::DiscreteColorMap* discreteColorMap = graphicalInformationSet->getDiscreteColorMap(targetObject);
+
 								vtkSMPropertyHelper(lutProxy, "IndexedLookup", true).Set(1);
-								std::vector<double> colors;
 
 								bool hasNullColor = discreteColorMap->hasNullColor();
 								uint64_t nbColors = discreteColorMap->getColorCount();
@@ -336,6 +408,8 @@ void ResqmlPropertyToVtkDataArray::applyResqmlPropKindColorMapToVtkDataArray(eml
 								vtkSMPropertyHelper(lutProxy, "Annotations").SetNumberOfElements(0);
 								vtkSMPropertyHelper(lutProxy, "Annotations").SetNumberOfElements(hasNullColor? nbColors +1: nbColors);
 
+								std::vector<double> colors;
+								colors.reserve(hasNullColor ? (nbColors + 1) * 3 : nbColors * 3);
 								double color[3] = { 0.0 /*RED*/, 0.0 /*GREEN*/, 0.0 /*BLUE*/ };
 								for (unsigned int colorIndex = 0; colorIndex < nbColors; ++colorIndex) {
 									int64_t location = discreteColorMap->getColorLocationInColorMap(colorIndex);
@@ -352,7 +426,7 @@ void ResqmlPropertyToVtkDataArray::applyResqmlPropKindColorMapToVtkDataArray(eml
 								if (discreteColorMap->hasNullColor())
 								{
 									discreteColorMap->getNullRgbColor(nanColor[0], nanColor[1], nanColor[2]);
-
+									
 									vtkSMPropertyHelper(lutProxy, "NanColor").Set(0, nanColor[0]);
 									vtkSMPropertyHelper(lutProxy, "NanColor").Set(1, nanColor[1]);
 									vtkSMPropertyHelper(lutProxy, "NanColor").Set(2, nanColor[2]);
@@ -362,7 +436,6 @@ void ResqmlPropertyToVtkDataArray::applyResqmlPropKindColorMapToVtkDataArray(eml
 									colors.push_back(nanColor[1]);
 									colors.push_back(nanColor[2]);
 								}
-								
 								vtkSMPropertyHelper(lutProxy, "IndexedColors").Set(colors.data(), colors.size());
 
 								lutProxy->UpdateVTKObjects();
