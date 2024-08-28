@@ -50,36 +50,40 @@ void ResqmlAbstractRepresentationToVtkPartitionedDataSet::addDataArray(const std
 	std::vector<RESQML2_NS::AbstractValuesProperty *>::iterator w_it = std::find_if(w_valuesPropertySet.begin(), w_valuesPropertySet.end(),
 																					[&p_uuid](RESQML2_NS::AbstractValuesProperty const *w_property)
 																					{ return w_property->getUuid() == p_uuid; });
+
 	if (w_it != std::end(w_valuesPropertySet))
 	{
-		auto const *const w_resqmlProp = *w_it;
-		ResqmlPropertyToVtkDataArray *w_fesppProperty = _isHyperslabed
-														  ? new ResqmlPropertyToVtkDataArray(w_resqmlProp,
-																							 _iCellCount * _jCellCount * (_maxKIndex - _initKIndex),
-																							 _pointCount,
-																							 _iCellCount,
-																							 _jCellCount,
-																							 _maxKIndex - _initKIndex,
-																							 _initKIndex,
-																							 p_patchIndex)
-														  : new ResqmlPropertyToVtkDataArray(w_resqmlProp,
-																							 _iCellCount * _jCellCount * _kCellCount,
-																							 _pointCount,
-																							 p_patchIndex);
-		switch (w_resqmlProp->getAttachmentKind())
+		if (_uuidToVtkDataArray.count(p_uuid) == 0) // create new property
 		{
-		case gsoap_eml2_3::eml23__IndexableElement::cells:
-		case gsoap_eml2_3::eml23__IndexableElement::triangles:
-			_vtkData->GetPartition(0)->GetCellData()->AddArray(w_fesppProperty->getVtkData());
-			break;
-		case gsoap_eml2_3::eml23__IndexableElement::nodes:
-			_vtkData->GetPartition(0)->GetPointData()->AddArray(w_fesppProperty->getVtkData());
-			break;
-		default:
-			throw std::invalid_argument("The property " + p_uuid + " is attached on a non supported topological element i.e. not cell, not point.");
+			auto const* const w_resqmlProp = *w_it;
+			ResqmlPropertyToVtkDataArray* w_fesppProperty = _isHyperslabed
+				? new ResqmlPropertyToVtkDataArray(w_resqmlProp,
+					_iCellCount * _jCellCount * (_maxKIndex - _initKIndex),
+					_pointCount,
+					_iCellCount,
+					_jCellCount,
+					_maxKIndex - _initKIndex,
+					_initKIndex,
+					p_patchIndex)
+				: new ResqmlPropertyToVtkDataArray(w_resqmlProp,
+					_iCellCount * _jCellCount * _kCellCount,
+					_pointCount,
+					p_patchIndex);
+			switch (w_resqmlProp->getAttachmentKind())
+			{
+			case gsoap_eml2_3::eml23__IndexableElement::cells:
+			case gsoap_eml2_3::eml23__IndexableElement::triangles:
+				_vtkData->GetPartition(0)->GetCellData()->AddArray(w_fesppProperty->getVtkData());
+				break;
+			case gsoap_eml2_3::eml23__IndexableElement::nodes:
+				_vtkData->GetPartition(0)->GetPointData()->AddArray(w_fesppProperty->getVtkData());
+				break;
+			default:
+				throw std::invalid_argument("The property " + p_uuid + " is attached on a non supported topological element i.e. not cell, not point.");
+			}
+			_uuidToVtkDataArray[p_uuid] = w_fesppProperty;
+			_vtkData->Modified();
 		}
-		_uuidToVtkDataArray[p_uuid] = w_fesppProperty;
-		_vtkData->Modified();
 	}
 	else
 	{
