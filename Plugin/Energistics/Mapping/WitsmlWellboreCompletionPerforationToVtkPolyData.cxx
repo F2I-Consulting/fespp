@@ -39,13 +39,13 @@ under the License.
 
 #include <vtkCellData.h>
 
+#include <fesapi/eml2/AbstractLocal3dCrs.h>
+#include <fesapi/eml2/GraphicalInformationSet.h>
 #include <fesapi/witsml2_1/WellboreCompletion.h>
 #include <fesapi/resqml2/MdDatum.h>
 #include <fesapi/resqml2/WellboreFeature.h>
 #include <fesapi/resqml2/WellboreInterpretation.h>
 #include <fesapi/resqml2/WellboreTrajectoryRepresentation.h>
-#include <fesapi/resqml2/AbstractLocal3dCrs.h>
-#include <fesapi/eml2/GraphicalInformationSet.h>
 
 WitsmlWellboreCompletionPerforationToVtkPolyData::WitsmlWellboreCompletionPerforationToVtkPolyData(const resqml2::WellboreTrajectoryRepresentation *wellboreTrajectory, const WITSML2_1_NS::WellboreCompletion *wellboreCompletion, const std::string &connectionuid, const std::string &title, const double skin, uint32_t p_procNumber, uint32_t p_maxProc)
 	: CommonAbstractObjectToVtkPartitionedDataSet(wellboreCompletion,

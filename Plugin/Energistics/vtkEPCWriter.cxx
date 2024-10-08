@@ -35,11 +35,11 @@ under the License.
 #include <vtkPointData.h>
 #include <vtkUnstructuredGrid.h>
 
+#include "fesapi/common/DataObjectRepository.h"
 #include "fesapi/common/EpcDocument.h"
 #include "fesapi/eml2/AbstractHdfProxy.h"
-#include "fesapi/common/DataObjectRepository.h"
+#include "fesapi/eml2/AbstractLocal3dCrs.h"
 #include "fesapi/resqml2_0_1/DiscreteProperty.h"
-#include "fesapi/resqml2/LocalDepth3dCrs.h"
 #include "fesapi/resqml2_0_1/ContinuousProperty.h"
 #include "fesapi/resqml2_0_1/PropertyKind.h"
 #include "fesapi/resqml2_0_1/UnstructuredGridRepresentation.h"
@@ -110,16 +110,16 @@ void vtkEPCWriter::WriteData()
 	common::AbstractObject::setFormat("F2I-CONSULTING", "FESPP", PROJECT_VERSION);
 	eml2::AbstractHdfProxy* hdfProxy = repo.createHdfProxy("", "Hdf Proxy", epcDoc.getStorageDirectory(), epcDoc.getName() + ".h5", COMMON_NS::DataObjectRepository::openingMode::OVERWRITE);
 
-	resqml2::LocalDepth3dCrs* local3dCrs = repo.createLocalDepth3dCrs("", "Default local CRS", .0, .0, .0, .0, gsoap_resqml2_0_1::eml20__LengthUom::m, "ParaView does not support CRS", gsoap_resqml2_0_1::eml20__LengthUom::m, "ParaView does not support CRS", true);
+	EML2_NS::AbstractLocal3dCrs* local3dCrs = repo.createLocalDepth3dCrs("", "Default local CRS", .0, .0, .0, .0, gsoap_resqml2_0_1::eml20__LengthUom::m, "ParaView does not support CRS", gsoap_resqml2_0_1::eml20__LengthUom::m, "ParaView does not support CRS", true);
 	repo.setDefaultCrs(local3dCrs);
 
 	if (!Internal->discretePropertyKind)
 	{
-		Internal->discretePropertyKind = repo.createPropertyKind("", "Discrete PropKind", "Fespp", gsoap_resqml2_0_1::resqml20__ResqmlUom::Euc, gsoap_resqml2_0_1::resqml20__ResqmlPropertyKind::discrete);
+		Internal->discretePropertyKind = repo.createPropertyKind("", "Discrete PropKind", "Fespp", gsoap_resqml2_0_1::resqml20__ResqmlUom::Euc, false, gsoap_resqml2_0_1::resqml20__ResqmlPropertyKind::discrete);
 	} // already exist
 	if (!Internal->continousPropertyKind)
 	{
-		Internal->continousPropertyKind = repo.createPropertyKind("", "Continous PropKind", "Fespp", gsoap_resqml2_0_1::resqml20__ResqmlUom::Euc, gsoap_resqml2_0_1::resqml20__ResqmlPropertyKind::continuous);
+		Internal->continousPropertyKind = repo.createPropertyKind("", "Continous PropKind", "Fespp", gsoap_resqml2_0_1::resqml20__ResqmlUom::Euc, false, gsoap_resqml2_0_1::resqml20__ResqmlPropertyKind::continuous);
 	} // already exist
 
 	if (Internal->dataType == VTK_UNSTRUCTURED_GRID)
@@ -236,7 +236,7 @@ void vtkEPCWriter::writeProperties(COMMON_NS::DataObjectRepository& repo, EML2_N
 }
 
 
-RESQML2_NS::UnstructuredGridRepresentation* vtkEPCWriter::writeUnstructuredGrid(COMMON_NS::DataObjectRepository& repo, EML2_NS::AbstractHdfProxy* hdfProxy, RESQML2_NS::LocalDepth3dCrs* local3dCrs)
+RESQML2_NS::UnstructuredGridRepresentation* vtkEPCWriter::writeUnstructuredGrid(COMMON_NS::DataObjectRepository& repo, EML2_NS::AbstractHdfProxy* hdfProxy, EML2_NS::AbstractLocal3dCrs* local3dCrs)
 {
 
 	std::vector<double> w_points = getUnstructuredGridPoints();
