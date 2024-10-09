@@ -159,7 +159,7 @@ void vtkEPCWriter::writeProperties(COMMON_NS::DataObjectRepository& repo, EML2_N
 
 	// passer en vtkGenericDataArray pour le type
 	vtkPointData* w_pointData = Internal->inputUnstructuredGrid->GetPointData();
-	for (uint32_t i = 0; i < w_pointData->GetNumberOfArrays(); ++i)
+	for (int i = 0; i < w_pointData->GetNumberOfArrays(); ++i)
 	{
 		vtkDataArray* w_array = Internal->inputUnstructuredGrid->GetPointData()->GetArray(i);
 		vtkIntArray* w_intArray = dynamic_cast<vtkIntArray*>(w_array);
@@ -197,7 +197,7 @@ void vtkEPCWriter::writeProperties(COMMON_NS::DataObjectRepository& repo, EML2_N
 	}
 
 	vtkCellData* w_cellData = Internal->inputUnstructuredGrid->GetCellData();
-	for (uint32_t i = 0; i < w_cellData->GetNumberOfArrays(); i++)
+	for (int i = 0; i < w_cellData->GetNumberOfArrays(); i++)
 	{
 		vtkDataArray* w_array = Internal->inputUnstructuredGrid->GetCellData()->GetArray(i);
 		vtkIntArray* w_intArray = dynamic_cast<vtkIntArray*>(w_array);
@@ -246,7 +246,7 @@ RESQML2_NS::UnstructuredGridRepresentation* vtkEPCWriter::writeUnstructuredGrid(
 	std::vector<uint64_t> faceIndicesCumulativeCountPerCell;
 	std::vector<uint8_t> faceRightHandness;
 
-	uint64_t numberOfCells = Internal->inputUnstructuredGrid->GetNumberOfCells();
+	vtkIdType numberOfCells = Internal->inputUnstructuredGrid->GetNumberOfCells();
 
 	for (vtkIdType cellId = 0; cellId < numberOfCells; ++cellId)
 	{
