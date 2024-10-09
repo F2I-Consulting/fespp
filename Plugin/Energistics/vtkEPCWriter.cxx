@@ -115,11 +115,11 @@ void vtkEPCWriter::WriteData()
 
 	if (!Internal->discretePropertyKind)
 	{
-		Internal->discretePropertyKind = repo.createPropertyKind("", "Discrete PropKind", "Fespp", gsoap_resqml2_0_1::resqml20__ResqmlUom::Euc, gsoap_resqml2_0_1::resqml20__ResqmlPropertyKind::discrete);
+		Internal->discretePropertyKind = repo.createPropertyKind("", "Discrete PropKind", "Fespp", gsoap_resqml2_0_1::resqml20__ResqmlUom::Euc, false, gsoap_resqml2_0_1::resqml20__ResqmlPropertyKind::discrete);
 	} // already exist
 	if (!Internal->continousPropertyKind)
 	{
-		Internal->continousPropertyKind = repo.createPropertyKind("", "Continous PropKind", "Fespp", gsoap_resqml2_0_1::resqml20__ResqmlUom::Euc, gsoap_resqml2_0_1::resqml20__ResqmlPropertyKind::continuous);
+		Internal->continousPropertyKind = repo.createPropertyKind("", "Continous PropKind", "Fespp", gsoap_resqml2_0_1::resqml20__ResqmlUom::Euc, false, gsoap_resqml2_0_1::resqml20__ResqmlPropertyKind::continuous);
 	} // already exist
 
 	if (Internal->dataType == VTK_UNSTRUCTURED_GRID)

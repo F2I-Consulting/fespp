@@ -1,21 +1,26 @@
+# F2I Energistics Standard Paraview Plugin
+
+## INTRODUCTION
+FESPP is a plugin for Paraview which allows the visualization of some Energistics data (mainly RESQML ones) stored in an EPC document and/or an ETP server such as the OSDU RDDMS.
+
 ## WINDOWS BINARIES
-- Please download the windows binaries of Fespp in the [release section](https://github.com/F2I-Consulting/fespp/releases) and follow instructions of the README.txt contained in the zip.
-- If you want to build Fespp by your own, look below for instructions.
+- Please download the Windows binaries of FESPP in the [release section](https://github.com/F2I-Consulting/fespp/releases) and follow instructions of the README.txt contained in the zip.
+- If you want to build FESPP by your own, look below for instructions.
 
 ## BUILD dependencies
-- [FESAPI v2.10.0.0](https://github.com/F2I-Consulting/fesapi/releases/tag/v2.10.0.0)
-- ParaView with same HDF5 libraries used by FESAPI + python
+- [FESAPI v2.10.X.X](https://github.com/F2I-Consulting/fesapi/releases/tag/v2.10.1.0)
+- ParaView dynamically linked to the same HDF5 libraries as FESAPI (if FESAPI is dynamically linked to HDF5)
 	 > known to work on Linux and Windows starting from ParaView 5.11.0
 
-## BUILD & INSTALL Fespp
-1. **CONFIGURE** Fespp with CMAKE
+## BUILD & INSTALL FESPP
+1. **CONFIGURE** FESPP with CMAKE
 You should fill in the following variables
-   - FESAPI_ROOT : The path to the folder containing include and lib folders of FESAPI v2.10.0.0 as a minimal version (using [our own cmake find module](./cmake/modules/FindFESAPI.cmake))
+   - FESAPI_ROOT : The path to the folder containing include and lib folders of FESAPI v2.10.X.Y (using [our own cmake find module](./cmake/modules/FindFESAPI.cmake))
    - ParaView_DIR = path_to_paraview_build
-   - OPTIONALLY, for (experimental) ETP support, you will need FETPAPI (v0.1.0.0 as a minimal version) support (see [here](https://github.com/F2I-Consulting/fetpapi) for documentation on how to build fetpapi). Please enable the WITH_ETP_SSL variable and usually set the following variables :
+   - OPTIONALLY, for (experimental) ETP support, you will need FETPAPI (v0.2.0.0 as a minimal version) support (see [here](https://github.com/F2I-Consulting/fetpapi) for documentation on how to build fetpapi). Please enable the WITH_ETP_SSL variable and usually set the following variables :
      - FETPAPI_INCLUDE_DIR = path_to_FETPAPI_install/include
      - FETPAPI_LIBRARY_RELEASE = path_to_FETPAPI_install/lib/libFetpapiCpp.so
-     - FETPAPI_LIBRARY_DEBUG = path_to_FETPAPI_install/lib/libFeetpapiCppd.so
+     - FETPAPI_LIBRARY_DEBUG = path_to_FETPAPI_install/lib/libFetpapiCppd.so
 	 - (ONLY IF NOT AUTOMATICALLY FOUND) Boost_INCLUDE_DIR : the directory where you can find the directory named "boost" which contain all BOOST headers
 	 - (ONLY IF NOT AUTOMATICALLY FOUND) AVRO_ROOT : The path to the folder containing include and lib folders of AVRO (we use [our own cmake find module](./cmake/modules/FindAVRO.cmake))
 2. **GENERATE** the build solution with CMAKE once the CONFIGURE step is OK
@@ -25,13 +30,13 @@ You should fill in the following variables
 	- in the paraview_install/Plugins/Fespp folder on Linux:
 	   - libFesapiCpp.so (from FESAPI install lib directory)
 	   - libFesapiCpp.so.2.10 (from FESAPI install lib directory)
-	   - libFesapiCpp.so.2.10.0.0 (from FESAPI install lib directory)
+	   - libFesapiCpp.so.2.10.X.Y (from FESAPI install lib directory)
    
 	- in the paraview_install\Plugins\Fespp folder on Windows:
-	   - FesapiCpp.2.10.0.0.dll (from FESAPI install)
+	   - FesapiCpp.2.10.X.Y.dll (from FESAPI install)
 
 - **Note 1** : If they exist (which probably not), you also need to copy FESAPI dependencies in this paraview_install\Plugins\Fespp folder. Or to put them in the (LD_LIBRARY_)PATH.
-- **Note 2** : On Linux at least, you need to build Paraview with VTK_MODULE_USE_EXTERNAL_VTK_hdf5=ON and VTK_MODULE_USE_EXTERNAL_VTK_zlib=ON for using the same HDF5 libraries in PV and Fespp. We use statically link HDF5 with FESAPI for our Windows build.
+- **Note 2** : On Linux at least, you need to build Paraview with VTK_MODULE_USE_EXTERNAL_VTK_hdf5=ON and VTK_MODULE_USE_EXTERNAL_VTK_zlib=ON for using the same HDF5 libraries in PV and FESPP. We use statically link HDF5 with FESAPI for our Windows build.
 
 ## Execution
 1. Only if you use MPI ParaView version, **Run** the **Paraview server** (Caution : use **MPI** build of ParaView!!!) : 

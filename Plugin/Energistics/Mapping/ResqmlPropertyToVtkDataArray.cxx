@@ -254,10 +254,8 @@ uint64_t ResqmlPropertyToVtkDataArray::isSupported(resqml2::AbstractValuesProper
 
 void ResqmlPropertyToVtkDataArray::applyResqmlPropKindColorMapToVtkDataArray(eml2::PropertyKind* propertyKind)
 {
-	std::vector<EML2_3_NS::GraphicalInformationSet*> gisSet = propertyKind->getRepository()->getDataObjects<EML2_3_NS::GraphicalInformationSet>();
-	for (unsigned int gisIndex = 0; gisIndex < gisSet.size(); ++gisIndex)
+	for (auto const* graphicalInformationSet: propertyKind->getRepository()->getGraphicalInformationSetSet())
 	{
-		EML2_3_NS::GraphicalInformationSet* graphicalInformationSet = gisSet[gisIndex];
 		for (unsigned int i = 0; i < graphicalInformationSet->getGraphicalInformationSetCount(); ++i)
 		{
 			for (unsigned int targetIndex = 0; targetIndex < graphicalInformationSet->getTargetObjectCount(i); ++targetIndex)
@@ -287,13 +285,13 @@ void ResqmlPropertyToVtkDataArray::applyResqmlPropKindColorMapToVtkDataArray(eml
 									<resqml22:UseLogarithmicMapping xmlns : xsd = "http://www.w3.org/2001/XMLSchema" xsi : type = "xsd:boolean">false< / resqml22:UseLogarithmicMapping>
 									<resqml22:UseReverseMapping xmlns : xsd = "http://www.w3.org/2001/XMLSchema" xsi : type = "xsd:boolean">false< / resqml22:UseReverseMapping>
 								*/
-								double* range;
+								double range[2];
 								if (graphicalInformationSet->hasColorMapMinMax(targetObject)) {
 									range[0] = graphicalInformationSet->getColorMapMin(targetObject);
 									range[1] = graphicalInformationSet->getColorMapMax(targetObject);
 								}
 								else { // get range data values
-									range = dataArray->GetRange();
+									dataArray->GetRange(range);
 								}
 
 								RESQML2_NS::ContinuousColorMap* continuousColorMap = graphicalInformationSet->getContinuousColorMap(targetObject);

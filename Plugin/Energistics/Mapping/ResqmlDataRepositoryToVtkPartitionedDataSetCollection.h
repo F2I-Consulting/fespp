@@ -114,7 +114,6 @@ private:
 	void selectNodeIdParent(int p_nodeId);
 	void selectNodeIdChildren(int p_nodeId);
 
-
 	/**
 	 * delete _oldSelection mapper
 	 */
