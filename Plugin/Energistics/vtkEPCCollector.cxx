@@ -69,6 +69,11 @@ vtkCxxSetObjectMacro(vtkEPCCollector, Controller, vtkMultiProcessController);
 vtkEPCCollector::vtkEPCCollector() : Files(vtkStringArray::New()),
 Controller(nullptr),
 AssemblyTag(0),
+ExtractTag(0),
+DataSetList(vtkStringArray::New()),
+DataSetListSelection({}),
+DataSetListForCopy(vtkStringArray::New()),
+DataSetListSelectionForCopy({}),
 MarkerOrientation(true),
 MarkerSize(10),
 colorApplyLoading(false)
@@ -212,6 +217,7 @@ bool vtkEPCCollector::AddSelector(const char* path)
 void vtkEPCCollector::ClearSelectors()
 {
 	repository.clearSelection();
+	ExtractTag = 1;
 	DataSetList = vtkStringArray::New();
 	if (!selectors.empty())
 	{
@@ -315,6 +321,12 @@ int vtkEPCCollector::RequestData(vtkInformation* info,
 	{
 		vtkWarningMacro(<< e.what());
 	}
+	if (GetOutput())
+	{
+		vtkSmartPointer < vtkPartitionedDataSetCollection> pdc = GetOutput();
+		ExtractTag = pdc->GetNumberOfPartitionedDataSets() > 0 ? 0 : 1;
+		Modified();
+	}
 	return 1;
 }
 
@@ -333,3 +345,268 @@ vtkDataAssembly* vtkEPCCollector::GetAssembly()
 	return dinfo->GetDataAssembly();
 }
 
+//------------------------------------------------------------------------------
+// For extract by reference: clear selection
+void vtkEPCCollector::ClearDataSetList()
+{
+	DataSetListSelection.clear();
+}
+
+//------------------------------------------------------------------------------
+// For extract by reference: each block with selection status
+void vtkEPCCollector::SetDataSetList(const char* name, int status)
+{
+	if (status == 1)
+	{
+		vtkSMProxyManager* proxyManager = vtkSMProxyManager::GetProxyManager();
+		vtkSMSession* session = proxyManager->GetActiveSession();
+
+		vtkSMSourceProxy* readerProxy = nullptr;
+		vtkNew<vtkSMProxyIterator> iterProxy;
+		iterProxy->SetSession(session);
+		for (iterProxy->Begin("sources"); !iterProxy->IsAtEnd(); iterProxy->Next())
+		{
+			vtkSMSourceProxy* sourceProxy = vtkSMSourceProxy::SafeDownCast(iterProxy->GetProxy());
+			if (sourceProxy && sourceProxy->GetClientSideObject() == this)
+			{
+				readerProxy = sourceProxy;
+				break;
+			}
+		}
+
+		if (readerProxy)
+		{
+			this->Extract(readerProxy, DataSetList->LookupValue(name));
+		}
+	}
+}
+
+//------------------------------------------------------------------------------
+// Call only by GUI: for extract by reference selection of blocks
+vtkStringArray* vtkEPCCollector::GetAllDataSet()
+{
+	return GetHierarchyBlocks("REFERENCE");
+}
+
+//------------------------------------------------------------------------------
+// For extract with copy: clear selection
+// 
+// ! important: (1) DataSetListForCopy is last declare in properties xml 
+//
+void vtkEPCCollector::ClearDataSetListForCopy()
+{
+	DataSetListSelectionForCopy.clear();
+
+	this->ClearExtractAndCopy(); // (1) 
+}
+
+//------------------------------------------------------------------------------
+// For extract with copy: each block with selection status
+void vtkEPCCollector::SetDataSetListForCopy(const char* name, int status)
+{
+	if (status == 1)
+	{
+		vtkSMProxyManager* proxyManager = vtkSMProxyManager::GetProxyManager();
+		vtkSMSession* session = proxyManager->GetActiveSession();
+
+		vtkSMSourceProxy* readerProxy = nullptr;
+		vtkNew<vtkSMProxyIterator> iterProxy;
+		iterProxy->SetSession(session);
+		for (iterProxy->Begin("sources"); !iterProxy->IsAtEnd(); iterProxy->Next())
+		{
+			vtkSMSourceProxy* sourceProxy = vtkSMSourceProxy::SafeDownCast(iterProxy->GetProxy());
+			if (sourceProxy && sourceProxy->GetClientSideObject() == this)
+			{
+				readerProxy = sourceProxy;
+				break;
+			}
+		}
+
+		if (readerProxy)
+		{
+			this->Copy(readerProxy, DataSetListForCopy->LookupValue(name));
+		}
+	}
+}
+
+//------------------------------------------------------------------------------
+// Call only by GUI: for extract with copy selection of blocks
+vtkStringArray* vtkEPCCollector::GetAllDataSetForCopy() 
+{
+	return GetHierarchyBlocks("COPY");
+}
+
+//----------------------------------------------------------------------------
+// Create a new EnergisticsExtractor sub-pipeline 
+void vtkEPCCollector::Extract(vtkSMSourceProxy* readerProxy, int index)
+{
+	vtkSMSessionProxyManager* sessionProxyManager = vtkSMProxyManager::GetProxyManager()->GetActiveSessionProxyManager();
+
+	vtkSmartPointer<vtkStringArray> list = nullptr;
+	std::map<std::string, bool> map;
+
+	list = DataSetList;
+
+	vtkSMSourceProxy* extract = vtkSMSourceProxy::SafeDownCast(sessionProxyManager->NewProxy("filters", "EnergisticsExtractor"));;
+
+	// set the input
+	vtkSMInputProperty* inputProperty = vtkSMInputProperty::SafeDownCast(extract->GetProperty("Input"));
+	inputProperty->SetInputConnection(0, readerProxy, 0);
+
+	vtkSMPropertyHelper(extract, "PartitionIndex").Set(index);
+	// TODO faire par PATH !!
+	for (const auto& node : GetAssembly()->GetChildNodes(0))
+	{
+		std::vector<unsigned int> indices = GetAssembly()->GetDataSetIndices(node);
+		if (!indices.empty() &&
+			(strcmp(GetAssembly()->GetAttributeOrDefault(node, "type", GetAssembly()->GetNodeName(node)), std::to_string(static_cast<int>(TreeViewNodeType::Representation)).c_str()) == 0 ||
+				strcmp(GetAssembly()->GetAttributeOrDefault(node, "type", GetAssembly()->GetNodeName(node)), std::to_string(static_cast<int>(TreeViewNodeType::SubRepresentation)).c_str()) == 0 ||
+				strcmp(GetAssembly()->GetAttributeOrDefault(node, "type", GetAssembly()->GetNodeName(node)), std::to_string(static_cast<int>(TreeViewNodeType::WellboreTrajectory)).c_str()) == 0 ||
+				strcmp(GetAssembly()->GetAttributeOrDefault(node, "type", GetAssembly()->GetNodeName(node)), std::to_string(static_cast<int>(TreeViewNodeType::WellboreChannel)).c_str()) == 0 ||
+				strcmp(GetAssembly()->GetAttributeOrDefault(node, "type", GetAssembly()->GetNodeName(node)), std::to_string(static_cast<int>(TreeViewNodeType::WellboreMarker)).c_str()) == 0 ||
+				strcmp(GetAssembly()->GetAttributeOrDefault(node, "type", GetAssembly()->GetNodeName(node)), std::to_string(static_cast<int>(TreeViewNodeType::Perforation)).c_str()) == 0
+				))
+		{
+			vtkOutputWindowDisplayText(GetAssembly()->GetNodePath(node).c_str());
+			vtkOutputWindowDisplayText("\n");
+			vtkSMPropertyHelper(extract, "ExtractPath").Set(GetAssembly()->GetNodePath(node).c_str());
+
+		}
+	}
+
+
+
+	extract->UpdateVTKObjects();
+	extract->UpdatePipelineInformation();
+
+	vtkNew<vtkSMParaViewPipelineController> controller;
+	controller->InitializeProxy(extract);
+	controller->RegisterPipelineProxy(extract, list->GetValue(index));
+}
+
+//----------------------------------------------------------------------------
+// Create a new vtkDataSet pipeline
+void vtkEPCCollector::Copy(vtkSMSourceProxy* readerProxy, int index)
+{
+	vtkSMSessionProxyManager* sessionProxyManager = vtkSMProxyManager::GetProxyManager()->GetActiveSessionProxyManager();
+
+	vtkSmartPointer<vtkStringArray> list = nullptr;
+	std::map<std::string, bool> map;
+
+	list = DataSetListForCopy;
+
+	vtkSMSourceProxy* producerCopyProxy = vtkSMSourceProxy::SafeDownCast(sessionProxyManager->NewProxy("sources", "PVTrivialProducer"));;
+	producerCopyProxy->UpdateVTKObjects();
+
+	auto* clientSideObject = producerCopyProxy->GetClientSideObject();
+	vtkPVTrivialProducer* realProducer = vtkPVTrivialProducer::SafeDownCast(clientSideObject);
+	if (realProducer)
+	{
+		vtkSmartPointer < vtkPartitionedDataSetCollection> pdc = repository.getVtkPartitionedDatasSetCollection();
+		vtkPartitionedDataSet* partitionedDataSet = pdc->GetPartitionedDataSet(index);
+		realProducer->SetOutput(partitionedDataSet->GetPartitionAsDataObject(0));
+	}
+
+	sessionProxyManager->RegisterProxy("sources", list->GetValue(index), producerCopyProxy);
+}
+
+//----------------------------------------------------------------------------
+// Clear property Extract with and without copy
+void vtkEPCCollector::ClearExtractAndCopy()
+{
+	vtkSMProxyManager* proxyManager = vtkSMProxyManager::GetProxyManager();
+	vtkSMSession* session = proxyManager->GetActiveSession();
+
+	vtkSMSourceProxy* readerProxy = nullptr;
+	vtkNew<vtkSMProxyIterator> iterProxy;
+	iterProxy->SetSession(session);
+	for (iterProxy->Begin("sources"); !iterProxy->IsAtEnd(); iterProxy->Next())
+	{
+		vtkSMSourceProxy* sourceProxy = vtkSMSourceProxy::SafeDownCast(iterProxy->GetProxy());
+		if (sourceProxy && sourceProxy->GetClientSideObject() == this)
+		{
+			readerProxy = sourceProxy;
+			break;
+		}
+	}
+
+	if (readerProxy)
+	{
+
+		// reset extract selection
+		vtkSmartPointer<vtkSMPropertyIterator> iterProperty;
+		iterProperty.TakeReference(readerProxy->NewPropertyIterator());
+		for (iterProperty->Begin(); !iterProperty->IsAtEnd(); iterProperty->Next())
+		{
+			// selectors are VectorProperty
+			auto property = vtkSMStringVectorProperty::SafeDownCast(iterProperty->GetProperty());
+			if (property == nullptr)
+			{
+				continue;
+			}
+			else
+			{
+				if (strcmp(property->GetXMLName(), "DataSetList") == 0 ||
+					strcmp(property->GetXMLName(), "DataSetListForCopy") == 0)
+				{
+					unsigned int nbElements = property->GetNumberOfElements();
+					std::vector<const char *> values(nbElements);
+					std::vector<int> states(nbElements);
+
+					for (unsigned int i = 0; i < nbElements; i++)
+					{
+						values[i] = property->GetElement(i);
+					}
+
+					for (unsigned int i = 0; i < nbElements; i = i+2)
+					{
+						if (strcmp(values[i + 1], "1") == 0)
+						{
+							property->SetElement(i + 1, "0");
+						}
+					}
+
+					property->Modified();
+					property->GetImmediateUpdate();
+				}
+			}
+		}
+	}
+}
+
+//------------------------------------------------------------------------------
+// Call only by GUI: for extract by reference selection of blocks
+vtkStringArray* vtkEPCCollector::GetHierarchyBlocks(std::string type)
+{
+	vtkStringArray* result = (type=="COPY")? DataSetListForCopy:DataSetList;
+	result->Initialize();
+	vtkPVDataInformation* dinfo = vtkPVDataInformation::New();
+	dinfo->CopyFromObject(this->GetOutputDataObject(0));
+	vtkSmartPointer<vtkDataAssembly> hierarchy = dinfo->GetHierarchy();
+
+	for (unsigned int i = 1; i < hierarchy->GetNumberOfChildren(0) + 1; ++i) // 0 is root
+	{
+//		result->InsertNextValue(hierarchy->GetAttributeOrDefault(i, "label", hierarchy->GetNodeName(i)));
+	}
+
+	vtkSmartPointer<vtkDataAssembly> assembly = dinfo->GetDataAssembly();
+
+	for (const auto& node : assembly->GetChildNodes(0))
+	{
+		std::vector<unsigned int> indices = assembly->GetDataSetIndices(node);
+		if (!indices.empty() &&
+			(strcmp(assembly->GetAttributeOrDefault(node, "type", assembly->GetNodeName(node)), std::to_string(static_cast<int>(TreeViewNodeType::Representation)).c_str()) == 0 ||
+				strcmp(assembly->GetAttributeOrDefault(node, "type", assembly->GetNodeName(node)), std::to_string(static_cast<int>(TreeViewNodeType::SubRepresentation)).c_str()) == 0 ||
+				strcmp(assembly->GetAttributeOrDefault(node, "type", assembly->GetNodeName(node)), std::to_string(static_cast<int>(TreeViewNodeType::WellboreTrajectory)).c_str()) == 0 ||
+				strcmp(assembly->GetAttributeOrDefault(node, "type", assembly->GetNodeName(node)), std::to_string(static_cast<int>(TreeViewNodeType::WellboreChannel)).c_str()) == 0 ||
+				strcmp(assembly->GetAttributeOrDefault(node, "type", assembly->GetNodeName(node)), std::to_string(static_cast<int>(TreeViewNodeType::WellboreMarker)).c_str()) == 0 ||
+				strcmp(assembly->GetAttributeOrDefault(node, "type", assembly->GetNodeName(node)), std::to_string(static_cast<int>(TreeViewNodeType::Perforation)).c_str()) == 0
+			))
+		{
+				result->InsertNextValue(assembly->GetAttributeOrDefault(node, "label", assembly->GetNodeName(node)));
+
+		}
+	}
+
+	return result;
+}

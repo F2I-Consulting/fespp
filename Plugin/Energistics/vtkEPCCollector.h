@@ -113,6 +113,8 @@ public:
    */
   vtkGetMacro(AssemblyTag, int);
 
+  vtkGetMacro(ExtractTag, int);
+
   	///@{
 	/**
    * API to specify selectors that indicate which branches on the assembly are
@@ -140,6 +142,24 @@ public:
 	void setMarkerSize(int size);
 	///@}
 
+		///@{
+     /**
+	 * Get a list all file names as a vtkStringArray.
+	 */
+	void SetDataSetList(const char* name, int status);
+	void ClearDataSetList();
+	vtkStringArray* GetAllDataSet();
+	///@}
+
+			///@{
+	 /**
+	 * Get a list all file names as a vtkStringArray.
+	 */
+	void SetDataSetListForCopy(const char* name, int status);
+	void ClearDataSetListForCopy();
+	vtkStringArray* GetAllDataSetForCopy();
+	///@}
+
 
 protected:
 	vtkEPCCollector();
@@ -148,6 +168,11 @@ protected:
 private:
 	int RequestData(vtkInformation*, vtkInformationVector**, vtkInformationVector*) final;
 
+	void Extract(vtkSMSourceProxy*, int index);
+	void Copy(vtkSMSourceProxy*, int index);
+	void ClearExtractAndCopy();
+
+	vtkStringArray* GetHierarchyBlocks(std::string type); // types: "COPY", "REFERENCE"
 
 	// files
 	vtkSmartPointer<vtkStringArray> Files;
@@ -165,6 +190,14 @@ private:
 
 	// Tag for property visibility
 	int AssemblyTag;
+	int ExtractTag;
+
+	bool extractExist;
+	vtkSmartPointer<vtkStringArray> DataSetList;
+	std::map<std::string, bool> DataSetListSelection;
+
+	vtkSmartPointer<vtkStringArray> DataSetListForCopy;
+	std::map<std::string, bool> DataSetListSelectionForCopy;
 
 	// Wellbores Properties
 	bool MarkerOrientation;
