@@ -1,27 +1,22 @@
 <ServerManagerConfiguration>
+
+	<!-- ====================- Energistics (EPC/ETP) SOURCES -===================== -->
 	<ProxyGroup name="sources">
-		<SourceProxy name="EPCReader" class="vtkEPCReader" label="Energistics Packaging Conventions (EPC) Reader">
-			<Documentation short_help="A reader for an Energistics standard data format used by	various geosciences applications.">A reader for an Energistics standard data format used by	various geosciences applications. The underlying format uses OPC to store XML documents and links to an HDF5 file which stores the numerical data arrays into HDF5 datasets.</Documentation>
+
+		<!-- ================- - EPC Collector - -================================= -->
+		<SourceProxy name="EPCCollector" class="vtkEPCCollector" label="EPCCollector">
+			<Documentation short_help="Pipeline grouping epc files.">Pipeline grouping epc files.</Documentation>
 			<Hints>
-				<ReaderFactory extensions="epc" file_description="EPC files" filename_patterns="*.epc" />
+				<RepresentationType view="RenderView" type="Surface" />
 				<PipelineIcon name="CINEMA_MARK" />
 			</Hints>
 
-			<!-- File to load: -->
-			<StringVectorProperty clean_command="ClearFileName" command="AddFileNameToFiles" name="FileName" number_of_elements="1" repeat_command="1" label="add file">
-				<FileListDomain name="files" />
-				<Documentation>This property specifies the file name for the epc reader.</Documentation>
-				<Hints>
-					<FileChooser extensions="epc" file_description="epc file to load" />
-				</Hints>
-			</StringVectorProperty>
 			<!-- Files List loaded: -->
 			<StringVectorProperty command="GetAllFiles" information_only="1" name="FilesInfo">
 				<StringArrayHelper />
 			</StringVectorProperty>
-			<StringVectorProperty name="Files" command="SetFiles" number_of_elements="1" repeat_command="1" label="all files loaded">				<!-- panel_widget="file_list"> 
-			<FileListDomain name="files"/> -->
-				<ArraySelectionDomain name="FilesList">
+			<StringVectorProperty name="Files" command="SetFiles" number_of_elements="1" repeat_command="1" label="all files loaded">
+				<ArraySelectionDomain name="array_list" attribute_type="Scalars">
 					<RequiredProperties>
 						<Property function="FilesInfo" name="FilesInfo" />
 					</RequiredProperties>
@@ -48,7 +43,11 @@
 				<Hints>
 					<!-- AssemblyTag == 0 implies there's no assembly in the file, in which case, we want to hide this widget entirely -->
 					<PropertyWidgetDecorator type="GenericDecorator" mode="visibility" property="AssemblyTag" value="0" inverse="1" />
-					<Expansion depth="1" />
+					<WidgetHeight number_of_rows="500" />
+				</Hints>
+			</StringVectorProperty>
+
+
 				</Hints>
 			</StringVectorProperty>
 
@@ -59,13 +58,36 @@
 			</IntVectorProperty>
 			<!-- marker size -->
 			<IntVectorProperty name="MarkerSize" command="setMarkerSize" number_of_elements="1" default_values="10"></IntVectorProperty>
+
 			<PropertyGroup label="Wellbore marker">
 				<Property name="MarkerOrientation" />
 				<Property name="MarkerSize" />
+				<Hints>
+					<PropertyWidgetDecorator type="GenericDecorator" mode="visibility" property="Options" value="0"/>
+				</Hints>
 			</PropertyGroup>
-
 		</SourceProxy>
-		<!-- ==================================================================== -->
+
+		<!-- ================- - EPC READER - -==================================== -->
+		<SourceProxy name="EPCReader" class="vtkEPCReader" label="Energistics Packaging Conventions (EPC) Reader">
+			<Documentation short_help="A reader for an Energistics standard data format used by	various geosciences applications.">A reader for an Energistics standard data format used by	various geosciences applications. The underlying format uses OPC to store XML documents and links to an HDF5 file which stores the numerical data arrays into HDF5 datasets.</Documentation>
+			<Hints>
+				<ReaderFactory extensions="epc" file_description="EPC files" filename_patterns="*.epc" />
+				<RepresentationType view="RenderView" type="Wireframe" />
+				<PipelineIcon name="CINEMA_MARK" />
+			</Hints>
+
+			<!-- File to load: -->
+			<StringVectorProperty clean_command="ClearFileName" command="AddFileNameToFiles" name="FileName" number_of_elements="1" repeat_command="1" label="add file">
+				<FileListDomain name="files" />
+				<Documentation>This property specifies the file name for the epc reader.</Documentation>
+				<Hints>
+					<FileChooser extensions="epc" file_description="epc file to load" />
+				</Hints>
+			</StringVectorProperty>
+		</SourceProxy>
+
+		<!-- ================- - ETP CONNECT - -=================================== -->
 		<SourceProxy name="ETPsource" class="vtkETPSource" label="ETP1.2 Store">
 			<Documentation short_help="A reader for an Energistics standard data format used by	various geosciences applications.">A reader for an Energistics standard data format used by	various geosciences applications. The underlying format uses OPC to store XML documents and links to an HDF5 file which stores the numerical data arrays into HDF5 datasets.</Documentation>
 			<Hints>
@@ -214,7 +236,6 @@
 				<Property name="MarkerSize" />
 			</PropertyGroup>
 		</SourceProxy>
-		<!-- ==================================================================== -->
 	</ProxyGroup>
 
 	<!-- ====================- EPC/ETP FILTER -==================================== -->
@@ -256,6 +277,7 @@
 		</SourceProxy>
 	</ProxyGroup>
 
+	<!-- ====================- EPC/ETP WRITER -==================================== -->
 	<ProxyGroup name="writers">
 		<WriterProxy name="EPCWriter" class="vtkEPCWriter" base_proxygroup="writers">
 			<Documentation short_help="A reader for an Energistics standard data format used by	various geosciences applications.">A reader for an Energistics standard data format used by	various geosciences applications. The underlying format uses OPC to store XML documents and links to an HDF5 file which stores the numerical data arrays into HDF5 datasets.</Documentation>
