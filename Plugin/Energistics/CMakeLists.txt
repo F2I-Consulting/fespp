@@ -1,7 +1,9 @@
 set(classes
-  vtkEPCReader
-  vtkEPCWriter
-  vtkETPSource
+	vtkEPCReader
+	vtkETPSource
+  	vtkEPCWriter
+	vtkEnergisticsExtractor
+	vtkEPCCollector
 )
 
 FILE (GLOB FESPP_MAPPING_SOURCES Mapping/*.cxx  VTK/*.cxx)

@@ -216,6 +216,7 @@
 		</SourceProxy>
 		<!-- ==================================================================== -->
 	</ProxyGroup>
+
 	<ProxyGroup name="writers">
 		<WriterProxy name="EPCWriter" class="vtkEPCWriter" base_proxygroup="writers">
 			<Documentation short_help="A reader for an Energistics standard data format used by	various geosciences applications.">A reader for an Energistics standard data format used by	various geosciences applications. The underlying format uses OPC to store XML documents and links to an HDF5 file which stores the numerical data arrays into HDF5 datasets.</Documentation>
