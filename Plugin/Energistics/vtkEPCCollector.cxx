@@ -61,6 +61,12 @@ under the License.
 #include <vtkCompositeDataPipeline.h>
 #include <vtkSMUncheckedPropertyHelper.h>
 #include <vtkSMStringVectorProperty.h>
+#include <vtkCompositeDataPipeline.h>
+#include <vtkNew.h>
+#include <vtkCollection.h>
+#include <vtkSMRepresentationProxy.h>
+#include <vtkSMColorMapEditorHelper.h>
+#include <vtkSMProxySelectionModel.h>
 
 vtkStandardNewMacro(vtkEPCCollector);
 vtkCxxSetObjectMacro(vtkEPCCollector, Controller, vtkMultiProcessController);
@@ -316,6 +322,7 @@ int vtkEPCCollector::RequestData(vtkInformation* info,
 				colorApplyLoading = false;
 			}
 		}
+		Modified();
 	}
 	catch (const std::exception& e)
 	{
@@ -327,6 +334,8 @@ int vtkEPCCollector::RequestData(vtkInformation* info,
 		ExtractTag = pdc->GetNumberOfPartitionedDataSets() > 0 ? 0 : 1;
 		Modified();
 	}
+
+
 	return 1;
 }
 
@@ -440,6 +449,7 @@ vtkStringArray* vtkEPCCollector::GetAllDataSetForCopy()
 // Create a new EnergisticsExtractor sub-pipeline 
 void vtkEPCCollector::Extract(vtkSMSourceProxy* readerProxy, int index)
 {
+	vtkOutputWindowDisplayDebugText("Extract\n");
 	vtkSMSessionProxyManager* sessionProxyManager = vtkSMProxyManager::GetProxyManager()->GetActiveSessionProxyManager();
 
 	vtkSmartPointer<vtkStringArray> list = nullptr;
@@ -453,8 +463,6 @@ void vtkEPCCollector::Extract(vtkSMSourceProxy* readerProxy, int index)
 	vtkSMInputProperty* inputProperty = vtkSMInputProperty::SafeDownCast(extract->GetProperty("Input"));
 	inputProperty->SetInputConnection(0, readerProxy, 0);
 
-	vtkSMPropertyHelper(extract, "PartitionIndex").Set(index);
-	// TODO faire par PATH !!
 	for (const auto& node : GetAssembly()->GetChildNodes(0))
 	{
 		std::vector<unsigned int> indices = GetAssembly()->GetDataSetIndices(node);
@@ -465,10 +473,10 @@ void vtkEPCCollector::Extract(vtkSMSourceProxy* readerProxy, int index)
 				strcmp(GetAssembly()->GetAttributeOrDefault(node, "type", GetAssembly()->GetNodeName(node)), std::to_string(static_cast<int>(TreeViewNodeType::WellboreChannel)).c_str()) == 0 ||
 				strcmp(GetAssembly()->GetAttributeOrDefault(node, "type", GetAssembly()->GetNodeName(node)), std::to_string(static_cast<int>(TreeViewNodeType::WellboreMarker)).c_str()) == 0 ||
 				strcmp(GetAssembly()->GetAttributeOrDefault(node, "type", GetAssembly()->GetNodeName(node)), std::to_string(static_cast<int>(TreeViewNodeType::Perforation)).c_str()) == 0
-				))
+				) &&
+			GetAssembly()->GetDataSetIndices(node)[0] == index
+			)
 		{
-			vtkOutputWindowDisplayText(GetAssembly()->GetNodePath(node).c_str());
-			vtkOutputWindowDisplayText("\n");
 			vtkSMPropertyHelper(extract, "ExtractPath").Set(GetAssembly()->GetNodePath(node).c_str());
 
 		}
