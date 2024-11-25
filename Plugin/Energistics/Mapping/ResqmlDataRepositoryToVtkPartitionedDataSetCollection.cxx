@@ -157,6 +157,7 @@ MapperType getMapperType(TreeViewNodeType p_type)
 	case TreeViewNodeType::Unknown:
 	case TreeViewNodeType::Collection:
 	case TreeViewNodeType::Wellbore:
+	case TreeViewNodeType::Partial:
 		return MapperType::Folder;
 	case TreeViewNodeType::Representation:
 	case TreeViewNodeType::SubRepresentation:
@@ -410,45 +411,40 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::buildDataAsse
 std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchRepresentations(resqml2::AbstractRepresentation const* p_representation, int p_NodeId)
 {
 	std::string w_result;
-
-	if (p_representation->isPartial())
+	
+	// The leading underscore is forced by VTK which does not support a node name starting with a digit (probably because it is a QNAME).
+	const std::string w_nodeName = "_" + p_representation->getUuid();
+	const int w_existingNodeId = _output->GetDataAssembly()->FindFirstNodeWithName(w_nodeName.c_str());
+	if (w_existingNodeId == -1)
 	{
-		// check if it has already been added
-		// not exist => not loaded
-		if (_output->GetDataAssembly()->FindFirstNodeWithName(("_" + p_representation->getUuid()).c_str()) == -1)
+		p_NodeId = _output->GetDataAssembly()->AddNode(w_nodeName.c_str(), p_NodeId);
+
+		auto const* w_subrep = dynamic_cast<RESQML2_NS::SubRepresentation const*>(p_representation);
+		// To shorten the xmlTag by removing �Representation� from the end.
+
+		std::string w_typeRepresentation = SimplifyXmlTag(p_representation->getXmlTag());
+
+		const std::string w_representationVtkValidName = w_subrep == nullptr
+			? this->MakeValidNodeName((w_typeRepresentation + "_" + p_representation->getTitle()).c_str())
+			: this->MakeValidNodeName((w_typeRepresentation + "_" + w_subrep->getSupportingRepresentation(0)->getTitle() + "_" + p_representation->getTitle()).c_str());
+
+		const TreeViewNodeType w_type = w_subrep == nullptr
+			? TreeViewNodeType::Representation
+			: TreeViewNodeType::SubRepresentation;
+
+		_output->GetDataAssembly()->SetAttribute(p_NodeId, "label", w_representationVtkValidName.c_str());
+		if (p_representation->isPartial())
 		{
-			return "Partial representation with UUID \"" + p_representation->getUuid() + "\" is not loaded.\n";
-		} /******* TODO ********/ // exist but not the same type ?
-	}
-	else
-	{
-		// The leading underscore is forced by VTK which does not support a node name starting with a digit (probably because it is a QNAME).
-		const std::string w_nodeName = "_" + p_representation->getUuid();
-		const int w_existingNodeId = _output->GetDataAssembly()->FindFirstNodeWithName(w_nodeName.c_str());
-		if (w_existingNodeId == -1)
-		{
-			p_NodeId = _output->GetDataAssembly()->AddNode(w_nodeName.c_str(), p_NodeId);
-
-			auto const* w_subrep = dynamic_cast<RESQML2_NS::SubRepresentation const*>(p_representation);
-			// To shorten the xmlTag by removing �Representation� from the end.
-
-			std::string w_typeRepresentation = SimplifyXmlTag(p_representation->getXmlTag());
-
-			const std::string w_representationVtkValidName = w_subrep == nullptr
-				? this->MakeValidNodeName((w_typeRepresentation + "_" + p_representation->getTitle()).c_str())
-				: this->MakeValidNodeName((w_typeRepresentation + "_" + w_subrep->getSupportingRepresentation(0)->getTitle() + "_" + p_representation->getTitle()).c_str());
-
-			const TreeViewNodeType w_type = w_subrep == nullptr
-				? TreeViewNodeType::Representation
-				: TreeViewNodeType::SubRepresentation;
-
-			_output->GetDataAssembly()->SetAttribute(p_NodeId, "label", w_representationVtkValidName.c_str());
-			_output->GetDataAssembly()->SetAttribute(p_NodeId, "type", std::to_string(static_cast<int>(TreeViewNodeType::Representation)).c_str());
+			_output->GetDataAssembly()->SetAttribute(p_NodeId, "type", std::to_string(static_cast<int>(TreeViewNodeType::Partial)).c_str());
 		}
 		else
 		{
-			p_NodeId = w_existingNodeId;
+			_output->GetDataAssembly()->SetAttribute(p_NodeId, "type", std::to_string(static_cast<int>(TreeViewNodeType::Representation)).c_str());
 		}
+	}
+	else
+	{
+		p_NodeId = w_existingNodeId;
 	}
 
 	// add sub representation with properties (only for ijkGrid and unstructured grid)
@@ -626,23 +622,15 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchWellbor
 				_output->GetDataAssembly()->SetAttribute(w_initNodeId, "type", std::to_string(static_cast<int>(TreeViewNodeType::Wellbore)).c_str());
 			}
 
+			const std::string w_vtkValidName = MakeValidNodeName((SimplifyXmlTag(w_wellboreTrajectory->getXmlTag()) + '_' + w_wellboreTrajectory->getTitle()).c_str());
+			w_nodeId = _output->GetDataAssembly()->AddNode(("_" + w_wellboreTrajectory->getUuid()).c_str(), w_initNodeId);
+			_output->GetDataAssembly()->SetAttribute(w_nodeId, "label", w_vtkValidName.c_str());
 			if (w_wellboreTrajectory->isPartial())
 			{
-				// check if it has already been added
-
-				const std::string w_vtkValidName = MakeValidNodeName((SimplifyXmlTag(w_wellboreTrajectory->getXmlTag()) + "_" + w_wellboreTrajectory->getTitle()).c_str());
-				// not exist => not loaded
-				if (_output->GetDataAssembly()->FindFirstNodeWithName(("_" + w_vtkValidName).c_str()) == -1)
-				{
-					w_result = w_result + " Partial UUID: (" + w_wellboreTrajectory->getUuid() + ") is not loaded \n";
-					continue;
-				} /******* TODO ********/ // exist but not the same type ?
+				_output->GetDataAssembly()->SetAttribute(w_nodeId, "type", std::to_string(static_cast<int>(TreeViewNodeType::Partial)).c_str());
 			}
 			else
 			{
-				const std::string w_vtkValidName = MakeValidNodeName((SimplifyXmlTag(w_wellboreTrajectory->getXmlTag()) + '_' + w_wellboreTrajectory->getTitle()).c_str());
-				w_nodeId = _output->GetDataAssembly()->AddNode(("_" + w_wellboreTrajectory->getUuid()).c_str(), w_initNodeId);
-				_output->GetDataAssembly()->SetAttribute(w_nodeId, "label", w_vtkValidName.c_str());
 				_output->GetDataAssembly()->SetAttribute(w_nodeId, "type", std::to_string(static_cast<int>(TreeViewNodeType::WellboreTrajectory)).c_str());
 			}
 		}

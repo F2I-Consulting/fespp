@@ -45,7 +45,8 @@ enum class TreeViewNodeType
 	WellboreMarker,
 	WellboreCompletion,
 	TimeSeries,
-	Perforation
+	Perforation,
+	Partial
 };
 
 #endif // ENUM_H
