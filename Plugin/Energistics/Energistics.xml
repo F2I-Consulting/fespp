@@ -302,11 +302,6 @@
 				<Documentation>The input from which the selection is extracted.</Documentation>
 			</InputProperty>
 
-			<IntVectorProperty name="PartitionIndex" command="SetPartitionIndex" number_of_elements="1" default_values="1">
-				<Documentation>
-    Index of the partition to extract.
-				</Documentation>
-			</IntVectorProperty>
 			<StringVectorProperty name="ExtractPath" command="SetExtractPath" number_of_elements="1" default_values="1" panel_visibility="never">
 				<Documentation>
     assembly path to extract.

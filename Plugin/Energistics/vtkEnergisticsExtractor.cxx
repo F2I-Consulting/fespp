@@ -36,8 +36,8 @@ vtkStandardNewMacro(vtkEnergisticsExtractor);
 
 //-----------------------------------------------------------------------------
 vtkEnergisticsExtractor::vtkEnergisticsExtractor() :
-	PartitionIndex(0),
-	PartitionType(0)
+	ExtractPath(""),
+	dataType("vtkDataObject")
 {
 	this->SetNumberOfInputPorts(1);
 	this->SetNumberOfOutputPorts(1);
@@ -72,29 +72,27 @@ int vtkEnergisticsExtractor::FillInputPortInformation(int vtkNotUsed(port), vtkI
 int vtkEnergisticsExtractor::FillOutputPortInformation(
 	int vtkNotUsed(port), vtkInformation* info)
 {
-	vtkOutputWindowDisplayText("FillOutputPortInformation\n");
-	vtkOutputWindowDisplayText(ExtractPath.c_str());
-	vtkOutputWindowDisplayText("\n");
+	try {
+		// Get the type of the first partition in the requested partitioned dataset
+		vtkDataObject* inputData = this->GetInputDataObject(0, 0);
+		vtkPartitionedDataSetCollection* input = vtkPartitionedDataSetCollection::SafeDownCast(inputData);
+		if (input)
+		{
+			if (input->GetDataAssembly())
+			{
+				int node = input->GetDataAssembly()->GetFirstNodeByPath(ExtractPath.c_str());
+				if (node > -1)
+				{
+					dataType = input->GetPartitionedDataSet(input->GetDataAssembly()->GetDataSetIndices(node)[0])->GetPartition(0)->GetClassName();
+				}
+			}
+		}
 
-	// Get the type of the first partition in the requested partitioned dataset
-	vtkDataObject* inputData = this->GetInputDataObject(0, 0);
-	vtkPartitionedDataSetCollection* input = vtkPartitionedDataSetCollection::SafeDownCast(inputData);
-	if (input)
-	{
-		if (input->GetPartitionedDataSet(this->PartitionIndex)->GetNumberOfPartitions() > 0)
-		{
-			vtkDataSet* firstPartition = input->GetPartitionedDataSet(this->PartitionIndex)->GetPartition(0);
-			info->Set(vtkDataObject::DATA_TYPE_NAME(), firstPartition->GetClassName());
-		}
-		else
-		{
-			info->Set(vtkDataObject::DATA_TYPE_NAME(), "");
-		}
+		info->Set(vtkDataObject::DATA_TYPE_NAME(), dataType);
 	}
-	else
+	catch (const std::exception& e)
 	{
-		vtkOutputWindowDisplayText("input manquant\n");
-		info->Set(vtkDataObject::DATA_TYPE_NAME(), "");
+		vtkOutputWindowDisplayErrorText((std::string("vtkEnergisticsExtractor error > ") + e.what()).c_str());
 	}
 
 	return 1;
@@ -109,25 +107,31 @@ int vtkEnergisticsExtractor::RequestData(vtkInformation* vtkNotUsed(request),
 
 	if (!input)
 	{
-		vtkErrorMacro("Missing input!");
+		vtkErrorMacro("Missing Input!");
 		return 0;
 	}
 
+	int partitionIndex = -1;
+	if (input->GetDataAssembly())
+	{
+		
+		int node = input->GetDataAssembly()->GetFirstNodeByPath(ExtractPath.c_str());
+		if (node > -1)
+		{
+			partitionIndex = input->GetDataAssembly()->GetDataSetIndices(node)[0];
+		}
+	}
 	vtkSmartPointer<vtkDataObject> ouput = vtkSmartPointer<vtkDataObject>::New();
 
 	// Get the requested partitioned dataset
-	vtkPartitionedDataSet* partitionedDataSet = input->GetPartitionedDataSet(this->PartitionIndex);
+	vtkPartitionedDataSet* partitionedDataSet = input->GetPartitionedDataSet(partitionIndex);
 	if (partitionedDataSet)
 	{
 		if (partitionedDataSet->GetNumberOfPartitions() > 0)
 		{
-			// **TODO** faire avec path
-
 			// Create a copy of the partitioned dataset
 			vtkSmartPointer<vtkPartitionedDataSet> outputPartitionedDataSet = vtkSmartPointer<vtkPartitionedDataSet>::New();
 			ouput = partitionedDataSet->GetPartitionAsDataObject(0);
-
-			// **TODO** multi partition => append each partition
 		}
 	}
 

@@ -40,12 +40,8 @@ public:
 	static vtkEnergisticsExtractor* New();
 	vtkTypeMacro(vtkEnergisticsExtractor, vtkAlgorithm);
 
-	vtkSetMacro(PartitionIndex, int);
-	vtkGetMacro(PartitionIndex, int);
 	vtkSetMacro(ExtractPath, std::string);
 	vtkGetMacro(ExtractPath, std::string);
-	vtkSetMacro(PartitionType, int);
-	vtkGetMacro(PartitionType, int);
 
 protected:
 	vtkEnergisticsExtractor();
@@ -65,9 +61,9 @@ protected:
 		vtkInformationVector**, 
 		vtkInformationVector*) override;
 
-	int PartitionIndex;
-	int PartitionType;
 	std::string ExtractPath;
+
+	const char* dataType;
 };
 
 #endif
