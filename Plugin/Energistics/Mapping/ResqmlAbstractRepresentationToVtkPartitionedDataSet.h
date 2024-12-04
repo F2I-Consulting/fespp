@@ -55,7 +55,7 @@ public:
 	/**
 	 * add a resqml property to VtkPartitionedDataSet
 	 */
-	void addDataArray(const std::string &p_uuid, uint32_t p_patchIndex = 0);
+	char * addDataArray(const std::string &p_uuid, uint32_t p_patchIndex = 0);
 
 	/**
 	 * remove a resqml property to VtkPartitionedDataSet
@@ -68,6 +68,12 @@ public:
 	void registerSubRep();
 	void unregisterSubRep();
 	uint32_t subRepLinkedCount();
+
+	const char* getActivePropertyName() { return activeArrayName; }
+	int getActivePropertyType() { return activeType; }
+
+private:
+	int ActiveProperty(const char* arrayName, vtkDataObject::AttributeTypes type);
 
 protected:
 	const RESQML2_NS::AbstractRepresentation *getResqmlData() const { return _resqmlData; }
@@ -86,5 +92,8 @@ protected:
 	const RESQML2_NS::AbstractRepresentation *_resqmlData;
 
 	std::unordered_map<std::string, class ResqmlPropertyToVtkDataArray *> _uuidToVtkDataArray;
+
+	char * activeArrayName = nullptr;
+	int activeType =0;
 };
 #endif

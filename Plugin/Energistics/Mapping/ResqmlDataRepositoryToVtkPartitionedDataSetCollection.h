@@ -57,6 +57,7 @@ namespace resqml2_0_1
 class ResqmlAbstractRepresentationToVtkPartitionedDataSet;
 class CommonAbstractObjectSetToVtkPartitionedDataSetSet;
 class CommonAbstractObjectToVtkPartitionedDataSet;
+class vtkSMPVRepresentationProxy;
 
 /**
  * @brief	transform a fesapi data repository to VtkPartitionedDataSetCollection
@@ -88,9 +89,9 @@ public:
 	void setMarkerSize(uint32_t p_size);
 
 	vtkPartitionedDataSetCollection *getVtkPartitionedDatasSetCollection(const double p_time, const uint32_t p_nbProcess = 1, const uint32_t p_processId = 0);
+	vtkPartitionedDataSetCollection* getVtkPartitionedDatasSetCollection() { return _output; };
 
 	std::vector<double> getTimes() { return _timesStep; };
-	void addResqmlColor();
 
 	/**
 	 * @return selection parent
@@ -113,6 +114,9 @@ private:
 
 	void selectNodeIdParent(int p_nodeId);
 	void selectNodeIdChildren(int p_nodeId);
+
+	void addResqmlColor();
+	vtkSMPVRepresentationProxy* getRepresentation();
 
 	/**
 	 * delete _oldSelection mapper
@@ -164,7 +168,8 @@ private:
 	// time step values
 	std::vector<double> _timesStep;
 
-	std::string _commandColorPython;
+	std::vector<const char*> _blocksColors;
+	std::map<std::string, std::array<double, 3>> _blockColorsMap;
 
 #ifdef WITH_ETP_SSL
 	std::shared_ptr<ETP_NS::ClientSession> _session;

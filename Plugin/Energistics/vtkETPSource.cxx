@@ -332,11 +332,13 @@ int vtkETPSource::RequestData(vtkInformation*,
 
 			_newSelection = false;
 			
+			/*
 			if (vtkPartitionedDataSetCollection::GetData(outInfo)->GetNumberOfPartitionedDataSets() > 0 && !colorApplyLoading) {
 				colorApplyLoading = true;
 				repository.addResqmlColor();
 				colorApplyLoading = false;
 			}
+			*/
 
 			progressBar->setIndeterminate(false);
 		}

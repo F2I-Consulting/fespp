@@ -18,45 +18,18 @@ under the License.
 -----------------------------------------------------------------------*/
 #include "vtkEPCReader.h"
 
-#include <exception>
-#include <iterator>
-#include <algorithm>
-#include <limits>
-#include <sstream>
-
 #include "vtkEnergisticsExtractor.h"
 
-#include <vtkIndent.h>
-#include <vtkInformation.h>
-#include <vtkInformationVector.h>
-#include <vtkPartitionedDataSetCollection.h>
-#include <vtkDataAssembly.h>
-#include <vtkObjectFactory.h>
-#include <vtkMultiProcessController.h>
-#include <vtkStreamingDemandDrivenPipeline.h>
-#include <vtkDataObject.h>
-#include <vtkPVDataInformation.h>
-
-#include <vtkPartitionedDataSet.h>
-
-#include "vtkSMInputProperty.h"
-#include "vtkSMProxyManager.h"
-#include "vtkSMSessionProxyManager.h"
-#include "vtkSMSourceProxy.h"
-#include "vtkSMViewProxy.h"
-#include "vtkSMRenderViewProxy.h"
-#include "vtkSMRepresentationProxy.h"
-#include "vtkSMPropertyHelper.h"
-#include "vtkSMProxyIterator.h"
-#include <vtkSMParaViewPipelineController.h>
-#include <vtkSMOutputPort.h>
-#include <vtkCommand.h>
-#include <vtkSMProperty.h>
-#include <vtkDataSet.h>
-
+#include <vtkSMProxyManager.h>
+#include <vtkSMSessionProxyManager.h>
+#include <vtkSMSourceProxy.h>
+#include <vtkSMViewProxy.h>
+#include <vtkSMRenderViewProxy.h>
+#include <vtkSMPropertyHelper.h>
+#include <vtkSMProxyIterator.h>
+#include <vtkSMParaViewPipelineControllerWithRendering.h>
 #include <vtkSMSession.h>
-#include <vtkCollection.h>
-#include <vtkCollectionIterator.h>
+#include <vtkPVRenderView.h>
 
 vtkStandardNewMacro(vtkEPCReader);
 
@@ -69,11 +42,13 @@ vtkEPCReader::vtkEPCReader()
 	vtkSMSession* session = proxyManager->GetActiveSession();
 
 	vtkSMSourceProxy* collectorEPCProxy = nullptr;
-	vtkNew<vtkSMProxyIterator> iter;
-	iter->SetSession(session);
-	for (iter->Begin("sources"); !iter->IsAtEnd(); iter->Next())
+	vtkSMViewProxy* collectorEPCview = nullptr;
+	vtkNew<vtkSMProxyIterator> iterProxy;
+	iterProxy->SetSession(session);
+	// search EPC Collector proxy
+	for (iterProxy->Begin("sources"); !iterProxy->IsAtEnd(); iterProxy->Next())
 	{
-		vtkSMSourceProxy* sourceProxy = vtkSMSourceProxy::SafeDownCast(iter->GetProxy());
+		vtkSMSourceProxy* sourceProxy = vtkSMSourceProxy::SafeDownCast(iterProxy->GetProxy());
 		std::string proxyName = sourceProxy->GetXMLName();
 		if (proxyName == "EPCCollector")
 		{
@@ -81,21 +56,34 @@ vtkEPCReader::vtkEPCReader()
 		}
 	}
 
-	vtkSMSessionProxyManager* sessionProxyManager = vtkSMProxyManager::GetProxyManager()->GetActiveSessionProxyManager();
-
 	if (!collectorEPCProxy)
 	{
+		//
+		// create ParaView pipeline EPC Collector source
+		//
 
+		// search a RenderView to link EPC Collector
+		for (iterProxy->Begin("views"); !iterProxy->IsAtEnd(); iterProxy->Next())
+		{
+			vtkSMViewProxy* view = vtkSMViewProxy::SafeDownCast(iterProxy->GetProxy());
+			if (view && vtkPVRenderView::SafeDownCast(view->GetClientSideView()))
+			{
+				collectorEPCview = view;
+				break;
+			}
+		}
+
+		vtkSMSessionProxyManager* sessionProxyManager = proxyManager->GetActiveSessionProxyManager();
 		vtkSMSourceProxy* collectorEPCProxy = vtkSMSourceProxy::SafeDownCast(sessionProxyManager->NewProxy("sources", "EPCCollector"));;
 
-		//vtkSMPropertyHelper(collecterEPCProxy, "Files").Set(FileName);
-
-		vtkNew<vtkSMParaViewPipelineController> controller;
+		// create ParaView pipeline
+		vtkNew<vtkSMParaViewPipelineControllerWithRendering> controller;
 		controller->InitializeProxy(collectorEPCProxy);
+		collectorEPCProxy->SetSession(session);
 		controller->RegisterPipelineProxy(collectorEPCProxy, "EPC Collector");
+		// link ParaView pipeline with PVRenderView
+		controller->SetVisibility(collectorEPCProxy, 0, collectorEPCview, true);
 	}
-
-
 }
 
 vtkEPCReader::~vtkEPCReader()
@@ -113,14 +101,15 @@ void vtkEPCReader::AddFileNameToFiles(const char* fname)
 		vtkSMSourceProxy* readerProxy = nullptr;
 		vtkNew<vtkSMProxyIterator> iter;
 		iter->SetSession(session);
+		// search EPC Collector Proxy
 		for (iter->Begin("sources"); !iter->IsAtEnd(); iter->Next())
 		{
 			vtkSMSourceProxy* sourceProxy = vtkSMSourceProxy::SafeDownCast(iter->GetProxy());
 			std::string proxyName = sourceProxy->GetXMLName();
 			if (proxyName == "EPCCollector")
 			{
+				// add FileName to EPC Collector Proxy
 				vtkSMPropertyHelper(sourceProxy, "Files").Set(fname);
-				//vtkSMPropertyHelper(sourceProxy, "MarkerSize").Set(100);
 				sourceProxy->UpdateVTKObjects();
 				sourceProxy->UpdatePipelineInformation();
 			}

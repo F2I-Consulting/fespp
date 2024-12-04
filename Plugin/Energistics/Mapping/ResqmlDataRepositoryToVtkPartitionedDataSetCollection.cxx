@@ -46,9 +46,13 @@ VtkAssembly => TreeView:
 #include <vtkDataArraySelection.h>
 #include <vtkResourceFileLocator.h>
 #include <vtksys/SystemTools.hxx>
-#include <vtkPython.h>
-#include <vtkPythonCompatibility.h>
-#include <vtkPythonInterpreter.h>
+#include <vtkSMPropertyHelper.h>
+#include <vtkSMProxyManager.h>
+#include <vtkSMSessionProxyManager.h>
+#include <vtkSMProxySelectionModel.h>
+#include <vtkSMViewProxy.h>
+#include <vtkSMProperty.h>
+#include <vtkProcessModule.h>
 
 // FESAPI includes
 #include <fesapi/common/DataObjectRepository.h>
@@ -104,6 +108,11 @@ VtkAssembly => TreeView:
 #include "Mapping/WitsmlWellboreCompletionPerforationToVtkPolyData.h"
 #include "Mapping/CommonAbstractObjectSetToVtkPartitionedDataSetSet.h"
 
+#include <vtkNew.h>
+#include <vtkCollection.h>
+#include <vtkSMPVRepresentationProxy.h>
+#include <vtkSMColorMapEditorHelper.h>
+
 extern "C" const char* GetEnergisticsVersion() {
 	return PROJECT_VERSION;
 }
@@ -114,8 +123,7 @@ ResqmlDataRepositoryToVtkPartitionedDataSetCollection::ResqmlDataRepositoryToVtk
 	_output(vtkSmartPointer<vtkPartitionedDataSetCollection>::New()),
 	_nodeIdToMapper(),
 	_currentSelection(),
-	_oldSelection(),
-	_commandColorPython("")
+	_oldSelection()
 {
 	auto w_assembly = vtkSmartPointer<vtkDataAssembly>::New();
 	w_assembly->SetRootNodeName("data");
@@ -411,7 +419,7 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::buildDataAsse
 std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchRepresentations(resqml2::AbstractRepresentation const* p_representation, int p_NodeId)
 {
 	std::string w_result;
-	
+
 	// The leading underscore is forced by VTK which does not support a node name starting with a digit (probably because it is a QNAME).
 	const std::string w_nodeName = "_" + p_representation->getUuid();
 	const int w_existingNodeId = _output->GetDataAssembly()->FindFirstNodeWithName(w_nodeName.c_str());
@@ -424,23 +432,26 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchReprese
 
 		std::string w_typeRepresentation = SimplifyXmlTag(p_representation->getXmlTag());
 
-		const std::string w_representationVtkValidName = w_subrep == nullptr
-			? this->MakeValidNodeName((w_typeRepresentation + "_" + p_representation->getTitle()).c_str())
-			: this->MakeValidNodeName((w_typeRepresentation + "_" + w_subrep->getSupportingRepresentation(0)->getTitle() + "_" + p_representation->getTitle()).c_str());
+		std::string w_representationVtkValidName = "";
 
-		const TreeViewNodeType w_type = w_subrep == nullptr
-			? TreeViewNodeType::Representation
-			: TreeViewNodeType::SubRepresentation;
-
-		_output->GetDataAssembly()->SetAttribute(p_NodeId, "label", w_representationVtkValidName.c_str());
 		if (p_representation->isPartial())
 		{
+			w_representationVtkValidName = this->MakeValidNodeName(("partial_" + p_representation->getTitle()).c_str());
+
 			_output->GetDataAssembly()->SetAttribute(p_NodeId, "type", std::to_string(static_cast<int>(TreeViewNodeType::Partial)).c_str());
 		}
 		else
 		{
-			_output->GetDataAssembly()->SetAttribute(p_NodeId, "type", std::to_string(static_cast<int>(TreeViewNodeType::Representation)).c_str());
+			w_representationVtkValidName = w_subrep == nullptr
+				? this->MakeValidNodeName((w_typeRepresentation + "_" + p_representation->getTitle()).c_str())
+				: this->MakeValidNodeName((w_typeRepresentation + "_" + w_subrep->getSupportingRepresentation(0)->getTitle() + "_" + p_representation->getTitle()).c_str());
+
+			const TreeViewNodeType w_type = w_subrep == nullptr
+				? TreeViewNodeType::Representation
+				: TreeViewNodeType::SubRepresentation;
+			_output->GetDataAssembly()->SetAttribute(p_NodeId, "type", std::to_string(static_cast<int>(w_type)).c_str());
 		}
+		_output->GetDataAssembly()->SetAttribute(p_NodeId, "label", w_representationVtkValidName.c_str());
 	}
 	else
 	{
@@ -575,7 +586,16 @@ int ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchRepresentationS
 								graphicalInformationSet->getDefaultRgbColor(targetObject, R, G, B);
 								double dR, dG, dB;
 								graphicalInformationSet->getDefaultRgbColor(targetObject, dR, dG, dB);
-								_commandColorPython += "'" + _output->GetDataAssembly()->GetNodePath(p_nodeId) + "','" + std::to_string(dR) + "','" + std::to_string(dG) + "','" + std::to_string(dB) + "',";
+								_blocksColors.push_back(_output->GetDataAssembly()->GetNodePath(p_nodeId).c_str());
+								_blocksColors.push_back(std::to_string(dR).c_str());
+								_blocksColors.push_back(std::to_string(dG).c_str());
+								_blocksColors.push_back(std::to_string(dB).c_str());
+								_blockColorsMap[_output->GetDataAssembly()->GetNodePath(p_nodeId).c_str()] =
+								{
+									dR,
+									dG,
+									dB
+								};
 								_output->GetDataAssembly()->SetAttribute(p_nodeId, "colorRGB", (std::to_string(R) + "," + std::to_string(G) + "," + std::to_string(B)).c_str());
 							}
 						}
@@ -598,7 +618,6 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchWellbor
 	std::string w_result;
 
 	int w_nodeId = 0;
-	_commandColorPython = "colorepcDisplay.BlockColors = [";
 	for (auto* w_wellboreTrajectory : _repository->getWellboreTrajectoryRepresentationSet())
 	{
 		const auto* w_wellboreFeature = dynamic_cast<RESQML2_NS::WellboreFeature*>(w_wellboreTrajectory->getInterpretation()->getInterpretedFeature());
@@ -622,22 +641,23 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchWellbor
 				_output->GetDataAssembly()->SetAttribute(w_initNodeId, "type", std::to_string(static_cast<int>(TreeViewNodeType::Wellbore)).c_str());
 			}
 
-			const std::string w_vtkValidName = MakeValidNodeName((SimplifyXmlTag(w_wellboreTrajectory->getXmlTag()) + '_' + w_wellboreTrajectory->getTitle()).c_str());
+			std::string w_vtkValidName = "";
 			w_nodeId = _output->GetDataAssembly()->AddNode(("_" + w_wellboreTrajectory->getUuid()).c_str(), w_initNodeId);
-			_output->GetDataAssembly()->SetAttribute(w_nodeId, "label", w_vtkValidName.c_str());
 			if (w_wellboreTrajectory->isPartial())
 			{
+				w_vtkValidName = MakeValidNodeName(("partial_" + w_wellboreTrajectory->getTitle()).c_str());
 				_output->GetDataAssembly()->SetAttribute(w_nodeId, "type", std::to_string(static_cast<int>(TreeViewNodeType::Partial)).c_str());
 			}
 			else
 			{
+				w_vtkValidName = MakeValidNodeName((SimplifyXmlTag(w_wellboreTrajectory->getXmlTag()) + "_" + w_wellboreTrajectory->getTitle()).c_str());
 				_output->GetDataAssembly()->SetAttribute(w_nodeId, "type", std::to_string(static_cast<int>(TreeViewNodeType::WellboreTrajectory)).c_str());
 			}
+			_output->GetDataAssembly()->SetAttribute(w_nodeId, "label", w_vtkValidName.c_str());
 		}
 		w_result += searchWellboreFrame(w_wellboreTrajectory, w_initNodeId);
 		w_result += searchWellboreCompletion(w_wellboreFeature, w_initNodeId);
 	}
-	_commandColorPython += "]";
 	return w_result;
 }
 
@@ -687,81 +707,81 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchWellbor
 {
 	std::string w_result = "";
 	// witsml2::Wellbore *witsmlWellbore = nullptr;
-	if (!p_wellboreFeature->isPartial())
+//	if (!p_wellboreFeature->isPartial())
+//	{
+	if (const witsml2::Wellbore* w_witsmlWellbore = dynamic_cast<witsml2::Wellbore*>(p_wellboreFeature->getWitsmlWellbore()))
 	{
-		if (const witsml2::Wellbore* w_witsmlWellbore = dynamic_cast<witsml2::Wellbore*>(p_wellboreFeature->getWitsmlWellbore()))
+		for (const auto* w_wellboreCompletion : w_witsmlWellbore->getWellboreCompletionSet())
 		{
-			for (const auto* w_wellboreCompletion : w_witsmlWellbore->getWellboreCompletionSet())
+			const std::string w_vtkValidName = MakeValidNodeName((SimplifyXmlTag(w_wellboreCompletion->getXmlTag()) + '_' + w_wellboreCompletion->getTitle()).c_str());
+			int w_completionNodeId = _output->GetDataAssembly()->AddNode(("_" + w_wellboreCompletion->getUuid()).c_str(), p_nodeId);
+			_output->GetDataAssembly()->SetAttribute(w_completionNodeId, "label", w_vtkValidName.c_str());
+			_output->GetDataAssembly()->SetAttribute(w_completionNodeId, "type", std::to_string(static_cast<int>(TreeViewNodeType::WellboreCompletion)).c_str());
+			// Iterate over the perforations.
+			for (uint64_t w_perforationIndex = 0; w_perforationIndex < w_wellboreCompletion->getConnectionCount(WITSML2_1_NS::WellboreCompletion::WellReservoirConnectionType::PERFORATION); ++w_perforationIndex)
 			{
-				const std::string w_vtkValidName = MakeValidNodeName((SimplifyXmlTag(w_wellboreCompletion->getXmlTag()) + '_' + w_wellboreCompletion->getTitle()).c_str());
-				int w_completionNodeId = _output->GetDataAssembly()->AddNode(("_" + w_wellboreCompletion->getUuid()).c_str(), p_nodeId);
-				_output->GetDataAssembly()->SetAttribute(w_completionNodeId, "label", w_vtkValidName.c_str());
-				_output->GetDataAssembly()->SetAttribute(w_completionNodeId, "type", std::to_string(static_cast<int>(TreeViewNodeType::WellboreCompletion)).c_str());
-				// Iterate over the perforations.
-				for (uint64_t w_perforationIndex = 0; w_perforationIndex < w_wellboreCompletion->getConnectionCount(WITSML2_1_NS::WellboreCompletion::WellReservoirConnectionType::PERFORATION); ++w_perforationIndex)
-				{
-					// init
-					std::string w_perforationName = "Perfo";
-					std::string w_perforationSkin = "";
-					std::string w_perforationDiameter = "";
+				// init
+				std::string w_perforationName = "Perfo";
+				std::string w_perforationSkin = "";
+				std::string w_perforationDiameter = "";
 
-					// Test with Petrel rules
-					auto w_petrelName = w_wellboreCompletion->getConnectionExtraMetadata(WITSML2_1_NS::WellboreCompletion::WellReservoirConnectionType::PERFORATION, w_perforationIndex, "Petrel:Name0");
-					// arbitrarily select the first event name as perforation name
-					if (w_petrelName.size() > 0)
+				// Test with Petrel rules
+				auto w_petrelName = w_wellboreCompletion->getConnectionExtraMetadata(WITSML2_1_NS::WellboreCompletion::WellReservoirConnectionType::PERFORATION, w_perforationIndex, "Petrel:Name0");
+				// arbitrarily select the first event name as perforation name
+				if (w_petrelName.size() > 0)
+				{
+					w_perforationName += "_" + w_petrelName[0];
+					// skin
+					auto w_petrelSkin = w_wellboreCompletion->getConnectionExtraMetadata(WITSML2_1_NS::WellboreCompletion::WellReservoirConnectionType::PERFORATION, w_perforationIndex, "Petrel:Skin0");
+					if (w_petrelSkin.size() > 0)
 					{
-						w_perforationName += "_" + w_petrelName[0];
+						w_perforationSkin = w_petrelSkin[0];
+					}
+					// diameter
+					auto w_petrelDiam = w_wellboreCompletion->getConnectionExtraMetadata(WITSML2_1_NS::WellboreCompletion::WellReservoirConnectionType::PERFORATION, w_perforationIndex, "Petrel:BoreholePerforatedSection0");
+					if (w_petrelDiam.size() > 0)
+					{
+						w_perforationDiameter = w_petrelDiam[0];
+					}
+				}
+				else
+				{
+					// Test with Sismage rules
+					auto w_sismageName = w_wellboreCompletion->getConnectionExtraMetadata(WITSML2_1_NS::WellboreCompletion::WellReservoirConnectionType::PERFORATION, w_perforationIndex, "Sismage-CIG:Name");
+					if (w_sismageName.size() > 0)
+					{
+						w_perforationName += "_" + w_sismageName[0];
 						// skin
-						auto w_petrelSkin = w_wellboreCompletion->getConnectionExtraMetadata(WITSML2_1_NS::WellboreCompletion::WellReservoirConnectionType::PERFORATION, w_perforationIndex, "Petrel:Skin0");
-						if (w_petrelSkin.size() > 0)
+						auto w_sismageSkin = w_wellboreCompletion->getConnectionExtraMetadata(WITSML2_1_NS::WellboreCompletion::WellReservoirConnectionType::PERFORATION, w_perforationIndex, "Sismage-CIG:Skin0");
+						if (w_sismageSkin.size() > 0)
 						{
-							w_perforationSkin = w_petrelSkin[0];
+							w_perforationSkin = w_sismageSkin[0];
 						}
 						// diameter
-						auto w_petrelDiam = w_wellboreCompletion->getConnectionExtraMetadata(WITSML2_1_NS::WellboreCompletion::WellReservoirConnectionType::PERFORATION, w_perforationIndex, "Petrel:BoreholePerforatedSection0");
-						if (w_petrelDiam.size() > 0)
+						auto w_sismageDiam = w_wellboreCompletion->getConnectionExtraMetadata(WITSML2_1_NS::WellboreCompletion::WellReservoirConnectionType::PERFORATION, w_perforationIndex, "Sismage-CIG:CompletionDiameter");
+						if (w_sismageDiam.size() > 0)
 						{
-							w_perforationDiameter = w_petrelDiam[0];
+							w_perforationDiameter = w_sismageDiam[0];
 						}
 					}
 					else
 					{
-						// Test with Sismage rules
-						auto w_sismageName = w_wellboreCompletion->getConnectionExtraMetadata(WITSML2_1_NS::WellboreCompletion::WellReservoirConnectionType::PERFORATION, w_perforationIndex, "Sismage-CIG:Name");
-						if (w_sismageName.size() > 0)
-						{
-							w_perforationName += "_" + w_sismageName[0];
-							// skin
-							auto w_sismageSkin = w_wellboreCompletion->getConnectionExtraMetadata(WITSML2_1_NS::WellboreCompletion::WellReservoirConnectionType::PERFORATION, w_perforationIndex, "Sismage-CIG:Skin0");
-							if (w_sismageSkin.size() > 0)
-							{
-								w_perforationSkin = w_sismageSkin[0];
-							}
-							// diameter
-							auto w_sismageDiam = w_wellboreCompletion->getConnectionExtraMetadata(WITSML2_1_NS::WellboreCompletion::WellReservoirConnectionType::PERFORATION, w_perforationIndex, "Sismage-CIG:CompletionDiameter");
-							if (w_sismageDiam.size() > 0)
-							{
-								w_perforationDiameter = w_sismageDiam[0];
-							}
-						}
-						else
-						{
-							// default
-							w_perforationName += "_" + w_wellboreCompletion->getConnectionUid(WITSML2_1_NS::WellboreCompletion::WellReservoirConnectionType::PERFORATION, w_perforationIndex);
-						}
+						// default
+						w_perforationName += "_" + w_wellboreCompletion->getConnectionUid(WITSML2_1_NS::WellboreCompletion::WellReservoirConnectionType::PERFORATION, w_perforationIndex);
 					}
-					w_perforationName += "__Skin_" + w_perforationSkin + "__Diam_" + w_perforationDiameter;
-
-					int w_nodeId = _output->GetDataAssembly()->AddNode(this->MakeValidNodeName(("_" + w_wellboreCompletion->getUuid() + "_" + w_wellboreCompletion->getConnectionUid(WITSML2_1_NS::WellboreCompletion::WellReservoirConnectionType::PERFORATION, w_perforationIndex)).c_str()).c_str(), w_completionNodeId);
-					_output->GetDataAssembly()->SetAttribute(w_nodeId, "label", MakeValidNodeName((w_perforationName).c_str()).c_str());
-					_output->GetDataAssembly()->SetAttribute(w_nodeId, "type", std::to_string(static_cast<int>(TreeViewNodeType::Perforation)).c_str());
-					_output->GetDataAssembly()->SetAttribute(w_nodeId, "connection", w_wellboreCompletion->getConnectionUid(WITSML2_1_NS::WellboreCompletion::WellReservoirConnectionType::PERFORATION, w_perforationIndex).c_str());
-					_output->GetDataAssembly()->SetAttribute(w_nodeId, "skin", w_perforationSkin.c_str());
-					_output->GetDataAssembly()->SetAttribute(w_nodeId, "diameter", w_perforationDiameter.c_str());
 				}
+				w_perforationName += "__Skin_" + w_perforationSkin + "__Diam_" + w_perforationDiameter;
+
+				int w_nodeId = _output->GetDataAssembly()->AddNode(this->MakeValidNodeName(("_" + w_wellboreCompletion->getUuid() + "_" + w_wellboreCompletion->getConnectionUid(WITSML2_1_NS::WellboreCompletion::WellReservoirConnectionType::PERFORATION, w_perforationIndex)).c_str()).c_str(), w_completionNodeId);
+				_output->GetDataAssembly()->SetAttribute(w_nodeId, "label", MakeValidNodeName((w_perforationName).c_str()).c_str());
+				_output->GetDataAssembly()->SetAttribute(w_nodeId, "type", std::to_string(static_cast<int>(TreeViewNodeType::Perforation)).c_str());
+				_output->GetDataAssembly()->SetAttribute(w_nodeId, "connection", w_wellboreCompletion->getConnectionUid(WITSML2_1_NS::WellboreCompletion::WellReservoirConnectionType::PERFORATION, w_perforationIndex).c_str());
+				_output->GetDataAssembly()->SetAttribute(w_nodeId, "skin", w_perforationSkin.c_str());
+				_output->GetDataAssembly()->SetAttribute(w_nodeId, "diameter", w_perforationDiameter.c_str());
 			}
 		}
 	}
+	//	}
 	return w_result;
 }
 std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchTimeSeries(const std::string& p_fileName)
@@ -1165,7 +1185,7 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::addDataToParent(cons
 				if (abstractRepresentation->getOutput()->GetNumberOfPartitions() == 0) {
 					abstractRepresentation->loadVtkObject();
 				}
-				abstractRepresentation->addDataArray(w_uuid);
+				char * name = abstractRepresentation->addDataArray(w_uuid);
 			}
 			else
 			{
@@ -1366,6 +1386,8 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::deleteMapper(double 
 
 vtkPartitionedDataSetCollection* ResqmlDataRepositoryToVtkPartitionedDataSetCollection::getVtkPartitionedDatasSetCollection(const double p_time, const uint32_t p_nbProcess, const uint32_t p_processId)
 {
+	addResqmlColor();
+
 	deleteMapper(p_time);
 
 	// vtkParitionedDataSetCollection - hierarchy - build
@@ -1478,14 +1500,63 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::setMarkerSize(uint32
 
 void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::addResqmlColor()
 {
-	std::ostringstream loadPython;
-	loadPython << "from paraview.simple import *\n"
-		<< "colorepc = GetActiveSource()\n"
-		<< "SetActiveSource(colorepc)\n"
-		<< "renderView1 = GetActiveViewOrCreate('RenderView')\n"
-		<< "colorepcDisplay = GetDisplayProperties(colorepc, view=renderView1)\n"
-		<< _commandColorPython;
+	vtkSMPVRepresentationProxy* representation = getRepresentation();
 
-	vtkPythonInterpreter::Initialize();
-	vtkPythonInterpreter::RunSimpleString(loadPython.str().c_str());
+	if (representation)
+	{
+		for (auto i = _blockColorsMap.begin(); i != _blockColorsMap.end(); ++i)
+		{
+			vtkSMColorMapEditorHelper::SetBlockColor(representation, i->first, i->second);
+		}
+	}
 }
+
+vtkSMPVRepresentationProxy* ResqmlDataRepositoryToVtkPartitionedDataSetCollection::getRepresentation()
+{
+	vtkSMPVRepresentationProxy* representation = nullptr;
+
+	vtkSMSessionProxyManager* activeSessionProxyManager = vtkSMProxyManager::GetProxyManager()->GetActiveSessionProxyManager();
+	if (!activeSessionProxyManager)
+	{
+		vtkOutputWindowDisplayErrorText("vtkSMSessionProxyManager not found.\n");
+	}
+	else
+	{
+		vtkSMProxySelectionModel* selectionModel = activeSessionProxyManager->GetSelectionModel("ActiveView");
+		if (!selectionModel)
+		{
+			vtkOutputWindowDisplayErrorText("Failed to get ActiveView selection model.");
+		}
+		else
+		{
+			vtkSMViewProxy* activeView = vtkSMViewProxy::SafeDownCast(selectionModel->GetCurrentProxy());
+			if (!activeView)
+			{
+				vtkOutputWindowDisplayErrorText("No active view found.\n");
+			}
+			else
+			{
+				// search representation
+				vtkNew<vtkCollection> representations;
+				activeSessionProxyManager->GetProxies("representations", representations);
+
+				for (int i = 0; i < representations->GetNumberOfItems(); i++)
+				{
+					vtkSMPVRepresentationProxy* rep =
+						vtkSMPVRepresentationProxy::SafeDownCast(representations->GetItemAsObject(i));
+					if (rep && rep->GetProperty("Input"))
+					{
+						vtkSMPropertyHelper helper(rep->GetProperty("Input"));
+						if (helper.GetNumberOfElements() > 0)
+						{
+							return rep;
+						}
+					}
+				}
+			}
+		}
+
+	}
+	return representation;
+}
+

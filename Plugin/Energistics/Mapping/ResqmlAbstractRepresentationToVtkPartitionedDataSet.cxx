@@ -33,23 +33,34 @@ under the License.
 // include F2i-consulting Energistics Paraview Plugin
 #include "Mapping/ResqmlPropertyToVtkDataArray.h"
 
+
+#include <vtkCollection.h>
+#include <vtkSMColorMapEditorHelper.h>
+#include <vtkSMPropertyHelper.h>
+#include <vtkSMProxyManager.h>
+#include <vtkSMProxySelectionModel.h>
+#include <vtkSMRepresentationProxy.h>
+#include <vtkSMSessionProxyManager.h>
+#include <vtkSMViewProxy.h>
+
+
 //----------------------------------------------------------------------------
-ResqmlAbstractRepresentationToVtkPartitionedDataSet::ResqmlAbstractRepresentationToVtkPartitionedDataSet(const RESQML2_NS::AbstractRepresentation *p_abstractRepresentation, uint32_t p_procNumber, uint32_t p_maxProc)
+ResqmlAbstractRepresentationToVtkPartitionedDataSet::ResqmlAbstractRepresentationToVtkPartitionedDataSet(const RESQML2_NS::AbstractRepresentation* p_abstractRepresentation, uint32_t p_procNumber, uint32_t p_maxProc)
 	: CommonAbstractObjectToVtkPartitionedDataSet(p_abstractRepresentation,
-												  p_procNumber,
-												  p_maxProc),
-	  _subrepPointerOnPointsCount(0),
-	  _resqmlData(p_abstractRepresentation),
-	  _uuidToVtkDataArray()
+		p_procNumber,
+		p_maxProc),
+	_subrepPointerOnPointsCount(0),
+	_resqmlData(p_abstractRepresentation),
+	_uuidToVtkDataArray()
 {
 }
 
-void ResqmlAbstractRepresentationToVtkPartitionedDataSet::addDataArray(const std::string &p_uuid, uint32_t p_patchIndex)
+char * ResqmlAbstractRepresentationToVtkPartitionedDataSet::addDataArray(const std::string& p_uuid, uint32_t p_patchIndex)
 {
-	std::vector<RESQML2_NS::AbstractValuesProperty *> w_valuesPropertySet = getResqmlData()->getValuesPropertySet();
-	std::vector<RESQML2_NS::AbstractValuesProperty *>::iterator w_it = std::find_if(w_valuesPropertySet.begin(), w_valuesPropertySet.end(),
-																					[&p_uuid](RESQML2_NS::AbstractValuesProperty const *w_property)
-																					{ return w_property->getUuid() == p_uuid; });
+	std::vector<RESQML2_NS::AbstractValuesProperty*> w_valuesPropertySet = getResqmlData()->getValuesPropertySet();
+	std::vector<RESQML2_NS::AbstractValuesProperty*>::iterator w_it = std::find_if(w_valuesPropertySet.begin(), w_valuesPropertySet.end(),
+		[&p_uuid](RESQML2_NS::AbstractValuesProperty const* w_property)
+		{ return w_property->getUuid() == p_uuid; });
 
 	if (w_it != std::end(w_valuesPropertySet))
 	{
@@ -74,29 +85,33 @@ void ResqmlAbstractRepresentationToVtkPartitionedDataSet::addDataArray(const std
 			case gsoap_eml2_3::eml23__IndexableElement::cells:
 			case gsoap_eml2_3::eml23__IndexableElement::triangles:
 				_vtkData->GetPartition(0)->GetCellData()->AddArray(w_fesppProperty->getVtkData());
+				ActiveProperty(w_fesppProperty->getVtkData()->GetName(), vtkDataObject::AttributeTypes::CELL);
 				break;
 			case gsoap_eml2_3::eml23__IndexableElement::nodes:
 				_vtkData->GetPartition(0)->GetPointData()->AddArray(w_fesppProperty->getVtkData());
+				ActiveProperty(w_fesppProperty->getVtkData()->GetName(), vtkDataObject::AttributeTypes::POINT);
 				break;
 			default:
 				throw std::invalid_argument("The property " + p_uuid + " is attached on a non supported topological element i.e. not cell, not point.");
 			}
 			_uuidToVtkDataArray[p_uuid] = w_fesppProperty;
 			_vtkData->Modified();
+			return w_fesppProperty->getVtkData()->GetName();
 		}
 	}
 	else
 	{
 		throw std::invalid_argument("The property " + p_uuid + "cannot be added since it is not contained in the representation " + getResqmlData()->getUuid());
 	}
+	return nullptr;
 }
 
-void ResqmlAbstractRepresentationToVtkPartitionedDataSet::deleteDataArray(const std::string &p_uuid)
+void ResqmlAbstractRepresentationToVtkPartitionedDataSet::deleteDataArray(const std::string& p_uuid)
 {
-	ResqmlPropertyToVtkDataArray *w_vtkDataArray = _uuidToVtkDataArray[p_uuid];
+	ResqmlPropertyToVtkDataArray* w_vtkDataArray = _uuidToVtkDataArray[p_uuid];
 	if (w_vtkDataArray != nullptr)
 	{
-		char *w_dataArrayName = w_vtkDataArray->getVtkData()->GetName();
+		char* w_dataArrayName = w_vtkDataArray->getVtkData()->GetName();
 		if (_vtkData->GetPartition(0)->GetCellData()->HasArray(w_dataArrayName))
 		{
 			_vtkData->GetPartition(0)->GetCellData()->RemoveArray(w_dataArrayName);
@@ -129,4 +144,57 @@ void ResqmlAbstractRepresentationToVtkPartitionedDataSet::unregisterSubRep()
 unsigned int ResqmlAbstractRepresentationToVtkPartitionedDataSet::subRepLinkedCount()
 {
 	return _subrepPointerOnPointsCount;
+}
+
+
+int ResqmlAbstractRepresentationToVtkPartitionedDataSet::ActiveProperty(const char* arrayName, vtkDataObject::AttributeTypes type)
+{
+	vtkSMSessionProxyManager* activeSessionProxyManager = vtkSMProxyManager::GetProxyManager()->GetActiveSessionProxyManager();
+	if (!activeSessionProxyManager)
+	{
+		vtkOutputWindowDisplayErrorText("vtkSMSessionProxyManager not found.\n");
+		return 0;
+	}
+	else
+	{
+		vtkSMProxySelectionModel* selectionModel = activeSessionProxyManager->GetSelectionModel("ActiveView");
+		if (!selectionModel)
+		{
+			vtkOutputWindowDisplayErrorText("Failed to get ActiveView selection model.");
+			return 0;
+		}
+		else
+		{
+			vtkSMViewProxy* activeView = vtkSMViewProxy::SafeDownCast(selectionModel->GetCurrentProxy());
+			if (!activeView)
+			{
+				vtkOutputWindowDisplayErrorText("No active view found.\n");
+				return 0;
+			}
+			else
+			{
+				// Recherche de la représentation pour notre source
+				vtkNew<vtkCollection> representations;
+				activeSessionProxyManager->GetProxies("representations", representations);
+
+				for (int i = 0; i < representations->GetNumberOfItems(); i++)
+				{
+					vtkSMRepresentationProxy* representation =
+						vtkSMRepresentationProxy::SafeDownCast(representations->GetItemAsObject(i));
+					if (representation && representation->GetProperty("Input"))
+					{
+						vtkSMPropertyHelper helper(representation->GetProperty("Input"));
+						if (helper.GetNumberOfElements() > 0)
+						{
+							vtkSMColorMapEditorHelper::SetScalarColoring(representation, arrayName, type);
+							//strcpy(activeArrayName, arrayName);
+							//activeType = type;
+							return 1;
+						}
+					}
+				}
+			}
+		}
+	}
+	return 1;
 }

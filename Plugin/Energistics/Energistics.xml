@@ -7,6 +7,7 @@
 		<SourceProxy name="EPCCollector" class="vtkEPCCollector" label="EPCCollector">
 			<Documentation short_help="Pipeline grouping epc files.">Pipeline grouping epc files.</Documentation>
 			<Hints>
+				<View type="RenderView" />
 				<RepresentationType view="RenderView" type="Surface" />
 				<PipelineIcon name="CINEMA_MARK" />
 			</Hints>
@@ -15,7 +16,7 @@
 			<StringVectorProperty command="GetAllFiles" information_only="1" name="FilesInfo">
 				<StringArrayHelper />
 			</StringVectorProperty>
-			<StringVectorProperty name="Files" command="SetFiles" number_of_elements="1" repeat_command="1" label="all files loaded">
+			<StringVectorProperty name="Files" command="SetFiles" number_of_elements="1" repeat_command="1" label="all files loaded" panel_visibility="never">
 				<ArraySelectionDomain name="array_list" attribute_type="Scalars">
 					<RequiredProperties>
 						<Property function="FilesInfo" name="FilesInfo" />

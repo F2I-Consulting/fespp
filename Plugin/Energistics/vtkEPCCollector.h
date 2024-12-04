@@ -36,6 +36,8 @@ under the License.
 class vtkDataAssembly;
 class vtkMultiProcessController;
 class vtkSMSourceProxy;
+class vtkSMViewProxy;
+class vtkPVRenderView;
 
 /**
  * A VTK reader for EPC document.
@@ -167,6 +169,8 @@ protected:
 
 private:
 	int RequestData(vtkInformation*, vtkInformationVector**, vtkInformationVector*) final;
+
+	vtkSMSourceProxy* GetThisProxy();
 
 	void Extract(vtkSMSourceProxy*, int index);
 	void Copy(vtkSMSourceProxy*, int index);

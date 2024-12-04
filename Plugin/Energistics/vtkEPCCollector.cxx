@@ -68,6 +68,10 @@ under the License.
 #include <vtkSMColorMapEditorHelper.h>
 #include <vtkSMProxySelectionModel.h>
 
+#include <vtkPVRenderView.h>
+#include <vtkSMSession.h>
+#include <vtkSMParaViewPipelineControllerWithRendering.h>
+
 vtkStandardNewMacro(vtkEPCCollector);
 vtkCxxSetObjectMacro(vtkEPCCollector, Controller, vtkMultiProcessController);
 
@@ -148,8 +152,7 @@ vtkStringArray* vtkEPCCollector::GetAllFiles() // call only by GUI
 			{
 				vtkWarningMacro(<< msg);
 			}
-			AssemblyTag++;
-			//Modified();
+			Modified();
 			Update();
 		}
 	}
@@ -179,6 +182,8 @@ void vtkEPCCollector::AddFiles(const std::string& file)
 	{
 		GetAllFiles();
 	}
+	Modified();
+	Update();
 }
 
 //------------------------------------------------------------------------------
@@ -314,15 +319,6 @@ int vtkEPCCollector::RequestData(vtkInformation* info,
 		vtkPartitionedDataSetCollection::GetData(outInfo)->DeepCopy(pdc);
 		// close hdfProxies in case the system would want reuse hdf files
 		repository.closeHdfProxies();
-		if (pdc->GetNumberOfPartitionedDataSets() > 0)
-		{
-			if (!colorApplyLoading) {
-				colorApplyLoading = true;
-				repository.addResqmlColor();
-				colorApplyLoading = false;
-			}
-		}
-		Modified();
 	}
 	catch (const std::exception& e)
 	{
@@ -332,10 +328,9 @@ int vtkEPCCollector::RequestData(vtkInformation* info,
 	{
 		vtkSmartPointer < vtkPartitionedDataSetCollection> pdc = GetOutput();
 		ExtractTag = pdc->GetNumberOfPartitionedDataSets() > 0 ? 0 : 1;
-		Modified();
 	}
-
-
+	AssemblyTag++;
+	Modified();
 	return 1;
 }
 
@@ -367,21 +362,7 @@ void vtkEPCCollector::SetDataSetList(const char* name, int status)
 {
 	if (status == 1)
 	{
-		vtkSMProxyManager* proxyManager = vtkSMProxyManager::GetProxyManager();
-		vtkSMSession* session = proxyManager->GetActiveSession();
-
-		vtkSMSourceProxy* readerProxy = nullptr;
-		vtkNew<vtkSMProxyIterator> iterProxy;
-		iterProxy->SetSession(session);
-		for (iterProxy->Begin("sources"); !iterProxy->IsAtEnd(); iterProxy->Next())
-		{
-			vtkSMSourceProxy* sourceProxy = vtkSMSourceProxy::SafeDownCast(iterProxy->GetProxy());
-			if (sourceProxy && sourceProxy->GetClientSideObject() == this)
-			{
-				readerProxy = sourceProxy;
-				break;
-			}
-		}
+		vtkSMSourceProxy* readerProxy = GetThisProxy();
 
 		if (readerProxy)
 		{
@@ -415,21 +396,7 @@ void vtkEPCCollector::SetDataSetListForCopy(const char* name, int status)
 {
 	if (status == 1)
 	{
-		vtkSMProxyManager* proxyManager = vtkSMProxyManager::GetProxyManager();
-		vtkSMSession* session = proxyManager->GetActiveSession();
-
-		vtkSMSourceProxy* readerProxy = nullptr;
-		vtkNew<vtkSMProxyIterator> iterProxy;
-		iterProxy->SetSession(session);
-		for (iterProxy->Begin("sources"); !iterProxy->IsAtEnd(); iterProxy->Next())
-		{
-			vtkSMSourceProxy* sourceProxy = vtkSMSourceProxy::SafeDownCast(iterProxy->GetProxy());
-			if (sourceProxy && sourceProxy->GetClientSideObject() == this)
-			{
-				readerProxy = sourceProxy;
-				break;
-			}
-		}
+		vtkSMSourceProxy* readerProxy = GetThisProxy();
 
 		if (readerProxy)
 		{
@@ -449,7 +416,6 @@ vtkStringArray* vtkEPCCollector::GetAllDataSetForCopy()
 // Create a new EnergisticsExtractor sub-pipeline 
 void vtkEPCCollector::Extract(vtkSMSourceProxy* readerProxy, int index)
 {
-	vtkOutputWindowDisplayDebugText("Extract\n");
 	vtkSMSessionProxyManager* sessionProxyManager = vtkSMProxyManager::GetProxyManager()->GetActiveSessionProxyManager();
 
 	vtkSmartPointer<vtkStringArray> list = nullptr;
@@ -503,7 +469,7 @@ void vtkEPCCollector::Copy(vtkSMSourceProxy* readerProxy, int index)
 
 	list = DataSetListForCopy;
 
-	vtkSMSourceProxy* producerCopyProxy = vtkSMSourceProxy::SafeDownCast(sessionProxyManager->NewProxy("sources", "PVTrivialProducer"));;
+	vtkSMSourceProxy* producerCopyProxy = vtkSMSourceProxy::SafeDownCast(sessionProxyManager->NewProxy("sources", "PVTrivialProducer"));
 	producerCopyProxy->UpdateVTKObjects();
 
 	auto* clientSideObject = producerCopyProxy->GetClientSideObject();
@@ -522,21 +488,7 @@ void vtkEPCCollector::Copy(vtkSMSourceProxy* readerProxy, int index)
 // Clear property Extract with and without copy
 void vtkEPCCollector::ClearExtractAndCopy()
 {
-	vtkSMProxyManager* proxyManager = vtkSMProxyManager::GetProxyManager();
-	vtkSMSession* session = proxyManager->GetActiveSession();
-
-	vtkSMSourceProxy* readerProxy = nullptr;
-	vtkNew<vtkSMProxyIterator> iterProxy;
-	iterProxy->SetSession(session);
-	for (iterProxy->Begin("sources"); !iterProxy->IsAtEnd(); iterProxy->Next())
-	{
-		vtkSMSourceProxy* sourceProxy = vtkSMSourceProxy::SafeDownCast(iterProxy->GetProxy());
-		if (sourceProxy && sourceProxy->GetClientSideObject() == this)
-		{
-			readerProxy = sourceProxy;
-			break;
-		}
-	}
+	vtkSMSourceProxy* readerProxy = GetThisProxy();
 
 	if (readerProxy)
 	{
@@ -617,4 +569,30 @@ vtkStringArray* vtkEPCCollector::GetHierarchyBlocks(std::string type)
 	}
 
 	return result;
+}
+
+//------------------------------------------------------------------------------
+vtkSMSourceProxy* vtkEPCCollector::GetThisProxy()
+{
+	vtkSMProxyManager* proxyManager = vtkSMProxyManager::GetProxyManager();
+	vtkSMSession* session = proxyManager->GetActiveSession();
+	
+	vtkSMSourceProxy* collectorProxy = nullptr;
+	vtkNew<vtkSMProxyIterator> iterProxy;
+	iterProxy->SetSession(session);
+	for (iterProxy->Begin("sources"); !iterProxy->IsAtEnd(); iterProxy->Next())
+	{
+		vtkSMSourceProxy* sourceProxy = vtkSMSourceProxy::SafeDownCast(iterProxy->GetProxy());
+		if (sourceProxy && sourceProxy->GetClientSideObject() == this)
+		{
+			collectorProxy = sourceProxy;
+			break;
+		}
+	}
+
+	if (collectorProxy)
+	{
+		return collectorProxy;
+	}
+	return nullptr;
 }
