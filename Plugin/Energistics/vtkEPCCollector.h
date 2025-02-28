@@ -28,7 +28,10 @@ under the License.
 #include <vtkSmartPointer.h>
 #include <vtkStringArray.h>
 #include <vtkIntArray.h>
-#include <vtkCommand.h> // For UserEvent
+
+#include <vtkVector.h>
+#include <vtkScalarsToColors.h>
+
 
 #include "EnergisticsModule.h"
 #include "Mapping/ResqmlDataRepositoryToVtkPartitionedDataSetCollection.h"
@@ -162,6 +165,7 @@ public:
 	vtkStringArray* GetAllDataSetForCopy();
 	///@}
 
+	void ApplyColors();
 
 protected:
 	vtkEPCCollector();
@@ -211,6 +215,7 @@ private:
 	ResqmlDataRepositoryToVtkPartitionedDataSetCollection repository;
 
 	bool colorApplyLoading;
+
 };
 #endif
 

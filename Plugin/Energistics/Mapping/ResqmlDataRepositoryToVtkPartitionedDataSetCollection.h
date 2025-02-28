@@ -99,6 +99,8 @@ public:
 	std::string selectNodeId(int p_nodeId);
 	void clearSelection();
 
+	void addResqmlColor();
+
 private:
 	std::string buildDataAssemblyFromDataObjectRepo(const char *p_fileName);
 
@@ -112,10 +114,11 @@ private:
 	int searchPropertySet(resqml2_0_1::PropertySet const *p_propSet, int p_nodeId);
 	std::string searchProperties(resqml2::AbstractRepresentation const *p_representation, int p_nodeParent);
 
+	void ResetResqmlColor();
+
 	void selectNodeIdParent(int p_nodeId);
 	void selectNodeIdChildren(int p_nodeId);
 
-	void addResqmlColor();
 	vtkSMPVRepresentationProxy* getRepresentation();
 
 	/**

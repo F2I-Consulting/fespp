@@ -48,6 +48,8 @@
 				</Hints>
 			</StringVectorProperty>
 
+			<Property name="ApplyColors" command="ApplyColors" panel_widget="command_button"/>
+
 
 			<!-- Extract Mode -->
 			<!-- AssemblyTag == 0 implies there's no assembly in the file, in which case, we want to hide this widget entirely -->

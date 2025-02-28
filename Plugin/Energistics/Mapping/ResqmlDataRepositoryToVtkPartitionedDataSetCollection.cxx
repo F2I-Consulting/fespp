@@ -1386,6 +1386,8 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::deleteMapper(double 
 
 vtkPartitionedDataSetCollection* ResqmlDataRepositoryToVtkPartitionedDataSetCollection::getVtkPartitionedDatasSetCollection(const double p_time, const uint32_t p_nbProcess, const uint32_t p_processId)
 {
+	ResetResqmlColor();
+
 	addResqmlColor();
 
 	deleteMapper(p_time);
@@ -1483,7 +1485,7 @@ vtkPartitionedDataSetCollection* ResqmlDataRepositoryToVtkPartitionedDataSetColl
 			}
 		}
 	}
-
+	
 	_output->Modified();
 	return _output;
 }
@@ -1498,15 +1500,28 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::setMarkerSize(uint32
 	_markerSize = size;
 }
 
+void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::ResetResqmlColor()
+{
+	vtkSMPVRepresentationProxy* representation = getRepresentation();
+
+	if (representation)
+	{
+		vtkSMColorMapEditorHelper::RemoveBlockColor(representation, "/");
+		representation->Modified();
+		representation->UpdatePipeline();
+		representation->UpdatePipelineInformation();
+	}
+}
+
 void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::addResqmlColor()
 {
 	vtkSMPVRepresentationProxy* representation = getRepresentation();
 
 	if (representation)
 	{
-		for (auto i = _blockColorsMap.begin(); i != _blockColorsMap.end(); ++i)
+		for (const auto& blockColors : _blockColorsMap)
 		{
-			vtkSMColorMapEditorHelper::SetBlockColor(representation, i->first, i->second);
+			vtkSMColorMapEditorHelper::SetBlockColor(representation, blockColors.first, blockColors.second);
 		}
 	}
 }

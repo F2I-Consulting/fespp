@@ -31,46 +31,24 @@ under the License.
 #include <vtkInformationVector.h>
 #include <vtkPartitionedDataSetCollection.h>
 #include <vtkDataAssembly.h>
-#include <vtkObjectFactory.h>
 #include <vtkMultiProcessController.h>
 #include <vtkStreamingDemandDrivenPipeline.h>
-#include <vtkDataObject.h>
 #include <vtkPVDataInformation.h>
-
 #include <vtkPartitionedDataSet.h>
-
 #include "vtkSMInputProperty.h"
 #include "vtkSMProxyManager.h"
 #include "vtkSMSessionProxyManager.h"
 #include "vtkSMSourceProxy.h"
-#include "vtkSMViewProxy.h"
-#include "vtkSMRenderViewProxy.h"
-#include "vtkSMRepresentationProxy.h"
 #include "vtkSMPropertyHelper.h"
 #include "vtkSMProxyIterator.h"
 #include <vtkSMParaViewPipelineController.h>
-#include <vtkSMOutputPort.h>
-#include <vtkCommand.h>
-#include <vtkSMProperty.h>
 #include <vtkDataSet.h>
 #include <vtkSMPropertyIterator.h>
 #include <vtkSmartPointer.h>
-#include <vtkSMVectorProperty.h>
-#include <vtkTextActor.h>
 #include <vtkPVTrivialProducer.h>
-#include <vtkCompositeDataPipeline.h>
-#include <vtkSMUncheckedPropertyHelper.h>
 #include <vtkSMStringVectorProperty.h>
-#include <vtkCompositeDataPipeline.h>
 #include <vtkNew.h>
-#include <vtkCollection.h>
-#include <vtkSMRepresentationProxy.h>
-#include <vtkSMColorMapEditorHelper.h>
-#include <vtkSMProxySelectionModel.h>
-
-#include <vtkPVRenderView.h>
 #include <vtkSMSession.h>
-#include <vtkSMParaViewPipelineControllerWithRendering.h>
 
 vtkStandardNewMacro(vtkEPCCollector);
 vtkCxxSetObjectMacro(vtkEPCCollector, Controller, vtkMultiProcessController);
@@ -327,7 +305,7 @@ int vtkEPCCollector::RequestData(vtkInformation* info,
 	if (GetOutput())
 	{
 		vtkSmartPointer < vtkPartitionedDataSetCollection> pdc = GetOutput();
-		ExtractTag = pdc->GetNumberOfPartitionedDataSets() > 0 ? 0 : 1;
+		ExtractTag = pdc->GetNumberOfPartitionedDataSets() > 0 ? 0 : ExtractTag++;
 	}
 	AssemblyTag++;
 	Modified();
@@ -542,13 +520,6 @@ vtkStringArray* vtkEPCCollector::GetHierarchyBlocks(std::string type)
 	result->Initialize();
 	vtkPVDataInformation* dinfo = vtkPVDataInformation::New();
 	dinfo->CopyFromObject(this->GetOutputDataObject(0));
-	vtkSmartPointer<vtkDataAssembly> hierarchy = dinfo->GetHierarchy();
-
-	for (unsigned int i = 1; i < hierarchy->GetNumberOfChildren(0) + 1; ++i) // 0 is root
-	{
-//		result->InsertNextValue(hierarchy->GetAttributeOrDefault(i, "label", hierarchy->GetNodeName(i)));
-	}
-
 	vtkSmartPointer<vtkDataAssembly> assembly = dinfo->GetDataAssembly();
 
 	for (const auto& node : assembly->GetChildNodes(0))
@@ -595,4 +566,12 @@ vtkSMSourceProxy* vtkEPCCollector::GetThisProxy()
 		return collectorProxy;
 	}
 	return nullptr;
+}
+
+// --------------------------------------------------------------------------
+void vtkEPCCollector::ApplyColors()
+{
+	vtkOutputWindowDisplayText("IN => ApplyColors\n");
+	repository.addResqmlColor();
+	vtkOutputWindowDisplayText("OUT => ApplyColors");
 }
