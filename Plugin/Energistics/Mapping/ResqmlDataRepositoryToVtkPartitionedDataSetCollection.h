@@ -119,6 +119,8 @@ private:
 	void selectNodeIdParent(int p_nodeId);
 	void selectNodeIdChildren(int p_nodeId);
 
+	void RemoveAllDataSetIndicesRecursive(int nodeId);
+
 	vtkSMPVRepresentationProxy* getRepresentation();
 
 	/**
@@ -163,8 +165,10 @@ private:
 	//\/          uuid             title            index        prop_uuid
 	std::map<std::string, std::map<std::string, std::map<double, std::string>>> _timeSeriesUuidAndTitleToIndexAndPropertiesUuid;
 
+	std::set<int> _selection;
 	std::set<int> _currentSelection;
 	std::set<int> _oldSelection;
+	bool _selectionCleared;
 
 	std::set<std::string> _files;
 

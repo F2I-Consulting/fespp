@@ -571,7 +571,5 @@ vtkSMSourceProxy* vtkEPCCollector::GetThisProxy()
 // --------------------------------------------------------------------------
 void vtkEPCCollector::ApplyColors()
 {
-	vtkOutputWindowDisplayText("IN => ApplyColors\n");
 	repository.addResqmlColor();
-	vtkOutputWindowDisplayText("OUT => ApplyColors");
 }

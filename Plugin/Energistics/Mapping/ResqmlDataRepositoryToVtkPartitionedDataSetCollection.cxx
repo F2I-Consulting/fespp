@@ -122,8 +122,10 @@ ResqmlDataRepositoryToVtkPartitionedDataSetCollection::ResqmlDataRepositoryToVtk
 	_markerSize(10),
 	_output(vtkSmartPointer<vtkPartitionedDataSetCollection>::New()),
 	_nodeIdToMapper(),
+	_selection(),
 	_currentSelection(),
-	_oldSelection()
+	_oldSelection(),
+	_selectionCleared(true)
 {
 	auto w_assembly = vtkSmartPointer<vtkDataAssembly>::New();
 	w_assembly->SetRootNodeName("data");
@@ -870,6 +872,7 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchTimeSer
 
 std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::selectNodeId(int p_node)
 {
+	_currentSelection.clear();
 	if (p_node != 0)
 	{
 		selectNodeIdParent(p_node);
@@ -879,6 +882,7 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::selectNodeId(
 	}
 	selectNodeIdChildren(p_node);
 
+	_selection.insert(_currentSelection.begin(), _currentSelection.end());
 	return "";
 }
 
@@ -903,8 +907,10 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::selectNodeIdChildren
 
 void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::clearSelection()
 {
-	_oldSelection = _currentSelection;
+	_oldSelection = _selection;
+	_selection.clear();
 	_currentSelection.clear();
+	_selectionCleared = true;
 }
 
 void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::initMapperSet(const TreeViewNodeType p_type, const int p_nodeId, const uint32_t p_nbProcess, const uint32_t p_processId)
@@ -1290,7 +1296,7 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::deleteMapper(double 
 				if (_nodeIdToMapperSet.find(w_nodeParent) != _nodeIdToMapperSet.end())
 				{
 					_nodeIdToMapperSet[w_nodeParent]->removeCommonAbstractObjectToVtkPartitionedDataSet(std::string(w_Assembly->GetNodeName(w_nodeId)).substr(1));
-					GetAssembly()->RemoveAllDataSetIndices(w_nodeId);
+					//GetAssembly()->RemoveAllDataSetIndices(w_nodeId);
 				}
 			}
 			catch (const std::exception& e)
@@ -1315,7 +1321,7 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::deleteMapper(double 
 					}
 					delete _nodeIdToMapper[w_nodeId];
 					_nodeIdToMapper.erase(w_nodeId);
-					GetAssembly()->RemoveAllDataSetIndices(w_nodeId);
+					//GetAssembly()->RemoveAllDataSetIndices(w_nodeId);
 				}
 				else
 				{
@@ -1336,7 +1342,7 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::deleteMapper(double 
 				{
 					delete _nodeIdToMapper[w_nodeId];
 					_nodeIdToMapper.erase(w_nodeId);
-					GetAssembly()->RemoveAllDataSetIndices(w_nodeId);
+					//GetAssembly()->RemoveAllDataSetIndices(w_nodeId);
 				}
 			}
 			catch (const std::exception& e)
@@ -1355,7 +1361,7 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::deleteMapper(double 
 					const char* w_connection;
 					_output->GetDataAssembly()->GetAttribute(w_nodeId, "connection", w_connection);
 					_nodeIdToMapperSet[w_nodeParent]->removeCommonAbstractObjectToVtkPartitionedDataSet(w_connection);
-					GetAssembly()->RemoveAllDataSetIndices(w_nodeId);
+					//GetAssembly()->RemoveAllDataSetIndices(w_nodeId);
 				}
 			}
 			catch (const std::exception& e)
@@ -1373,7 +1379,7 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::deleteMapper(double 
 				{
 					delete _nodeIdToMapperSet[w_nodeId];
 					_nodeIdToMapperSet.erase(w_nodeId);
-					GetAssembly()->RemoveAllDataSetIndices(w_nodeId);
+					//GetAssembly()->RemoveAllDataSetIndices(w_nodeId);
 				}
 			}
 			catch (const std::exception& e)
@@ -1382,6 +1388,7 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::deleteMapper(double 
 			}
 		}
 	}
+	this->RemoveAllDataSetIndicesRecursive(GetAssembly()->FindFirstNodeWithName("data"));
 }
 
 vtkPartitionedDataSetCollection* ResqmlDataRepositoryToVtkPartitionedDataSetCollection::getVtkPartitionedDatasSetCollection(const double p_time, const uint32_t p_nbProcess, const uint32_t p_processId)
@@ -1390,7 +1397,9 @@ vtkPartitionedDataSetCollection* ResqmlDataRepositoryToVtkPartitionedDataSetColl
 
 	addResqmlColor();
 
-	deleteMapper(p_time);
+	if (_selectionCleared) {
+		deleteMapper(p_time);
+	}
 
 	// vtkParitionedDataSetCollection - hierarchy - build
 	// foreach selection node init object
@@ -1431,7 +1440,7 @@ vtkPartitionedDataSetCollection* ResqmlDataRepositoryToVtkPartitionedDataSetColl
 		}
 	}
 
-	unsigned int w_PartitionIndex = 0;
+	unsigned int w_PartitionIndex = _output->GetNumberOfPartitionedDataSets();
 	// foreach selection node load object
 	for (const int w_nodeSelection : _currentSelection)
 	{
@@ -1486,6 +1495,7 @@ vtkPartitionedDataSetCollection* ResqmlDataRepositoryToVtkPartitionedDataSetColl
 		}
 	}
 	
+	_selectionCleared = false;
 	_output->Modified();
 	return _output;
 }
@@ -1575,3 +1585,12 @@ vtkSMPVRepresentationProxy* ResqmlDataRepositoryToVtkPartitionedDataSetCollectio
 	return representation;
 }
 
+void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::RemoveAllDataSetIndicesRecursive(int nodeId)
+{
+	GetAssembly()->RemoveAllDataSetIndices(nodeId);
+
+	for (int child_id : GetAssembly()->GetChildNodes(nodeId))
+	{
+		RemoveAllDataSetIndicesRecursive(child_id);
+	}
+}
