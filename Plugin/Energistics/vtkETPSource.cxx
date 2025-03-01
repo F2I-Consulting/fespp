@@ -25,13 +25,10 @@ under the License.
 #include <thread>
 
 #include <vtkDataAssembly.h>
-#include <vtkDataObject.h>
 #include <vtkIndent.h>
 #include <vtkInformation.h>
 #include <vtkInformationVector.h>
-#include <vtkMultiProcessController.h>
 #include <vtkObjectFactory.h>
-#include <vtkPartitionedDataSet.h>
 #include <vtkPartitionedDataSetCollection.h>
 #include <vtkStdString.h>
 #include <vtkStreamingDemandDrivenPipeline.h>

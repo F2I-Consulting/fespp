@@ -24,7 +24,6 @@ under the License.
 #include <vtkSMSessionProxyManager.h>
 #include <vtkSMSourceProxy.h>
 #include <vtkSMViewProxy.h>
-#include <vtkSMRenderViewProxy.h>
 #include <vtkSMPropertyHelper.h>
 #include <vtkSMProxyIterator.h>
 #include <vtkSMParaViewPipelineControllerWithRendering.h>
@@ -111,7 +110,7 @@ void vtkEPCReader::AddFileNameToFiles(const char* fname)
 				// add FileName to EPC Collector Proxy
 				vtkSMPropertyHelper(sourceProxy, "Files").Set(fname);
 				sourceProxy->UpdateVTKObjects();
-				sourceProxy->UpdatePipelineInformation();
+				//sourceProxy->UpdatePipelineInformation();
 			}
 		}
 	}

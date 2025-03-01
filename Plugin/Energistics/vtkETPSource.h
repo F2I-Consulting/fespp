@@ -24,16 +24,10 @@ under the License.
 #include <set>
 
 #include <vtkPartitionedDataSetCollectionAlgorithm.h>
-#include <vtkCommand.h>
-#include <vtkObject.h>
-#include <vtkSmartPointer.h>
 #include <vtkStringArray.h>
 
 #include "EnergisticsModule.h"
 #include "Mapping/ResqmlDataRepositoryToVtkPartitionedDataSetCollection.h"
-
-class vtkDataAssembly;
-class vtkMultiProcessController;
 
 /**
  * A VTK reader for EPC document.

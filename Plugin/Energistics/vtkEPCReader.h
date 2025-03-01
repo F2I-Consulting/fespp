@@ -28,7 +28,6 @@ under the License.
 #include <vtkSmartPointer.h>
 #include <vtkStringArray.h>
 #include <vtkIntArray.h>
-#include <vtkCommand.h> // For UserEvent
 
 #include "EnergisticsModule.h"
 #include "Mapping/ResqmlDataRepositoryToVtkPartitionedDataSetCollection.h"
