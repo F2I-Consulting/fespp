@@ -459,7 +459,7 @@ void vtkEPCCollector::Copy(vtkSMSourceProxy* readerProxy, int index)
 		realProducer->SetOutput(partitionedDataSet->GetPartitionAsDataObject(0));
 	}
 
-	sessionProxyManager->RegisterProxy("sources", list->GetValue(index), producerCopyProxy);
+	sessionProxyManager->RegisterProxy("sources", list->GetValue(index).c_str(), producerCopyProxy);
 }
 
 //----------------------------------------------------------------------------
