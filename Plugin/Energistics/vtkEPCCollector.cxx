@@ -433,7 +433,7 @@ void vtkEPCCollector::Extract(vtkSMSourceProxy* readerProxy, int index)
 
 	vtkNew<vtkSMParaViewPipelineController> controller;
 	controller->InitializeProxy(extract);
-	controller->RegisterPipelineProxy(extract, list->GetValue(index));
+	controller->RegisterPipelineProxy(extract, list->GetValue(index).c_str());
 }
 
 //----------------------------------------------------------------------------
