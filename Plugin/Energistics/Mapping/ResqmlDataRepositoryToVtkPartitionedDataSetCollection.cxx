@@ -429,29 +429,50 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchReprese
 	
 	if (w_existingNodeId == -1)
 	{
-		p_NodeId = _output->GetDataAssembly()->AddNode(w_nodeName.c_str(), p_NodeId);
-
 		// To shorten the xmlTag by removing �Representation� from the end.
 		std::string w_representationVtkValidName = "";
+		std::string w_typeRepresentation = SimplifyXmlTag(p_representation->getXmlTag());
 
 		if (p_representation->isPartial())
 		{
 			w_representationVtkValidName = this->MakeValidNodeName(("partial_" + p_representation->getTitle()).c_str());
-			std::string w_typeRepresentation = SimplifyXmlTag(p_representation->getXmlTag());
+			p_NodeId = _output->GetDataAssembly()->AddNode(w_nodeName.c_str(), p_NodeId);
 			_output->GetDataAssembly()->SetAttribute(p_NodeId, "supporttype", w_typeRepresentation.c_str());
 			_output->GetDataAssembly()->SetAttribute(p_NodeId, "type", std::to_string(static_cast<int>(TreeViewNodeType::Partial)).c_str());
 		}
 		else
 		{
 			auto const* w_subrep = dynamic_cast<RESQML2_NS::SubRepresentation const*>(p_representation);
-			std::string w_typeRepresentation = SimplifyXmlTag(p_representation->getXmlTag());
-			w_representationVtkValidName = w_subrep == nullptr
-				? this->MakeValidNodeName((w_typeRepresentation + "_" + p_representation->getTitle()).c_str())
-				: this->MakeValidNodeName((w_typeRepresentation + "_" + w_subrep->getSupportingRepresentation(0)->getTitle() + "_" + p_representation->getTitle()).c_str());
 
-			const TreeViewNodeType w_type = w_subrep == nullptr
-				? TreeViewNodeType::Representation
-				: TreeViewNodeType::SubRepresentation;
+			TreeViewNodeType w_type;
+			if (w_subrep == nullptr) {
+				w_representationVtkValidName = this->MakeValidNodeName((w_typeRepresentation + "_" + p_representation->getTitle()).c_str());
+				w_type = TreeViewNodeType::Representation;
+			}
+			else { // subRep
+				auto elementType = w_subrep->getElementKindOfPatch(0, 0);
+
+				auto* supportingIjkGrid = dynamic_cast<RESQML2_NS::AbstractIjkGridRepresentation*>(w_subrep->getSupportingRepresentation(0));
+				auto* supportingUnstructuredGrid = dynamic_cast<RESQML2_NS::UnstructuredGridRepresentation*>(w_subrep->getSupportingRepresentation(0));
+
+				if (supportingIjkGrid != nullptr) { // support = ijkGrid
+					if (elementType != gsoap_eml2_3::eml23__IndexableElement::cells) {
+						return w_result;
+					}
+				}
+				else if (supportingUnstructuredGrid != nullptr) { // support = unstructuredGrid
+					if (elementType != gsoap_eml2_3::eml23__IndexableElement::cells &&
+						elementType != gsoap_eml2_3::eml23__IndexableElement::faces) {
+						return w_result;
+					}
+				}
+				else {
+					return w_result;
+				}
+				w_representationVtkValidName = this->MakeValidNodeName((w_typeRepresentation + "_" + w_subrep->getSupportingRepresentation(0)->getTitle() + "_" + p_representation->getTitle()).c_str());
+				w_type = TreeViewNodeType::SubRepresentation;
+			}
+			p_NodeId = _output->GetDataAssembly()->AddNode(w_nodeName.c_str(), p_NodeId);
 			_output->GetDataAssembly()->SetAttribute(p_NodeId, "type", std::to_string(static_cast<int>(w_type)).c_str());
 		}
 		_output->GetDataAssembly()->SetAttribute(p_NodeId, "label", w_representationVtkValidName.c_str());
@@ -467,13 +488,36 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchReprese
 				std::string w_typeRepresentation = SimplifyXmlTag(p_representation->getXmlTag());
 
 				auto const* w_subrep = dynamic_cast<RESQML2_NS::SubRepresentation const*>(p_representation);
-				w_representationVtkValidName = w_subrep == nullptr
-					? this->MakeValidNodeName((w_typeRepresentation + "_" + p_representation->getTitle()).c_str())
-					: this->MakeValidNodeName((w_typeRepresentation + "_" + w_subrep->getSupportingRepresentation(0)->getTitle() + "_" + p_representation->getTitle()).c_str());
 
-				const TreeViewNodeType w_type = w_subrep == nullptr
-					? TreeViewNodeType::Representation
-					: TreeViewNodeType::SubRepresentation;
+				TreeViewNodeType w_type;
+				if (w_subrep == nullptr) {
+					w_representationVtkValidName = this->MakeValidNodeName((w_typeRepresentation + "_" + p_representation->getTitle()).c_str());
+					w_type = TreeViewNodeType::Representation;
+				}
+				else { // subRep
+					auto elementType = w_subrep->getElementKindOfPatch(0, 0);
+
+					auto* supportingIjkGrid = dynamic_cast<RESQML2_NS::AbstractIjkGridRepresentation*>(w_subrep->getSupportingRepresentation(0));
+					auto* supportingUnstructuredGrid = dynamic_cast<RESQML2_NS::UnstructuredGridRepresentation*>(w_subrep->getSupportingRepresentation(0));
+
+					if (supportingIjkGrid != nullptr) { // support = ijkGrid
+						if (elementType != gsoap_eml2_3::eml23__IndexableElement::cells) {
+							return w_result;
+						}
+					} 
+					else if (supportingUnstructuredGrid != nullptr) { // support = unstructuredGrid
+							if (elementType != gsoap_eml2_3::eml23__IndexableElement::cells &&
+								elementType != gsoap_eml2_3::eml23__IndexableElement::faces) {
+								return w_result;
+							}
+					} 
+					else {
+						return w_result;
+					}
+					w_representationVtkValidName = this->MakeValidNodeName((w_typeRepresentation + "_" + w_subrep->getSupportingRepresentation(0)->getTitle() + "_" + p_representation->getTitle()).c_str());
+					w_type = TreeViewNodeType::SubRepresentation;
+				}
+			
 				_output->GetDataAssembly()->SetAttribute(p_NodeId, "type", std::to_string(static_cast<int>(w_type)).c_str());
 				_output->GetDataAssembly()->SetAttribute(p_NodeId, "label", w_representationVtkValidName.c_str());
 			}
@@ -1024,7 +1068,7 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::loadMapper(const Tre
 	}
 	else if (TreeViewNodeType::SubRepresentation == p_type)
 	{
-		loadWellboreTrajectoryMapper(p_nodeId);
+		loadRepresentationMapper(p_nodeId, p_nbProcess, p_processId);
 	}
 }
 
