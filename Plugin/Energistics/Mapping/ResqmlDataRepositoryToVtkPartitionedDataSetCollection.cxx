@@ -426,15 +426,12 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchReprese
 	// The leading underscore is forced by VTK which does not support a node name starting with a digit (probably because it is a QNAME).
 	const std::string w_nodeName = "_" + p_representation->getUuid();
 	const int w_existingNodeId = _output->GetDataAssembly()->FindFirstNodeWithName(w_nodeName.c_str());
+	
 	if (w_existingNodeId == -1)
 	{
 		p_NodeId = _output->GetDataAssembly()->AddNode(w_nodeName.c_str(), p_NodeId);
 
-		auto const* w_subrep = dynamic_cast<RESQML2_NS::SubRepresentation const*>(p_representation);
 		// To shorten the xmlTag by removing �Representation� from the end.
-
-		std::string w_typeRepresentation = SimplifyXmlTag(p_representation->getXmlTag());
-
 		std::string w_representationVtkValidName = "";
 
 		if (p_representation->isPartial())
@@ -445,6 +442,8 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchReprese
 		}
 		else
 		{
+			auto const* w_subrep = dynamic_cast<RESQML2_NS::SubRepresentation const*>(p_representation);
+			std::string w_typeRepresentation = SimplifyXmlTag(p_representation->getXmlTag());
 			w_representationVtkValidName = w_subrep == nullptr
 				? this->MakeValidNodeName((w_typeRepresentation + "_" + p_representation->getTitle()).c_str())
 				: this->MakeValidNodeName((w_typeRepresentation + "_" + w_subrep->getSupportingRepresentation(0)->getTitle() + "_" + p_representation->getTitle()).c_str());
@@ -459,6 +458,25 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchReprese
 	else
 	{
 		p_NodeId = w_existingNodeId;
+		if (!p_representation->isPartial()) {
+			int w_type;
+			_output->GetDataAssembly()->GetAttribute(p_NodeId, "type", w_type);
+			if (w_type == static_cast<int>(TreeViewNodeType::Partial)) {
+				std::string w_representationVtkValidName = "";
+				std::string w_typeRepresentation = SimplifyXmlTag(p_representation->getXmlTag());
+
+				auto const* w_subrep = dynamic_cast<RESQML2_NS::SubRepresentation const*>(p_representation);
+				w_representationVtkValidName = w_subrep == nullptr
+					? this->MakeValidNodeName((w_typeRepresentation + "_" + p_representation->getTitle()).c_str())
+					: this->MakeValidNodeName((w_typeRepresentation + "_" + w_subrep->getSupportingRepresentation(0)->getTitle() + "_" + p_representation->getTitle()).c_str());
+
+				const TreeViewNodeType w_type = w_subrep == nullptr
+					? TreeViewNodeType::Representation
+					: TreeViewNodeType::SubRepresentation;
+				_output->GetDataAssembly()->SetAttribute(p_NodeId, "type", std::to_string(static_cast<int>(w_type)).c_str());
+				_output->GetDataAssembly()->SetAttribute(p_NodeId, "label", w_representationVtkValidName.c_str());
+			}
+		}
 	}
 
 	// add sub representation with properties (only for ijkGrid and unstructured grid)
@@ -657,6 +675,20 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchWellbor
 				_output->GetDataAssembly()->SetAttribute(w_nodeId, "type", std::to_string(static_cast<int>(TreeViewNodeType::WellboreTrajectory)).c_str());
 			}
 			_output->GetDataAssembly()->SetAttribute(w_nodeId, "label", w_vtkValidName.c_str());
+		}
+		else
+		{
+			if (!w_wellboreTrajectory->isPartial()) {
+				int w_type;
+				 _output->GetDataAssembly()->GetAttribute(_output->GetDataAssembly()->FindFirstNodeWithName(("_" + w_wellboreFeature->getUuid()).c_str()), "type", w_type);
+				if (w_type == static_cast<int>(TreeViewNodeType::Partial)) {
+					w_nodeId = _output->GetDataAssembly()->FindFirstNodeWithName(("_" + w_wellboreTrajectory->getUuid()).c_str());
+					std::string w_vtkValidName = MakeValidNodeName((SimplifyXmlTag(w_wellboreTrajectory->getXmlTag()) + "_" + w_wellboreTrajectory->getTitle()).c_str());
+					_output->GetDataAssembly()->SetAttribute(w_nodeId, "type", std::to_string(static_cast<int>(TreeViewNodeType::WellboreTrajectory)).c_str());
+					_output->GetDataAssembly()->SetAttribute(w_nodeId, "label", w_vtkValidName.c_str());
+
+				}
+			}
 		}
 		w_result += searchWellboreFrame(w_wellboreTrajectory, w_initNodeId);
 		w_result += searchWellboreCompletion(w_wellboreFeature, w_initNodeId);
