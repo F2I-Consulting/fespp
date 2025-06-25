@@ -437,7 +437,8 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchReprese
 		if (p_representation->isPartial())
 		{
 			w_representationVtkValidName = this->MakeValidNodeName(("partial_" + p_representation->getTitle()).c_str());
-
+			std::string w_typeRepresentation = SimplifyXmlTag(p_representation->getXmlTag());
+			_output->GetDataAssembly()->SetAttribute(p_NodeId, "supporttype", w_typeRepresentation.c_str());
 			_output->GetDataAssembly()->SetAttribute(p_NodeId, "type", std::to_string(static_cast<int>(TreeViewNodeType::Partial)).c_str());
 		}
 		else
@@ -667,6 +668,7 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchWellbor
 			if (w_wellboreTrajectory->isPartial())
 			{
 				w_vtkValidName = MakeValidNodeName(("partial_" + w_wellboreTrajectory->getTitle()).c_str());
+				_output->GetDataAssembly()->SetAttribute(w_nodeId, "supporttype", std::to_string(static_cast<int>(TreeViewNodeType::WellboreTrajectory)).c_str());
 				_output->GetDataAssembly()->SetAttribute(w_nodeId, "type", std::to_string(static_cast<int>(TreeViewNodeType::Partial)).c_str());
 			}
 			else
