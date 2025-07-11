@@ -326,7 +326,6 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::addFile(const
 	COMMON_NS::EpcDocument w_pck(p_fileName);
 	_repository->clearWarnings();
 	std::string w_message = w_pck.deserializeInto(*_repository);
-	w_pck.close();
 	_files.insert(p_fileName);
 	w_message += buildDataAssemblyFromDataObjectRepo(p_fileName);
 	return w_message;
