@@ -8,7 +8,7 @@ FESPP is a plugin for Paraview which allows the visualization of some Energistic
 - If you want to build FESPP by your own, look below for instructions.
 
 ## BUILD dependencies
-- [FESAPI v2.13.X.X](https://github.com/F2I-Consulting/fesapi/releases/tag/v2.10.1.0)
+- [FESAPI v2.13.X.X](https://github.com/F2I-Consulting/fesapi/releases/tag/v2.13.0.0)
 - ParaView dynamically linked to the same HDF5 libraries as FESAPI (if FESAPI is dynamically linked to HDF5)
 	 > known to work on Linux and Windows starting from ParaView 5.13.0
 
