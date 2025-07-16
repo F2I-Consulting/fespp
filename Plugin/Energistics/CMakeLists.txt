@@ -65,6 +65,13 @@ if (WITH_ETP_SSL)
 endif (WITH_ETP_SSL)
 
 # ============================================================================
+# External resource
+# ============================================================================
+install(FILES ${FESAPI_RESOURCES_DIR}/PropertyKindMapping.xml
+        DESTINATION ${CMAKE_INSTALL_BINDIR}/paraview-${ParaView_VERSION_MAJOR}.${ParaView_VERSION_MINOR}/plugins/Fespp)
+
+
+# ============================================================================
 # External link
 # ============================================================================
 
