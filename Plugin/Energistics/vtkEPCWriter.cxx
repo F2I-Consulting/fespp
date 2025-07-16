@@ -152,32 +152,50 @@ void vtkEPCWriter::WriteData()
 
 void vtkEPCWriter::writeProperties(COMMON_NS::DataObjectRepository& repo, EML2_NS::AbstractHdfProxy* hdfProxy, RESQML2_NS::UnstructuredGridRepresentation* p_resqmlUnstructuredGrid)
 {
-
-	// passer en vtkGenericDataArray pour le type
-	vtkPointData* w_pointData = Internal->inputUnstructuredGrid->GetPointData();
+	vtkPointData* const w_pointData = Internal->inputUnstructuredGrid->GetPointData();
 	for (int i = 0; i < w_pointData->GetNumberOfArrays(); ++i)
 	{
-		vtkDataArray* w_array = Internal->inputUnstructuredGrid->GetPointData()->GetArray(i);
-		vtkIntArray* w_intArray = dynamic_cast<vtkIntArray*>(w_array);
+		vtkDataArray* const w_array = Internal->inputUnstructuredGrid->GetPointData()->GetArray(i);
+		vtkIntArray* const w_intArray = dynamic_cast<vtkIntArray*>(w_array);
+		const auto numberOfTuples = w_array->GetNumberOfTuples();
+		const auto numberOfComponents = w_array->GetNumberOfComponents();
 		if (w_intArray)
 		{
-			RESQML2_NS::DiscreteProperty* w_prop = repo.createDiscreteProperty(p_resqmlUnstructuredGrid, "", w_intArray->GetName(), 1, gsoap_eml2_3::eml23__IndexableElement::nodes, Internal->discretePropertyKind);
-			w_prop->pushBackInt32Hdf5Array1dOfValues(static_cast<int32_t*>(w_intArray->GetVoidPointer(0)), w_intArray->GetNumberOfValues(), hdfProxy, (std::numeric_limits<int32_t>::max)());
+			RESQML2_NS::DiscreteProperty* const w_prop = repo.createDiscreteProperty(p_resqmlUnstructuredGrid, "", w_intArray->GetName(), numberOfComponents, gsoap_eml2_3::eml23__IndexableElement::nodes, Internal->discretePropertyKind);
+			auto const* const values = static_cast<int32_t*>(w_intArray->GetVoidPointer(0));
+			if (numberOfComponents == 1) {
+				w_prop->pushBackInt32Hdf5Array1dOfValues(values, numberOfTuples, hdfProxy, (std::numeric_limits<int32_t>::max)());
+			}
+			else {
+				w_prop->pushBackInt32Hdf5Array2dOfValues(values, numberOfComponents, numberOfTuples, hdfProxy, (std::numeric_limits<int32_t>::max)());
+			}
 		}
 		else {
-			vtkDoubleArray* w_doubleArray = dynamic_cast<vtkDoubleArray*>(w_array);
+			vtkDoubleArray* const w_doubleArray = dynamic_cast<vtkDoubleArray*>(w_array);
 			if (w_doubleArray)
 			{
-				RESQML2_NS::ContinuousProperty* w_prop = repo.createContinuousProperty(p_resqmlUnstructuredGrid, "", w_doubleArray->GetName(), 1, gsoap_eml2_3::eml23__IndexableElement::nodes, gsoap_resqml2_0_1::resqml20__ResqmlUom::Euc, Internal->continousPropertyKind);
-				w_prop->pushBackDoubleHdf5Array1dOfValues(static_cast<double*>(w_doubleArray->GetVoidPointer(0)), w_doubleArray->GetNumberOfValues());
+				RESQML2_NS::ContinuousProperty* const w_prop = repo.createContinuousProperty(p_resqmlUnstructuredGrid, "", w_doubleArray->GetName(), numberOfComponents, gsoap_eml2_3::eml23__IndexableElement::nodes, gsoap_resqml2_0_1::resqml20__ResqmlUom::Euc, Internal->continousPropertyKind);
+				auto const* const values = static_cast<double*>(w_doubleArray->GetVoidPointer(0));
+				if (numberOfComponents == 1) {
+					w_prop->pushBackDoubleHdf5Array1dOfValues(values, numberOfTuples);
+				}
+				else {
+					w_prop->pushBackDoubleHdf5Array2dOfValues(values, numberOfComponents, numberOfTuples);
+				}
 			}
 			else
 			{
-				vtkFloatArray* w_floatArray = dynamic_cast<vtkFloatArray*>(w_array);
+				vtkFloatArray* const w_floatArray = dynamic_cast<vtkFloatArray*>(w_array);
 				if (w_floatArray)
 				{
-					RESQML2_NS::ContinuousProperty* w_prop = repo.createContinuousProperty(p_resqmlUnstructuredGrid, "", w_floatArray->GetName(), 1, gsoap_eml2_3::eml23__IndexableElement::nodes, gsoap_resqml2_0_1::resqml20__ResqmlUom::Euc, Internal->continousPropertyKind);
-					w_prop->pushBackFloatHdf5Array1dOfValues(static_cast<float*>(w_floatArray->GetVoidPointer(0)), w_floatArray->GetNumberOfValues());
+					RESQML2_NS::ContinuousProperty* const w_prop = repo.createContinuousProperty(p_resqmlUnstructuredGrid, "", w_floatArray->GetName(), numberOfComponents, gsoap_eml2_3::eml23__IndexableElement::nodes, gsoap_resqml2_0_1::resqml20__ResqmlUom::Euc, Internal->continousPropertyKind);
+					auto const* const values = static_cast<float*>(w_floatArray->GetVoidPointer(0));
+					if (numberOfComponents == 1) {
+						w_prop->pushBackFloatHdf5Array1dOfValues(values, numberOfTuples);
+					}
+					else {
+						w_prop->pushBackFloatHdf5Array2dOfValues(values, numberOfComponents, numberOfTuples);
+					}
 				}
 				else
 				{
@@ -197,24 +215,44 @@ void vtkEPCWriter::writeProperties(COMMON_NS::DataObjectRepository& repo, EML2_N
 	{
 		vtkDataArray* w_array = Internal->inputUnstructuredGrid->GetCellData()->GetArray(i);
 		vtkIntArray* w_intArray = dynamic_cast<vtkIntArray*>(w_array);
+		const auto numberOfTuples = w_array->GetNumberOfTuples();
+		const auto numberOfComponents = w_array->GetNumberOfComponents();
 		if (w_intArray)
 		{
 			RESQML2_NS::DiscreteProperty* w_prop = repo.createDiscreteProperty(p_resqmlUnstructuredGrid, "", w_intArray->GetName(), 1, gsoap_eml2_3::eml23__IndexableElement::cells, Internal->discretePropertyKind);
-			w_prop->pushBackInt32Hdf5Array1dOfValues(static_cast<int32_t*>(w_intArray->GetVoidPointer(0)), w_intArray->GetNumberOfValues(), hdfProxy, (std::numeric_limits<int32_t>::max)());
+			auto const* const values = static_cast<int32_t*>(w_intArray->GetVoidPointer(0));
+			if (numberOfComponents == 1) {
+				w_prop->pushBackInt32Hdf5Array1dOfValues(values, numberOfTuples, hdfProxy, (std::numeric_limits<int32_t>::max)());
+			}
+			else {
+				w_prop->pushBackInt32Hdf5Array2dOfValues(values, numberOfComponents, numberOfTuples, hdfProxy, (std::numeric_limits<int32_t>::max)());
+			}
 		}
 		else {
 			vtkDoubleArray* w_doubleArray = dynamic_cast<vtkDoubleArray*>(w_array);
 			if (w_doubleArray)
 			{
 				RESQML2_NS::ContinuousProperty* w_prop = repo.createContinuousProperty(p_resqmlUnstructuredGrid, "", w_doubleArray->GetName(), 1, gsoap_eml2_3::eml23__IndexableElement::cells, gsoap_resqml2_0_1::resqml20__ResqmlUom::Euc, Internal->continousPropertyKind);
-				w_prop->pushBackDoubleHdf5Array1dOfValues(static_cast<double*>(w_doubleArray->GetVoidPointer(0)), w_doubleArray->GetNumberOfValues());
+				auto const* const values = static_cast<double*>(w_doubleArray->GetVoidPointer(0));
+				if (numberOfComponents == 1) {
+					w_prop->pushBackDoubleHdf5Array1dOfValues(values, numberOfTuples);
+				}
+				else {
+					w_prop->pushBackDoubleHdf5Array2dOfValues(values, numberOfComponents, numberOfTuples);
+				}
 			}
 			else {
 				vtkFloatArray* w_floatArray = dynamic_cast<vtkFloatArray*>(w_array);
 				if (w_floatArray)
 				{
 					RESQML2_NS::ContinuousProperty* w_prop = repo.createContinuousProperty(p_resqmlUnstructuredGrid, "", w_floatArray->GetName(), 1, gsoap_eml2_3::eml23__IndexableElement::cells, gsoap_resqml2_0_1::resqml20__ResqmlUom::Euc, Internal->continousPropertyKind);
-					w_prop->pushBackFloatHdf5Array1dOfValues(static_cast<float*>(w_floatArray->GetVoidPointer(0)), w_floatArray->GetNumberOfValues());
+					auto const* const values = static_cast<float*>(w_floatArray->GetVoidPointer(0));
+					if (numberOfComponents == 1) {
+						w_prop->pushBackFloatHdf5Array1dOfValues(values, numberOfTuples);
+					}
+					else {
+						w_prop->pushBackFloatHdf5Array2dOfValues(values, numberOfComponents, numberOfTuples);
+					}
 				}
 				else
 				{

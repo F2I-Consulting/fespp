@@ -57,7 +57,7 @@ ResqmlPropertyToVtkDataArray::ResqmlPropertyToVtkDataArray(const RESQML2_NS::Abs
 	uint32_t initKIndex,
 	uint64_t patch_index)
 {
-	uint64_t nbElement = isSupported(valuesProperty, cellCount, pointCount);
+	uint64_t nbElement = getNumberOfValues(valuesProperty, cellCount, pointCount);
 
 	if (nbElement > 0)
 	{
@@ -168,28 +168,28 @@ ResqmlPropertyToVtkDataArray::ResqmlPropertyToVtkDataArray(resqml2::AbstractValu
 	uint64_t pointCount,
 	uint64_t patch_index)
 {
-	uint64_t nbElement = isSupported(valuesProperty, cellCount, pointCount);
+	uint64_t numberOfValues = getNumberOfValues(valuesProperty, cellCount, pointCount);
 
-	if (nbElement > 0)
+	if (numberOfValues > 0)
 	{
-		const uint32_t elementCountPerValue = valuesProperty->getElementCountPerValue();
+		const uint64_t elementCountPerValue = valuesProperty->getElementCountPerValue();
 		const std::string name = valuesProperty->getTitle();
 		const std::string xmlTag = valuesProperty->getXmlTag();
 		if (xmlTag == resqml2::ContinuousProperty::XML_TAG)
 		{
-			const uint64_t totalHDFElementcount = nbElement * elementCountPerValue;
-			if (totalHDFElementcount != valuesProperty->getValuesCountOfPatch(patch_index))
+			const uint64_t totalNumberOfValues = numberOfValues * elementCountPerValue;
+			if (totalNumberOfValues != valuesProperty->getValuesCountOfPatch(patch_index))
 			{
-				throw std::invalid_argument("Property values count of hdfDataset \"" + std::to_string(valuesProperty->getValuesCountOfPatch(patch_index)) + "\" does not match the indexable element count in the supporting representation\"" + std::to_string(totalHDFElementcount) + "\"");
+				throw std::invalid_argument("Property values count of hdfDataset \"" + std::to_string(valuesProperty->getValuesCountOfPatch(patch_index)) + "\" does not match the indexable element count in the supporting representation\"" + std::to_string(totalNumberOfValues) + "\"");
 			}
 
-			double* valuesDoubleSet = new double[totalHDFElementcount]; // deleted by VTK data vtkSmartPointer
+			double* valuesDoubleSet = new double[totalNumberOfValues]; // deleted by VTK data vtkSmartPointer
 			valuesProperty->getDoubleValuesOfPatch(patch_index, valuesDoubleSet);
 
 			vtkSmartPointer<vtkDoubleArray> cellDataDouble = vtkSmartPointer<vtkDoubleArray>::New();
 			cellDataDouble->SetNumberOfComponents(elementCountPerValue);
 			cellDataDouble->SetName(name.c_str());
-			cellDataDouble->SetArray(valuesDoubleSet, nbElement * elementCountPerValue, 0, vtkAbstractArray::VTK_DATA_ARRAY_DELETE);
+			cellDataDouble->SetArray(valuesDoubleSet, numberOfValues * elementCountPerValue, 0, vtkAbstractArray::VTK_DATA_ARRAY_DELETE);
 			dataArray = cellDataDouble;
 			
 			dataArray->Modified();
@@ -204,13 +204,13 @@ ResqmlPropertyToVtkDataArray::ResqmlPropertyToVtkDataArray(resqml2::AbstractValu
 			(xmlTag == resqml2::CategoricalProperty::XML_TAG &&
 				static_cast<resqml2::CategoricalProperty const*>(valuesProperty)->getStringLookup() != nullptr))
 		{
-			int32_t* values = new int32_t[nbElement * elementCountPerValue]; // deleted by VTK data vtkSmartPointer
+			int32_t* values = new int32_t[numberOfValues * elementCountPerValue]; // deleted by VTK data vtkSmartPointer
 			valuesProperty->getInt32ValuesOfPatch(patch_index, values);
 
 			vtkSmartPointer<vtkIntArray> cellDataInt = vtkSmartPointer<vtkIntArray>::New();
 			cellDataInt->SetNumberOfComponents(elementCountPerValue);
 			cellDataInt->SetName(name.c_str());
-			cellDataInt->SetArray(values, nbElement * elementCountPerValue, 0, vtkAbstractArray::VTK_DATA_ARRAY_DELETE);
+			cellDataInt->SetArray(values, numberOfValues * elementCountPerValue, 0, vtkAbstractArray::VTK_DATA_ARRAY_DELETE);
 			dataArray = cellDataInt;
 			
 			dataArray->Modified();
@@ -229,27 +229,24 @@ ResqmlPropertyToVtkDataArray::ResqmlPropertyToVtkDataArray(resqml2::AbstractValu
 }
 
 // -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
-uint64_t ResqmlPropertyToVtkDataArray::isSupported(resqml2::AbstractValuesProperty const* valuesProperty,
+uint64_t ResqmlPropertyToVtkDataArray::getNumberOfValues(resqml2::AbstractValuesProperty const* valuesProperty,
 	uint64_t cellCount,
 	uint64_t pointCount)
 {
-	uint64_t nbElement = 0;
-
 	const gsoap_eml2_3::eml23__IndexableElement element = valuesProperty->getAttachmentKind();
 	if (element == gsoap_eml2_3::eml23__IndexableElement::cells ||
 		element == gsoap_eml2_3::eml23__IndexableElement::triangles)
 	{
-		nbElement = cellCount;
+		return cellCount;
 	}
 	else if (element == gsoap_eml2_3::eml23__IndexableElement::nodes)
 	{
-		nbElement = pointCount;
+		return pointCount;
 	}
 	else
 	{
 		throw std::invalid_argument("Property indexable element must be points or cells.");
 	}
-	return nbElement;
 }
 
 void ResqmlPropertyToVtkDataArray::applyResqmlPropKindColorMapToVtkDataArray(eml2::PropertyKind* propertyKind)
@@ -333,7 +330,6 @@ void ResqmlPropertyToVtkDataArray::applyResqmlPropKindColorMapToVtkDataArray(eml
 								opacities.reserve(continuousColorMap->getColorCount() * 2);
 								double color[3] = { 0.0 /*RED*/, 0.0 /*GREEN*/, 0.0 /*BLUE*/ };
 								for (unsigned int colorIndex = 0; colorIndex < continuousColorMap->getColorCount(); ++colorIndex) {
-									int64_t location = continuousColorMap->getColorLocationInColorMap(colorIndex);
 									continuousColorMap->getRgbColor(colorIndex, color[0], color[1], color[2]);
 
 									colors.push_back(continuousColorMap->getColorLocationInColorMap(colorIndex));
