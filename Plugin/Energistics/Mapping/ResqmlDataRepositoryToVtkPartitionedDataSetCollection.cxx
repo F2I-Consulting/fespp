@@ -62,6 +62,7 @@ VtkAssembly => TreeView:
 #include <fesapi/resqml2/AbstractFeatureInterpretation.h>
 #include <fesapi/resqml2/AbstractIjkGridRepresentation.h>
 #include <fesapi/resqml2/PolylineSetRepresentation.h>
+#include <fesapi/resqml2/PolylineRepresentation.h>
 #include <fesapi/resqml2/SubRepresentation.h>
 #include <fesapi/resqml2/TriangulatedSetRepresentation.h>
 #include <fesapi/resqml2/UnstructuredGridRepresentation.h>
@@ -69,7 +70,6 @@ VtkAssembly => TreeView:
 #include <fesapi/resqml2/WellboreFrameRepresentation.h>
 #include <fesapi/resqml2/WellboreMarker.h>
 #include <fesapi/resqml2/WellboreTrajectoryRepresentation.h>
-#include <fesapi/resqml2/AbstractFeatureInterpretation.h>
 #include <fesapi/resqml2/ContinuousProperty.h>
 #include <fesapi/resqml2/DiscreteProperty.h>
 #include <fesapi/resqml2/WellboreFeature.h>
@@ -97,6 +97,7 @@ VtkAssembly => TreeView:
 #include "Mapping/ResqmlIjkGridToVtkExplicitStructuredGrid.h"
 #include "Mapping/ResqmlIjkGridSubRepToVtkExplicitStructuredGrid.h"
 #include "Mapping/ResqmlGrid2dToVtkStructuredGrid.h"
+#include "Mapping/ResqmlPolylineSetToVtkPolyData.h"
 #include "Mapping/ResqmlPolylineToVtkPolyData.h"
 #include "Mapping/ResqmlTriangulatedSetToVtkPartitionedDataSet.h"
 #include "Mapping/ResqmlUnstructuredGridToVtkUnstructuredGrid.h"
@@ -400,6 +401,7 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::buildDataAsse
 	sortAndAdd(_repository->getHorizonGrid2dRepresentationSet(), w_allReps);
 	sortAndAdd(_repository->getIjkGridRepresentationSet(), w_allReps);
 	sortAndAdd(_repository->getAllPolylineSetRepresentationSet(), w_allReps);
+	sortAndAdd(_repository->getAllPolylineRepresentationSet(), w_allReps);
 	sortAndAdd(_repository->getAllTriangulatedSetRepresentationSet(), w_allReps);
 	sortAndAdd(_repository->getUnstructuredGridRepresentationSet(), w_allReps);
 
@@ -1091,7 +1093,11 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::loadRepresentationMa
 	}
 	else if (dynamic_cast<RESQML2_NS::PolylineSetRepresentation*>(w_abstractObject) != nullptr)
 	{
-		w_caotvpds = new ResqmlPolylineToVtkPolyData(static_cast<RESQML2_NS::PolylineSetRepresentation*>(w_abstractObject));
+		w_caotvpds = new ResqmlPolylineSetToVtkPolyData(static_cast<RESQML2_NS::PolylineSetRepresentation*>(w_abstractObject));
+	}
+	else if (dynamic_cast<RESQML2_NS::PolylineRepresentation*>(w_abstractObject) != nullptr)
+	{
+		w_caotvpds = new ResqmlPolylineToVtkPolyData(static_cast<RESQML2_NS::PolylineRepresentation*>(w_abstractObject));
 	}
 	else if (dynamic_cast<RESQML2_NS::UnstructuredGridRepresentation*>(w_abstractObject) != nullptr)
 	{

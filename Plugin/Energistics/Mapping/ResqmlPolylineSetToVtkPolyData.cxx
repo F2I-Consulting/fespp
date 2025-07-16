@@ -16,7 +16,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 -----------------------------------------------------------------------*/
-#include "Mapping/ResqmlPolylineToVtkPolyData.h"
+#include "Mapping/ResqmlPolylineSetToVtkPolyData.h"
 
 // include VTK library
 #include <vtkPolyData.h>
@@ -28,13 +28,13 @@ under the License.
 
 // include F2i-consulting Energistics Standards API
 #include <fesapi/eml2/AbstractLocal3dCrs.h>
-#include <fesapi/resqml2/PolylineRepresentation.h>
+#include <fesapi/resqml2/PolylineSetRepresentation.h>
 
 // include F2i-consulting Energistics Standards ParaView Plugin
 #include "Mapping/ResqmlPropertyToVtkDataArray.h"
 
 //----------------------------------------------------------------------------
-ResqmlPolylineToVtkPolyData::ResqmlPolylineToVtkPolyData(const RESQML2_NS::PolylineRepresentation *polyline, uint32_t p_procNumber, uint32_t p_maxProc)
+ResqmlPolylineSetToVtkPolyData::ResqmlPolylineSetToVtkPolyData(const RESQML2_NS::PolylineSetRepresentation *polyline, uint32_t p_procNumber, uint32_t p_maxProc)
 	: ResqmlAbstractRepresentationToVtkPartitionedDataSet(polyline,
 														  p_procNumber,
 														  p_maxProc)
@@ -47,46 +47,27 @@ ResqmlPolylineToVtkPolyData::ResqmlPolylineToVtkPolyData(const RESQML2_NS::Polyl
 }
 
 //----------------------------------------------------------------------------
-const RESQML2_NS::PolylineRepresentation *ResqmlPolylineToVtkPolyData::getResqmlData() const
+const RESQML2_NS::PolylineSetRepresentation *ResqmlPolylineSetToVtkPolyData::getResqmlData() const
 {
-	return static_cast<const RESQML2_NS::PolylineRepresentation *>(_resqmlData);
+	return static_cast<const RESQML2_NS::PolylineSetRepresentation *>(_resqmlData);
 }
 
 //----------------------------------------------------------------------------
-void ResqmlPolylineToVtkPolyData::loadVtkObject()
+void ResqmlPolylineSetToVtkPolyData::loadVtkObject()
 {
-	RESQML2_NS::PolylineRepresentation const *polyline = getResqmlData();
+	RESQML2_NS::PolylineSetRepresentation const *polylineSet = getResqmlData();
 
 	// Create and set the list of points of the vtkPolyData
 	vtkSmartPointer<vtkPolyData> vtk_polydata = vtkSmartPointer<vtkPolyData>::New();
 
 	// POINT
-	size_t coordCount = _pointCount * 3;
-	double* resqmlAllXyzPoints = new double[coordCount];
-	double* allXyzPoints = nullptr;  // Will be deleted by VTK
-	polyline->getXyzPointsOfPatchInGlobalCrs(0, resqmlAllXyzPoints);
-
-	if (polyline->isClosed() && _pointCount > 1 && 
-		!(resqmlAllXyzPoints[0] == resqmlAllXyzPoints[coordCount - 3] &&
-			resqmlAllXyzPoints[1] == resqmlAllXyzPoints[coordCount - 2] &&
-			resqmlAllXyzPoints[2] == resqmlAllXyzPoints[coordCount - 1])
-		)
-	{
-		coordCount = ++_pointCount * 3;
-		allXyzPoints = new double[coordCount];
-		memcpy(allXyzPoints, resqmlAllXyzPoints, sizeof(double) * (coordCount -3));
-		delete[] resqmlAllXyzPoints;
-		allXyzPoints[coordCount - 3] = allXyzPoints[0];
-		allXyzPoints[coordCount - 2] = allXyzPoints[1];
-		allXyzPoints[coordCount - 1] = allXyzPoints[2];
-	}
-	else {
-		allXyzPoints = resqmlAllXyzPoints;
-	}
+	double *allXyzPoints = new double[_pointCount * 3]; // Will be deleted by VTK
+	polylineSet->getXyzPointsOfPatchInGlobalCrs(0, allXyzPoints);
 
 	vtkSmartPointer<vtkPoints> vtkPts = vtkSmartPointer<vtkPoints>::New();
 
-	if (polyline->getLocalCrs(0)->isDepthOriented())
+	const size_t coordCount = _pointCount * 3;
+	if (polylineSet->getLocalCrs(0)->isDepthOriented())
 	{
 		for (size_t zCoordIndex = 2; zCoordIndex < coordCount; zCoordIndex += 3)
 		{
@@ -104,16 +85,23 @@ void ResqmlPolylineToVtkPolyData::loadVtkObject()
 	// POLYLINE
 	vtkSmartPointer<vtkCellArray> setPolylineRepresentationLines = vtkSmartPointer<vtkCellArray>::New();
 
+	uint32_t countPolyline = polylineSet->getPolylineCountOfPatch(0);
+
+	std::unique_ptr<uint32_t[]> countNodePolylineInPatch(new uint32_t[countPolyline]);
+	polylineSet->getNodeCountPerPolylineInPatch(0, countNodePolylineInPatch.get());
 
 	vtkIdType idPoint = 0;
-	vtkSmartPointer<vtkPolyLine> polylineRepresentation = vtkSmartPointer<vtkPolyLine>::New();
-	polylineRepresentation->GetPointIds()->SetNumberOfIds(_pointCount);
-	for (uint32_t line = 0; line < _pointCount; ++line)
+	for (uint32_t polylineIndex = 0; polylineIndex < countPolyline; ++polylineIndex)
 	{
-		polylineRepresentation->GetPointIds()->SetId(line, idPoint++);
+		vtkSmartPointer<vtkPolyLine> polylineRepresentation = vtkSmartPointer<vtkPolyLine>::New();
+		polylineRepresentation->GetPointIds()->SetNumberOfIds(countNodePolylineInPatch[polylineIndex]);
+		for (uint32_t line = 0; line < countNodePolylineInPatch[polylineIndex]; ++line)
+		{
+			polylineRepresentation->GetPointIds()->SetId(line, idPoint++);
+		}
+		setPolylineRepresentationLines->InsertNextCell(polylineRepresentation);
+		vtk_polydata->SetLines(setPolylineRepresentationLines);
 	}
-	setPolylineRepresentationLines->InsertNextCell(polylineRepresentation);
-	vtk_polydata->SetLines(setPolylineRepresentationLines);
 
 	_vtkData->SetPartition(0, vtk_polydata);
 	_vtkData->Modified();

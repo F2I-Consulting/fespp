@@ -16,26 +16,26 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 -----------------------------------------------------------------------*/
-#ifndef __ResqmlPolylineToVtkPolyData_h
-#define __ResqmlPolylineToVtkPolyData_h
+#ifndef __ResqmlPolylineSetToVtkPolyData_h
+#define __ResqmlPolylineSetToVtkPolyData_h
 
 #include "ResqmlAbstractRepresentationToVtkPartitionedDataSet.h"
 
 namespace RESQML2_NS
 {
-	class PolylineRepresentation;
+	class PolylineSetRepresentation;
 }
 
-/** @brief	The fespp polyline representation
+/** @brief	The fespp polylineSet representation
  */
 
-class ResqmlPolylineToVtkPolyData : public ResqmlAbstractRepresentationToVtkPartitionedDataSet
+class ResqmlPolylineSetToVtkPolyData : public ResqmlAbstractRepresentationToVtkPartitionedDataSet
 {
 public:
 	/**
 	 * Constructor
 	 */
-	explicit ResqmlPolylineToVtkPolyData(const RESQML2_NS::PolylineRepresentation *polyline, uint32_t p_procNumber = 0, uint32_t p_maxProc = 1);
+	explicit ResqmlPolylineSetToVtkPolyData(const RESQML2_NS::PolylineSetRepresentation *polyline, uint32_t p_procNumber = 0, uint32_t p_maxProc = 1);
 
 	/**
 	 * load vtkDataSet with resqml data
@@ -43,6 +43,6 @@ public:
 	void loadVtkObject() override;
 
 protected:
-	const RESQML2_NS::PolylineRepresentation *getResqmlData() const;
+	const RESQML2_NS::PolylineSetRepresentation *getResqmlData() const;
 };
 #endif
