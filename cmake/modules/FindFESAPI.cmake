@@ -22,6 +22,7 @@ This module defines the following variables:
 ::
 
   FESAPI_INCLUDE_DIRS   - where to find zip.h, unzip.h, etc.
+  FESAPI_RESOURCES_DIRS   - where to find PropertyKindMapping.xml, etc.
   FESAPI_LIBRARIES      - List of libraries when using fesapi.
   FESAPI_FOUND          - True if fesapi found.
 
@@ -67,6 +68,11 @@ foreach(search ${_FESAPI_SEARCHES})
   find_path(FESAPI_INCLUDE_DIR NAMES fesapi/common/DataObjectRepository.h ${${search}} PATH_SUFFIXES include)
 endforeach()
 
+# Try each search configuration.
+foreach(search ${_FESAPI_SEARCHES})
+  find_path(FESAPI_RESOURCES_DIR NAMES PropertyKindMapping.xml ${${search}} PATH_SUFFIXES resources)
+endforeach()
+
 # Allow FESAPI_LIBRARY to be set manually, as the location of the zlib library
 if(NOT FESAPI_LIBRARY)
   foreach(search ${_FESAPI_SEARCHES})
@@ -82,7 +88,7 @@ unset(FESAPI_NAMES_DEBUG)
 
 mark_as_advanced(FESAPI_INCLUDE_DIR)
 
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(FESAPI REQUIRED_VARS FESAPI_LIBRARY FESAPI_INCLUDE_DIR)
+FIND_PACKAGE_HANDLE_STANDARD_ARGS(FESAPI REQUIRED_VARS FESAPI_LIBRARY FESAPI_INCLUDE_DIR FESAPI_RESOURCES_DIR)
 
 if(FESAPI_FOUND)
     set(FESAPI_INCLUDE_DIRS ${FESAPI_INCLUDE_DIR})
