@@ -37,13 +37,13 @@ under the License.
 namespace common
 {
 	class DataObjectRepository;
+	class AbstractObject;
 }
 
 namespace resqml2
 {
 	class AbstractRepresentation;
 	class RepresentationSetRepresentation;
-	class AbstractObject;
 	class PropertySet;
 	class WellboreTrajectoryRepresentation;
 	class WellboreFeature;
@@ -103,10 +103,12 @@ public:
 
 private:
 	std::string buildDataAssemblyFromDataObjectRepo(const char *p_fileName);
+	int addNodeToDataAssembly(common::AbstractObject const* object,const TreeViewNodeType type, int nodeId_parent); // return new nodeId
+	void addDefaultToDataAssemblyNode(common::AbstractObject const* object, const TreeViewNodeType type, int nodeId);
 
-	std::string searchWellboreTrajectory(const std::string &p_fileName);												  // traj
-	std::string searchWellboreFrame(const resqml2::WellboreTrajectoryRepresentation *w_wellboreTrajectory, int p_nodeId); // frame/markerFrame + chanel + marker
-	std::string searchWellboreCompletion(const resqml2::WellboreFeature *w_wellboreTrajectory, int p_nodeId);			  // completion + perforation
+	std::string searchWellboreTrajectory(const std::string& p_fileName);												  // traj
+	std::string searchWellboreFrame(const resqml2::WellboreTrajectoryRepresentation* w_wellboreTrajectory, int p_nodeId); // frame/markerFrame + chanel + marker
+	std::string searchWellboreCompletion(const resqml2::WellboreFeature* w_wellboreTrajectory, int p_nodeId);			  // completion + perforation
 	std::string searchRepresentations(resqml2::AbstractRepresentation const *p_representation, int p_nodeId = 0 /* 0 is root's id*/);
 	int searchRepresentationSetRepresentation(resqml2::RepresentationSetRepresentation const *p_rsr, int p_nodeId = 0 /* 0 is root's id*/);
 	std::string searchSubRepresentation(resqml2::AbstractRepresentation const *p_representation, int p_nodeParent);
