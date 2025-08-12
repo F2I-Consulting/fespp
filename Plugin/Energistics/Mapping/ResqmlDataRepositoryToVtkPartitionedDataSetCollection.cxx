@@ -61,6 +61,7 @@ VtkAssembly => TreeView:
 #include <fesapi/resqml2/Grid2dRepresentation.h>
 #include <fesapi/resqml2/AbstractFeatureInterpretation.h>
 #include <fesapi/resqml2/AbstractIjkGridRepresentation.h>
+#include <fesapi/resqml2/PointSetRepresentation.h>
 #include <fesapi/resqml2/PolylineSetRepresentation.h>
 #include <fesapi/resqml2/PolylineRepresentation.h>
 #include <fesapi/resqml2/SubRepresentation.h>
@@ -97,6 +98,7 @@ VtkAssembly => TreeView:
 #include "Mapping/ResqmlIjkGridToVtkExplicitStructuredGrid.h"
 #include "Mapping/ResqmlIjkGridSubRepToVtkExplicitStructuredGrid.h"
 #include "Mapping/ResqmlGrid2dToVtkStructuredGrid.h"
+#include "Mapping/ResqmlPointSetToVtkPolyVertex.h"
 #include "Mapping/ResqmlPolylineSetToVtkPolyData.h"
 #include "Mapping/ResqmlPolylineToVtkPolyData.h"
 #include "Mapping/ResqmlTriangulatedSetToVtkPartitionedDataSet.h"
@@ -400,6 +402,7 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::buildDataAsse
 	// create vtkDataAssembly: create treeView in property panel
 	sortAndAdd(_repository->getHorizonGrid2dRepresentationSet(), w_allReps);
 	sortAndAdd(_repository->getIjkGridRepresentationSet(), w_allReps);
+	sortAndAdd(_repository->getPointSetRepresentationSet(), w_allReps);
 	sortAndAdd(_repository->getAllPolylineSetRepresentationSet(), w_allReps);
 	sortAndAdd(_repository->getAllPolylineRepresentationSet(), w_allReps);
 	sortAndAdd(_repository->getAllTriangulatedSetRepresentationSet(), w_allReps);
@@ -1122,6 +1125,10 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::loadRepresentationMa
 	else if (dynamic_cast<RESQML2_NS::TriangulatedSetRepresentation*>(w_abstractObject) != nullptr)
 	{
 		w_caotvpds = new ResqmlTriangulatedSetToVtkPartitionedDataSet(static_cast<RESQML2_NS::TriangulatedSetRepresentation*>(w_abstractObject));
+	}
+	else if (dynamic_cast<RESQML2_NS::PointSetRepresentation*>(w_abstractObject) != nullptr)
+	{
+		w_caotvpds = new ResqmlPointSetToVtkPolyVertex(static_cast<RESQML2_NS::PointSetRepresentation*>(w_abstractObject));
 	}
 	else if (dynamic_cast<RESQML2_NS::PolylineSetRepresentation*>(w_abstractObject) != nullptr)
 	{
