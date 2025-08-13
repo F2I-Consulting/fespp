@@ -76,6 +76,7 @@ VtkAssembly => TreeView:
 #include <fesapi/resqml2/WellboreFeature.h>
 #include <fesapi/resqml2/RepresentationSetRepresentation.h>
 #include <fesapi/resqml2_0_1/PropertySet.h>
+#include <fesapi/resqml2_0_1/MdDatum.h>
 #include <fesapi/witsml2_1/WellboreCompletion.h>
 #include <fesapi/witsml2_1/WellCompletion.h>
 #include <fesapi/witsml2_1/Well.h>
@@ -785,6 +786,13 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchWellbor
 				}
 			}
 		}
+
+		// add MdDatum position attribute
+		double x_MdDatum = w_wellboreTrajectory->getMdDatum()->getXInGlobalCrs();
+		double y_MdDatum = w_wellboreTrajectory->getMdDatum()->getYInGlobalCrs();
+		double z_MdDatum = w_wellboreTrajectory->getMdDatum()->getZInGlobalCrs();
+		_output->GetDataAssembly()->SetAttribute(w_nodeId, "mdDatumPosition", (std::to_string(x_MdDatum) + "," + std::to_string(y_MdDatum) + "," + std::to_string(z_MdDatum)).c_str());
+
 		w_result += searchWellboreFrame(w_wellboreTrajectory, w_initNodeId);
 		w_result += searchWellboreCompletion(w_wellboreFeature, w_initNodeId);
 	}
