@@ -54,13 +54,9 @@ list(APPEND _FESAPI_SEARCHES _FESAPI_SEARCH_NORMAL)
 # The maximum of ranges are defined totally arbitrarily
 set(FESAPI_NAMES FesapiCpp)
 set(FESAPI_NAMES_DEBUG FesapiCppd)
-foreach(minorVer RANGE 9 17)
-	foreach(patchVer RANGE 0 5)
-		foreach(tweakVer RANGE 0 5)
-			list(APPEND FESAPI_NAMES FesapiCpp.2.${minorVer}.${patchVer}.${tweakVer})
-			list(APPEND FESAPI_NAMES_DEBUG FesapiCppd.2.${minorVer}.${patchVer}.${tweakVer})
-		endforeach()
-	endforeach()
+foreach(minorVer RANGE 11 99)
+	list(APPEND FESAPI_NAMES FesapiCpp-2.${minorVer})
+	list(APPEND FESAPI_NAMES_DEBUG FesapiCppd-2.${minorVer})
 endforeach()
 
 # Try each search configuration.
