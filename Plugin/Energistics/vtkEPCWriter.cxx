@@ -123,7 +123,9 @@ void vtkEPCWriter::WriteData()
 		Internal->inputUnstructuredGrid = vtkUnstructuredGrid::SafeDownCast(Internal->input);
 
 		RESQML2_NS::UnstructuredGridRepresentation* w_unstructuredGridRepresentation = writeUnstructuredGrid(repo, hdfProxy, local3dCrs);
-		writeProperties(repo, hdfProxy, w_unstructuredGridRepresentation);
+		if (w_unstructuredGridRepresentation != nullptr) {
+			writeProperties(repo, hdfProxy, w_unstructuredGridRepresentation);
+		}
 	}
 	else if (Internal->dataType == VTK_PARTITIONED_DATA_SET_COLLECTION)
 	{
@@ -141,7 +143,9 @@ void vtkEPCWriter::WriteData()
 				Internal->inputUnstructuredGridName = object_name;
 				Internal->inputUnstructuredGrid = vtkUnstructuredGrid::SafeDownCast(w_vPDSC->GetPartitionAsDataObject(index, 0));
 				RESQML2_NS::UnstructuredGridRepresentation* w_unstructuredGridRepresentation = writeUnstructuredGrid(repo, hdfProxy, local3dCrs);
-				writeProperties(repo, hdfProxy, w_unstructuredGridRepresentation);
+				if (w_unstructuredGridRepresentation != nullptr) {
+					writeProperties(repo, hdfProxy, w_unstructuredGridRepresentation);
+				}
 			} // other type not supported
 		}
 	} // other type not supported
