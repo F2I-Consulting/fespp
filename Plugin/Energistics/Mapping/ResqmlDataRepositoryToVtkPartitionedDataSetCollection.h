@@ -128,7 +128,7 @@ private:
 	/**
 	 * delete _oldSelection mapper
 	 */
-	void deleteMapper(double p_time);
+	void deleteMapper();
 	/**
 	 * initialize _nodeIdToMapperSet
 	 */
@@ -142,7 +142,7 @@ private:
 	/**
  * add data to parent nodeId
  */
-	void addDataToParent(const TreeViewNodeType p_type, const int p_nodeId, const uint32_t p_nbProcess, const uint32_t p_processId, const double p_time);
+	void addDataToParent(const TreeViewNodeType p_type, const int p_nodeId, const uint32_t p_nbProcess, const uint32_t p_processId);
 
 	// This function replaces the VTK function vtkDataAssembly::MakeValidNodeName(),
 	// which has a bug in the sorted_valid_chars array. The '.' character is placed
@@ -176,6 +176,8 @@ private:
 
 	// time step values
 	std::vector<double> _timesStep;
+	double _oldTimesStep;
+	double _currentTimesStep;
 
 	std::vector<const char*> _blocksColors;
 	std::map<std::string, std::array<double, 3>> _blockColorsMap;

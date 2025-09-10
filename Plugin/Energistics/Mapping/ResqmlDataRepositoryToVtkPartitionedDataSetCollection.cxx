@@ -129,6 +129,8 @@ ResqmlDataRepositoryToVtkPartitionedDataSetCollection::ResqmlDataRepositoryToVtk
 	_selection(),
 	_currentSelection(),
 	_oldSelection(),
+	_oldTimesStep(0.0),
+	_currentTimesStep(0.0),
 	_selectionCleared(true)
 {
 	auto w_assembly = vtkSmartPointer<vtkDataAssembly>::New();
@@ -467,37 +469,40 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::addDefaultToDataAsse
 	}
 	_output->GetDataAssembly()->SetAttribute(nodeId, "label", w_representationVtkValidName.c_str());
 
-	// metadatas attribute
-	for (unsigned int i = 0; i < object->getExtraMetadataCount(); ++i) {
-		_output->GetDataAssembly()->SetAttribute(nodeId, object->getExtraMetadataKeyAtIndex(i).c_str(), object->getExtraMetadataStringValueAtIndex(i).c_str());
-	}
+	if (type != TreeViewNodeType::Partial)
+	{
+		// metadatas attribute
+		for (unsigned int i = 0; i < object->getExtraMetadataCount(); ++i) {
+			_output->GetDataAssembly()->SetAttribute(nodeId, object->getExtraMetadataKeyAtIndex(i).c_str(), object->getExtraMetadataStringValueAtIndex(i).c_str());
+		}
 
-	// date creation attribute
+		// date creation attribute
 
 
-	// version attribute
-	if (!object->getVersion().empty()) {
-		_output->GetDataAssembly()->SetAttribute(nodeId, "version", object->getVersion().c_str());
-	}
+		// version attribute
+		if (!object->getVersion().empty()) {
+			_output->GetDataAssembly()->SetAttribute(nodeId, "version", object->getVersion().c_str());
+		}
 
-	// format attribute
-	if (!object->getFormat().empty()) {
-		_output->GetDataAssembly()->SetAttribute(nodeId, "format", object->getFormat().c_str());
-	}
+		// format attribute
+		if (!object->getFormat().empty()) {
+			_output->GetDataAssembly()->SetAttribute(nodeId, "format", object->getFormat().c_str());
+		}
 
-	// editor attribute
-	if (!object->getEditor().empty()) {
-		_output->GetDataAssembly()->SetAttribute(nodeId, "editor", object->getEditor().c_str());
-	}
+		// editor attribute
+		if (!object->getEditor().empty()) {
+			_output->GetDataAssembly()->SetAttribute(nodeId, "editor", object->getEditor().c_str());
+		}
 
-	// originator attribute
-	if (!object->getOriginator().empty()) {
-		_output->GetDataAssembly()->SetAttribute(nodeId, "originator", object->getOriginator().c_str());
-	}
+		// originator attribute
+		if (!object->getOriginator().empty()) {
+			_output->GetDataAssembly()->SetAttribute(nodeId, "originator", object->getOriginator().c_str());
+		}
 
-	// description attribute
-	if (!object->getDescription().empty()) {
-		_output->GetDataAssembly()->SetAttribute(nodeId, "description", object->getDescription().c_str());
+		// description attribute
+		if (!object->getDescription().empty()) {
+			_output->GetDataAssembly()->SetAttribute(nodeId, "description", object->getDescription().c_str());
+		}
 	}
 }
 
@@ -951,9 +956,12 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchTimeSer
 						if (w_parentNodeId != -1)
 						{
 							w_propertyNameToNodeIdSet[w_prop->getTitle()].push_back(w_nodeId);
-							const size_t w_timeIndexInTimeSeries = w_timeSeries->getTimestampIndex(w_prop->getSingleTimestamp());
-							_timesStep.push_back(w_timeIndexInTimeSeries);
-							_timeSeriesUuidAndTitleToIndexAndPropertiesUuid[w_timeSeries->getUuid()][MakeValidNodeName((w_timeSeries->getXmlTag() + '_' + w_prop->getTitle()).c_str())][w_timeIndexInTimeSeries] = w_prop->getUuid();
+							if (w_prop->getSingleTimestamp() != -1)
+							{
+								const size_t w_timeIndexInTimeSeries = w_timeSeries->getTimestampIndex(w_prop->getSingleTimestamp());
+								_timesStep.push_back(w_timeIndexInTimeSeries);
+								_timeSeriesUuidAndTitleToIndexAndPropertiesUuid[w_timeSeries->getUuid()][MakeValidNodeName((w_timeSeries->getXmlTag() + '_' + w_prop->getTitle()).c_str())][w_timeIndexInTimeSeries] = w_prop->getUuid();
+							}
 						}
 						else
 						{
@@ -1215,7 +1223,7 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::loadWellboreTrajecto
 	}
 }
 
-void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::addDataToParent(const TreeViewNodeType p_type, const int p_nodeId, const uint32_t p_nbProcess, const uint32_t p_processId, const double p_time)
+void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::addDataToParent(const TreeViewNodeType p_type, const int p_nodeId, const uint32_t p_nbProcess, const uint32_t p_processId)
 {
 	const std::string w_uuid = std::string(_output->GetDataAssembly()->GetNodeName(p_nodeId)).substr(1);
 
@@ -1348,7 +1356,11 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::addDataToParent(cons
 				if (abstractRepresentation->getOutput()->GetNumberOfPartitions() == 0) {
 					abstractRepresentation->loadVtkObject();
 				}
-				abstractRepresentation->addDataArray(_timeSeriesUuidAndTitleToIndexAndPropertiesUuid[w_tsUuid][w_nodeName][p_time]);
+				if (_oldTimesStep != _currentTimesStep)
+				{
+					abstractRepresentation->deleteDataArray(_timeSeriesUuidAndTitleToIndexAndPropertiesUuid[w_tsUuid][w_nodeName][_oldTimesStep]);
+				}
+				abstractRepresentation->addDataArray(_timeSeriesUuidAndTitleToIndexAndPropertiesUuid[w_tsUuid][w_nodeName][_currentTimesStep]);
 			}
 		}
 		catch (const std::exception& e)
@@ -1362,7 +1374,7 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::addDataToParent(cons
 /**
  * delete oldSelection mapper
  */
-void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::deleteMapper(double p_time)
+void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::deleteMapper()
 {
 	// initialization the output (VtkPartitionedDatasSetCollection) with same vtkDataAssembly
 	vtkSmartPointer<vtkDataAssembly> w_Assembly = vtkSmartPointer<vtkDataAssembly>::New();
@@ -1389,7 +1401,7 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::deleteMapper(double 
 			const int w_nodeParent = w_Assembly->GetParent(w_Assembly->FindFirstNodeWithName(("_" + uuid_unselect).c_str()));
 			if (_nodeIdToMapper.find(w_nodeParent) != _nodeIdToMapper.end())
 			{
-				static_cast<ResqmlAbstractRepresentationToVtkPartitionedDataSet*>(_nodeIdToMapper[w_nodeParent])->deleteDataArray(_timeSeriesUuidAndTitleToIndexAndPropertiesUuid[w_timeSeriesuuid][w_nodeName][p_time]);
+				static_cast<ResqmlAbstractRepresentationToVtkPartitionedDataSet*>(_nodeIdToMapper[w_nodeParent])->deleteDataArray(_timeSeriesUuidAndTitleToIndexAndPropertiesUuid[w_timeSeriesuuid][w_nodeName][_currentTimesStep]);
 			}
 		}
 		else if (valueType == TreeViewNodeType::Properties)
@@ -1524,12 +1536,17 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::deleteMapper(double 
 
 vtkPartitionedDataSetCollection* ResqmlDataRepositoryToVtkPartitionedDataSetCollection::getVtkPartitionedDatasSetCollection(const double p_time, const uint32_t p_nbProcess, const uint32_t p_processId)
 {
+	if (p_time != _currentTimesStep)
+	{
+		_selectionCleared = true;
+		_currentTimesStep = p_time;
+	}
 	ResetResqmlColor();
 
 	addResqmlColor();
 
 	if (_selectionCleared) {
-		deleteMapper(p_time);
+		deleteMapper();
 	}
 
 	// vtkParitionedDataSetCollection - hierarchy - build
@@ -1566,7 +1583,7 @@ vtkPartitionedDataSetCollection* ResqmlDataRepositoryToVtkPartitionedDataSetColl
 		}
 		else if (getMapperType(w_type) == MapperType::Data)
 		{
-			addDataToParent(w_type, *w_it, p_nbProcess, p_processId, p_time);
+			addDataToParent(w_type, *w_it, p_nbProcess, p_processId);
 			++w_it;
 		}
 	}
@@ -1628,6 +1645,7 @@ vtkPartitionedDataSetCollection* ResqmlDataRepositoryToVtkPartitionedDataSetColl
 	
 	_selectionCleared = false;
 	_output->Modified();
+	_oldTimesStep = _currentTimesStep;
 	return _output;
 }
 

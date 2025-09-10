@@ -252,6 +252,29 @@ void vtkEPCCollector::setMarkerSize(int size)
 	Modified();
 }
 
+//------------------------------------------------------------------------------
+int vtkEPCCollector::RequestInformation(vtkInformation* vtkNotUsed(request),
+	vtkInformationVector** vtkNotUsed(inputVector), vtkInformationVector* outputVector)
+{
+	vtkInformation* outInfo = outputVector->GetInformationObject(0);
+	outInfo->Remove(vtkStreamingDemandDrivenPipeline::TIME_STEPS());
+	const std::vector<double> times = repository.getTimes();
+
+	if (times.size() > (std::numeric_limits<int>::max)())
+	{
+		throw std::out_of_range("Too much times.");
+	}
+
+	if (!times.empty())
+	{
+		const auto minmax = std::minmax_element(begin(times), end(times));
+		outInfo->Set(vtkStreamingDemandDrivenPipeline::TIME_STEPS(), &times[0], static_cast<int>(times.size()));
+		static double timeRange[] = { *minmax.first, *minmax.second };
+		outInfo->Set(vtkStreamingDemandDrivenPipeline::TIME_RANGE(), timeRange, 2);
+	}
+	return 1;
+}
+
 //----------------------------------------------------------------------------
 int vtkEPCCollector::RequestData(vtkInformation* info,
 	vtkInformationVector** inputVector,
@@ -272,24 +295,8 @@ int vtkEPCCollector::RequestData(vtkInformation* info,
 	}
 
 	auto* outInfo = outputVector->GetInformationObject(0);
-	outInfo->Remove(vtkStreamingDemandDrivenPipeline::TIME_STEPS());
-	const std::vector<double> times = repository.getTimes();
-
-	if (times.size() > (std::numeric_limits<int>::max)())
-	{
-		throw std::out_of_range("Too much times.");
-	}
-	double requestedTimeStep = 0;
-	if (!times.empty())
-	{
-		const auto minmax = std::minmax_element(begin(times), end(times));
-		outInfo->Set(vtkStreamingDemandDrivenPipeline::TIME_STEPS(), &times[0], static_cast<int>(times.size()));
-		static double timeRange[] = { *minmax.first, *minmax.second };
-		outInfo->Set(vtkStreamingDemandDrivenPipeline::TIME_RANGE(), timeRange, 2);
-
-		// current timeStep value
-		requestedTimeStep = outInfo->Get(vtkStreamingDemandDrivenPipeline::UPDATE_TIME_STEP());
-	}
+	// current timeStep value
+	double requestedTimeStep = outInfo->Get(vtkStreamingDemandDrivenPipeline::UPDATE_TIME_STEP());
 
 	try
 	{
