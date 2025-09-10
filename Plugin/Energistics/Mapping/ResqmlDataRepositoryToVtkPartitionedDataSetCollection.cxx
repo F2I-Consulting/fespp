@@ -1034,10 +1034,6 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchTimeSer
 						}
 					}
 				}
-				if (w_prop->getXmlTag() == RESQML2_NS::DiscreteProperty::XML_TAG)
-				{
-
-				}
 			}
 			// erase duplicate Index
 			sort(_timesStep.begin(), _timesStep.end());

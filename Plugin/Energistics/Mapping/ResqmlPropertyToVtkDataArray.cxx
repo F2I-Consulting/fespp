@@ -87,7 +87,7 @@ ResqmlPropertyToVtkDataArray::ResqmlPropertyToVtkDataArray(const RESQML2_NS::Abs
 			{
 				vtkOutputWindowDisplayErrorText("error in : propertyValue->getDimensionsCountOfPatch (values different of 1 or 3)\n");
 			}
-			cellDataFloat->SetName(valuesProperty->getTitle().c_str());
+			cellDataFloat->SetName(MakeValidNodeName(valuesProperty->getTitle().c_str()).c_str());
 			cellDataFloat->SetArray(valuesFloatSet, nbElement, 0, vtkAbstractArray::VTK_DATA_ARRAY_DELETE);
 			
 			dataArray = cellDataFloat;
@@ -115,7 +115,7 @@ ResqmlPropertyToVtkDataArray::ResqmlPropertyToVtkDataArray(const RESQML2_NS::Abs
 			{
 				vtkOutputWindowDisplayErrorText("error in : propertyValue->getDimensionsCountOfPatch (values different of 1 or 3)\n");
 			}
-			cellDataInt->SetName(valuesProperty->getTitle().c_str());
+			cellDataInt->SetName(MakeValidNodeName(valuesProperty->getTitle().c_str()).c_str());
 			cellDataInt->SetArray(valuesIntSet, nbElement, 0, vtkAbstractArray::VTK_DATA_ARRAY_DELETE);
 
 			dataArray = cellDataInt;
@@ -143,7 +143,7 @@ ResqmlPropertyToVtkDataArray::ResqmlPropertyToVtkDataArray(const RESQML2_NS::Abs
 			{
 				vtkOutputWindowDisplayErrorText("error in : propertyValue->getDimensionsCountOfPatch (values different of 1 or 3)\n");
 			}
-			cellDataInt->SetName(valuesProperty->getTitle().c_str());
+			cellDataInt->SetName(MakeValidNodeName(valuesProperty->getTitle().c_str()).c_str());
 			cellDataInt->SetArray(valuesIntSet, nbElement, 0, vtkAbstractArray::VTK_DATA_ARRAY_DELETE);
 
 			dataArray = cellDataInt;
@@ -160,6 +160,37 @@ ResqmlPropertyToVtkDataArray::ResqmlPropertyToVtkDataArray(const RESQML2_NS::Abs
 			vtkOutputWindowDisplayErrorText("property not supported...  (hdfDatatypeEnum)\n");
 		}
 	}
+}
+
+std::string ResqmlPropertyToVtkDataArray::MakeValidNodeName(const char* p_name)
+{
+	if (p_name == nullptr || p_name[0] == '\0')
+	{
+		return std::string();
+	}
+
+	const char w_sortedValidChars[] =
+		"-.0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz";
+	const auto w_sortedValidCharsLen = strlen(w_sortedValidChars);
+
+	std::string w_result;
+	w_result.reserve(strlen(p_name));
+	for (size_t w_cc = 0, max = strlen(p_name); w_cc < max; ++w_cc)
+	{
+		if (std::binary_search(
+			w_sortedValidChars, w_sortedValidChars + w_sortedValidCharsLen, p_name[w_cc]))
+		{
+			w_result += p_name[w_cc];
+		}
+	}
+
+	if (w_result.empty() ||
+		((w_result[0] < 'a' || w_result[0] > 'z') && (w_result[0] < 'A' || w_result[0] > 'Z') &&
+			w_result[0] != '_'))
+	{
+		return "_" + w_result;
+	}
+	return w_result;
 }
 
 // -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
