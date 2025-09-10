@@ -916,7 +916,7 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchWellbor
 }
 std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchTimeSeries(const std::string& p_fileName)
 {
-	_timesStep.clear();
+	//_timesStep.clear();
 
 	std::string w_message = "";
 	std::vector<EML2_NS::TimeSeries*> w_timeSeriesSet;
@@ -938,7 +938,9 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchTimeSer
 		try
 		{
 			std::map<std::string, std::vector<int>> w_propertyNameToNodeIdSet;
-			for (auto const* w_prop : w_timeSeries->getPropertySet())
+			std::map<std::string, double> w_propertyNameToMinPropValue;
+			std::map<std::string, double> w_propertyNameToMaxPropValue;
+			for (auto* w_prop : w_timeSeries->getPropertySet())
 			{
 				if (w_prop->getXmlTag() == RESQML2_NS::ContinuousProperty::XML_TAG ||
 					w_prop->getXmlTag() == RESQML2_NS::DiscreteProperty::XML_TAG)
@@ -970,6 +972,72 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchTimeSer
 						}
 					}
 				}
+				auto* w_prop_cont = dynamic_cast<RESQML2_NS::ContinuousProperty*>(w_prop);
+				if (w_prop_cont != nullptr)
+				{
+					auto min = w_prop_cont->getMinimumValue();
+					if (!std::isnan(min))
+					{
+						if (w_propertyNameToMinPropValue.find(w_prop->getTitle()) == w_propertyNameToMinPropValue.end())
+						{
+							w_propertyNameToMinPropValue[w_prop->getTitle()] = min;
+						}
+						else
+						{
+							w_propertyNameToMinPropValue[w_prop->getTitle()] = w_propertyNameToMinPropValue[w_prop->getTitle()] > min ? min : w_propertyNameToMinPropValue[w_prop->getTitle()];
+						}
+					}
+					auto max = w_prop_cont->getMaximumValue();
+					if (!std::isnan(max))
+					{
+						if (w_propertyNameToMaxPropValue.find(w_prop->getTitle()) == w_propertyNameToMaxPropValue.end())
+						{
+							w_propertyNameToMaxPropValue[w_prop->getTitle()] = max;
+						}
+						else
+						{
+							w_propertyNameToMaxPropValue[w_prop->getTitle()] = w_propertyNameToMaxPropValue[w_prop->getTitle()] < max ? max : w_propertyNameToMaxPropValue[w_prop->getTitle()];
+						}
+					}
+				}
+				auto* w_prop_disc = dynamic_cast<RESQML2_NS::DiscreteProperty*>(w_prop);
+				if (w_prop_disc != nullptr)
+				{
+					if (w_prop_disc->hasMinimumValue())
+					{
+						auto min = w_prop_disc->getMinimumValue();
+						if (!std::isnan(min))
+						{
+							if (w_propertyNameToMinPropValue.find(w_prop->getTitle()) == w_propertyNameToMinPropValue.end())
+							{
+								w_propertyNameToMinPropValue[w_prop->getTitle()] = min;
+							}
+							else
+							{
+								w_propertyNameToMinPropValue[w_prop->getTitle()] = w_propertyNameToMinPropValue[w_prop->getTitle()] > min ? min : w_propertyNameToMinPropValue[w_prop->getTitle()];
+							}
+						}
+					}
+					if (w_prop_disc->hasMaximumValue())
+					{
+						auto max = w_prop_disc->getMaximumValue();
+						if (!std::isnan(max))
+						{
+							if (w_propertyNameToMaxPropValue.find(w_prop->getTitle()) == w_propertyNameToMaxPropValue.end())
+							{
+								w_propertyNameToMaxPropValue[w_prop->getTitle()] = max;
+							}
+							else
+							{
+								w_propertyNameToMaxPropValue[w_prop->getTitle()] = w_propertyNameToMaxPropValue[w_prop->getTitle()] < max ? max : w_propertyNameToMaxPropValue[w_prop->getTitle()];
+							}
+						}
+					}
+				}
+				if (w_prop->getXmlTag() == RESQML2_NS::DiscreteProperty::XML_TAG)
+				{
+
+				}
 			}
 			// erase duplicate Index
 			sort(_timesStep.begin(), _timesStep.end());
@@ -990,6 +1058,16 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchTimeSer
 				auto w_nodeId = _output->GetDataAssembly()->AddNode(("_" + w_timeSeries->getUuid() + w_vtkValidName).c_str(), w_parentNodeId);
 				_output->GetDataAssembly()->SetAttribute(w_nodeId, "label", w_vtkValidName.c_str());
 				_output->GetDataAssembly()->SetAttribute(w_nodeId, "type", std::to_string(static_cast<int>(TreeViewNodeType::TimeSeries)).c_str());
+				if (w_propertyNameToMinPropValue.find(w_myPair.first) != w_propertyNameToMinPropValue.end())
+				{
+					auto min = w_propertyNameToMinPropValue[w_myPair.first];
+					_output->GetDataAssembly()->SetAttribute(w_nodeId, "minvalue", std::to_string(static_cast<double>(w_propertyNameToMinPropValue[w_myPair.first])).c_str());
+				}
+				if (w_propertyNameToMaxPropValue.find(w_myPair.first) != w_propertyNameToMaxPropValue.end())
+				{
+					auto min = w_propertyNameToMaxPropValue[w_myPair.first];
+					_output->GetDataAssembly()->SetAttribute(w_nodeId, "maxvalue", std::to_string(static_cast<double>(w_propertyNameToMaxPropValue[w_myPair.first])).c_str());
+				}
 			}
 		}
 		catch (const std::exception& e)
