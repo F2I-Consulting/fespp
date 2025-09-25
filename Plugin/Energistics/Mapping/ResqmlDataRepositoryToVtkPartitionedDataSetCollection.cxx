@@ -36,6 +36,7 @@ VtkAssembly => TreeView:
 #include <regex>
 #include <numeric>
 #include <cstdlib>
+#include <sstream>
 #include <iostream>
 
 // VTK includes
@@ -129,15 +130,15 @@ ResqmlDataRepositoryToVtkPartitionedDataSetCollection::ResqmlDataRepositoryToVtk
 	_selection(),
 	_currentSelection(),
 	_oldSelection(),
-	_oldTimesStep(0.0),
-	_currentTimesStep(0.0),
+	_oldTimesStepIndex(0.0),
+	_currentTimesStepIndex(0.0),
 	_selectionCleared(true)
 {
 	auto w_assembly = vtkSmartPointer<vtkDataAssembly>::New();
 	w_assembly->SetRootNodeName("data");
 
 	_output->SetDataAssembly(w_assembly);
-	_timesStep.clear();
+	_timesStepIndex.clear();
 
 	auto energistics_libs = vtkGetLibraryPathForSymbol(GetEnergisticsVersion);
 	vtkNew<vtkResourceFileLocator> locator;
@@ -961,7 +962,12 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchTimeSer
 							if (w_prop->getSingleTimestamp() != -1)
 							{
 								const size_t w_timeIndexInTimeSeries = w_timeSeries->getTimestampIndex(w_prop->getSingleTimestamp());
-								_timesStep.push_back(w_timeIndexInTimeSeries);
+								// wait fesapi v14 for date format to string
+								std::ostringstream oss;
+								oss.str("");
+								oss << w_timeSeries->getTimestamp(w_timeIndexInTimeSeries);
+								_timesStepIndexToISODate[w_timeIndexInTimeSeries] = oss.str();
+								_timesStepIndex.push_back(w_timeIndexInTimeSeries);
 								_timeSeriesUuidAndTitleToIndexAndPropertiesUuid[w_timeSeries->getUuid()][MakeValidNodeName((w_timeSeries->getXmlTag() + '_' + w_prop->getTitle()).c_str())][w_timeIndexInTimeSeries] = w_prop->getUuid();
 							}
 						}
@@ -1036,8 +1042,12 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchTimeSer
 				}
 			}
 			// erase duplicate Index
-			sort(_timesStep.begin(), _timesStep.end());
-			_timesStep.erase(unique(_timesStep.begin(), _timesStep.end()), _timesStep.end());
+			sort(_timesStepIndex.begin(), _timesStepIndex.end());
+			_timesStepIndex.erase(unique(_timesStepIndex.begin(), _timesStepIndex.end()), _timesStepIndex.end());
+			for (const auto timeIndex : _timesStepIndex)
+			{
+				_output->GetDataAssembly()->SetAttribute(0, ("time" + std::to_string(timeIndex)).c_str(), _timesStepIndexToISODate[timeIndex].c_str());
+			}
 
 			for (const auto& w_myPair : w_propertyNameToNodeIdSet)
 			{
@@ -1430,11 +1440,11 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::addDataToParent(cons
 				if (abstractRepresentation->getOutput()->GetNumberOfPartitions() == 0) {
 					abstractRepresentation->loadVtkObject();
 				}
-				if (_oldTimesStep != _currentTimesStep)
+				if (_oldTimesStepIndex != _currentTimesStepIndex)
 				{
-					abstractRepresentation->deleteDataArray(_timeSeriesUuidAndTitleToIndexAndPropertiesUuid[w_tsUuid][w_nodeName][_oldTimesStep]);
+					abstractRepresentation->deleteDataArray(_timeSeriesUuidAndTitleToIndexAndPropertiesUuid[w_tsUuid][w_nodeName][_oldTimesStepIndex]);
 				}
-				abstractRepresentation->addDataArray(_timeSeriesUuidAndTitleToIndexAndPropertiesUuid[w_tsUuid][w_nodeName][_currentTimesStep]);
+				abstractRepresentation->addDataArray(_timeSeriesUuidAndTitleToIndexAndPropertiesUuid[w_tsUuid][w_nodeName][_currentTimesStepIndex]);
 			}
 		}
 		catch (const std::exception& e)
@@ -1475,7 +1485,7 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::deleteMapper()
 			const int w_nodeParent = w_Assembly->GetParent(w_Assembly->FindFirstNodeWithName(("_" + uuid_unselect).c_str()));
 			if (_nodeIdToMapper.find(w_nodeParent) != _nodeIdToMapper.end())
 			{
-				static_cast<ResqmlAbstractRepresentationToVtkPartitionedDataSet*>(_nodeIdToMapper[w_nodeParent])->deleteDataArray(_timeSeriesUuidAndTitleToIndexAndPropertiesUuid[w_timeSeriesuuid][w_nodeName][_currentTimesStep]);
+				static_cast<ResqmlAbstractRepresentationToVtkPartitionedDataSet*>(_nodeIdToMapper[w_nodeParent])->deleteDataArray(_timeSeriesUuidAndTitleToIndexAndPropertiesUuid[w_timeSeriesuuid][w_nodeName][_currentTimesStepIndex]);
 			}
 		}
 		else if (valueType == TreeViewNodeType::Properties)
@@ -1610,10 +1620,10 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::deleteMapper()
 
 vtkPartitionedDataSetCollection* ResqmlDataRepositoryToVtkPartitionedDataSetCollection::getVtkPartitionedDatasSetCollection(const double p_time, const uint32_t p_nbProcess, const uint32_t p_processId)
 {
-	if (p_time != _currentTimesStep)
+	if (p_time != _currentTimesStepIndex)
 	{
 		_selectionCleared = true;
-		_currentTimesStep = p_time;
+		_currentTimesStepIndex = p_time;
 	}
 	ResetResqmlColor();
 
@@ -1719,7 +1729,7 @@ vtkPartitionedDataSetCollection* ResqmlDataRepositoryToVtkPartitionedDataSetColl
 	
 	_selectionCleared = false;
 	_output->Modified();
-	_oldTimesStep = _currentTimesStep;
+	_oldTimesStepIndex = _currentTimesStepIndex;
 	return _output;
 }
 
