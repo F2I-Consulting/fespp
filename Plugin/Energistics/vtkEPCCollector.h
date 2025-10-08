@@ -172,6 +172,7 @@ protected:
 	~vtkEPCCollector() final;
 
 private:
+	int RequestInformation(vtkInformation*, vtkInformationVector**, vtkInformationVector*) final;
 	int RequestData(vtkInformation*, vtkInformationVector**, vtkInformationVector*) final;
 
 	vtkSMSourceProxy* GetThisProxy();

@@ -91,7 +91,7 @@ public:
 	vtkPartitionedDataSetCollection *getVtkPartitionedDatasSetCollection(const double p_time, const uint32_t p_nbProcess = 1, const uint32_t p_processId = 0);
 	vtkPartitionedDataSetCollection* getVtkPartitionedDatasSetCollection() { return _output; };
 
-	std::vector<double> getTimes() { return _timesStep; };
+	std::vector<double> getTimes() { return _timesStepIndex; };
 
 	/**
 	 * @return selection parent
@@ -128,7 +128,7 @@ private:
 	/**
 	 * delete _oldSelection mapper
 	 */
-	void deleteMapper(double p_time);
+	void deleteMapper();
 	/**
 	 * initialize _nodeIdToMapperSet
 	 */
@@ -142,7 +142,7 @@ private:
 	/**
  * add data to parent nodeId
  */
-	void addDataToParent(const TreeViewNodeType p_type, const int p_nodeId, const uint32_t p_nbProcess, const uint32_t p_processId, const double p_time);
+	void addDataToParent(const TreeViewNodeType p_type, const int p_nodeId, const uint32_t p_nbProcess, const uint32_t p_processId);
 
 	// This function replaces the VTK function vtkDataAssembly::MakeValidNodeName(),
 	// which has a bug in the sorted_valid_chars array. The '.' character is placed
@@ -175,7 +175,10 @@ private:
 	std::set<std::string> _files;
 
 	// time step values
-	std::vector<double> _timesStep;
+	std::map<double, std::string> _timesStepIndexToISODate;
+	std::vector<double> _timesStepIndex;
+	double _oldTimesStepIndex;
+	double _currentTimesStepIndex;
 
 	std::vector<const char*> _blocksColors;
 	std::map<std::string, std::array<double, 3>> _blockColorsMap;

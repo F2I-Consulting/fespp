@@ -67,6 +67,8 @@ public:
 	vtkSmartPointer<vtkDataArray> getVtkData() { return dataArray; }
 
 private:
+	std::string MakeValidNodeName(const char* p_name);
+
 	uint64_t getNumberOfValues(RESQML2_NS::AbstractValuesProperty const* resqmlProperty,
 		uint64_t cellCount,
 		uint64_t pointCount);

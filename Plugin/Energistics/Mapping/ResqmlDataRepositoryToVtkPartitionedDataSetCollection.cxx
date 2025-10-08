@@ -36,6 +36,7 @@ VtkAssembly => TreeView:
 #include <regex>
 #include <numeric>
 #include <cstdlib>
+#include <sstream>
 #include <iostream>
 
 // VTK includes
@@ -129,13 +130,15 @@ ResqmlDataRepositoryToVtkPartitionedDataSetCollection::ResqmlDataRepositoryToVtk
 	_selection(),
 	_currentSelection(),
 	_oldSelection(),
+	_oldTimesStepIndex(0.0),
+	_currentTimesStepIndex(0.0),
 	_selectionCleared(true)
 {
 	auto w_assembly = vtkSmartPointer<vtkDataAssembly>::New();
 	w_assembly->SetRootNodeName("data");
 
 	_output->SetDataAssembly(w_assembly);
-	_timesStep.clear();
+	_timesStepIndex.clear();
 
 	auto energistics_libs = vtkGetLibraryPathForSymbol(GetEnergisticsVersion);
 	vtkNew<vtkResourceFileLocator> locator;
@@ -467,37 +470,40 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::addDefaultToDataAsse
 	}
 	_output->GetDataAssembly()->SetAttribute(nodeId, "label", w_representationVtkValidName.c_str());
 
-	// metadatas attribute
-	for (uint64_t i = 0; i < object->getExtraMetadataCount(); ++i) {
-		_output->GetDataAssembly()->SetAttribute(nodeId, MakeValidNodeName(object->getExtraMetadataKeyAtIndex(i).c_str()).c_str(), MakeValidNodeName(object->getExtraMetadataStringValueAtIndex(i).c_str()).c_str());
-	}
+	if (type != TreeViewNodeType::Partial)
+	{
+		// metadatas attribute
+		for (uint64_t i = 0; i < object->getExtraMetadataCount(); ++i) {
+			_output->GetDataAssembly()->SetAttribute(nodeId, MakeValidNodeName(object->getExtraMetadataKeyAtIndex(i).c_str()).c_str(), MakeValidNodeName(object->getExtraMetadataStringValueAtIndex(i).c_str()).c_str());
+		}
 
-	// date creation attribute
+		// date creation attribute
 
 
-	// version attribute
-	if (!object->getVersion().empty()) {
-		_output->GetDataAssembly()->SetAttribute(nodeId, "version", object->getVersion().c_str());
-	}
+		// version attribute
+		if (!object->getVersion().empty()) {
+			_output->GetDataAssembly()->SetAttribute(nodeId, "version", object->getVersion().c_str());
+		}
 
-	// format attribute
-	if (!object->getFormat().empty()) {
-		_output->GetDataAssembly()->SetAttribute(nodeId, "format", object->getFormat().c_str());
-	}
+		// format attribute
+		if (!object->getFormat().empty()) {
+			_output->GetDataAssembly()->SetAttribute(nodeId, "format", object->getFormat().c_str());
+		}
 
-	// editor attribute
-	if (!object->getEditor().empty()) {
-		_output->GetDataAssembly()->SetAttribute(nodeId, "editor", object->getEditor().c_str());
-	}
+		// editor attribute
+		if (!object->getEditor().empty()) {
+			_output->GetDataAssembly()->SetAttribute(nodeId, "editor", object->getEditor().c_str());
+		}
 
-	// originator attribute
-	if (!object->getOriginator().empty()) {
-		_output->GetDataAssembly()->SetAttribute(nodeId, "originator", object->getOriginator().c_str());
-	}
+		// originator attribute
+		if (!object->getOriginator().empty()) {
+			_output->GetDataAssembly()->SetAttribute(nodeId, "originator", object->getOriginator().c_str());
+		}
 
-	// description attribute
-	if (!object->getDescription().empty()) {
-		_output->GetDataAssembly()->SetAttribute(nodeId, "description", object->getDescription().c_str());
+		// description attribute
+		if (!object->getDescription().empty()) {
+			_output->GetDataAssembly()->SetAttribute(nodeId, "description", object->getDescription().c_str());
+		}
 	}
 }
 
@@ -911,7 +917,7 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchWellbor
 }
 std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchTimeSeries(const std::string& p_fileName)
 {
-	_timesStep.clear();
+	//_timesStep.clear();
 
 	std::string w_message = "";
 	std::vector<EML2_NS::TimeSeries*> w_timeSeriesSet;
@@ -933,7 +939,9 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchTimeSer
 		try
 		{
 			std::map<std::string, std::vector<int>> w_propertyNameToNodeIdSet;
-			for (auto const* w_prop : w_timeSeries->getPropertySet())
+			std::map<std::string, double> w_propertyNameToMinPropValue;
+			std::map<std::string, double> w_propertyNameToMaxPropValue;
+			for (auto* w_prop : w_timeSeries->getPropertySet())
 			{
 				if (w_prop->getXmlTag() == RESQML2_NS::ContinuousProperty::XML_TAG ||
 					w_prop->getXmlTag() == RESQML2_NS::DiscreteProperty::XML_TAG)
@@ -951,9 +959,17 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchTimeSer
 						if (w_parentNodeId != -1)
 						{
 							w_propertyNameToNodeIdSet[w_prop->getTitle()].push_back(w_nodeId);
-							const size_t w_timeIndexInTimeSeries = w_timeSeries->getTimestampIndex(w_prop->getSingleTimestamp());
-							_timesStep.push_back(w_timeIndexInTimeSeries);
-							_timeSeriesUuidAndTitleToIndexAndPropertiesUuid[w_timeSeries->getUuid()][MakeValidNodeName((w_timeSeries->getXmlTag() + '_' + w_prop->getTitle()).c_str())][w_timeIndexInTimeSeries] = w_prop->getUuid();
+							if (w_prop->getSingleTimestamp() != -1)
+							{
+								const size_t w_timeIndexInTimeSeries = w_timeSeries->getTimestampIndex(w_prop->getSingleTimestamp());
+								// wait fesapi v14 for date format to string
+								std::ostringstream oss;
+								oss.str("");
+								oss << w_timeSeries->getTimestamp(w_timeIndexInTimeSeries);
+								_timesStepIndexToISODate[w_timeIndexInTimeSeries] = oss.str();
+								_timesStepIndex.push_back(w_timeIndexInTimeSeries);
+								_timeSeriesUuidAndTitleToIndexAndPropertiesUuid[w_timeSeries->getUuid()][MakeValidNodeName((w_timeSeries->getXmlTag() + '_' + w_prop->getTitle()).c_str())][w_timeIndexInTimeSeries] = w_prop->getUuid();
+							}
 						}
 						else
 						{
@@ -962,10 +978,76 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchTimeSer
 						}
 					}
 				}
+				auto* w_prop_cont = dynamic_cast<RESQML2_NS::ContinuousProperty*>(w_prop);
+				if (w_prop_cont != nullptr)
+				{
+					auto min = w_prop_cont->getMinimumValue();
+					if (!std::isnan(min))
+					{
+						if (w_propertyNameToMinPropValue.find(w_prop->getTitle()) == w_propertyNameToMinPropValue.end())
+						{
+							w_propertyNameToMinPropValue[w_prop->getTitle()] = min;
+						}
+						else
+						{
+							w_propertyNameToMinPropValue[w_prop->getTitle()] = w_propertyNameToMinPropValue[w_prop->getTitle()] > min ? min : w_propertyNameToMinPropValue[w_prop->getTitle()];
+						}
+					}
+					auto max = w_prop_cont->getMaximumValue();
+					if (!std::isnan(max))
+					{
+						if (w_propertyNameToMaxPropValue.find(w_prop->getTitle()) == w_propertyNameToMaxPropValue.end())
+						{
+							w_propertyNameToMaxPropValue[w_prop->getTitle()] = max;
+						}
+						else
+						{
+							w_propertyNameToMaxPropValue[w_prop->getTitle()] = w_propertyNameToMaxPropValue[w_prop->getTitle()] < max ? max : w_propertyNameToMaxPropValue[w_prop->getTitle()];
+						}
+					}
+				}
+				auto* w_prop_disc = dynamic_cast<RESQML2_NS::DiscreteProperty*>(w_prop);
+				if (w_prop_disc != nullptr)
+				{
+					if (w_prop_disc->hasMinimumValue())
+					{
+						auto min = w_prop_disc->getMinimumValue();
+						if (!std::isnan(min))
+						{
+							if (w_propertyNameToMinPropValue.find(w_prop->getTitle()) == w_propertyNameToMinPropValue.end())
+							{
+								w_propertyNameToMinPropValue[w_prop->getTitle()] = min;
+							}
+							else
+							{
+								w_propertyNameToMinPropValue[w_prop->getTitle()] = w_propertyNameToMinPropValue[w_prop->getTitle()] > min ? min : w_propertyNameToMinPropValue[w_prop->getTitle()];
+							}
+						}
+					}
+					if (w_prop_disc->hasMaximumValue())
+					{
+						auto max = w_prop_disc->getMaximumValue();
+						if (!std::isnan(max))
+						{
+							if (w_propertyNameToMaxPropValue.find(w_prop->getTitle()) == w_propertyNameToMaxPropValue.end())
+							{
+								w_propertyNameToMaxPropValue[w_prop->getTitle()] = max;
+							}
+							else
+							{
+								w_propertyNameToMaxPropValue[w_prop->getTitle()] = w_propertyNameToMaxPropValue[w_prop->getTitle()] < max ? max : w_propertyNameToMaxPropValue[w_prop->getTitle()];
+							}
+						}
+					}
+				}
 			}
 			// erase duplicate Index
-			sort(_timesStep.begin(), _timesStep.end());
-			_timesStep.erase(unique(_timesStep.begin(), _timesStep.end()), _timesStep.end());
+			sort(_timesStepIndex.begin(), _timesStepIndex.end());
+			_timesStepIndex.erase(unique(_timesStepIndex.begin(), _timesStepIndex.end()), _timesStepIndex.end());
+			for (const auto timeIndex : _timesStepIndex)
+			{
+				_output->GetDataAssembly()->SetAttribute(0, ("time" + std::to_string(timeIndex)).c_str(), _timesStepIndexToISODate[timeIndex].c_str());
+			}
 
 			for (const auto& w_myPair : w_propertyNameToNodeIdSet)
 			{
@@ -982,6 +1064,16 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchTimeSer
 				auto w_nodeId = _output->GetDataAssembly()->AddNode(("_" + w_timeSeries->getUuid() + w_vtkValidName).c_str(), w_parentNodeId);
 				_output->GetDataAssembly()->SetAttribute(w_nodeId, "label", w_vtkValidName.c_str());
 				_output->GetDataAssembly()->SetAttribute(w_nodeId, "type", std::to_string(static_cast<int>(TreeViewNodeType::TimeSeries)).c_str());
+				if (w_propertyNameToMinPropValue.find(w_myPair.first) != w_propertyNameToMinPropValue.end())
+				{
+					auto min = w_propertyNameToMinPropValue[w_myPair.first];
+					_output->GetDataAssembly()->SetAttribute(w_nodeId, "minvalue", std::to_string(static_cast<double>(w_propertyNameToMinPropValue[w_myPair.first])).c_str());
+				}
+				if (w_propertyNameToMaxPropValue.find(w_myPair.first) != w_propertyNameToMaxPropValue.end())
+				{
+					auto min = w_propertyNameToMaxPropValue[w_myPair.first];
+					_output->GetDataAssembly()->SetAttribute(w_nodeId, "maxvalue", std::to_string(static_cast<double>(w_propertyNameToMaxPropValue[w_myPair.first])).c_str());
+				}
 			}
 		}
 		catch (const std::exception& e)
@@ -1215,7 +1307,7 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::loadWellboreTrajecto
 	}
 }
 
-void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::addDataToParent(const TreeViewNodeType p_type, const int p_nodeId, const uint32_t p_nbProcess, const uint32_t p_processId, const double p_time)
+void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::addDataToParent(const TreeViewNodeType p_type, const int p_nodeId, const uint32_t p_nbProcess, const uint32_t p_processId)
 {
 	const std::string w_uuid = std::string(_output->GetDataAssembly()->GetNodeName(p_nodeId)).substr(1);
 
@@ -1348,7 +1440,11 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::addDataToParent(cons
 				if (abstractRepresentation->getOutput()->GetNumberOfPartitions() == 0) {
 					abstractRepresentation->loadVtkObject();
 				}
-				abstractRepresentation->addDataArray(_timeSeriesUuidAndTitleToIndexAndPropertiesUuid[w_tsUuid][w_nodeName][p_time]);
+				if (_oldTimesStepIndex != _currentTimesStepIndex)
+				{
+					abstractRepresentation->deleteDataArray(_timeSeriesUuidAndTitleToIndexAndPropertiesUuid[w_tsUuid][w_nodeName][_oldTimesStepIndex]);
+				}
+				abstractRepresentation->addDataArray(_timeSeriesUuidAndTitleToIndexAndPropertiesUuid[w_tsUuid][w_nodeName][_currentTimesStepIndex]);
 			}
 		}
 		catch (const std::exception& e)
@@ -1362,7 +1458,7 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::addDataToParent(cons
 /**
  * delete oldSelection mapper
  */
-void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::deleteMapper(double p_time)
+void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::deleteMapper()
 {
 	// initialization the output (VtkPartitionedDatasSetCollection) with same vtkDataAssembly
 	vtkSmartPointer<vtkDataAssembly> w_Assembly = vtkSmartPointer<vtkDataAssembly>::New();
@@ -1389,7 +1485,7 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::deleteMapper(double 
 			const int w_nodeParent = w_Assembly->GetParent(w_Assembly->FindFirstNodeWithName(("_" + uuid_unselect).c_str()));
 			if (_nodeIdToMapper.find(w_nodeParent) != _nodeIdToMapper.end())
 			{
-				static_cast<ResqmlAbstractRepresentationToVtkPartitionedDataSet*>(_nodeIdToMapper[w_nodeParent])->deleteDataArray(_timeSeriesUuidAndTitleToIndexAndPropertiesUuid[w_timeSeriesuuid][w_nodeName][p_time]);
+				static_cast<ResqmlAbstractRepresentationToVtkPartitionedDataSet*>(_nodeIdToMapper[w_nodeParent])->deleteDataArray(_timeSeriesUuidAndTitleToIndexAndPropertiesUuid[w_timeSeriesuuid][w_nodeName][_currentTimesStepIndex]);
 			}
 		}
 		else if (valueType == TreeViewNodeType::Properties)
@@ -1524,12 +1620,17 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::deleteMapper(double 
 
 vtkPartitionedDataSetCollection* ResqmlDataRepositoryToVtkPartitionedDataSetCollection::getVtkPartitionedDatasSetCollection(const double p_time, const uint32_t p_nbProcess, const uint32_t p_processId)
 {
+	if (p_time != _currentTimesStepIndex)
+	{
+		_selectionCleared = true;
+		_currentTimesStepIndex = p_time;
+	}
 	ResetResqmlColor();
 
 	addResqmlColor();
 
 	if (_selectionCleared) {
-		deleteMapper(p_time);
+		deleteMapper();
 	}
 
 	// vtkParitionedDataSetCollection - hierarchy - build
@@ -1566,7 +1667,7 @@ vtkPartitionedDataSetCollection* ResqmlDataRepositoryToVtkPartitionedDataSetColl
 		}
 		else if (getMapperType(w_type) == MapperType::Data)
 		{
-			addDataToParent(w_type, *w_it, p_nbProcess, p_processId, p_time);
+			addDataToParent(w_type, *w_it, p_nbProcess, p_processId);
 			++w_it;
 		}
 	}
@@ -1628,6 +1729,7 @@ vtkPartitionedDataSetCollection* ResqmlDataRepositoryToVtkPartitionedDataSetColl
 	
 	_selectionCleared = false;
 	_output->Modified();
+	_oldTimesStepIndex = _currentTimesStepIndex;
 	return _output;
 }
 
