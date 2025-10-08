@@ -70,8 +70,12 @@ protected:
 	int RequestData(vtkInformation*, vtkInformationVector**, vtkInformationVector*) override;
 	void WriteData() override;
 
-	resqml2::UnstructuredGridRepresentation* writeUnstructuredGrid(common::DataObjectRepository&, eml2::AbstractHdfProxy*, eml2::AbstractLocal3dCrs*);
-	void writeProperties(common::DataObjectRepository&, eml2::AbstractHdfProxy*, resqml2::UnstructuredGridRepresentation*);
+	resqml2::UnstructuredGridRepresentation* writeUnstructuredGrid(common::DataObjectRepository&);
+
+	/**
+	* Write all VTK DataArray of the vtkUnstructuredGrid as RESQML properties
+	*/
+	void writeProperties(common::DataObjectRepository&, resqml2::UnstructuredGridRepresentation*);
 
 	char* FileName = nullptr;
 

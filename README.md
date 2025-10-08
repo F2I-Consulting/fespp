@@ -8,14 +8,14 @@ FESPP is a plugin for Paraview which allows the visualization of some Energistic
 - If you want to build FESPP by your own, look below for instructions.
 
 ## BUILD dependencies
-- [FESAPI v2.13.X.X](https://github.com/F2I-Consulting/fesapi/releases/tag/v2.13.0.0)
+- [FESAPI v2.14.X.X](https://github.com/F2I-Consulting/fesapi/releases/tag/v2.14.0.0)
 - ParaView dynamically linked to the same HDF5 libraries as FESAPI (if FESAPI is dynamically linked to HDF5)
 	 > known to work on Linux and Windows starting from ParaView 5.13.0
 
 ## BUILD & INSTALL FESPP
 1. **CONFIGURE** FESPP with CMAKE
 You should fill in the following variables
-   - FESAPI_ROOT : The path to the folder containing include and lib folders of FESAPI v2.13.X.Y (using [our own cmake find module](./cmake/modules/FindFESAPI.cmake))
+   - FESAPI_ROOT : The path to the folder containing include and lib folders of FESAPI v2.14.X.Y (using [our own cmake find module](./cmake/modules/FindFESAPI.cmake))
    - ParaView_DIR = path_to_paraview_build
    - OPTIONALLY, for (experimental) ETP support, you will need FETPAPI (v0.2.0.0 as a minimal version) support (see [here](https://github.com/F2I-Consulting/fetpapi) for documentation on how to build fetpapi). Please enable the WITH_ETP_SSL variable and usually set the following variables :
      - FETPAPI_INCLUDE_DIR = path_to_FETPAPI_install/include
@@ -29,11 +29,11 @@ You should fill in the following variables
  
 	- in the paraview_install/Plugins/Fespp folder on Linux:
 	   - libFesapiCpp.so (from FESAPI install lib directory)
-	   - libFesapiCpp.so.2.13 (from FESAPI install lib directory)
-	   - libFesapiCpp.so.2.13.X.Y (from FESAPI install lib directory)
+	   - libFesapiCpp.so.2.14 (from FESAPI install lib directory)
+	   - libFesapiCpp.so.2.14.X.Y (from FESAPI install lib directory)
    
 	- in the paraview_install\Plugins\Fespp folder on Windows:
-	   - FesapiCpp.2.13.X.Y.dll (from FESAPI install)
+	   - FesapiCpp.2.14.X.Y.dll (from FESAPI install)
 
 - **Note 1** : If they exist (which probably not), you also need to copy FESAPI dependencies in this paraview_install\Plugins\Fespp folder. Or to put them in the (LD_LIBRARY_)PATH.
 - **Note 2** : On Linux at least, you need to build Paraview with VTK_MODULE_USE_EXTERNAL_VTK_hdf5=ON and VTK_MODULE_USE_EXTERNAL_VTK_zlib=ON for using the same HDF5 libraries in PV and FESPP. We use statically link HDF5 with FESAPI for our Windows build.

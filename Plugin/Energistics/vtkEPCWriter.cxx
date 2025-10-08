@@ -18,18 +18,15 @@ under the License.
 -----------------------------------------------------------------------*/
 #include "vtkEPCWriter.h"
 
-#include <array>
 #include <vector>
 
 #include <vtkCell.h>
 #include <vtkCellData.h>
-#include <vtkDataArray.h>
-#include <vtkDoubleArray.h>
-#include <vtkFloatArray.h>
 #include <vtkInformation.h>
 #include <vtkPartitionedDataSetCollection.h>
 #include <vtkPointData.h>
 #include <vtkUnstructuredGrid.h>
+#include <vtkArrayDispatch.h>
 
 #include "fesapi/common/DataObjectRepository.h"
 #include "fesapi/common/EpcDocument.h"
@@ -105,6 +102,7 @@ void vtkEPCWriter::WriteData()
 
 	COMMON_NS::AbstractObject::setFormat("F2I-CONSULTING", "FESPP", PROJECT_VERSION);
 	EML2_NS::AbstractHdfProxy* hdfProxy = repo.createHdfProxy("", "Hdf Proxy", epcDoc.getStorageDirectory(), epcDoc.getName() + ".h5", COMMON_NS::DataObjectRepository::openingMode::OVERWRITE);
+	repo.setDefaultHdfProxy(hdfProxy);
 
 	EML2_NS::AbstractLocal3dCrs* local3dCrs = repo.createLocalDepth3dCrs("", "Default local CRS", .0, .0, .0, .0, gsoap_resqml2_0_1::eml20__LengthUom::m, "ParaView does not support CRS", gsoap_resqml2_0_1::eml20__LengthUom::m, "ParaView does not support CRS", true);
 	repo.setDefaultCrs(local3dCrs);
@@ -122,9 +120,9 @@ void vtkEPCWriter::WriteData()
 	{
 		Internal->inputUnstructuredGrid = vtkUnstructuredGrid::SafeDownCast(Internal->input);
 
-		RESQML2_NS::UnstructuredGridRepresentation* w_unstructuredGridRepresentation = writeUnstructuredGrid(repo, hdfProxy, local3dCrs);
+		RESQML2_NS::UnstructuredGridRepresentation* w_unstructuredGridRepresentation = writeUnstructuredGrid(repo);
 		if (w_unstructuredGridRepresentation != nullptr) {
-			writeProperties(repo, hdfProxy, w_unstructuredGridRepresentation);
+			writeProperties(repo, w_unstructuredGridRepresentation);
 		}
 	}
 	else if (Internal->dataType == VTK_PARTITIONED_DATA_SET_COLLECTION)
@@ -142,9 +140,9 @@ void vtkEPCWriter::WriteData()
 				}
 				Internal->inputUnstructuredGridName = object_name;
 				Internal->inputUnstructuredGrid = vtkUnstructuredGrid::SafeDownCast(w_vPDSC->GetPartitionAsDataObject(index, 0));
-				RESQML2_NS::UnstructuredGridRepresentation* w_unstructuredGridRepresentation = writeUnstructuredGrid(repo, hdfProxy, local3dCrs);
+				RESQML2_NS::UnstructuredGridRepresentation* w_unstructuredGridRepresentation = writeUnstructuredGrid(repo);
 				if (w_unstructuredGridRepresentation != nullptr) {
-					writeProperties(repo, hdfProxy, w_unstructuredGridRepresentation);
+					writeProperties(repo, w_unstructuredGridRepresentation);
 				}
 			} // other type not supported
 		}
@@ -154,127 +152,78 @@ void vtkEPCWriter::WriteData()
 	epcDoc.serializeFrom(repo);
 }
 
-void vtkEPCWriter::writeProperties(COMMON_NS::DataObjectRepository& repo, EML2_NS::AbstractHdfProxy* hdfProxy, RESQML2_NS::UnstructuredGridRepresentation* p_resqmlUnstructuredGrid)
-{
-	vtkPointData* const w_pointData = Internal->inputUnstructuredGrid->GetPointData();
-	for (int i = 0; i < w_pointData->GetNumberOfArrays(); ++i)
+namespace {
+
+	// Functor to process arrays differently based on floating point type
+	struct MyContinuousWorker
 	{
-		vtkDataArray* const w_array = Internal->inputUnstructuredGrid->GetPointData()->GetArray(i);
-		vtkIntArray* const w_intArray = dynamic_cast<vtkIntArray*>(w_array);
-		const auto numberOfTuples = w_array->GetNumberOfTuples();
-		const auto numberOfComponents = w_array->GetNumberOfComponents();
-		if (w_intArray)
+		template <typename ArrayT>
+		void operator()(ArrayT* vtkArray, COMMON_NS::DataObjectRepository& repo,
+			RESQML2_NS::UnstructuredGridRepresentation* resqmlUnstructuredGrid, gsoap_eml2_3::eml23__IndexableElement indexableElement, RESQML2_0_1_NS::PropertyKind* continuousPropKind)
 		{
-			RESQML2_NS::DiscreteProperty* const w_prop = repo.createDiscreteProperty(p_resqmlUnstructuredGrid, "", w_intArray->GetName(), numberOfComponents, gsoap_eml2_3::eml23__IndexableElement::nodes, Internal->discretePropertyKind);
-			auto const* const values = static_cast<int32_t*>(w_intArray->GetVoidPointer(0));
+			const auto numberOfComponents = vtkArray->GetNumberOfComponents();
+			const auto propName = vtkArray->GetName();
+			RESQML2_NS::AbstractValuesProperty* resqmlProp = repo.createContinuousProperty(resqmlUnstructuredGrid, "", propName, numberOfComponents, indexableElement, gsoap_resqml2_0_1::resqml20__ResqmlUom::Euc, continuousPropKind);
+
+			const auto numberOfTuples = vtkArray->GetNumberOfTuples();
 			if (numberOfComponents == 1) {
-				w_prop->pushBackInt32Hdf5Array1dOfValues(values, numberOfTuples, hdfProxy, (std::numeric_limits<int32_t>::max)());
+				resqmlProp->pushBackArray1dOfValues(vtkArray->GetPointer(0), numberOfTuples);
 			}
 			else {
-				w_prop->pushBackInt32Hdf5Array2dOfValues(values, numberOfComponents, numberOfTuples, hdfProxy, (std::numeric_limits<int32_t>::max)());
+				resqmlProp->pushBackArray2dOfValues(vtkArray->GetPointer(0), numberOfComponents, numberOfTuples);
 			}
 		}
-		else {
-			vtkDoubleArray* const w_doubleArray = dynamic_cast<vtkDoubleArray*>(w_array);
-			if (w_doubleArray)
-			{
-				RESQML2_NS::ContinuousProperty* const w_prop = repo.createContinuousProperty(p_resqmlUnstructuredGrid, "", w_doubleArray->GetName(), numberOfComponents, gsoap_eml2_3::eml23__IndexableElement::nodes, gsoap_resqml2_0_1::resqml20__ResqmlUom::Euc, Internal->continousPropertyKind);
-				auto const* const values = static_cast<double*>(w_doubleArray->GetVoidPointer(0));
-				if (numberOfComponents == 1) {
-					w_prop->pushBackDoubleHdf5Array1dOfValues(values, numberOfTuples);
-				}
-				else {
-					w_prop->pushBackDoubleHdf5Array2dOfValues(values, numberOfComponents, numberOfTuples);
-				}
+	};
+	
+	// Functor to process arrays differently based on integral type
+	struct MyDiscreteWorker
+	{
+		template <typename ArrayT>
+		void operator()(ArrayT* vtkArray, COMMON_NS::DataObjectRepository& repo,
+			RESQML2_NS::UnstructuredGridRepresentation* resqmlUnstructuredGrid, gsoap_eml2_3::eml23__IndexableElement indexableElement, RESQML2_0_1_NS::PropertyKind* discretePropKind)
+		{
+			const auto numberOfComponents = vtkArray->GetNumberOfComponents();
+			const auto propName = vtkArray->GetName();
+			RESQML2_NS::AbstractValuesProperty* resqmlProp = repo.createDiscreteProperty(resqmlUnstructuredGrid, "", propName, numberOfComponents, indexableElement, discretePropKind);
+
+			const auto numberOfTuples = vtkArray->GetNumberOfTuples();
+			if (numberOfComponents == 1) {
+				resqmlProp->pushBackArray1dOfValues(vtkArray->GetPointer(0), numberOfTuples);
 			}
-			else
-			{
-				vtkFloatArray* const w_floatArray = dynamic_cast<vtkFloatArray*>(w_array);
-				if (w_floatArray)
-				{
-					RESQML2_NS::ContinuousProperty* const w_prop = repo.createContinuousProperty(p_resqmlUnstructuredGrid, "", w_floatArray->GetName(), numberOfComponents, gsoap_eml2_3::eml23__IndexableElement::nodes, gsoap_resqml2_0_1::resqml20__ResqmlUom::Euc, Internal->continousPropertyKind);
-					auto const* const values = static_cast<float*>(w_floatArray->GetVoidPointer(0));
-					if (numberOfComponents == 1) {
-						w_prop->pushBackFloatHdf5Array1dOfValues(values, numberOfTuples);
-					}
-					else {
-						w_prop->pushBackFloatHdf5Array2dOfValues(values, numberOfComponents, numberOfTuples);
-					}
-				}
-				else
-				{
-					if (w_array) {
-						vtkOutputWindowDisplayErrorText(("Exporting data type " + std::string(w_array->GetClassName()) + " for property " + std::string(w_array->GetName()) + " is not supported\n").c_str());
-					}
-					else {
-						vtkOutputWindowDisplayErrorText("A DataArray cannot be exported.\n");
-					}
-				}
+			else {
+				resqmlProp->pushBackArray2dOfValues(vtkArray->GetPointer(0), numberOfComponents, numberOfTuples);
 			}
 		}
+	};
+
+	void writeProperty(COMMON_NS::DataObjectRepository& repo, RESQML2_NS::UnstructuredGridRepresentation* resqmlUnstructuredGrid,
+		gsoap_eml2_3::eml23__IndexableElement indexableElement, RESQML2_0_1_NS::PropertyKind* discretePropKind, RESQML2_0_1_NS::PropertyKind* continuousPropKind,
+		vtkDataArray* vtkArray)
+	{
+		vtkArrayDispatch::DispatchByValueType<vtkArrayDispatch::Reals>::Execute(vtkArray, MyContinuousWorker{}, repo, resqmlUnstructuredGrid, indexableElement, continuousPropKind);
+		
+		using FesapiDiscreteValueTypes = vtkTypeList::Create<int8_t, uint8_t, int16_t, uint16_t, int32_t, uint32_t, int64_t, uint64_t>;
+		vtkArrayDispatch::DispatchByValueType<FesapiDiscreteValueTypes>::Execute(vtkArray, MyDiscreteWorker{}, repo, resqmlUnstructuredGrid, indexableElement, discretePropKind);
+	}
+}
+
+void vtkEPCWriter::writeProperties(COMMON_NS::DataObjectRepository& repo, RESQML2_NS::UnstructuredGridRepresentation* resqmlUnstructuredGrid)
+{
+	vtkPointData* const pointData = Internal->inputUnstructuredGrid->GetPointData();
+	for (int i = 0; i < pointData->GetNumberOfArrays(); ++i)
+	{
+		writeProperty(repo, resqmlUnstructuredGrid, gsoap_eml2_3::eml23__IndexableElement::nodes, Internal->discretePropertyKind, Internal->continousPropertyKind, pointData->GetArray(i));
 	}
 
-	vtkCellData* w_cellData = Internal->inputUnstructuredGrid->GetCellData();
-	for (int i = 0; i < w_cellData->GetNumberOfArrays(); i++)
+	vtkCellData* const cellData = Internal->inputUnstructuredGrid->GetCellData();
+	for (int i = 0; i < cellData->GetNumberOfArrays(); ++i)
 	{
-		vtkDataArray* w_array = Internal->inputUnstructuredGrid->GetCellData()->GetArray(i);
-		vtkIntArray* w_intArray = dynamic_cast<vtkIntArray*>(w_array);
-		const auto numberOfTuples = w_array->GetNumberOfTuples();
-		const auto numberOfComponents = w_array->GetNumberOfComponents();
-		if (w_intArray)
-		{
-			RESQML2_NS::DiscreteProperty* w_prop = repo.createDiscreteProperty(p_resqmlUnstructuredGrid, "", w_intArray->GetName(), 1, gsoap_eml2_3::eml23__IndexableElement::cells, Internal->discretePropertyKind);
-			auto const* const values = static_cast<int32_t*>(w_intArray->GetVoidPointer(0));
-			if (numberOfComponents == 1) {
-				w_prop->pushBackInt32Hdf5Array1dOfValues(values, numberOfTuples, hdfProxy, (std::numeric_limits<int32_t>::max)());
-			}
-			else {
-				w_prop->pushBackInt32Hdf5Array2dOfValues(values, numberOfComponents, numberOfTuples, hdfProxy, (std::numeric_limits<int32_t>::max)());
-			}
-		}
-		else {
-			vtkDoubleArray* w_doubleArray = dynamic_cast<vtkDoubleArray*>(w_array);
-			if (w_doubleArray)
-			{
-				RESQML2_NS::ContinuousProperty* w_prop = repo.createContinuousProperty(p_resqmlUnstructuredGrid, "", w_doubleArray->GetName(), 1, gsoap_eml2_3::eml23__IndexableElement::cells, gsoap_resqml2_0_1::resqml20__ResqmlUom::Euc, Internal->continousPropertyKind);
-				auto const* const values = static_cast<double*>(w_doubleArray->GetVoidPointer(0));
-				if (numberOfComponents == 1) {
-					w_prop->pushBackDoubleHdf5Array1dOfValues(values, numberOfTuples);
-				}
-				else {
-					w_prop->pushBackDoubleHdf5Array2dOfValues(values, numberOfComponents, numberOfTuples);
-				}
-			}
-			else {
-				vtkFloatArray* w_floatArray = dynamic_cast<vtkFloatArray*>(w_array);
-				if (w_floatArray)
-				{
-					RESQML2_NS::ContinuousProperty* w_prop = repo.createContinuousProperty(p_resqmlUnstructuredGrid, "", w_floatArray->GetName(), 1, gsoap_eml2_3::eml23__IndexableElement::cells, gsoap_resqml2_0_1::resqml20__ResqmlUom::Euc, Internal->continousPropertyKind);
-					auto const* const values = static_cast<float*>(w_floatArray->GetVoidPointer(0));
-					if (numberOfComponents == 1) {
-						w_prop->pushBackFloatHdf5Array1dOfValues(values, numberOfTuples);
-					}
-					else {
-						w_prop->pushBackFloatHdf5Array2dOfValues(values, numberOfComponents, numberOfTuples);
-					}
-				}
-				else
-				{
-					if (w_array) {
-						vtkOutputWindowDisplayErrorText(("Exporting data type " + std::string(w_array->GetClassName()) + " for property " + std::string(w_array->GetName()) + " is not supported\n").c_str());
-					}
-					else {
-						vtkOutputWindowDisplayErrorText("A DataArray cannot be exported.\n");
-					}
-				}
-			}
-		}
-
+		writeProperty(repo, resqmlUnstructuredGrid, gsoap_eml2_3::eml23__IndexableElement::cells, Internal->discretePropertyKind, Internal->continousPropertyKind, cellData->GetArray(i));
 	}
 }
 
 
-RESQML2_NS::UnstructuredGridRepresentation* vtkEPCWriter::writeUnstructuredGrid(COMMON_NS::DataObjectRepository& repo, EML2_NS::AbstractHdfProxy* hdfProxy, EML2_NS::AbstractLocal3dCrs* local3dCrs)
+RESQML2_NS::UnstructuredGridRepresentation* vtkEPCWriter::writeUnstructuredGrid(COMMON_NS::DataObjectRepository& repo)
 {
 	std::vector<double> w_points = getUnstructuredGridPoints();
 
@@ -332,7 +281,7 @@ RESQML2_NS::UnstructuredGridRepresentation* vtkEPCWriter::writeUnstructuredGrid(
 
 	// creating the unstructured grid
 	RESQML2_NS::UnstructuredGridRepresentation* unstructuredGrid = repo.createUnstructuredGridRepresentation("", Internal->inputUnstructuredGridName, numberOfCells);
-	unstructuredGrid->setGeometry(faceRightHandness.data(), w_points.data(), w_points.size() / 3, nullptr, faceIndicesPerCell.data(), faceIndicesCumulativeCountPerCell.data(), faceIndicesPerCell.size() /* warning shared faces */, w_nodeIndicesPerFace.data(), w_nodeIndicesCumulativeCountPerFace.data(), gsoap_resqml2_0_1::resqml20__CellShape::polyhedral /*local3dCrs*/);
+	unstructuredGrid->setGeometry(faceRightHandness.data(), w_points.data(), w_points.size() / 3, nullptr, faceIndicesPerCell.data(), faceIndicesCumulativeCountPerCell.data(), faceIndicesPerCell.size() /* warning shared faces */, w_nodeIndicesPerFace.data(), w_nodeIndicesCumulativeCountPerFace.data(), gsoap_resqml2_0_1::resqml20__CellShape::polyhedral);
 
 	return unstructuredGrid;
 }
@@ -685,8 +634,8 @@ void vtkEPCWriter::loadFacesForVTK_PYRAMID(vtkIdType const* p_ptsIds, std::vecto
 void vtkEPCWriter::loadFacesForVTK_PENTAGONAL_PRISM(vtkIdType const* p_ptsIds, std::vector<uint64_t>& p_nodeIndicesPerFace, std::vector<uint64_t>& nodeIndicesCumulativeCountPerFace, std::vector<uint64_t>& faceIndicesPerCell, std::vector<uint64_t>& faceIndicesCumulativeCountPerCell, std::vector<uint8_t>& faceRightHandness)
 {
 	/*
-* Nodes per face
-*/
+	* Nodes per face
+	*/
 	uint64_t w_nodeIndicesForWedgeFaces[30] = {
 		//Face 0
 		static_cast<uint64_t>(p_ptsIds[0]),
@@ -764,8 +713,8 @@ void vtkEPCWriter::loadFacesForVTK_PENTAGONAL_PRISM(vtkIdType const* p_ptsIds, s
 void vtkEPCWriter::loadFacesForVTK_HEXAGONAL_PRISM(vtkIdType const* p_ptsIds, std::vector<uint64_t>& p_nodeIndicesPerFace, std::vector<uint64_t>& nodeIndicesCumulativeCountPerFace, std::vector<uint64_t>& faceIndicesPerCell, std::vector<uint64_t>& faceIndicesCumulativeCountPerCell, std::vector<uint8_t>& faceRightHandness)
 {
 	/*
-* Nodes per face
-*/
+	* Nodes per face
+	*/
 	uint64_t w_nodeIndicesForWedgeFaces[36] = {
 		//Face 0
 		static_cast<uint64_t>(p_ptsIds[0]),
@@ -845,11 +794,9 @@ void vtkEPCWriter::loadFacesForVTK_HEXAGONAL_PRISM(vtkIdType const* p_ptsIds, st
 * VTK_POLYHEDRON:
 *
 * https://examples.vtk.org/site/VTKBook/05Chapter5/#Figure%205-2
-*
 */
 void vtkEPCWriter::loadFacesForVTK_POLYHEDRON(vtkIdType cellId, std::vector<uint64_t>& p_nodeIndicesPerFace, std::vector<uint64_t>& nodeIndicesCumulativeCountPerFace, std::vector<uint64_t>& faceIndicesPerCell, std::vector<uint64_t>& faceIndicesCumulativeCountPerCell, std::vector<uint8_t>& faceRightHandness)
 {
-
 	vtkIdType nfaces;
 	const vtkIdType* facePtIds;
 	Internal->inputUnstructuredGrid->GetFaceStream(cellId, nfaces, facePtIds);
@@ -882,4 +829,3 @@ void vtkEPCWriter::PrintSelf(ostream& os, vtkIndent indent)
 
 	os << indent << "FileName: " << (GetFileName() ? GetFileName() : "(none)") << indent;
 }
-

@@ -54,7 +54,7 @@ list(APPEND _FESAPI_SEARCHES _FESAPI_SEARCH_NORMAL)
 # The maximum of ranges are defined totally arbitrarily
 set(FESAPI_NAMES FesapiCpp)
 set(FESAPI_NAMES_DEBUG FesapiCppd)
-foreach(minorVer RANGE 11 99)
+foreach(minorVer RANGE 14 99)
 	list(APPEND FESAPI_NAMES FesapiCpp-2.${minorVer})
 	list(APPEND FESAPI_NAMES_DEBUG FesapiCppd-2.${minorVer})
 endforeach()

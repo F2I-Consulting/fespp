@@ -56,11 +56,11 @@ const RESQML2_NS::WellboreFrameRepresentation *ResqmlWellboreChannelToVtkPolyDat
 //----------------------------------------------------------------------------
 void ResqmlWellboreChannelToVtkPolyData::loadVtkObject()
 {
-	RESQML2_NS::WellboreFrameRepresentation const *frame = getResqmlData();
+	RESQML2_NS::WellboreFrameRepresentation const* frame = getResqmlData();
 
 	// We need to build first a polyline for the channel to support the vtk tube.
 	_pointCount = frame->getXyzPointCountOfPatch(0);
-	double *allXyzPoints = new double[_pointCount * 3]; // Will be deleted by VTK
+	double* allXyzPoints = new double[_pointCount * 3]; // Will be deleted by VTK
 	frame->getXyzPointsOfAllPatchesInGlobalCrs(allXyzPoints);
 
 	vtkSmartPointer<vtkPoints> vtkPts = vtkSmartPointer<vtkPoints>::New();
@@ -95,13 +95,13 @@ void ResqmlWellboreChannelToVtkPolyData::loadVtkObject()
 	tubeRadius->SetName(_abstractProperty->getTitle().c_str());
 	tubeRadius->SetNumberOfTuples(_pointCount);
 	bool hasNANValue = false;
-	if (dynamic_cast<const RESQML2_NS::ContinuousProperty *>(_abstractProperty) != nullptr)
+	if (dynamic_cast<RESQML2_NS::ContinuousProperty const*>(_abstractProperty) != nullptr)
 	{
 		std::unique_ptr<double[]> values(new double[_pointCount]);
-		_abstractProperty->getDoubleValuesOfPatch(0, values.get());
+		_abstractProperty->getArrayOfValuesOfPatch(0, values.get());
 		for (unsigned int i = 0; i < _pointCount; ++i)
 		{
-			if (values[i] != values[i])
+			if (std::isnan(values[i]))
 			{
 				hasNANValue = true;
 				tubeRadius->SetTuple1(i, 0);
@@ -114,9 +114,9 @@ void ResqmlWellboreChannelToVtkPolyData::loadVtkObject()
 	}
 	else if (dynamic_cast<const RESQML2_NS::DiscreteProperty *>(_abstractProperty) != nullptr || dynamic_cast<const RESQML2_NS::CategoricalProperty *>(_abstractProperty) != nullptr)
 	{
-		std::unique_ptr<int[]> values(new int[_pointCount]);
-		_abstractProperty->getInt32ValuesOfPatch(0, values.get());
-		for (unsigned int i = 0; i < _pointCount; ++i)
+		std::unique_ptr<int32_t[]> values(new int[_pointCount]);
+		_abstractProperty->getArrayOfValuesOfPatch(0, values.get());
+		for (uint64_t i = 0; i < _pointCount; ++i)
 		{
 			if (values[i] > (std::numeric_limits<int>::max)())
 			{

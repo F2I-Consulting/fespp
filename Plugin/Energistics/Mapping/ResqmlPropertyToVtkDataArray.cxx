@@ -184,7 +184,7 @@ ResqmlPropertyToVtkDataArray::ResqmlPropertyToVtkDataArray(resqml2::AbstractValu
 			}
 
 			double* valuesDoubleSet = new double[totalNumberOfValues]; // deleted by VTK data vtkSmartPointer
-			valuesProperty->getDoubleValuesOfPatch(patch_index, valuesDoubleSet);
+			valuesProperty->getArrayOfValuesOfPatch(patch_index, valuesDoubleSet);
 
 			vtkSmartPointer<vtkDoubleArray> cellDataDouble = vtkSmartPointer<vtkDoubleArray>::New();
 			cellDataDouble->SetNumberOfComponents(elementCountPerValue);
@@ -205,7 +205,7 @@ ResqmlPropertyToVtkDataArray::ResqmlPropertyToVtkDataArray(resqml2::AbstractValu
 				static_cast<resqml2::CategoricalProperty const*>(valuesProperty)->getStringLookup() != nullptr))
 		{
 			int32_t* values = new int32_t[numberOfValues * elementCountPerValue]; // deleted by VTK data vtkSmartPointer
-			valuesProperty->getInt32ValuesOfPatch(patch_index, values);
+			valuesProperty->getArrayOfValuesOfPatch(patch_index, values);
 
 			vtkSmartPointer<vtkIntArray> cellDataInt = vtkSmartPointer<vtkIntArray>::New();
 			cellDataInt->SetNumberOfComponents(elementCountPerValue);

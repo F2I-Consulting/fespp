@@ -441,15 +441,15 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::addDefaultToDataAsse
 	std::string w_representationVtkValidName;
 	if (type == TreeViewNodeType::Collection)
 	{
-		w_representationVtkValidName = this->MakeValidNodeName(("Collection_" + object->getTitle()).c_str());
+		w_representationVtkValidName = MakeValidNodeName(("Collection_" + object->getTitle()).c_str());
 	}
 	else if (type == TreeViewNodeType::Partial)
 	{
-		w_representationVtkValidName = this->MakeValidNodeName(("Partial_" + object->getTitle()).c_str());
+		w_representationVtkValidName = MakeValidNodeName(("Partial_" + object->getTitle()).c_str());
 	}
 	else if (type == TreeViewNodeType::Wellbore)
 	{
-		w_representationVtkValidName = this->MakeValidNodeName(("Wellbore_" + object->getTitle()).c_str());
+		w_representationVtkValidName = MakeValidNodeName(("Wellbore_" + object->getTitle()).c_str());
 	}
 	else
 	{
@@ -457,19 +457,19 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::addDefaultToDataAsse
 		if (type == TreeViewNodeType::SubRepresentation)
 		{
 			auto const* w_subrep = static_cast<RESQML2_NS::SubRepresentation const*>(object);
-			w_representationVtkValidName = this->MakeValidNodeName((w_typeRepresentation + "_" + w_subrep->getSupportingRepresentation(0)->getTitle() + "_" + object->getTitle()).c_str());
+			w_representationVtkValidName = MakeValidNodeName((w_typeRepresentation + "_" + w_subrep->getSupportingRepresentation(0)->getTitle() + "_" + object->getTitle()).c_str());
 
 		}
 		else
 		{
-			w_representationVtkValidName = this->MakeValidNodeName((w_typeRepresentation + "_" + object->getTitle()).c_str());
+			w_representationVtkValidName = MakeValidNodeName((w_typeRepresentation + "_" + object->getTitle()).c_str());
 		}
 	}
 	_output->GetDataAssembly()->SetAttribute(nodeId, "label", w_representationVtkValidName.c_str());
 
 	// metadatas attribute
-	for (unsigned int i = 0; i < object->getExtraMetadataCount(); ++i) {
-		_output->GetDataAssembly()->SetAttribute(nodeId, object->getExtraMetadataKeyAtIndex(i).c_str(), object->getExtraMetadataStringValueAtIndex(i).c_str());
+	for (uint64_t i = 0; i < object->getExtraMetadataCount(); ++i) {
+		_output->GetDataAssembly()->SetAttribute(nodeId, MakeValidNodeName(object->getExtraMetadataKeyAtIndex(i).c_str()).c_str(), MakeValidNodeName(object->getExtraMetadataStringValueAtIndex(i).c_str()).c_str());
 	}
 
 	// date creation attribute
