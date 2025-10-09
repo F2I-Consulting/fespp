@@ -61,7 +61,7 @@ ResqmlPropertyToVtkDataArray::ResqmlPropertyToVtkDataArray(const RESQML2_NS::Abs
 
 	if (nbElement > 0)
 	{
-		const uint32_t elementCountPerValue = valuesProperty->getElementCountPerValue();
+		const auto elementCountPerValue = valuesProperty->getValueCountPerIndexableElement();
 		if (elementCountPerValue != 1)
 		{
 			vtkOutputWindowDisplayErrorText("does not support vectorial property yet\n");
@@ -203,7 +203,7 @@ ResqmlPropertyToVtkDataArray::ResqmlPropertyToVtkDataArray(resqml2::AbstractValu
 
 	if (numberOfValues > 0)
 	{
-		const uint64_t elementCountPerValue = valuesProperty->getElementCountPerValue();
+		const uint64_t elementCountPerValue = valuesProperty->getValueCountPerIndexableElement();
 		const std::string name = valuesProperty->getTitle();
 		const std::string xmlTag = valuesProperty->getXmlTag();
 		if (xmlTag == resqml2::ContinuousProperty::XML_TAG)
