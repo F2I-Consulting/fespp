@@ -962,11 +962,7 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchTimeSer
 							if (w_prop->getSingleTimestamp() != -1)
 							{
 								const size_t w_timeIndexInTimeSeries = w_timeSeries->getTimestampIndex(w_prop->getSingleTimestamp());
-								// wait fesapi v14 for date format to string
-								std::ostringstream oss;
-								oss.str("");
-								oss << w_timeSeries->getTimestamp(w_timeIndexInTimeSeries);
-								_timesStepIndexToISODate[w_timeIndexInTimeSeries] = oss.str();
+								_timesStepIndexToISODate[w_timeIndexInTimeSeries] = w_timeSeries->getTimestampAsIsoString(w_timeIndexInTimeSeries);
 								_timesStepIndex.push_back(w_timeIndexInTimeSeries);
 								_timeSeriesUuidAndTitleToIndexAndPropertiesUuid[w_timeSeries->getUuid()][MakeValidNodeName((w_timeSeries->getXmlTag() + '_' + w_prop->getTitle()).c_str())][w_timeIndexInTimeSeries] = w_prop->getUuid();
 							}
