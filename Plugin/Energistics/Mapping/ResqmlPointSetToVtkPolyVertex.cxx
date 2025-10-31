@@ -36,8 +36,8 @@ under the License.
 //----------------------------------------------------------------------------
 ResqmlPointSetToVtkPolyVertex::ResqmlPointSetToVtkPolyVertex(const RESQML2_NS::PointSetRepresentation* points, uint32_t p_procNumber, uint32_t p_maxProc)
 	: ResqmlAbstractRepresentationToVtkPartitionedDataSet(points,
-														  p_procNumber,
-														  p_maxProc)
+		p_procNumber,
+		p_maxProc)
 {
 	_pointCount = points->getXyzPointCountOfPatch(0);
 
@@ -61,16 +61,51 @@ void ResqmlPointSetToVtkPolyVertex::loadVtkObject()
 	vtkSmartPointer<vtkPolyVertex> vtk_polyvertex = vtkSmartPointer<vtkPolyVertex>::New();
 
 	// POINT
-	double *allXyzPoints = new double[_pointCount * 3]; // Will be deleted by VTK
+	double* allXyzPoints = new double[_pointCount * 3]; // Will be deleted by VTK
 	pointSet->getXyzPointsOfPatchInGlobalCrs(0, allXyzPoints);
-
 	const size_t coordCount = _pointCount * 3;
-	if (pointSet->getLocalCrs(0)->isDepthOriented())
-	{
-		for (size_t zCoordIndex = 2; zCoordIndex < coordCount; zCoordIndex += 3)
-		{
-			allXyzPoints[zCoordIndex] *= -1;
+
+	// Determine Z transformation factors before the loop
+	const bool shouldBe2D = pointSet->isIn2D(0);
+	const bool shouldInvertZ = pointSet->getLocalCrs(0)->isDepthOriented();
+	bool nanFound = false;
+
+	// Explicit index counter: X=0, Y=1, Z=2. Used for fast Z identification.
+	int zIndex = 0;
+
+	for (size_t i = 0; i < coordCount; ++i) {
+		// 1. NaN Handling (applies to X, Y, and Z)
+		if (std::isnan(allXyzPoints[i])) {
+			allXyzPoints[i] = 0.0; // Replace NaN with 0.0 as requested
+			nanFound = true;
 		}
+
+		// 2. Z Transformation Management
+		if (zIndex == 2) { // Only for the Z index
+			if (shouldBe2D) {
+				// Priority: Set Z to zero for 2D representation
+				allXyzPoints[i] = 0.0;
+			}
+			else if (shouldInvertZ) {
+				// Invert Z if not 2D and if Depth-Oriented
+				allXyzPoints[i] *= -1.0;
+			}
+		}
+
+		// 3. Counter Update
+		zIndex++;
+		if (zIndex == 3) {
+			zIndex = 0;
+		}
+	}
+
+	if (nanFound) {
+		vtkOutputWindowDisplayText(("WARNING: Coordinates in " +
+			pointSet->getTitle() +
+			" contained NaN values, which have been replaced by 0.0.").c_str());
+	}
+	if (shouldBe2D) {
+		vtkOutputWindowDisplayText((pointSet->getTitle() + " is in 2D (z = 0)").c_str());
 	}
 
 	vtkSmartPointer<vtkDoubleArray> pointsArray = vtkSmartPointer<vtkDoubleArray>::New();
@@ -81,8 +116,7 @@ void ResqmlPointSetToVtkPolyVertex::loadVtkObject()
 	vtkSmartPointer<vtkPoints> vtk_points = vtkSmartPointer<vtkPoints>::New();
 	vtk_points->SetData(pointsArray);
 	vtk_polyvertex->GetPointIds()->SetNumberOfIds(_pointCount);
-	for (int i = 0; i < _pointCount; ++i)
-	{
+	for (int i = 0; i < _pointCount; ++i) {
 		vtk_polyvertex->GetPointIds()->SetId(i, i);
 	}
 
