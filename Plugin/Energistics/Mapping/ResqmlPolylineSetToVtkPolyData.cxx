@@ -86,23 +86,115 @@ void ResqmlPolylineSetToVtkPolyData::loadVtkObject()
 	vtkSmartPointer<vtkCellArray> setPolylineRepresentationLines = vtkSmartPointer<vtkCellArray>::New();
 
 	uint32_t countPolyline = polylineSet->getPolylineCountOfPatch(0);
-
 	std::unique_ptr<uint32_t[]> countNodePolylineInPatch(new uint32_t[countPolyline]);
 	polylineSet->getNodeCountPerPolylineInPatch(0, countNodePolylineInPatch.get());
 
-	vtkIdType idPoint = 0;
-	for (uint32_t polylineIndex = 0; polylineIndex < countPolyline; ++polylineIndex)
-	{
-		vtkSmartPointer<vtkPolyLine> polylineRepresentation = vtkSmartPointer<vtkPolyLine>::New();
-		polylineRepresentation->GetPointIds()->SetNumberOfIds(countNodePolylineInPatch[polylineIndex]);
-		for (uint32_t line = 0; line < countNodePolylineInPatch[polylineIndex]; ++line)
-		{
-			polylineRepresentation->GetPointIds()->SetId(line, idPoint++);
-		}
-		setPolylineRepresentationLines->InsertNextCell(polylineRepresentation);
-		vtk_polydata->SetLines(setPolylineRepresentationLines);
-	}
+	vtkIdType currentGlobalPointId = 0; // Global index of the current point in vtkPts
 
+	// =========================================================
+	// PERFORMANCE OPTIMIZATION STEP: CHECK UNIFORM CLOSURE STATES
+	// =========================================================
+	// Check for uniform closure states using FESAPI's optimized methods
+	bool allClosed = polylineSet->areAllPolylinesClosedOfPatch(0);
+	bool allOpen = polylineSet->areAllPolylinesNonClosedOfPatch(0);
+
+	// SCENARIO A: ALL POLYLINES ARE CLOSED (Maximum Performance)
+	// ---------------------------------------------------------
+	if (allClosed)
+	{
+		for (uint32_t polylineIndex = 0; polylineIndex < countPolyline; ++polylineIndex)
+		{
+			uint32_t nodeCount = countNodePolylineInPatch[polylineIndex];
+
+			// If all are closed, cellPointCount is always nodeCount + 1 (for the closing point)
+			vtkIdType cellPointCount = nodeCount + 1;
+
+			vtkSmartPointer<vtkPolyLine> polylineRepresentation = vtkSmartPointer<vtkPolyLine>::New();
+			polylineRepresentation->GetPointIds()->SetNumberOfIds(cellPointCount);
+
+			// Store the ID of the first point for closure
+			vtkIdType firstPointId = currentGlobalPointId;
+
+			// Fill IDs (nodeCount iterations)
+			for (uint32_t line = 0; line < nodeCount; ++line)
+			{
+				// Assign current global ID and advance the global ID counter
+				polylineRepresentation->GetPointIds()->SetId(line, currentGlobalPointId++);
+			}
+
+			// Mandatory closure: Append the first point's ID at the end (index nodeCount)
+			polylineRepresentation->GetPointIds()->SetId(nodeCount, firstPointId);
+
+			setPolylineRepresentationLines->InsertNextCell(polylineRepresentation);
+		}
+	}
+    // SCÉNARIO B: ALL POLYLINES ARE OPEN (Maximum Performance)
+    // ---------------------------------------------------------
+    else if (allOpen)
+    {
+        for (uint32_t polylineIndex = 0; polylineIndex < countPolyline; ++polylineIndex)
+        {
+            uint32_t nodeCount = countNodePolylineInPatch[polylineIndex];
+
+            // If all are open, cellPointCount is always nodeCount
+            vtkIdType cellPointCount = nodeCount;
+
+            vtkSmartPointer<vtkPolyLine> polylineRepresentation = vtkSmartPointer<vtkPolyLine>::New();
+            polylineRepresentation->GetPointIds()->SetNumberOfIds(cellPointCount);
+
+            // Fill IDs (nodeCount iterations)
+            for (uint32_t line = 0; line < nodeCount; ++line)
+            {
+                // Assign current global ID and advance the global ID counter
+                polylineRepresentation->GetPointIds()->SetId(line, currentGlobalPointId++);
+            }
+            // No closure step needed
+
+            setPolylineRepresentationLines->InsertNextCell(polylineRepresentation);
+        }
+    }
+    // SCÉNARIO C: MIXED CASE (Requires Individual Flag Check)
+    // ---------------------------------------------------------
+    else
+    {
+        // Fallback: Use the individual flag check method for robust handling of mixed closure states
+        std::unique_ptr<bool[]> isClosedFlags(new bool[countPolyline]);
+        // Correct FESAPI method to get flags per polyline:
+        polylineSet->getClosedFlagPerPolylineOfPatch(0, isClosedFlags.get());
+
+        for (uint32_t polylineIndex = 0; polylineIndex < countPolyline; ++polylineIndex)
+        {
+            uint32_t nodeCount = countNodePolylineInPatch[polylineIndex];
+            bool isClosed = isClosedFlags[polylineIndex]; // Read the flag
+
+            // Determine cell size based on the flag
+            vtkIdType cellPointCount = nodeCount + (isClosed ? 1 : 0);
+
+            vtkSmartPointer<vtkPolyLine> polylineRepresentation = vtkSmartPointer<vtkPolyLine>::New();
+            polylineRepresentation->GetPointIds()->SetNumberOfIds(cellPointCount);
+
+            vtkIdType firstPointId = currentGlobalPointId;
+
+            // Fill IDs
+            for (uint32_t line = 0; line < nodeCount; ++line)
+            {
+                polylineRepresentation->GetPointIds()->SetId(line, currentGlobalPointId++);
+            }
+
+            // Conditional closure
+            if (isClosed)
+            {
+                // VTK closure: Set the first point's ID at the last position
+                polylineRepresentation->GetPointIds()->SetId(nodeCount, firstPointId);
+            }
+
+            setPolylineRepresentationLines->InsertNextCell(polylineRepresentation);
+        }
+    }
+    // =========================================================
+
+    // Set all lines/cells to the vtkPolyData (should be done only once)
+    vtk_polydata->SetLines(setPolylineRepresentationLines);
 	_vtkData->SetPartition(0, vtk_polydata);
 	_vtkData->Modified();
 }
