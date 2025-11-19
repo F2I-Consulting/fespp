@@ -1008,31 +1008,25 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchTimeSer
 					if (w_prop_disc->hasMinimumValue())
 					{
 						auto min = w_prop_disc->getMinimumValue();
-						if (!std::isnan(min))
+						if (w_propertyNameToMinPropValue.find(w_prop->getTitle()) == w_propertyNameToMinPropValue.end())
 						{
-							if (w_propertyNameToMinPropValue.find(w_prop->getTitle()) == w_propertyNameToMinPropValue.end())
-							{
-								w_propertyNameToMinPropValue[w_prop->getTitle()] = min;
-							}
-							else
-							{
-								w_propertyNameToMinPropValue[w_prop->getTitle()] = w_propertyNameToMinPropValue[w_prop->getTitle()] > min ? min : w_propertyNameToMinPropValue[w_prop->getTitle()];
-							}
+							w_propertyNameToMinPropValue[w_prop->getTitle()] = min;
+						}
+						else
+						{
+							w_propertyNameToMinPropValue[w_prop->getTitle()] = w_propertyNameToMinPropValue[w_prop->getTitle()] > min ? min : w_propertyNameToMinPropValue[w_prop->getTitle()];
 						}
 					}
 					if (w_prop_disc->hasMaximumValue())
 					{
 						auto max = w_prop_disc->getMaximumValue();
-						if (!std::isnan(max))
+						if (w_propertyNameToMaxPropValue.find(w_prop->getTitle()) == w_propertyNameToMaxPropValue.end())
 						{
-							if (w_propertyNameToMaxPropValue.find(w_prop->getTitle()) == w_propertyNameToMaxPropValue.end())
-							{
-								w_propertyNameToMaxPropValue[w_prop->getTitle()] = max;
-							}
-							else
-							{
-								w_propertyNameToMaxPropValue[w_prop->getTitle()] = w_propertyNameToMaxPropValue[w_prop->getTitle()] < max ? max : w_propertyNameToMaxPropValue[w_prop->getTitle()];
-							}
+							w_propertyNameToMaxPropValue[w_prop->getTitle()] = max;
+						}
+						else
+						{
+							w_propertyNameToMaxPropValue[w_prop->getTitle()] = w_propertyNameToMaxPropValue[w_prop->getTitle()] < max ? max : w_propertyNameToMaxPropValue[w_prop->getTitle()];
 						}
 					}
 				}
