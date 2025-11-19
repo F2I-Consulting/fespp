@@ -120,10 +120,12 @@ void vtkEPCWriter::WriteData()
 	{
 		Internal->inputUnstructuredGrid = vtkUnstructuredGrid::SafeDownCast(Internal->input);
 
-		RESQML2_NS::UnstructuredGridRepresentation* w_unstructuredGridRepresentation = writeUnstructuredGrid(repo);
-		if (w_unstructuredGridRepresentation != nullptr) {
-			writeProperties(repo, w_unstructuredGridRepresentation);
+		RESQML2_NS::UnstructuredGridRepresentation* const w_unstructuredGridRepresentation = writeUnstructuredGrid(repo);
+		if (w_unstructuredGridRepresentation == nullptr) {
+			hdfProxy->close();
+			return;
 		}
+		writeProperties(repo, w_unstructuredGridRepresentation);
 	}
 	else if (Internal->dataType == VTK_PARTITIONED_DATA_SET_COLLECTION)
 	{
