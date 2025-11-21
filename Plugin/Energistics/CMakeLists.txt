@@ -1,4 +1,4 @@
-set(classes
+set(ALL_FESPP_ENERGISTICS_CLASSES
 	vtkEPCReader
 	vtkETPSource
   	vtkEPCWriter
@@ -6,19 +6,26 @@ set(classes
 	vtkEPCCollector
 )
 
-FILE (GLOB FESPP_MAPPING_SOURCES Mapping/*.cxx  VTK/*.cxx)
-FILE (GLOB FESPP_MAPPING_HEADERS Mapping/*.h Tools/*.h VTK/*.h)
-set (ENERGISTICS_SOURCES
-	${FESPP_MAPPING_SOURCES}
+include(${CMAKE_CURRENT_SOURCE_DIR}/Mapping/CMakeLists.txt)
+include(${CMAKE_CURRENT_SOURCE_DIR}/Tools/CMakeLists.txt)
+include(${CMAKE_CURRENT_SOURCE_DIR}/VTK/CMakeLists.txt)
+
+list(APPEND ALL_FESPP_ENERGISTICS_HEADERS
+	${FESPP_ENERGISTICS_MAPPING_HEADERS}
+	${FESPP_ENERGISTICS_TOOLS_HEADERS}
+	${FESPP_ENERGISTICS_VTK_HEADERS}
 )
-set (ENERGISTICS_PRIVATE_HEADERS
-	${FESPP_MAPPING_HEADERS}
+
+list(APPEND ALL_FESPP_ENERGISTICS_SOURCES
+	${FESPP_ENERGISTICS_MAPPING_SOURCES}
+	${FESPP_ENERGISTICS_TOOLS_SOURCES}
+	${FESPP_ENERGISTICS_VTK_SOURCES}
 )
 
 vtk_module_add_module(Energistics
-  CLASSES ${classes} # shortcut for adding `<class>.cxx` to `SOURCES` and `<class>.h` to `HEADERS`
-  SOURCES ${ENERGISTICS_SOURCES} # Do not wrap SOURCES
-  PRIVATE_HEADERS ${ENERGISTICS_PRIVATE_HEADERS} # Do not wrap PRIVATE_HEADERS but only HEADERS (or CLASSES which also defines HEADERS)
+  CLASSES ${ALL_FESPP_ENERGISTICS_CLASSES} # shortcut for adding `<class>.cxx` to `SOURCES` and `<class>.h` to `HEADERS`
+  SOURCES ${ALL_FESPP_ENERGISTICS_SOURCES} # Do not wrap SOURCES
+  PRIVATE_HEADERS ${ALL_FESPP_ENERGISTICS_HEADERS} # Do not wrap PRIVATE_HEADERS but only HEADERS (or CLASSES which also defines HEADERS)
 )
 
 if (WITH_ETP_SSL)
@@ -68,12 +75,11 @@ endif (WITH_ETP_SSL)
 # External resource
 # ============================================================================
 if (WIN32)
-	install(FILES ${FESAPI_RESOURCES_DIR}/PropertyKindMapping.xml
-		DESTINATION ${CMAKE_INSTALL_BINDIR}/paraview-${ParaView_VERSION_MAJOR}.${ParaView_VERSION_MINOR}/plugins/Fespp)
+	cmake_path(SET DST_FILE NORMALIZE "${CMAKE_INSTALL_BINDIR}/paraview-${ParaView_VERSION_MAJOR}.${ParaView_VERSION_MINOR}/plugins/Fespp")
 elseif (UNIX)
-	install(FILES ${FESAPI_RESOURCES_DIR}/PropertyKindMapping.xml
-		DESTINATION ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}/paraview-${ParaView_VERSION_MAJOR}.${ParaView_VERSION_MINOR}/plugins/Fespp)
+	cmake_path(SET DST_FILE NORMALIZE "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}/paraview-${ParaView_VERSION_MAJOR}.${ParaView_VERSION_MINOR}/plugins/Fespp")
 endif (WIN32)
+install(FILES ${FESAPI_RESOURCES_DIR}/PropertyKindMapping.xml DESTINATION ${DST_FILE})
 
 # ============================================================================
 # External link

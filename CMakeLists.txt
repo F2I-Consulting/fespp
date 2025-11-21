@@ -1,18 +1,15 @@
-cmake_minimum_required(VERSION 3.14.0)
-
-# The NEW behavior for this policy is to set VERSION as documented by the project() command.
-cmake_policy(SET CMP0048 NEW)
+cmake_minimum_required(VERSION 3.20.0)
 
 # version mechanism
 set (Fespp_VERSION_MAJOR 3)
 set (Fespp_VERSION_MINOR 3)
-set (Fespp_VERSION_PATCH 0)
+set (Fespp_VERSION_PATCH 1)
 
 set (Fespp_VERSION ${Fespp_VERSION_MAJOR}.${Fespp_VERSION_MINOR}.${Fespp_VERSION_PATCH})
 
 project(Fespp
 	VERSION ${Fespp_VERSION}
-	DESCRIPTION "Paraview plugin for importing EPC documents"
+	DESCRIPTION "Paraview plugin for importing RESQML/EPC documents"
 	HOMEPAGE_URL "https://github.com/F2I-Consulting/fespp"
 	LANGUAGES C CXX
 )
@@ -36,7 +33,8 @@ set("_paraview_plugin_default_${CMAKE_PROJECT_NAME}" ON)
 paraview_plugin_scan(
   PLUGIN_FILES      "${CMAKE_CURRENT_SOURCE_DIR}/Plugin/paraview.plugin"
   PROVIDES_PLUGINS  plugins
-  REQUIRES_MODULES  required_modules)
+  REQUIRES_MODULES  required_modules
+)
 
 foreach (module IN LISTS required_modules)
   if (NOT TARGET "${module}")
@@ -50,5 +48,6 @@ paraview_plugin_build(
   RUNTIME_DESTINATION "${CMAKE_INSTALL_BINDIR}"
   LIBRARY_DESTINATION "${CMAKE_INSTALL_LIBDIR}"
   LIBRARY_SUBDIRECTORY "${PARAVIEW_PLUGIN_SUBDIR}"
-  PLUGINS ${plugins})
+  PLUGINS ${plugins}
+)
   

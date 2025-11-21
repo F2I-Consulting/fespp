@@ -51,7 +51,6 @@ endif (WITH_ETP_SSL)
 # -----------------------------------------------------------------------------
 paraview_add_plugin(${PROJECT_NAME}
 	VERSION ${PROJECT_VERSION}
-	SOURCES ${FESPP_NO_QT_SOURCES}
 	MODULES Energistics
 	MODULE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/Energistics/vtk.module"
 	XML_DOCUMENTATION OFF
