@@ -247,6 +247,11 @@
 				</StringListDomain >
 			</StringVectorProperty>
 
+			<!-- New properties for accessing dataspaces from Python -->
+			<IntVectorProperty command="GetNumberOfDataspaces" information_only="1" name="NumberOfDataspaces">
+				<Documentation>Returns the number of available dataspaces.</Documentation>
+			</IntVectorProperty>
+
 			<!-- TimeStepValues for Time series -->
 			<DoubleVectorProperty information_only="1" name="TimestepValues" repeatable="1">
 				<TimeStepsInformationHelper />

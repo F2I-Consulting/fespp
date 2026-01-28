@@ -90,6 +90,21 @@ public:
 
 	///@{
 	/**
+	 * Get the number of available dataspaces.
+	 */
+	int GetNumberOfDataspaces();
+	///@}
+
+	///@{
+	/**
+	 * Get the dataspace at the specified index.
+	 * Returns nullptr if the index is out of range.
+	 */
+	const char* GetDataspace(int index);
+	///@}
+
+	///@{
+	/**
 	 * Assemblies provide yet another way of selection blocks/sets to load, if
 	 * available in the dataset. If a block (or set) is enabled either in the
 	 * block (or set) selection or using assembly selector then it is treated as

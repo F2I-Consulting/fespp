@@ -205,6 +205,34 @@ void vtkETPSource::SetDataspaces(const char* dataspaces)
 }
 
 //----------------------------------------------------------------------------
+int vtkETPSource::GetNumberOfDataspaces()
+{
+	if (AllDataspaces == nullptr)
+	{
+		return 0;
+	}
+	return static_cast<int>(AllDataspaces->GetNumberOfValues());
+}
+
+//----------------------------------------------------------------------------
+const char* vtkETPSource::GetDataspace(int index)
+{
+	if (AllDataspaces == nullptr)
+	{
+		return nullptr;
+	}
+
+	if (index < 0 || index >= AllDataspaces->GetNumberOfValues())
+	{
+		vtkWarningMacro(<< "GetDataspace: index " << index << " is out of range [0, "
+		                << AllDataspaces->GetNumberOfValues() << ")");
+		return nullptr;
+	}
+
+	return AllDataspaces->GetValue(index).c_str();
+}
+
+//----------------------------------------------------------------------------
 bool vtkETPSource::AddSelector(const char* selector)
 {
 	if (selector != nullptr && selectors.insert(selector).second)
