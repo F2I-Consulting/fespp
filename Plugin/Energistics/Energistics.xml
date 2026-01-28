@@ -252,6 +252,14 @@
 				<Documentation>Returns the number of available dataspaces.</Documentation>
 			</IntVectorProperty>
 
+			<!-- Property to get all dataspace names as a string array -->
+			<StringVectorProperty command="GetAllDataspaces"
+			                      information_only="1"
+			                      name="AllDataspaceNames">
+				<StringArrayHelper />
+				<Documentation>Returns all available dataspace names from the AllDataspaces vtkStringArray.</Documentation>
+			</StringVectorProperty>
+
 			<!-- TimeStepValues for Time series -->
 			<DoubleVectorProperty information_only="1" name="TimestepValues" repeatable="1">
 				<TimeStepsInformationHelper />
