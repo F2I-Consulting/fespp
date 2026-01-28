@@ -307,7 +307,22 @@ std::vector<std::string> ResqmlDataRepositoryToVtkPartitionedDataSetCollection::
 	}
 
 	//************ LIST DATASPACES ************
-	const auto w_dataspaces = _session->getDataspaces();
+	// Wait for dataspaces to be received from server (getDataspaces is asynchronous)
+	// Try multiple times with delays to give the server time to send dataspaces
+	std::vector<Energistics::Etp::v12::Datatypes::Object::Dataspace> w_dataspaces;
+	int attempts = 0;
+	const int maxAttempts = 10;  // Try for up to 2 seconds (10 * 200ms)
+
+	while (attempts < maxAttempts)
+	{
+		w_dataspaces = _session->getDataspaces();
+		if (!w_dataspaces.empty())
+		{
+			break;  // Dataspaces received successfully
+		}
+		std::this_thread::sleep_for(std::chrono::milliseconds(200));
+		attempts++;
+	}
 
 	std::transform(w_dataspaces.begin(), w_dataspaces.end(), std::back_inserter(w_result),
 		[](const Energistics::Etp::v12::Datatypes::Object::Dataspace& w_ds)

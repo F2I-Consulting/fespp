@@ -146,6 +146,9 @@ void vtkETPSource::confirmConnectionClicked()
 	t1.detach();
 	try
 	{
+		// Clear AllDataspaces before filling to avoid accumulation
+		AllDataspaces->SetNumberOfValues(0);
+
 		const auto dataspaces = repository.connect(ETPUrl, OSDUDataPartition, ETPTokenType + " " + ETPToken, ProxyUrl, ProxyTokenType + " " + ProxyToken);
 		for (const std::string dataspace : dataspaces)
 		{
@@ -170,6 +173,10 @@ void vtkETPSource::confirmConnectionClicked()
 void vtkETPSource::disconnectionClicked()
 {
 	repository.disconnect();
+
+	// Clear AllDataspaces when disconnecting
+	AllDataspaces->SetNumberOfValues(0);
+
 	Modified();
 	Modified();
 	Update();
