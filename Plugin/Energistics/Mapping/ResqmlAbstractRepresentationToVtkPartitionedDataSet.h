@@ -72,8 +72,9 @@ public:
 	const char* getActivePropertyName() { return activeArrayName; }
 	int getActivePropertyType() { return activeType; }
 
-private:
 	int ActiveProperty(const char* arrayName, vtkDataObject::AttributeTypes type);
+
+private:
 
 protected:
 	const RESQML2_NS::AbstractRepresentation *getResqmlData() const { return _resqmlData; }

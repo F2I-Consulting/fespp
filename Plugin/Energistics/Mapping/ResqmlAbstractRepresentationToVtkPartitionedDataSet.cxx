@@ -108,10 +108,10 @@ char * ResqmlAbstractRepresentationToVtkPartitionedDataSet::addDataArray(const s
 
 void ResqmlAbstractRepresentationToVtkPartitionedDataSet::deleteDataArray(const std::string& p_uuid)
 {
-	ResqmlPropertyToVtkDataArray* w_vtkDataArray = _uuidToVtkDataArray[p_uuid];
-	if (w_vtkDataArray != nullptr)
+	if (auto it = _uuidToVtkDataArray.find(p_uuid); it != _uuidToVtkDataArray.end())
 	{
-		char* w_dataArrayName = w_vtkDataArray->getVtkData()->GetName();
+		auto* w_vtkDataArray = it->second;
+		const char* w_dataArrayName = w_vtkDataArray->getVtkData()->GetName();
 		if (_vtkData->GetPartition(0)->GetCellData()->HasArray(w_dataArrayName))
 		{
 			_vtkData->GetPartition(0)->GetCellData()->RemoveArray(w_dataArrayName);
@@ -123,12 +123,9 @@ void ResqmlAbstractRepresentationToVtkPartitionedDataSet::deleteDataArray(const 
 
 		// Cleaning
 		delete w_vtkDataArray;
-		_uuidToVtkDataArray.erase(p_uuid);
+		_uuidToVtkDataArray.erase(it);
 	}
-	else
-	{
-		throw std::invalid_argument("The property " + p_uuid + "cannot be deleted from representation " + getResqmlData()->getUuid() + " since it has never been added");
-	}
+	// else: property was never added (e.g. time step changed before any load) — nothing to delete
 }
 
 void ResqmlAbstractRepresentationToVtkPartitionedDataSet::registerSubRep()
@@ -173,7 +170,7 @@ int ResqmlAbstractRepresentationToVtkPartitionedDataSet::ActiveProperty(const ch
 			}
 			else
 			{
-				// Recherche de la représentation pour notre source
+				// Search for the representation for our source
 				vtkNew<vtkCollection> representations;
 				activeSessionProxyManager->GetProxies("representations", representations);
 

@@ -1,4 +1,4 @@
-/*-----------------------------------------------------------------------
+﻿/*-----------------------------------------------------------------------
 Licensed to the Apache Software Foundation (ASF) under one
 or more contributor license agreements.  See the NOTICE file
 distributed with this work for additional information
@@ -35,6 +35,8 @@ VtkAssembly => TreeView:
 #include <list>
 #include <regex>
 #include <numeric>
+#include <limits>
+#include <cmath>
 #include <cstdlib>
 #include <sstream>
 #include <iostream>
@@ -48,6 +50,9 @@ VtkAssembly => TreeView:
 #include <vtkResourceFileLocator.h>
 #include <vtksys/SystemTools.hxx>
 #include <vtkSMPropertyHelper.h>
+#include <vtkOutputWindow.h>
+#include <vtkCellData.h>
+#include <vtkPointData.h>
 #include <vtkSMProxyManager.h>
 #include <vtkSMSessionProxyManager.h>
 #include <vtkSMProxySelectionModel.h>
@@ -324,6 +329,8 @@ std::vector<std::string> ResqmlDataRepositoryToVtkPartitionedDataSetCollection::
 		attempts++;
 	}
 
+	vtkOutputWindowDisplayText(("Dataspaces received after " + std::to_string(attempts) + " attempts: " + std::to_string(w_dataspaces.size())).c_str());
+
 	std::transform(w_dataspaces.begin(), w_dataspaces.end(), std::back_inserter(w_result),
 		[](const Energistics::Etp::v12::Datatypes::Object::Dataspace& w_ds)
 		{ return w_ds.uri; });
@@ -439,6 +446,9 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::buildDataAsse
 	// get TimeSeries
 	w_message += searchTimeSeries(p_fileName);
 
+	// get Realizations
+	w_message += searchRealization();
+
 	return w_message;
 }
 
@@ -488,8 +498,13 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::addDefaultToDataAsse
 	if (type != TreeViewNodeType::Partial)
 	{
 		// metadatas attribute
-		for (uint64_t i = 0; i < object->getExtraMetadataCount(); ++i) {
-			_output->GetDataAssembly()->SetAttribute(nodeId, MakeValidNodeName(object->getExtraMetadataKeyAtIndex(i).c_str()).c_str(), MakeValidNodeName(object->getExtraMetadataStringValueAtIndex(i).c_str()).c_str());
+		try {
+			for (uint64_t i = 0; i < object->getExtraMetadataCount(); ++i) {
+				_output->GetDataAssembly()->SetAttribute(nodeId, MakeValidNodeName(object->getExtraMetadataKeyAtIndex(i).c_str()).c_str(), MakeValidNodeName(object->getExtraMetadataStringValueAtIndex(i).c_str()).c_str());
+			}
+		}
+		catch (const std::exception& e) {
+			vtkOutputWindowDisplayWarningText(("Warning: could not retrieve extra metadata for object " + object->getUuid() + ": " + e.what() + "\n").c_str());
 		}
 
 		// date creation attribute
@@ -676,32 +691,57 @@ int ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchPropertySet(res
 
 std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchProperties(RESQML2_NS::AbstractRepresentation const* p_representation, int p_nodeParent)
 {
+	std::vector<RESQML2_NS::AbstractValuesProperty*> w_valuesPropertySet;
 	try
 	{
-		auto w_valuesPropertySet = p_representation->getValuesPropertySet();
+		w_valuesPropertySet = p_representation->getValuesPropertySet();
 		std::sort(w_valuesPropertySet.begin(), w_valuesPropertySet.end(), lexicographicalComparison);
-
-		int w_propertySetNodeId = p_nodeParent;
-		// property
-		for (auto const* w_property : w_valuesPropertySet)
-		{
-			for (resqml2_0_1::PropertySet const* w_propertySet : w_property->getPropertySets())
-			{
-				w_propertySetNodeId = searchPropertySet(w_propertySet, p_nodeParent);
-			}
-
-			if (_output->GetDataAssembly()->FindFirstNodeWithName(("_" + w_property->getUuid()).c_str()) == -1)
-			{ // verify uuid exist in treeview
-				int w_propertyNodeId = addNodeToDataAssembly(w_property, TreeViewNodeType::Properties, w_propertySetNodeId);
-			}
-		}
 	}
 	catch (const std::exception& e)
 	{
 		return "Exception in FESAPI when calling getValuesPropertySet with representation uuid: " + p_representation->getUuid() + " : " + e.what() + ".\n";
 	}
 
-	return "";
+	std::string w_result;
+	int w_propertySetNodeId = p_nodeParent;
+	for (auto const* w_property : w_valuesPropertySet)
+	{
+		try
+		{
+			if (w_property->isPartial())
+			{
+				if (_output->GetDataAssembly()->FindFirstNodeWithName(("_" + w_property->getUuid()).c_str()) == -1)
+				{
+					addNodeToDataAssembly(w_property, TreeViewNodeType::Partial, w_propertySetNodeId);
+				}
+				continue;
+			}
+
+			try
+			{
+				for (resqml2_0_1::PropertySet const* w_propertySet : w_property->getPropertySets())
+				{
+					w_propertySetNodeId = searchPropertySet(w_propertySet, p_nodeParent);
+				}
+			}
+			catch (const std::exception& e)
+			{
+				w_result += "Warning: could not get property sets for property " + w_property->getUuid() + " : " + e.what() + " — property will be added under its parent representation.\n";
+				w_propertySetNodeId = p_nodeParent;
+			}
+
+			if (_output->GetDataAssembly()->FindFirstNodeWithName(("_" + w_property->getUuid()).c_str()) == -1)
+			{ // verify uuid exist in treeview
+				addNodeToDataAssembly(w_property, TreeViewNodeType::Properties, w_propertySetNodeId);
+			}
+		}
+		catch (const std::exception& e)
+		{
+			w_result += "Exception in FESAPI when processing property uuid: " + w_property->getUuid() + " : " + e.what() + ".\n";
+		}
+	}
+
+	return w_result;
 }
 
 int ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchRepresentationSetRepresentation(resqml2::RepresentationSetRepresentation const* p_rsr, int p_nodeId)
@@ -973,13 +1013,30 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchTimeSer
 						const int w_parentNodeId = _output->GetDataAssembly()->GetParent(w_nodeId);
 						if (w_parentNodeId != -1)
 						{
-							w_propertyNameToNodeIdSet[w_prop->getTitle()].push_back(w_nodeId);
-							if (w_prop->getSingleTimestamp() != -1)
+							// If this property also has realization indices, it belongs to the
+							// Realization+TimeSeries category. Store it there and skip the normal
+							// TimeSeries grouping; searchRealization() will build the tree nodes.
+							if (w_prop->hasRealizationIndices() && !w_prop->getRealizationIndices().empty()
+								&& w_prop->getSingleTimestamp() != -1)
 							{
-								const size_t w_timeIndexInTimeSeries = w_timeSeries->getTimestampIndex(w_prop->getSingleTimestamp());
-								_timesStepIndexToISODate[w_timeIndexInTimeSeries] = w_timeSeries->getTimestampAsIsoString(w_timeIndexInTimeSeries);
-								_timesStepIndex.push_back(w_timeIndexInTimeSeries);
-								_timeSeriesUuidAndTitleToIndexAndPropertiesUuid[w_timeSeries->getUuid()][MakeValidNodeName((w_timeSeries->getXmlTag() + '_' + w_prop->getTitle()).c_str())][w_timeIndexInTimeSeries] = w_prop->getUuid();
+								const uint32_t realIdx = w_prop->getRealizationIndices()[0];
+								const size_t timeIdx = w_timeSeries->getTimestampIndex(w_prop->getSingleTimestamp());
+								_timesStepIndexToISODate[timeIdx] = w_timeSeries->getTimestampAsIsoString(timeIdx);
+								_timesStepIndex.push_back(timeIdx);
+								_realAndTimeSeriesToIndexAndPropertiesUuid[w_prop->getTitle()][realIdx][timeIdx] = w_prop->getUuid();
+								_realAndTimeSeriesTsUuid[w_prop->getTitle()] = w_timeSeries->getUuid();
+								// Leave the individual node in the tree for searchRealization() to handle
+							}
+							else
+							{
+								w_propertyNameToNodeIdSet[w_prop->getTitle()].push_back(w_nodeId);
+								if (w_prop->getSingleTimestamp() != -1)
+								{
+									const size_t w_timeIndexInTimeSeries = w_timeSeries->getTimestampIndex(w_prop->getSingleTimestamp());
+									_timesStepIndexToISODate[w_timeIndexInTimeSeries] = w_timeSeries->getTimestampAsIsoString(w_timeIndexInTimeSeries);
+									_timesStepIndex.push_back(w_timeIndexInTimeSeries);
+									_timeSeriesUuidAndTitleToIndexAndPropertiesUuid[w_timeSeries->getUuid()][MakeValidNodeName((w_timeSeries->getXmlTag() + '_' + w_prop->getTitle()).c_str())][w_timeIndexInTimeSeries] = w_prop->getUuid();
+								}
 							}
 						}
 						else
@@ -1069,15 +1126,13 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchTimeSer
 				auto w_nodeId = _output->GetDataAssembly()->AddNode(("_" + w_timeSeries->getUuid() + w_vtkValidName).c_str(), w_parentNodeId);
 				_output->GetDataAssembly()->SetAttribute(w_nodeId, "label", w_vtkValidName.c_str());
 				_output->GetDataAssembly()->SetAttribute(w_nodeId, "type", std::to_string(static_cast<int>(TreeViewNodeType::TimeSeries)).c_str());
-				if (w_propertyNameToMinPropValue.find(w_myPair.first) != w_propertyNameToMinPropValue.end())
+				if (auto it = w_propertyNameToMinPropValue.find(w_myPair.first); it != w_propertyNameToMinPropValue.end())
 				{
-					auto min = w_propertyNameToMinPropValue[w_myPair.first];
-					_output->GetDataAssembly()->SetAttribute(w_nodeId, "minvalue", std::to_string(static_cast<double>(w_propertyNameToMinPropValue[w_myPair.first])).c_str());
+					_output->GetDataAssembly()->SetAttribute(w_nodeId, "minvalue", std::to_string(static_cast<double>(it->second)).c_str());
 				}
-				if (w_propertyNameToMaxPropValue.find(w_myPair.first) != w_propertyNameToMaxPropValue.end())
+				if (auto it = w_propertyNameToMaxPropValue.find(w_myPair.first); it != w_propertyNameToMaxPropValue.end())
 				{
-					auto min = w_propertyNameToMaxPropValue[w_myPair.first];
-					_output->GetDataAssembly()->SetAttribute(w_nodeId, "maxvalue", std::to_string(static_cast<double>(w_propertyNameToMaxPropValue[w_myPair.first])).c_str());
+					_output->GetDataAssembly()->SetAttribute(w_nodeId, "maxvalue", std::to_string(static_cast<double>(it->second)).c_str());
 				}
 			}
 		}
@@ -1086,6 +1141,351 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchTimeSer
 			w_message = w_message + "Exception in FESAPI when calling getPropertySet with file: " + p_fileName + " : " + e.what();
 		}
 	}
+
+	return w_message;
+}
+
+std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchRealization()
+{
+	// Iterate through all properties to detect those with multiple realizations
+	// Unlike TimeSeries, there is NO global "Realization" object
+	// Each individual property can have hasRealizationIndices() == true
+
+	std::string w_message = "";
+	std::map<std::string, std::vector<int>> propertyNameToNodeIdSet;
+	std::map<std::string, int> propertyNameToParentNode;
+	std::map<std::string, double> propertyNameToGlobalMin;
+	std::map<std::string, double> propertyNameToGlobalMax;
+
+	// Iterate through all representations in the repository
+	std::vector<RESQML2_NS::AbstractRepresentation const*> w_allReps;
+
+	try
+	{
+		// Collecter toutes les représentations par type
+		sortAndAdd(_repository->getHorizonGrid2dRepresentationSet(), w_allReps);
+		sortAndAdd(_repository->getIjkGridRepresentationSet(), w_allReps);
+		sortAndAdd(_repository->getPointSetRepresentationSet(), w_allReps);
+		sortAndAdd(_repository->getAllPolylineSetRepresentationSet(), w_allReps);
+		sortAndAdd(_repository->getAllPolylineRepresentationSet(), w_allReps);
+		sortAndAdd(_repository->getAllTriangulatedSetRepresentationSet(), w_allReps);
+		sortAndAdd(_repository->getUnstructuredGridRepresentationSet(), w_allReps);
+	}
+	catch (const std::exception& e)
+	{
+		w_message += "Exception in FESAPI when collecting representations: " + std::string(e.what()) + "\n";
+		return w_message;
+	}
+
+	// Iterate through all collected representations
+	for (auto* rep : w_allReps)
+	{
+		if (rep->isPartial())
+		{
+			continue;
+		}
+
+		std::vector<RESQML2_NS::AbstractValuesProperty*> valuesPropertySet;
+		try
+		{
+			valuesPropertySet = rep->getValuesPropertySet();
+		}
+		catch (const std::exception& e)
+		{
+			w_message += "Exception when getting properties for representation " + rep->getUuid() + " : " + e.what() + "\n";
+			continue;
+		}
+
+		for (auto* prop : valuesPropertySet)
+		{
+			try
+			{
+				if (prop->isPartial())
+				{
+					continue;
+				}
+
+				// DETECTION: Check if THIS property has realization indices
+				if (prop->hasRealizationIndices())
+				{
+					std::string propTitle = prop->getTitle();
+
+					// Skip: already handled as Realization+TimeSeries in section 3
+					if (_realAndTimeSeriesToIndexAndPropertiesUuid.count(propTitle) > 0)
+					{
+						continue;
+					}
+
+					// Get the realization indices
+					auto realizationIndices = prop->getRealizationIndices();
+					if (realizationIndices.empty())
+					{
+						continue;
+					}
+					uint32_t realizationIndex = realizationIndices[0];
+
+					// Find the node of this property in the TreeView
+					auto w_nodeId = _output->GetDataAssembly()->FindFirstNodeWithName(("_" + prop->getUuid()).c_str());
+					if (w_nodeId == -1)
+					{
+						const std::string repUuid = rep->getUuid();
+						const int repNodeId = _output->GetDataAssembly()->FindFirstNodeWithName(("_" + repUuid).c_str());
+						vtkOutputWindowDisplayWarningText(("Warning: property '" + propTitle + "' (UUID: " + prop->getUuid() + ", realization: " + std::to_string(realizationIndex) + ") not found in TreeView. Parent rep UUID: " + repUuid + " (node: " + std::to_string(repNodeId) + ").\n").c_str());
+						continue;
+					}
+
+					// Store in the mapping structure (per-property)
+					_realizationTitleToIndexAndPropertiesUuid[propTitle][realizationIndex] = prop->getUuid();
+
+					// Collect all nodes for this property (different realizations)
+					propertyNameToNodeIdSet[propTitle].push_back(w_nodeId);
+
+					// Remember the parent (same for all realizations of a property)
+					if (propertyNameToParentNode.find(propTitle) == propertyNameToParentNode.end())
+					{
+						int parentNodeId = _output->GetDataAssembly()->GetParent(w_nodeId);
+						propertyNameToParentNode[propTitle] = parentNodeId;
+					}
+
+					// Collect global min/max across all realizations (same pattern as TimeSeries)
+					auto* w_prop_cont = dynamic_cast<RESQML2_NS::ContinuousProperty*>(prop);
+					if (w_prop_cont)
+					{
+						auto minVal = w_prop_cont->getMinimumValue();
+						auto maxVal = w_prop_cont->getMaximumValue();
+						// Fallback: compute from actual data if metadata min/max are absent
+						if (std::isnan(minVal) || std::isnan(maxVal))
+						{
+							try
+							{
+								const uint64_t count = prop->getValuesCountOfPatch(0);
+								if (count > 0)
+								{
+									std::vector<float> vals(count);
+									w_prop_cont->getFloatValuesOfPatch(0, vals.data());
+									float localMin = std::numeric_limits<float>::max();
+									float localMax = std::numeric_limits<float>::lowest();
+									for (uint64_t vi = 0; vi < count; ++vi)
+									{
+										if (!std::isnan(vals[vi]))
+										{
+											if (vals[vi] < localMin) localMin = vals[vi];
+											if (vals[vi] > localMax) localMax = vals[vi];
+										}
+									}
+									if (localMin <= localMax)
+									{
+										if (std::isnan(minVal)) minVal = static_cast<double>(localMin);
+										if (std::isnan(maxVal)) maxVal = static_cast<double>(localMax);
+									}
+								}
+							}
+							catch (...) {}
+						}
+						if (!std::isnan(minVal))
+						{
+							if (propertyNameToGlobalMin.find(propTitle) == propertyNameToGlobalMin.end())
+								propertyNameToGlobalMin[propTitle] = minVal;
+							else
+								propertyNameToGlobalMin[propTitle] = propertyNameToGlobalMin[propTitle] > minVal ? minVal : propertyNameToGlobalMin[propTitle];
+						}
+						if (!std::isnan(maxVal))
+						{
+							if (propertyNameToGlobalMax.find(propTitle) == propertyNameToGlobalMax.end())
+								propertyNameToGlobalMax[propTitle] = maxVal;
+							else
+								propertyNameToGlobalMax[propTitle] = propertyNameToGlobalMax[propTitle] < maxVal ? maxVal : propertyNameToGlobalMax[propTitle];
+						}
+					}
+					auto* w_prop_disc = dynamic_cast<RESQML2_NS::DiscreteProperty*>(prop);
+					if (w_prop_disc)
+					{
+						if (w_prop_disc->hasMinimumValue())
+						{
+							auto minVal = static_cast<double>(w_prop_disc->getMinimumValue());
+							if (propertyNameToGlobalMin.find(propTitle) == propertyNameToGlobalMin.end())
+								propertyNameToGlobalMin[propTitle] = minVal;
+							else
+								propertyNameToGlobalMin[propTitle] = propertyNameToGlobalMin[propTitle] > minVal ? minVal : propertyNameToGlobalMin[propTitle];
+						}
+						if (w_prop_disc->hasMaximumValue())
+						{
+							auto maxVal = static_cast<double>(w_prop_disc->getMaximumValue());
+							if (propertyNameToGlobalMax.find(propTitle) == propertyNameToGlobalMax.end())
+								propertyNameToGlobalMax[propTitle] = maxVal;
+							else
+								propertyNameToGlobalMax[propTitle] = propertyNameToGlobalMax[propTitle] < maxVal ? maxVal : propertyNameToGlobalMax[propTitle];
+						}
+					}
+				}
+			}
+			catch (const std::exception& e)
+			{
+				w_message += "Exception when processing property " + prop->getUuid() + " : " + e.what() + "\n";
+			}
+		}
+	}
+
+	// 2. Create the hierarchy in the TreeView
+	// For each property that has multiple realizations
+	for (const auto& [propName, w_propertyNodeSet] : propertyNameToNodeIdSet)
+	{
+
+		// Only create the hierarchy if there are at least 2 realizations
+		if (w_propertyNodeSet.size() < 2)
+		{
+			vtkOutputWindowDisplayWarningText(("Warning: property '" + propName + "' has realization indices but only " + std::to_string(w_propertyNodeSet.size()) + " node(s) found in the TreeView — no realization group created.\n").c_str());
+			continue;
+		}
+
+		int w_parentNodeId = -1;
+
+		// Remove the original property nodes (like TimeSeries)
+		for (auto node : w_propertyNodeSet)
+		{
+			w_parentNodeId = _output->GetDataAssembly()->GetParent(node);
+			_output->GetDataAssembly()->RemoveNode(node);
+		}
+
+		// Create the parent node for the realization group
+		std::string w_vtkValidName = MakeValidNodeName(propName.c_str());
+		auto w_nodeId = _output->GetDataAssembly()->AddNode(
+			("_realization_" + w_vtkValidName).c_str(),
+			w_parentNodeId
+		);
+
+		_output->GetDataAssembly()->SetAttribute(w_nodeId, "label", ("Realization_" + w_vtkValidName).c_str());
+		_output->GetDataAssembly()->SetAttribute(
+			w_nodeId,
+			"type",
+			std::to_string(static_cast<int>(TreeViewNodeType::Realization)).c_str()
+		);
+		// Set global min/max range for consistent LUT across realizations
+		if (auto it = propertyNameToGlobalMin.find(propName); it != propertyNameToGlobalMin.end())
+			_output->GetDataAssembly()->SetAttribute(w_nodeId, "minvalue", std::to_string(it->second).c_str());
+		if (auto it = propertyNameToGlobalMax.find(propName); it != propertyNameToGlobalMax.end())
+			_output->GetDataAssembly()->SetAttribute(w_nodeId, "maxvalue", std::to_string(it->second).c_str());
+
+		// Create a child node for each realization
+		auto& realizationsForThisProp = _realizationTitleToIndexAndPropertiesUuid[propName];
+		for (const auto& [realizationIndex, propUuid] : realizationsForThisProp)
+		{
+
+			// Create the child node with the property UUID
+			int childNodeId = _output->GetDataAssembly()->AddNode(
+				("_" + propUuid).c_str(),
+				w_nodeId
+			);
+
+			// Définir le label du nœud enfant avec le suffixe _real#
+			std::string childLabel = w_vtkValidName + "_real" + std::to_string(realizationIndex);
+			_output->GetDataAssembly()->SetAttribute(childNodeId, "label", childLabel.c_str());
+			_output->GetDataAssembly()->SetAttribute(
+				childNodeId,
+				"type",
+				std::to_string(static_cast<int>(TreeViewNodeType::Properties)).c_str()
+			);
+		}
+	}
+
+	// 3. Handle properties with BOTH multi-realization AND TimeSeries.
+	// Build: Realization parent (type=Realization) with one TimeSeries child per realization index.
+	vtkOutputWindowDisplayText(("[DEBUG searchRealization] Section 3: _realAndTimeSeriesToIndexAndPropertiesUuid has "
+		+ std::to_string(_realAndTimeSeriesToIndexAndPropertiesUuid.size()) + " entr(ies)\n").c_str());
+
+	for (const auto& [propName, realizationMap] : _realAndTimeSeriesToIndexAndPropertiesUuid)
+	{
+		vtkOutputWindowDisplayText(("[DEBUG searchRealization] Processing propName='" + propName
+			+ "' with " + std::to_string(realizationMap.size()) + " realization(s)\n").c_str());
+
+		std::string w_vtkValidName = MakeValidNodeName(propName.c_str());
+		int w_parentNodeId = -1;
+		std::vector<int> nodesToRemove;
+		double globalMin = std::numeric_limits<double>::max();
+		double globalMax = std::numeric_limits<double>::lowest();
+		bool hasMinMax = false;
+
+		for (const auto& [realIdx, timeMap] : realizationMap)
+		{
+			vtkOutputWindowDisplayText(("[DEBUG searchRealization]   realIdx=" + std::to_string(realIdx)
+				+ " has " + std::to_string(timeMap.size()) + " timestep(s)\n").c_str());
+			for (const auto& [timeIdx, propUuid] : timeMap)
+			{
+				const int nodeId = _output->GetDataAssembly()->FindFirstNodeWithName(("_" + propUuid).c_str());
+				vtkOutputWindowDisplayText(("[DEBUG searchRealization]     timeIdx=" + std::to_string(timeIdx)
+					+ " uuid=" + propUuid + " nodeId=" + std::to_string(nodeId) + "\n").c_str());
+				if (nodeId == -1)
+					continue;
+				if (w_parentNodeId == -1)
+					w_parentNodeId = _output->GetDataAssembly()->GetParent(nodeId);
+				nodesToRemove.push_back(nodeId);
+
+				auto* prop = _repository->getDataObjectByUuid<RESQML2_NS::AbstractValuesProperty>(propUuid);
+				if (auto* contProp = dynamic_cast<RESQML2_NS::ContinuousProperty*>(prop))
+				{
+					const auto minV = static_cast<double>(contProp->getMinimumValue());
+					const auto maxV = static_cast<double>(contProp->getMaximumValue());
+					if (!std::isnan(minV)) { if (minV < globalMin) globalMin = minV; hasMinMax = true; }
+					if (!std::isnan(maxV)) { if (maxV > globalMax) globalMax = maxV; hasMinMax = true; }
+				}
+			}
+		}
+
+		vtkOutputWindowDisplayText(("[DEBUG searchRealization] parentNodeId=" + std::to_string(w_parentNodeId)
+			+ " nodesToRemove.size()=" + std::to_string(nodesToRemove.size()) + "\n").c_str());
+
+		if (w_parentNodeId == -1 || nodesToRemove.empty())
+		{
+			vtkOutputWindowDisplayText(("[DEBUG searchRealization] SKIP propName='" + propName
+				+ "' (parentNodeId=-1 or no nodes to remove)\n").c_str());
+			continue;
+		}
+
+		// Remove all individual property nodes from the tree
+		for (const int nodeId : nodesToRemove)
+			_output->GetDataAssembly()->RemoveNode(nodeId);
+
+		// Create the Realization parent node (folder)
+		const auto w_realNodeId = _output->GetDataAssembly()->AddNode(
+			("_realization_" + w_vtkValidName).c_str(),
+			w_parentNodeId
+		);
+		_output->GetDataAssembly()->SetAttribute(w_realNodeId, "label", ("Realization_" + w_vtkValidName).c_str());
+		_output->GetDataAssembly()->SetAttribute(w_realNodeId, "type",
+			std::to_string(static_cast<int>(TreeViewNodeType::Realization)).c_str());
+		if (hasMinMax)
+		{
+			_output->GetDataAssembly()->SetAttribute(w_realNodeId, "minvalue", std::to_string(globalMin).c_str());
+			_output->GetDataAssembly()->SetAttribute(w_realNodeId, "maxvalue", std::to_string(globalMax).c_str());
+		}
+		vtkOutputWindowDisplayText(("[DEBUG searchRealization] Created Realization node id="
+			+ std::to_string(w_realNodeId) + " label=Realization_" + w_vtkValidName
+			+ " parentId=" + std::to_string(w_parentNodeId) + "\n").c_str());
+
+		// Create one TimeSeries child per realization index.
+		const std::string tsUuid = _realAndTimeSeriesTsUuid.count(propName) > 0
+			? _realAndTimeSeriesTsUuid[propName] : "";
+		vtkOutputWindowDisplayText(("[DEBUG searchRealization] tsUuid='" + tsUuid + "'\n").c_str());
+		for (const auto& [realIdx, timeMap] : realizationMap)
+		{
+			const std::string childNodeName = "_" + tsUuid + "realts_" + std::to_string(realIdx) + "_" + w_vtkValidName;
+			const auto w_tsNodeId = _output->GetDataAssembly()->AddNode(
+				childNodeName.c_str(),
+				w_realNodeId
+			);
+			_output->GetDataAssembly()->SetAttribute(w_tsNodeId, "label",
+				("Realization_" + std::to_string(realIdx)).c_str());
+			_output->GetDataAssembly()->SetAttribute(w_tsNodeId, "type",
+				std::to_string(static_cast<int>(TreeViewNodeType::TimeSeries)).c_str());
+			_output->GetDataAssembly()->SetAttribute(w_tsNodeId, "propTitle", propName.c_str());
+			vtkOutputWindowDisplayText(("[DEBUG searchRealization]   Created TS child id=" + std::to_string(w_tsNodeId)
+				+ " name='" + childNodeName + "' label=Realization_" + std::to_string(realIdx) + "\n").c_str());
+		}
+	}
+
+	// Initialize the current index to 0 (first realization by default)
+	_currentRealizationIndex = 0;
+	_oldRealizationIndex = 0;
 
 	return w_message;
 }
@@ -1144,9 +1544,9 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::initMapperSet(const 
 	{
 		try
 		{
-			if (dynamic_cast<witsml2_1::WellboreCompletion*>(w_abstractObject) != nullptr)
+			if (auto* w_obj = dynamic_cast<witsml2_1::WellboreCompletion*>(w_abstractObject); w_obj != nullptr)
 			{
-				_nodeIdToMapperSet[p_nodeId] = new WitsmlWellboreCompletionToVtkPartitionedDataSet(static_cast<witsml2_1::WellboreCompletion*>(w_abstractObject), p_processId, p_nbProcess);
+				_nodeIdToMapperSet[p_nodeId] = new WitsmlWellboreCompletionToVtkPartitionedDataSet(w_obj, p_processId, p_nbProcess);
 			}
 			else
 			{
@@ -1162,9 +1562,9 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::initMapperSet(const 
 	{
 		try
 		{
-			if (dynamic_cast<RESQML2_NS::WellboreMarkerFrameRepresentation*>(w_abstractObject) != nullptr)
+			if (auto* w_obj = dynamic_cast<RESQML2_NS::WellboreMarkerFrameRepresentation*>(w_abstractObject); w_obj != nullptr)
 			{
-				_nodeIdToMapperSet[p_nodeId] = new ResqmlWellboreMarkerFrameToVtkPartitionedDataSet(static_cast<RESQML2_NS::WellboreMarkerFrameRepresentation*>(w_abstractObject), p_processId, p_nbProcess);
+				_nodeIdToMapperSet[p_nodeId] = new ResqmlWellboreMarkerFrameToVtkPartitionedDataSet(w_obj, p_processId, p_nbProcess);
 			}
 			else
 			{
@@ -1180,9 +1580,9 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::initMapperSet(const 
 	{
 		try
 		{
-			if (dynamic_cast<RESQML2_NS::WellboreFrameRepresentation*>(w_abstractObject) != nullptr)
+			if (auto* w_obj = dynamic_cast<RESQML2_NS::WellboreFrameRepresentation*>(w_abstractObject); w_obj != nullptr)
 			{
-				_nodeIdToMapperSet[p_nodeId] = new ResqmlWellboreFrameToVtkPartitionedDataSet(static_cast<RESQML2_NS::WellboreFrameRepresentation*>(w_abstractObject), p_processId, p_nbProcess);
+				_nodeIdToMapperSet[p_nodeId] = new ResqmlWellboreFrameToVtkPartitionedDataSet(w_obj, p_processId, p_nbProcess);
 			}
 			else
 			{
@@ -1215,74 +1615,89 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::loadMapper(const Tre
 
 void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::loadRepresentationMapper(const int p_nodeId, const uint32_t p_nbProcess, const uint32_t p_processId)
 {
-	CommonAbstractObjectToVtkPartitionedDataSet* w_caotvpds = nullptr;
 	const std::string w_uuid = std::string(_output->GetDataAssembly()->GetNodeName(p_nodeId)).substr(1);
+	vtkOutputWindowDisplayText(("[DEBUG loadRepresentationMapper] p_nodeId=" + std::to_string(p_nodeId) + " uuid='" + w_uuid + "'\n").c_str());
 	COMMON_NS::AbstractObject* const w_abstractObject = _repository->getDataObjectByUuid(w_uuid);
 
-	if (dynamic_cast<RESQML2_NS::AbstractIjkGridRepresentation*>(w_abstractObject) != nullptr)
-	{
-		w_caotvpds = new ResqmlIjkGridToVtkExplicitStructuredGrid(static_cast<RESQML2_NS::AbstractIjkGridRepresentation*>(w_abstractObject), p_processId, p_nbProcess);
-	}
-	else if (dynamic_cast<RESQML2_NS::Grid2dRepresentation*>(w_abstractObject) != nullptr)
-	{
-		w_caotvpds = new ResqmlGrid2dToVtkStructuredGrid(static_cast<RESQML2_NS::Grid2dRepresentation*>(w_abstractObject));
-	}
-	else if (dynamic_cast<RESQML2_NS::TriangulatedSetRepresentation*>(w_abstractObject) != nullptr)
-	{
-		w_caotvpds = new ResqmlTriangulatedSetToVtkPartitionedDataSet(static_cast<RESQML2_NS::TriangulatedSetRepresentation*>(w_abstractObject));
-	}
-	else if (dynamic_cast<RESQML2_NS::PointSetRepresentation*>(w_abstractObject) != nullptr)
-	{
-		w_caotvpds = new ResqmlPointSetToVtkPolyVertex(static_cast<RESQML2_NS::PointSetRepresentation*>(w_abstractObject));
-	}
-	else if (dynamic_cast<RESQML2_NS::PolylineSetRepresentation*>(w_abstractObject) != nullptr)
-	{
-		w_caotvpds = new ResqmlPolylineSetToVtkPolyData(static_cast<RESQML2_NS::PolylineSetRepresentation*>(w_abstractObject));
-	}
-	else if (dynamic_cast<RESQML2_NS::PolylineRepresentation*>(w_abstractObject) != nullptr)
-	{
-		w_caotvpds = new ResqmlPolylineToVtkPolyData(static_cast<RESQML2_NS::PolylineRepresentation*>(w_abstractObject));
-	}
-	else if (dynamic_cast<RESQML2_NS::UnstructuredGridRepresentation*>(w_abstractObject) != nullptr)
-	{
-		w_caotvpds = new ResqmlUnstructuredGridToVtkUnstructuredGrid(static_cast<RESQML2_NS::UnstructuredGridRepresentation*>(w_abstractObject));
-	}
-	else if (dynamic_cast<RESQML2_NS::SubRepresentation*>(w_abstractObject) != nullptr)
-	{
-		RESQML2_NS::SubRepresentation* w_subRep = static_cast<RESQML2_NS::SubRepresentation*>(w_abstractObject);
+	CommonAbstractObjectToVtkPartitionedDataSet* w_caotvpds = nullptr;
 
-		if (dynamic_cast<RESQML2_NS::AbstractIjkGridRepresentation*>(w_subRep->getSupportingRepresentation(0)) != nullptr)
+	if (auto* w_ijkGrid = dynamic_cast<RESQML2_NS::AbstractIjkGridRepresentation*>(w_abstractObject); w_ijkGrid != nullptr)
+	{
+		w_caotvpds = new ResqmlIjkGridToVtkExplicitStructuredGrid(w_ijkGrid, p_processId, p_nbProcess);
+	}
+	else if (auto* w_grid2d = dynamic_cast<RESQML2_NS::Grid2dRepresentation*>(w_abstractObject); w_grid2d != nullptr)
+	{
+		w_caotvpds = new ResqmlGrid2dToVtkStructuredGrid(w_grid2d);
+	}
+	else if (auto* w_triangulatedSet = dynamic_cast<RESQML2_NS::TriangulatedSetRepresentation*>(w_abstractObject); w_triangulatedSet != nullptr)
+	{
+		w_caotvpds = new ResqmlTriangulatedSetToVtkPartitionedDataSet(w_triangulatedSet);
+	}
+	else if (auto* w_pointSet = dynamic_cast<RESQML2_NS::PointSetRepresentation*>(w_abstractObject); w_pointSet != nullptr)
+	{
+		w_caotvpds = new ResqmlPointSetToVtkPolyVertex(w_pointSet);
+	}
+	else if (auto* w_polylineSet = dynamic_cast<RESQML2_NS::PolylineSetRepresentation*>(w_abstractObject); w_polylineSet != nullptr)
+	{
+		w_caotvpds = new ResqmlPolylineSetToVtkPolyData(w_polylineSet);
+	}
+	else if (auto* w_polyline = dynamic_cast<RESQML2_NS::PolylineRepresentation*>(w_abstractObject); w_polyline != nullptr)
+	{
+		w_caotvpds = new ResqmlPolylineToVtkPolyData(w_polyline);
+	}
+	else if (auto* w_unstructuredGrid = dynamic_cast<RESQML2_NS::UnstructuredGridRepresentation*>(w_abstractObject); w_unstructuredGrid != nullptr)
+	{
+		if (w_unstructuredGrid->hasGeometry())
 		{
-			auto* w_supportingGrid = static_cast<RESQML2_NS::AbstractIjkGridRepresentation*>(w_subRep->getSupportingRepresentation(0));
-			if (_nodeIdToMapper.find(_output->GetDataAssembly()->FindFirstNodeWithName(("_" + w_supportingGrid->getUuid()).c_str())) == _nodeIdToMapper.end())
-			{
-				_nodeIdToMapper[_output->GetDataAssembly()->FindFirstNodeWithName(("_" + w_supportingGrid->getUuid()).c_str())] = new ResqmlIjkGridToVtkExplicitStructuredGrid(w_supportingGrid);
-			}
-			w_caotvpds = new ResqmlIjkGridSubRepToVtkExplicitStructuredGrid(w_subRep, dynamic_cast<ResqmlIjkGridToVtkExplicitStructuredGrid*>(_nodeIdToMapper[_output->GetDataAssembly()->FindFirstNodeWithName(("_" + w_supportingGrid->getUuid()).c_str())]));
+			w_caotvpds = new ResqmlUnstructuredGridToVtkUnstructuredGrid(w_unstructuredGrid);
 		}
-		else if (dynamic_cast<RESQML2_NS::UnstructuredGridRepresentation*>(w_subRep->getSupportingRepresentation(0)) != nullptr)
+		else
 		{
-			auto* w_supportingGrid = static_cast<RESQML2_NS::UnstructuredGridRepresentation*>(w_subRep->getSupportingRepresentation(0));
-			if (_nodeIdToMapper.find(_output->GetDataAssembly()->FindFirstNodeWithName(("_" + w_supportingGrid->getUuid()).c_str())) == _nodeIdToMapper.end())
-			{
-				_nodeIdToMapper[_output->GetDataAssembly()->FindFirstNodeWithName(("_" + w_supportingGrid->getUuid()).c_str())] = new ResqmlUnstructuredGridToVtkUnstructuredGrid(w_supportingGrid);
-			}
-			w_caotvpds = new ResqmlUnstructuredGridSubRepToVtkUnstructuredGrid(w_subRep, dynamic_cast<ResqmlUnstructuredGridToVtkUnstructuredGrid*>(_nodeIdToMapper[_output->GetDataAssembly()->FindFirstNodeWithName(("_" + w_supportingGrid->getUuid()).c_str())]));
+			vtkOutputWindowDisplayErrorText(("Error: UnstructuredGrid (uuid: " + w_uuid + ") has no geometry, cannot render.\n").c_str());
 		}
-		else {
+	}
+	else if (auto* w_subRep = dynamic_cast<RESQML2_NS::SubRepresentation*>(w_abstractObject); w_subRep != nullptr)
+	{
+		if (auto* w_ijkGrid = dynamic_cast<RESQML2_NS::AbstractIjkGridRepresentation*>(w_subRep->getSupportingRepresentation(0)); w_ijkGrid != nullptr)
+		{
+			const int w_supportingNodeId = _output->GetDataAssembly()->FindFirstNodeWithName(("_" + w_ijkGrid->getUuid()).c_str());
+			if (_nodeIdToMapper.find(w_supportingNodeId) == _nodeIdToMapper.end())
+			{
+				_nodeIdToMapper[w_supportingNodeId] = new ResqmlIjkGridToVtkExplicitStructuredGrid(w_ijkGrid);
+			}
+			w_caotvpds = new ResqmlIjkGridSubRepToVtkExplicitStructuredGrid(w_subRep, dynamic_cast<ResqmlIjkGridToVtkExplicitStructuredGrid*>(_nodeIdToMapper[w_supportingNodeId]));
+		}
+		else if (auto* w_unstructuredGrid = dynamic_cast<RESQML2_NS::UnstructuredGridRepresentation*>(w_subRep->getSupportingRepresentation(0)); w_unstructuredGrid != nullptr)
+		{
+			const int w_supportingNodeId = _output->GetDataAssembly()->FindFirstNodeWithName(("_" + w_unstructuredGrid->getUuid()).c_str());
+			if (_nodeIdToMapper.find(w_supportingNodeId) == _nodeIdToMapper.end())
+			{
+				_nodeIdToMapper[w_supportingNodeId] = new ResqmlUnstructuredGridToVtkUnstructuredGrid(w_unstructuredGrid);
+			}
+			w_caotvpds = new ResqmlUnstructuredGridSubRepToVtkUnstructuredGrid(w_subRep, dynamic_cast<ResqmlUnstructuredGridToVtkUnstructuredGrid*>(_nodeIdToMapper[w_supportingNodeId]));
+		}
+		else
+		{
 			vtkOutputWindowDisplayWarningText(("FESPP only supports IJK Grid or UnstructuredGrid as supporting representation of subrepresentation  (for uuid: " + w_uuid + ")\n").c_str());
 		}
 	}
+
+	if (w_caotvpds == nullptr)
+	{
+		vtkOutputWindowDisplayText(("[DEBUG loadRepresentationMapper] FAILED: no mapper created for uuid='" + w_uuid + "' (object=" + std::string(w_abstractObject ? w_abstractObject->getXmlTag() : "NULL") + ")\n").c_str());
+		return;
+	}
+
 	_nodeIdToMapper[p_nodeId] = w_caotvpds;
+	vtkOutputWindowDisplayText(("[DEBUG loadRepresentationMapper] mapper created for uuid='" + w_uuid + "'\n").c_str());
 	try
 	{ // load representation
 		_nodeIdToMapper[p_nodeId]->loadVtkObject();
-		return;
+		vtkOutputWindowDisplayText(("[DEBUG loadRepresentationMapper] loadVtkObject() done, partitions=" + std::to_string(_nodeIdToMapper[p_nodeId]->getOutput()->GetNumberOfPartitions()) + "\n").c_str());
 	}
 	catch (const std::exception& e)
 	{
 		vtkOutputWindowDisplayErrorText(("Error when rendering uuid: " + w_uuid + "\n" + e.what()).c_str());
-		return;
 	}
 }
 
@@ -1321,7 +1736,7 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::addDataToParent(cons
 	uint32_t value_type;
 	_output->GetDataAssembly()->GetAttribute(w_nodeParent, "type", value_type);
 	TreeViewNodeType w_typeParent = static_cast<TreeViewNodeType>(value_type);
-	while (w_typeParent == TreeViewNodeType::Collection)
+	while (w_typeParent == TreeViewNodeType::Collection || w_typeParent == TreeViewNodeType::Realization)
 	{
 		w_nodeParent = _output->GetDataAssembly()->GetParent(w_nodeParent);
 		value_type;
@@ -1413,13 +1828,41 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::addDataToParent(cons
 	{
 		try
 		{
-			if (static_cast<ResqmlAbstractRepresentationToVtkPartitionedDataSet*>(_nodeIdToMapper[w_nodeParent]))
+			if (auto it = _nodeIdToMapper.find(w_nodeParent); it != _nodeIdToMapper.end() && it->second)
 			{
-				ResqmlAbstractRepresentationToVtkPartitionedDataSet* abstractRepresentation = static_cast<ResqmlAbstractRepresentationToVtkPartitionedDataSet*>(_nodeIdToMapper[w_nodeParent]);
+				auto* abstractRepresentation = static_cast<ResqmlAbstractRepresentationToVtkPartitionedDataSet*>(it->second);
 				if (abstractRepresentation->getOutput()->GetNumberOfPartitions() == 0) {
 					abstractRepresentation->loadVtkObject();
 				}
 				char * name = abstractRepresentation->addDataArray(w_uuid);
+
+				// Si la propriété est dans un nœud Realization, renommer avec le suffixe _real#
+				int immediateParent = _output->GetDataAssembly()->GetParent(p_nodeId);
+				uint32_t parentType = 0;
+				_output->GetDataAssembly()->GetAttribute(immediateParent, "type", parentType);
+				if (static_cast<TreeViewNodeType>(parentType) == TreeViewNodeType::Realization)
+				{
+					// Extraire le nom de la propriété depuis le label du nœud
+					const char* nodeLabel = nullptr;
+					if (name != nullptr && _output->GetDataAssembly()->GetAttribute(p_nodeId, "label", nodeLabel) && nodeLabel != nullptr)
+					{
+						// Le label a le format "PropertyName_real#"
+						// On utilise ce label pour renommer le data array
+						auto* partition = abstractRepresentation->getOutput()->GetPartition(0);
+						if (partition != nullptr && partition->GetCellData()->HasArray(name))
+						{
+							partition->GetCellData()->GetArray(name)->SetName(nodeLabel);
+							// Réactiver la propriété avec le nouveau nom
+							abstractRepresentation->ActiveProperty(nodeLabel, vtkDataObject::AttributeTypes::CELL);
+						}
+						if (partition != nullptr && partition->GetPointData()->HasArray(name))
+						{
+							partition->GetPointData()->GetArray(name)->SetName(nodeLabel);
+							// Réactiver la propriété avec le nouveau nom
+							abstractRepresentation->ActiveProperty(nodeLabel, vtkDataObject::AttributeTypes::POINT);
+						}
+					}
+				}
 			}
 			else
 			{
@@ -1435,26 +1878,177 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::addDataToParent(cons
 	{
 		try
 		{
-			std::string w_tsUuid = w_uuid.substr(0, 36);
-			std::string w_nodeName = w_uuid.substr(36);
+			const std::string w_tsUuid   = w_uuid.substr(0, 36);
+			const std::string w_nodeName = w_uuid.substr(36);
 
-			auto const* assembly = _output->GetDataAssembly();
-			if (_nodeIdToMapper[w_nodeParent])
+			if (w_nodeName.substr(0, 7) == "realts_")
 			{
-				ResqmlAbstractRepresentationToVtkPartitionedDataSet* abstractRepresentation = static_cast<ResqmlAbstractRepresentationToVtkPartitionedDataSet*>(_nodeIdToMapper[w_nodeParent]);
-				if (abstractRepresentation->getOutput()->GetNumberOfPartitions() == 0) {
-					abstractRepresentation->loadVtkObject();
-				}
-				if (_oldTimesStepIndex != _currentTimesStepIndex)
+				// Realization+TimeSeries child: nodeName = "realts_<N>_<propVtkName>"
+				const size_t sep = w_nodeName.find('_', 7);
+				const uint32_t realIdx = static_cast<uint32_t>(std::stoul(w_nodeName.substr(7, sep - 7)));
+
+				const char* propTitleAttr = nullptr;
+				_output->GetDataAssembly()->GetAttribute(p_nodeId, "propTitle", propTitleAttr);
+				const std::string propKey = propTitleAttr ? propTitleAttr : w_nodeName.substr(sep + 1);
+
+				vtkOutputWindowDisplayText(("[DEBUG addDataToParent/realts] p_nodeId=" + std::to_string(p_nodeId)
+					+ " w_nodeParent=" + std::to_string(w_nodeParent)
+					+ " realIdx=" + std::to_string(realIdx)
+					+ " propKey='" + propKey + "'"
+					+ " currentTimeStep=" + std::to_string(_currentTimesStepIndex)
+					+ " w_tsUuid='" + w_tsUuid + "'"
+					+ " w_nodeName='" + w_nodeName + "'\n").c_str());
+
+				const bool mapperExists = _nodeIdToMapper.find(w_nodeParent) != _nodeIdToMapper.end();
+				vtkOutputWindowDisplayText(("[DEBUG addDataToParent/realts] mapper exists for w_nodeParent="
+					+ std::to_string(w_nodeParent) + " : " + (mapperExists ? "YES" : "NO") + "\n").c_str());
+
+				const bool propKeyExists = _realAndTimeSeriesToIndexAndPropertiesUuid.count(propKey) > 0;
+				vtkOutputWindowDisplayText(("[DEBUG addDataToParent/realts] _realAndTimeSeries map has propKey='"
+					+ propKey + "' : " + (propKeyExists ? "YES" : "NO")
+					+ " (map size=" + std::to_string(_realAndTimeSeriesToIndexAndPropertiesUuid.size()) + ")\n").c_str());
+				if (propKeyExists)
 				{
-					abstractRepresentation->deleteDataArray(_timeSeriesUuidAndTitleToIndexAndPropertiesUuid[w_tsUuid][w_nodeName][_oldTimesStepIndex]);
+					auto& dbgMap = _realAndTimeSeriesToIndexAndPropertiesUuid[propKey];
+					for (const auto& [ri, tm] : dbgMap)
+					{
+						std::string ts_keys;
+						for (const auto& [ti, _] : tm) ts_keys += std::to_string(ti) + " ";
+						vtkOutputWindowDisplayText(("[DEBUG addDataToParent/realts]   realIdx=" + std::to_string(ri)
+							+ " timeSteps=[" + ts_keys + "]\n").c_str());
+					}
 				}
-				abstractRepresentation->addDataArray(_timeSeriesUuidAndTitleToIndexAndPropertiesUuid[w_tsUuid][w_nodeName][_currentTimesStepIndex]);
+
+				if (auto it = _nodeIdToMapper.find(w_nodeParent); it != _nodeIdToMapper.end() && it->second)
+				{
+					auto* abstractRepresentation = static_cast<ResqmlAbstractRepresentationToVtkPartitionedDataSet*>(it->second);
+					if (abstractRepresentation->getOutput()->GetNumberOfPartitions() == 0)
+						abstractRepresentation->loadVtkObject();
+
+					auto& realMap = _realAndTimeSeriesToIndexAndPropertiesUuid[propKey];
+					const bool hasRealIdx = realMap.count(realIdx) > 0;
+					const bool hasTimeStep = hasRealIdx && realMap[realIdx].count(static_cast<size_t>(_currentTimesStepIndex)) > 0;
+
+					vtkOutputWindowDisplayText(("[DEBUG addDataToParent/realts] hasRealIdx=" + std::to_string(hasRealIdx)
+						+ " hasTimeStep=" + std::to_string(hasTimeStep) + "\n").c_str());
+
+					if (_oldTimesStepIndex != _currentTimesStepIndex)
+					{
+						if (hasRealIdx && realMap[realIdx].count(static_cast<size_t>(_oldTimesStepIndex)) > 0)
+							abstractRepresentation->deleteDataArray(realMap[realIdx][static_cast<size_t>(_oldTimesStepIndex)]);
+					}
+					if (hasTimeStep)
+					{
+						char* arrayName = abstractRepresentation->addDataArray(realMap[realIdx][static_cast<size_t>(_currentTimesStepIndex)]);
+						vtkOutputWindowDisplayText(("[DEBUG addDataToParent/realts] addDataArray returned: '"
+							+ std::string(arrayName ? arrayName : "NULL") + "'\n").c_str());
+						// Rename the array to include the realization index suffix
+						if (arrayName != nullptr)
+						{
+							const std::string newName = propKey + "_real" + std::to_string(realIdx);
+							auto* partition = abstractRepresentation->getOutput()->GetPartition(0);
+							if (partition != nullptr)
+							{
+								if (partition->GetCellData()->HasArray(arrayName))
+								{
+									partition->GetCellData()->GetArray(arrayName)->SetName(newName.c_str());
+									abstractRepresentation->ActiveProperty(newName.c_str(), vtkDataObject::AttributeTypes::CELL);
+									vtkOutputWindowDisplayText(("[DEBUG addDataToParent/realts] renamed CELL array to '" + newName + "'\n").c_str());
+								}
+								else if (partition->GetPointData()->HasArray(arrayName))
+								{
+									partition->GetPointData()->GetArray(arrayName)->SetName(newName.c_str());
+									abstractRepresentation->ActiveProperty(newName.c_str(), vtkDataObject::AttributeTypes::POINT);
+									vtkOutputWindowDisplayText(("[DEBUG addDataToParent/realts] renamed POINT array to '" + newName + "'\n").c_str());
+								}
+								else
+								{
+									vtkOutputWindowDisplayText(("[DEBUG addDataToParent/realts] array '" + std::string(arrayName)
+										+ "' not found in CELL or POINT data!\n").c_str());
+								}
+							}
+							else
+							{
+								vtkOutputWindowDisplayText("[DEBUG addDataToParent/realts] GetPartition(0) returned NULL!\n");
+							}
+						}
+					}
+					else
+					{
+						vtkOutputWindowDisplayText(("[DEBUG addDataToParent/realts] NO DATA LOADED: hasRealIdx="
+							+ std::to_string(hasRealIdx) + " hasTimeStep=" + std::to_string(hasTimeStep) + "\n").c_str());
+					}
+				}
+				else
+				{
+					vtkOutputWindowDisplayText(("[DEBUG addDataToParent/realts] ERROR: no mapper for w_nodeParent="
+						+ std::to_string(w_nodeParent) + " — representation not loaded yet?\n").c_str());
+				}
+			}
+			else
+			{
+				if (auto it = _nodeIdToMapper.find(w_nodeParent); it != _nodeIdToMapper.end() && it->second)
+				{
+					auto* abstractRepresentation = static_cast<ResqmlAbstractRepresentationToVtkPartitionedDataSet*>(it->second);
+					if (abstractRepresentation->getOutput()->GetNumberOfPartitions() == 0)
+						abstractRepresentation->loadVtkObject();
+					if (_oldTimesStepIndex != _currentTimesStepIndex)
+					{
+						abstractRepresentation->deleteDataArray(_timeSeriesUuidAndTitleToIndexAndPropertiesUuid[w_tsUuid][w_nodeName][_oldTimesStepIndex]);
+					}
+					abstractRepresentation->addDataArray(_timeSeriesUuidAndTitleToIndexAndPropertiesUuid[w_tsUuid][w_nodeName][_currentTimesStepIndex]);
+				}
 			}
 		}
 		catch (const std::exception& e)
 		{
-			vtkOutputWindowDisplayErrorText(("Error when load Time Series property marker uuid: " + w_uuid + "\n" + e.what()).c_str());
+			vtkOutputWindowDisplayErrorText(("Error when load Time Series property uuid: " + w_uuid + "\n" + e.what()).c_str());
+		}
+		return;
+	}
+	else if (TreeViewNodeType::Realization == p_type)
+	{
+		try
+		{
+			// Extraire le nom de la propriété du nom du nœud
+			std::string w_nodeName = w_uuid.substr(12);  // Retire "realization_" (leading _ already removed)
+
+			auto const* assembly = _output->GetDataAssembly();
+			if (auto it = _nodeIdToMapper.find(w_nodeParent); it != _nodeIdToMapper.end() && it->second)
+			{
+				auto* abstractRepresentation = static_cast<ResqmlAbstractRepresentationToVtkPartitionedDataSet*>(it->second);
+
+				// Load the geometry if necessary
+				if (abstractRepresentation->getOutput()->GetNumberOfPartitions() == 0) {
+					abstractRepresentation->loadVtkObject();
+				}
+
+				// If the realization index has changed
+				if (_oldRealizationIndex != _currentRealizationIndex)
+				{
+					// Remove the data from the old realization
+					if (_realizationTitleToIndexAndPropertiesUuid.count(w_nodeName) > 0 &&
+						_realizationTitleToIndexAndPropertiesUuid[w_nodeName].count(_oldRealizationIndex) > 0)
+					{
+						abstractRepresentation->deleteDataArray(
+							_realizationTitleToIndexAndPropertiesUuid[w_nodeName][_oldRealizationIndex]
+						);
+					}
+				}
+
+				// Add the data from the new realization
+				if (_realizationTitleToIndexAndPropertiesUuid.count(w_nodeName) > 0 &&
+					_realizationTitleToIndexAndPropertiesUuid[w_nodeName].count(_currentRealizationIndex) > 0)
+				{
+					abstractRepresentation->addDataArray(
+						_realizationTitleToIndexAndPropertiesUuid[w_nodeName][_currentRealizationIndex]
+					);
+				}
+			}
+		}
+		catch (const std::exception& e)
+		{
+			vtkOutputWindowDisplayErrorText(("Error when load Realization property uuid: " + w_uuid + "\n" + e.what()).c_str());
 		}
 		return;
 	}
@@ -1484,13 +2078,58 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::deleteMapper()
 
 		if (valueType == TreeViewNodeType::TimeSeries)
 		{ // TimeSerie properties deselection
-			std::string w_timeSeriesuuid = uuid_unselect.substr(0, 36);
-			std::string w_nodeName = uuid_unselect.substr(36);
+			const std::string w_tsUuid   = uuid_unselect.substr(0, 36);
+			const std::string w_nodeName = uuid_unselect.substr(36);
+
+			if (w_nodeName.substr(0, 7) == "realts_")
+			{
+				// Realization+TimeSeries child: nodeName = "realts_<N>_<propVtkName>"
+				const size_t sep = w_nodeName.find('_', 7);
+				const uint32_t realIdx = static_cast<uint32_t>(std::stoul(w_nodeName.substr(7, sep - 7)));
+
+				const int nodeId = w_Assembly->FindFirstNodeWithName(("_" + uuid_unselect).c_str());
+				if (nodeId != -1)
+				{
+					// Use stored original property title for map lookup
+					const char* propTitleAttr = nullptr;
+					w_Assembly->GetAttribute(nodeId, "propTitle", propTitleAttr);
+					const std::string propKey = propTitleAttr ? propTitleAttr : w_nodeName.substr(sep + 1);
+
+					const int realNodeParent = w_Assembly->GetParent(nodeId);         // Realization folder
+					const int repNodeParent  = w_Assembly->GetParent(realNodeParent); // Representation
+					if (_nodeIdToMapper.find(repNodeParent) != _nodeIdToMapper.end())
+					{
+						auto& realMap = _realAndTimeSeriesToIndexAndPropertiesUuid[propKey];
+						if (realMap.count(realIdx) > 0 && realMap[realIdx].count(static_cast<size_t>(_currentTimesStepIndex)) > 0)
+						{
+							static_cast<ResqmlAbstractRepresentationToVtkPartitionedDataSet*>(_nodeIdToMapper[repNodeParent])
+								->deleteDataArray(realMap[realIdx][static_cast<size_t>(_currentTimesStepIndex)]);
+						}
+					}
+				}
+			}
+			else
+			{
+				const int w_nodeParent = w_Assembly->GetParent(w_Assembly->FindFirstNodeWithName(("_" + uuid_unselect).c_str()));
+				if (_nodeIdToMapper.find(w_nodeParent) != _nodeIdToMapper.end())
+				{
+					static_cast<ResqmlAbstractRepresentationToVtkPartitionedDataSet*>(_nodeIdToMapper[w_nodeParent])
+						->deleteDataArray(_timeSeriesUuidAndTitleToIndexAndPropertiesUuid[w_tsUuid][w_nodeName][_currentTimesStepIndex]);
+				}
+			}
+		}
+		else if (valueType == TreeViewNodeType::Realization)
+		{ // Realization properties deselection
+			std::string w_nodeName = uuid_unselect.substr(12);  // Retire "realization_" (leading _ already removed)
 
 			const int w_nodeParent = w_Assembly->GetParent(w_Assembly->FindFirstNodeWithName(("_" + uuid_unselect).c_str()));
 			if (_nodeIdToMapper.find(w_nodeParent) != _nodeIdToMapper.end())
 			{
-				static_cast<ResqmlAbstractRepresentationToVtkPartitionedDataSet*>(_nodeIdToMapper[w_nodeParent])->deleteDataArray(_timeSeriesUuidAndTitleToIndexAndPropertiesUuid[w_timeSeriesuuid][w_nodeName][_currentTimesStepIndex]);
+				if (_realizationTitleToIndexAndPropertiesUuid.count(w_nodeName) > 0 &&
+					_realizationTitleToIndexAndPropertiesUuid[w_nodeName].count(_currentRealizationIndex) > 0)
+				{
+					static_cast<ResqmlAbstractRepresentationToVtkPartitionedDataSet*>(_nodeIdToMapper[w_nodeParent])->deleteDataArray(_realizationTitleToIndexAndPropertiesUuid[w_nodeName][_currentRealizationIndex]);
+				}
 			}
 		}
 		else if (valueType == TreeViewNodeType::Properties)
@@ -1540,19 +2179,20 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::deleteMapper()
 		{
 			try
 			{
-				if (_nodeIdToMapper.find(w_nodeId) != _nodeIdToMapper.end())
+				if (auto it = _nodeIdToMapper.find(w_nodeId); it != _nodeIdToMapper.end())
 				{
-					std::string uuid_supporting_grid = "";
-					if (dynamic_cast<ResqmlUnstructuredGridSubRepToVtkUnstructuredGrid*>(_nodeIdToMapper[w_nodeId]) != nullptr)
+					std::string uuid_supporting_grid;
+					auto* w_mapper = it->second;
+					if (auto* subrep = dynamic_cast<ResqmlUnstructuredGridSubRepToVtkUnstructuredGrid*>(w_mapper); subrep != nullptr)
 					{
-						uuid_supporting_grid = static_cast<ResqmlUnstructuredGridSubRepToVtkUnstructuredGrid*>(_nodeIdToMapper[w_nodeId])->unregisterToMapperSupportingGrid();
+						uuid_supporting_grid = subrep->unregisterToMapperSupportingGrid();
 					}
-					else if (dynamic_cast<ResqmlIjkGridSubRepToVtkExplicitStructuredGrid*>(_nodeIdToMapper[w_nodeId]) != nullptr)
+					else if (auto* subrep = dynamic_cast<ResqmlIjkGridSubRepToVtkExplicitStructuredGrid*>(w_mapper); subrep != nullptr)
 					{
-						uuid_supporting_grid = static_cast<ResqmlIjkGridSubRepToVtkExplicitStructuredGrid*>(_nodeIdToMapper[w_nodeId])->unregisterToMapperSupportingGrid();
+						uuid_supporting_grid = subrep->unregisterToMapperSupportingGrid();
 					}
-					delete _nodeIdToMapper[w_nodeId];
-					_nodeIdToMapper.erase(w_nodeId);
+					delete w_mapper;
+					_nodeIdToMapper.erase(it);
 					//GetAssembly()->RemoveAllDataSetIndices(w_nodeId);
 				}
 				else
@@ -1640,6 +2280,15 @@ vtkPartitionedDataSetCollection* ResqmlDataRepositoryToVtkPartitionedDataSetColl
 
 	// vtkParitionedDataSetCollection - hierarchy - build
 	// foreach selection node init object
+	{
+		std::string selDbg = "[DEBUG getVtkPDSC] _currentSelection (" + std::to_string(_currentSelection.size()) + " nodes): ";
+		for (const int n : _currentSelection) {
+			uint32_t tv = 0;
+			_output->GetDataAssembly()->GetAttribute(n, "type", tv);
+			selDbg += std::to_string(n) + "(t=" + std::to_string(tv) + ") ";
+		}
+		vtkOutputWindowDisplayText((selDbg + "\n").c_str());
+	}
 	auto w_it = _currentSelection.begin();
 	while (w_it != _currentSelection.end())
 	{
@@ -1724,17 +2373,27 @@ vtkPartitionedDataSetCollection* ResqmlDataRepositoryToVtkPartitionedDataSetColl
 			// load mapper representation
 			if (_nodeIdToMapper.find(w_nodeSelection) != _nodeIdToMapper.end())
 			{
+				vtkOutputWindowDisplayText(("[DEBUG getVtkPDSC] SetPartitionedDataSet idx=" + std::to_string(w_PartitionIndex)
+					+ " nodeId=" + std::to_string(w_nodeSelection)
+					+ " title='" + _nodeIdToMapper[w_nodeSelection]->getTitle() + "'"
+					+ " partitions=" + std::to_string(_nodeIdToMapper[w_nodeSelection]->getOutput()->GetNumberOfPartitions())
+					+ "\n").c_str());
 				_output->SetPartitionedDataSet(w_PartitionIndex, _nodeIdToMapper[w_nodeSelection]->getOutput());
 				_output->GetMetaData(w_PartitionIndex)->Set(vtkCompositeDataSet::NAME(), _nodeIdToMapper[w_nodeSelection]->getTitle() + '(' + _nodeIdToMapper[w_nodeSelection]->getUuid() + ')');
 				GetAssembly()->AddDataSetIndex(w_nodeSelection, w_PartitionIndex); // attach hierarchy to assembly
 				w_PartitionIndex++;
 			}
+			else
+			{
+				vtkOutputWindowDisplayText(("[DEBUG getVtkPDSC] Mapper node " + std::to_string(w_nodeSelection) + " NOT in _nodeIdToMapper!\n").c_str());
+			}
 		}
 	}
-	
+
 	_selectionCleared = false;
 	_output->Modified();
 	_oldTimesStepIndex = _currentTimesStepIndex;
+	_oldRealizationIndex = _currentRealizationIndex;
 	return _output;
 }
 

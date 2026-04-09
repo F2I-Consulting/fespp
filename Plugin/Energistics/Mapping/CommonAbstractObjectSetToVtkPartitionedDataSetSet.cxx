@@ -18,6 +18,8 @@ under the License.
 -----------------------------------------------------------------------*/
 #include "Mapping/CommonAbstractObjectSetToVtkPartitionedDataSetSet.h"
 
+#include <algorithm>
+
 //----------------------------------------------------------------------------
 CommonAbstractObjectSetToVtkPartitionedDataSetSet::CommonAbstractObjectSetToVtkPartitionedDataSetSet(const COMMON_NS::AbstractObject *p_abstractObject, uint32_t p_procNumber, uint32_t p_maxProc)
 	: _procNumber(p_procNumber),
@@ -49,37 +51,18 @@ void CommonAbstractObjectSetToVtkPartitionedDataSetSet::loadVtkObject()
 //----------------------------------------------------------------------------
 void CommonAbstractObjectSetToVtkPartitionedDataSetSet::removeCommonAbstractObjectToVtkPartitionedDataSet(const std::string &p_id)
 {
-	for (auto w_it = _mapperSet.begin(); w_it != _mapperSet.end();)
+	auto it = std::find_if(_mapperSet.begin(), _mapperSet.end(),
+		[&p_id](const CommonAbstractObjectToVtkPartitionedDataSet* m) { return m->getUuid() == p_id; });
+	if (it != _mapperSet.end())
 	{
-		CommonAbstractObjectToVtkPartitionedDataSet *w_mapper = *w_it;
-		if (w_mapper->getUuid() == p_id)
-		{
-			delete w_mapper;
-			w_it = _mapperSet.erase(w_it);
-
-			return;
-		}
-		else
-		{
-			++w_it;
-		}
+		delete *it;
+		_mapperSet.erase(it);
 	}
 }
 
 //----------------------------------------------------------------------------
 bool CommonAbstractObjectSetToVtkPartitionedDataSetSet::existUuid(const std::string &p_id)
 {
-	for (auto w_it = _mapperSet.begin(); w_it != _mapperSet.end();)
-	{
-		CommonAbstractObjectToVtkPartitionedDataSet *w_mapper = *w_it;
-		if (w_mapper->getUuid() == p_id)
-		{
-			return true;
-		}
-		else
-		{
-			++w_it;
-		}
-	}
-	return false;
+	return std::any_of(_mapperSet.begin(), _mapperSet.end(),
+		[&p_id](const CommonAbstractObjectToVtkPartitionedDataSet* m) { return m->getUuid() == p_id; });
 }

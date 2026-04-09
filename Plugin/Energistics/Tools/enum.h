@@ -45,6 +45,7 @@ enum class TreeViewNodeType
 	WellboreMarker,
 	WellboreCompletion,
 	TimeSeries,
+	Realization,
 	Perforation,
 	Partial
 };

@@ -93,6 +93,28 @@ public:
 
 	std::vector<double> getTimes() { return _timesStepIndex; };
 
+	// Getter/Setter for the current realization index
+	uint32_t getCurrentRealizationIndex() const { return _currentRealizationIndex; }
+	void setCurrentRealizationIndex(uint32_t index)
+	{
+		_oldRealizationIndex = _currentRealizationIndex;
+		_currentRealizationIndex = index;
+	}
+
+	// Get available realizations for a specific property
+	std::map<uint32_t, std::string> getRealizationIndicesForProperty(const std::string& propertyTitle) const
+	{
+		std::map<uint32_t, std::string> result;
+		if (_realizationTitleToIndexAndPropertiesUuid.count(propertyTitle) > 0)
+		{
+			for (const auto& pair : _realizationTitleToIndexAndPropertiesUuid.at(propertyTitle))
+			{
+				result[pair.first] = "Realization " + std::to_string(pair.first);
+			}
+		}
+		return result;
+	}
+
 	/**
 	 * @return selection parent
 	 */
@@ -113,6 +135,7 @@ private:
 	int searchRepresentationSetRepresentation(resqml2::RepresentationSetRepresentation const *p_rsr, int p_nodeId = 0 /* 0 is root's id*/);
 	std::string searchSubRepresentation(resqml2::AbstractRepresentation const *p_representation, int p_nodeParent);
 	std::string searchTimeSeries(const std::string &p_fileName);
+	std::string searchRealization();
 	int searchPropertySet(resqml2_0_1::PropertySet const *p_propSet, int p_nodeId);
 	std::string searchProperties(resqml2::AbstractRepresentation const *p_representation, int p_nodeParent);
 
@@ -179,6 +202,19 @@ private:
 	std::vector<double> _timesStepIndex;
 	double _oldTimesStepIndex;
 	double _currentTimesStepIndex;
+
+	// realization values
+	// Note: Unlike TimeSeries, no global UUID because realizations are per-property
+	//      prop_title       realization_index   prop_uuid
+	std::map<std::string, std::map<uint32_t, std::string>> _realizationTitleToIndexAndPropertiesUuid;
+	uint32_t _oldRealizationIndex;       // Previously selected realization index
+	uint32_t _currentRealizationIndex;   // Currently selected realization index
+
+	// Properties with BOTH multi-realization AND TimeSeries (Realization parent + TimeSeries children)
+	// prop_title → realization_index → time_step_index → prop_uuid
+	std::map<std::string, std::map<uint32_t, std::map<size_t, std::string>>> _realAndTimeSeriesToIndexAndPropertiesUuid;
+	// prop_title → TimeSeries UUID (for node naming: "_<tsUuid>realts_<N>_<propVtkName>")
+	std::map<std::string, std::string> _realAndTimeSeriesTsUuid;
 
 	std::vector<const char*> _blocksColors;
 	std::map<std::string, std::array<double, 3>> _blockColorsMap;

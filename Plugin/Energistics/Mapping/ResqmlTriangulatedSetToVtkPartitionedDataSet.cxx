@@ -81,11 +81,11 @@ void ResqmlTriangulatedSetToVtkPartitionedDataSet::addDataArray(const std::strin
 {
 	vtkSmartPointer<vtkPartitionedDataSet> partition = vtkSmartPointer<vtkPartitionedDataSet>::New();
 
-	for (auto &map : patchIndex_to_ResqmlTriangulated)
+	for (auto& [patchIndex, rep] : patchIndex_to_ResqmlTriangulated)
 	{
-		map.second->addDataArray(p_uuid, map.first);
-		partition->SetPartition(map.first, map.second->getOutput()->GetPartitionAsDataObject(0));
-		partition->GetMetaData(map.first)->Set(vtkCompositeDataSet::NAME(), ("Patch " + std::to_string(map.first)).c_str());
+		rep->addDataArray(p_uuid, patchIndex);
+		partition->SetPartition(patchIndex, rep->getOutput()->GetPartitionAsDataObject(0));
+		partition->GetMetaData(patchIndex)->Set(vtkCompositeDataSet::NAME(), ("Patch " + std::to_string(patchIndex)).c_str());
 	}
 
 	_vtkData = partition;

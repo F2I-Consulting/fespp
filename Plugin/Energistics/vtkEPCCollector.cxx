@@ -27,6 +27,7 @@ under the License.
 #include "vtkEnergisticsExtractor.h"
 
 #include <vtkIndent.h>
+#include <vtkOutputWindow.h>
 #include <vtkInformation.h>
 #include <vtkInformationVector.h>
 #include <vtkPartitionedDataSetCollection.h>
@@ -68,6 +69,7 @@ colorApplyLoading(false)
 {
 	SetNumberOfInputPorts(0);
 	SetController(vtkMultiProcessController::GetGlobalController());
+	vtkOutputWindowDisplayText("fespp build: " __DATE__ " " __TIME__ "\n");
 }
 
 vtkEPCCollector::~vtkEPCCollector()
@@ -117,10 +119,17 @@ vtkStringArray* vtkEPCCollector::GetAllFiles() // call only by GUI
 			std::string msg = repository.addFile(file_property.c_str());
 
 			FileNamesLoaded.insert(file_property);
-			// add selector
-			for (auto selector : selectorNotLoaded)
+			// add selector — collect resolved paths first to avoid erasing during iteration
 			{
-				if (AddSelector(selector.c_str()))
+				std::vector<std::string> resolved;
+				for (const auto& selector : selectorNotLoaded)
+				{
+					if (AddSelector(selector.c_str()))
+					{
+						resolved.push_back(selector);
+					}
+				}
+				for (const auto& selector : resolved)
 				{
 					selectorNotLoaded.erase(selector);
 				}
@@ -281,14 +290,24 @@ int vtkEPCCollector::RequestData(vtkInformation* info,
 	vtkInformationVector* outputVector)
 {
 	// Load state (load selection in wait)
-	if (selectorNotLoaded.size() > 0)
+	// Collect paths to resolve first to avoid erasing from container during iteration
+	if (!selectorNotLoaded.empty())
 	{
-		for (auto path : selectorNotLoaded)
+		vtkDataAssembly* assembly = GetAssembly();
+		if (assembly)
 		{
-			int node_id = GetAssembly()->GetFirstNodeByPath(path.c_str());
-			if (node_id > -1)
+			std::vector<std::string> resolved;
+			for (const auto& path : selectorNotLoaded)
 			{
-				repository.selectNodeId(node_id);
+				int node_id = assembly->GetFirstNodeByPath(path.c_str());
+				if (node_id > -1)
+				{
+					repository.selectNodeId(node_id);
+					resolved.push_back(path);
+				}
+			}
+			for (const auto& path : resolved)
+			{
 				selectorNotLoaded.erase(path);
 			}
 		}
@@ -298,24 +317,32 @@ int vtkEPCCollector::RequestData(vtkInformation* info,
 	// current timeStep value
 	double requestedTimeStep = outInfo->Get(vtkStreamingDemandDrivenPipeline::UPDATE_TIME_STEP());
 
+	// Propagate active realization index to the mapping layer
+	repository.setCurrentRealizationIndex(static_cast<uint32_t>(RealizationIndex));
+
+	bool dataLoaded = false;
 	try
 	{
-		vtkSmartPointer < vtkPartitionedDataSetCollection> pdc = repository.getVtkPartitionedDatasSetCollection(requestedTimeStep, Controller->GetNumberOfProcesses(), Controller->GetLocalProcessId());
+		vtkSmartPointer<vtkPartitionedDataSetCollection> pdc = repository.getVtkPartitionedDatasSetCollection(requestedTimeStep, Controller->GetNumberOfProcesses(), Controller->GetLocalProcessId());
 		vtkPartitionedDataSetCollection::GetData(outInfo)->DeepCopy(pdc);
 		// close hdfProxies in case the system would want reuse hdf files
 		repository.closeHdfProxies();
+		dataLoaded = true;
 	}
 	catch (const std::exception& e)
 	{
 		vtkWarningMacro(<< e.what());
 	}
-	if (GetOutput())
+
+	if (dataLoaded)
 	{
-		vtkSmartPointer < vtkPartitionedDataSetCollection> pdc = GetOutput();
-		ExtractTag = pdc->GetNumberOfPartitionedDataSets() > 0 ? 0 : ExtractTag++;
+		if (GetOutput())
+		{
+			vtkSmartPointer<vtkPartitionedDataSetCollection> pdc = GetOutput();
+			ExtractTag = pdc->GetNumberOfPartitionedDataSets() > 0 ? 0 : ExtractTag++;
+		}
+		AssemblyTag++;
 	}
-	AssemblyTag++;
-	Modified();
 	return 1;
 }
 
@@ -328,10 +355,7 @@ void vtkEPCCollector::PrintSelf(ostream& os, vtkIndent indent)
 //----------------------------------------------------------------------------
 vtkDataAssembly* vtkEPCCollector::GetAssembly()
 {
-	vtkPVDataInformation* dinfo = vtkPVDataInformation::New();
-	dinfo->CopyFromObject(this->GetOutputDataObject(0));
-
-	return dinfo->GetDataAssembly();
+	return repository.GetAssembly();
 }
 
 //------------------------------------------------------------------------------
@@ -408,28 +432,41 @@ void vtkEPCCollector::Extract(vtkSMSourceProxy* readerProxy, int index)
 
 	list = DataSetList;
 
-	vtkSMSourceProxy* extract = vtkSMSourceProxy::SafeDownCast(sessionProxyManager->NewProxy("filters", "EnergisticsExtractor"));;
+	vtkSMSourceProxy* extract = vtkSMSourceProxy::SafeDownCast(sessionProxyManager->NewProxy("filters", "EnergisticsExtractor"));
+	if (!extract)
+	{
+		vtkWarningMacro(<< "Failed to create EnergisticsExtractor proxy.");
+		return;
+	}
 
 	// set the input
 	vtkSMInputProperty* inputProperty = vtkSMInputProperty::SafeDownCast(extract->GetProperty("Input"));
+	if (!inputProperty)
+	{
+		vtkWarningMacro(<< "EnergisticsExtractor proxy has no Input property.");
+		return;
+	}
 	inputProperty->SetInputConnection(0, readerProxy, 0);
 
-	for (const auto& node : GetAssembly()->GetChildNodes(0))
+	vtkDataAssembly* assembly = GetAssembly();
+	if (assembly)
 	{
-		std::vector<unsigned int> indices = GetAssembly()->GetDataSetIndices(node);
-		if (!indices.empty() &&
-			(strcmp(GetAssembly()->GetAttributeOrDefault(node, "type", GetAssembly()->GetNodeName(node)), std::to_string(static_cast<int>(TreeViewNodeType::Representation)).c_str()) == 0 ||
-				strcmp(GetAssembly()->GetAttributeOrDefault(node, "type", GetAssembly()->GetNodeName(node)), std::to_string(static_cast<int>(TreeViewNodeType::SubRepresentation)).c_str()) == 0 ||
-				strcmp(GetAssembly()->GetAttributeOrDefault(node, "type", GetAssembly()->GetNodeName(node)), std::to_string(static_cast<int>(TreeViewNodeType::WellboreTrajectory)).c_str()) == 0 ||
-				strcmp(GetAssembly()->GetAttributeOrDefault(node, "type", GetAssembly()->GetNodeName(node)), std::to_string(static_cast<int>(TreeViewNodeType::WellboreChannel)).c_str()) == 0 ||
-				strcmp(GetAssembly()->GetAttributeOrDefault(node, "type", GetAssembly()->GetNodeName(node)), std::to_string(static_cast<int>(TreeViewNodeType::WellboreMarker)).c_str()) == 0 ||
-				strcmp(GetAssembly()->GetAttributeOrDefault(node, "type", GetAssembly()->GetNodeName(node)), std::to_string(static_cast<int>(TreeViewNodeType::Perforation)).c_str()) == 0
-				) &&
-			GetAssembly()->GetDataSetIndices(node)[0] == index
-			)
+		for (const auto& node : assembly->GetChildNodes(0))
 		{
-			vtkSMPropertyHelper(extract, "ExtractPath").Set(GetAssembly()->GetNodePath(node).c_str());
-
+			std::vector<unsigned int> indices = assembly->GetDataSetIndices(node);
+			if (!indices.empty() &&
+				(strcmp(assembly->GetAttributeOrDefault(node, "type", assembly->GetNodeName(node)), std::to_string(static_cast<int>(TreeViewNodeType::Representation)).c_str()) == 0 ||
+					strcmp(assembly->GetAttributeOrDefault(node, "type", assembly->GetNodeName(node)), std::to_string(static_cast<int>(TreeViewNodeType::SubRepresentation)).c_str()) == 0 ||
+					strcmp(assembly->GetAttributeOrDefault(node, "type", assembly->GetNodeName(node)), std::to_string(static_cast<int>(TreeViewNodeType::WellboreTrajectory)).c_str()) == 0 ||
+					strcmp(assembly->GetAttributeOrDefault(node, "type", assembly->GetNodeName(node)), std::to_string(static_cast<int>(TreeViewNodeType::WellboreChannel)).c_str()) == 0 ||
+					strcmp(assembly->GetAttributeOrDefault(node, "type", assembly->GetNodeName(node)), std::to_string(static_cast<int>(TreeViewNodeType::WellboreMarker)).c_str()) == 0 ||
+					strcmp(assembly->GetAttributeOrDefault(node, "type", assembly->GetNodeName(node)), std::to_string(static_cast<int>(TreeViewNodeType::Perforation)).c_str()) == 0
+					) &&
+				indices[0] == static_cast<unsigned int>(index)
+				)
+			{
+				vtkSMPropertyHelper(extract, "ExtractPath").Set(assembly->GetNodePath(node).c_str());
+			}
 		}
 	}
 
@@ -455,13 +492,23 @@ void vtkEPCCollector::Copy(vtkSMSourceProxy* readerProxy, int index)
 	list = DataSetListForCopy;
 
 	vtkSMSourceProxy* producerCopyProxy = vtkSMSourceProxy::SafeDownCast(sessionProxyManager->NewProxy("sources", "PVTrivialProducer"));
+	if (!producerCopyProxy)
+	{
+		vtkWarningMacro(<< "Failed to create PVTrivialProducer proxy.");
+		return;
+	}
 	producerCopyProxy->UpdateVTKObjects();
 
 	auto* clientSideObject = producerCopyProxy->GetClientSideObject();
 	vtkPVTrivialProducer* realProducer = vtkPVTrivialProducer::SafeDownCast(clientSideObject);
 	if (realProducer)
 	{
-		vtkSmartPointer < vtkPartitionedDataSetCollection> pdc = repository.getVtkPartitionedDatasSetCollection();
+		vtkSmartPointer<vtkPartitionedDataSetCollection> pdc = repository.getVtkPartitionedDatasSetCollection();
+		if (!pdc)
+		{
+			vtkWarningMacro(<< "No data available to copy.");
+			return;
+		}
 		vtkPartitionedDataSet* partitionedDataSet = pdc->GetPartitionedDataSet(index);
 		realProducer->SetOutput(partitionedDataSet->GetPartitionAsDataObject(0));
 	}
@@ -525,9 +572,11 @@ vtkStringArray* vtkEPCCollector::GetHierarchyBlocks(std::string type)
 {
 	vtkStringArray* result = (type=="COPY")? DataSetListForCopy:DataSetList;
 	result->Initialize();
-	vtkPVDataInformation* dinfo = vtkPVDataInformation::New();
-	dinfo->CopyFromObject(this->GetOutputDataObject(0));
-	vtkSmartPointer<vtkDataAssembly> assembly = dinfo->GetDataAssembly();
+	vtkDataAssembly* assembly = repository.GetAssembly();
+	if (!assembly)
+	{
+		return result;
+	}
 
 	for (const auto& node : assembly->GetChildNodes(0))
 	{

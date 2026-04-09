@@ -147,6 +147,14 @@ public:
 	void setMarkerSize(int size);
 	///@}
 
+	///@{
+	/**
+	 * Index of the active realization for Realization nodes (multi-realization without TimeSeries).
+	 */
+	vtkSetMacro(RealizationIndex, int);
+	vtkGetMacro(RealizationIndex, int);
+	///@}
+
 		///@{
      /**
 	 * Get a list all file names as a vtkStringArray.
@@ -211,6 +219,9 @@ private:
 	// Wellbores Properties
 	bool MarkerOrientation;
 	int MarkerSize;
+
+	// Active realization index for Realization nodes (multi-realization without TimeSeries)
+	int RealizationIndex = 0;
 
 	// Resqml
 	ResqmlDataRepositoryToVtkPartitionedDataSetCollection repository;
