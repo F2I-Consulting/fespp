@@ -261,6 +261,45 @@ void vtkEPCCollector::setMarkerSize(int size)
 	Modified();
 }
 
+//----------------------------------------------------------------------------
+int vtkEPCCollector::GetMaxRealizationIndex()
+{
+	return static_cast<int>(repository.getMaxRealizationIndex());
+}
+
+//----------------------------------------------------------------------------
+void vtkEPCCollector::SetRealizationIndexAsString(const char* indexStr)
+{
+	if (!indexStr || !*indexStr) return;
+	try
+	{
+		const int idx = std::stoi(indexStr);
+		if (idx != RealizationIndex)
+		{
+			RealizationIndex = idx;
+			this->Modified();
+		}
+	}
+	catch (const std::exception&)
+	{
+		// Ignore malformed values; the dropdown will only feed valid ones.
+	}
+}
+
+//----------------------------------------------------------------------------
+vtkStringArray* vtkEPCCollector::GetAvailableRealizationIndices()
+{
+	// Held as a member-like static so the returned pointer stays valid until
+	// the next call (ParaView reads it during proxy update).
+	static vtkSmartPointer<vtkStringArray> result;
+	result = vtkSmartPointer<vtkStringArray>::New();
+	for (uint32_t idx : repository.getAvailableRealizationIndices())
+	{
+		result->InsertNextValue(std::to_string(idx).c_str());
+	}
+	return result;
+}
+
 //------------------------------------------------------------------------------
 int vtkEPCCollector::RequestInformation(vtkInformation* vtkNotUsed(request),
 	vtkInformationVector** vtkNotUsed(inputVector), vtkInformationVector* outputVector)

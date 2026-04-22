@@ -53,9 +53,13 @@ public:
 	virtual void loadVtkObject() = 0;
 
 	/**
-	 * add a resqml property to VtkPartitionedDataSet
+	 * add a resqml property to VtkPartitionedDataSet.
+	 * When p_autoActivate is false, the array is added without forcing it as
+	 * the active scalar coloring on the representation. Set this to false
+	 * for swap operations (multi-realization or time-step changes) where the
+	 * user has already chosen which array drives the coloring.
 	 */
-	char * addDataArray(const std::string &p_uuid, uint32_t p_patchIndex = 0);
+	char * addDataArray(const std::string &p_uuid, uint32_t p_patchIndex = 0, bool p_autoActivate = true);
 
 	/**
 	 * remove a resqml property to VtkPartitionedDataSet

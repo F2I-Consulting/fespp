@@ -114,6 +114,30 @@
 					<PropertyWidgetDecorator type="GenericDecorator" mode="visibility" property="Options" value="0"/>
 				</Hints>
 			</PropertyGroup>
+
+			<!-- Multi-realization: max index available in the loaded data -->
+			<IntVectorProperty name="MaxRealizationIndex" command="GetMaxRealizationIndex" information_only="1">
+				<SimpleIntInformationHelper />
+			</IntVectorProperty>
+			<!-- Sorted list of realization indices that actually exist in the data,
+			     formatted as strings (e.g. "0", "23", "24"). Drives the dropdown. -->
+			<StringVectorProperty name="AvailableRealizationIndices" command="GetAvailableRealizationIndices" information_only="1">
+				<StringArrayHelper />
+			</StringVectorProperty>
+			<!-- Active realization index (shared across all multi-realization properties).
+			     Exposed as a dropdown so the user only sees indices that exist in the data. -->
+			<StringVectorProperty name="RealizationIndex" command="SetRealizationIndexAsString" number_of_elements="1" default_values="0" label="Realization">
+				<StringListDomain name="list">
+					<RequiredProperties>
+						<Property function="ArrayList" name="AvailableRealizationIndices" />
+					</RequiredProperties>
+				</StringListDomain>
+				<Documentation>Index of the active realization. Applies to every multi-realization property in the data set.</Documentation>
+				<Hints>
+					<!-- Hide the dropdown when there is no multi-realization data (max == 0) -->
+					<PropertyWidgetDecorator type="GenericDecorator" mode="visibility" property="MaxRealizationIndex" value="0" inverse="1" />
+				</Hints>
+			</StringVectorProperty>
 		</SourceProxy>
 
 		<!-- ================- - EPC READER - -==================================== -->

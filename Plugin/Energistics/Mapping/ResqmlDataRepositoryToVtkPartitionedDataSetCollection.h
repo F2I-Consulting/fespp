@@ -23,6 +23,7 @@ under the License.
 #include <string>
 #include <map>
 #include <set>
+#include <vector>
 
 #include <vtkSmartPointer.h>
 #include <vtkPartitionedDataSetCollection.h>
@@ -113,6 +114,37 @@ public:
 			}
 		}
 		return result;
+	}
+
+	// Maximum realization index across all multi-realization properties (both
+	// realization-only and realization+time-series maps). Returns 0 if none.
+	uint32_t getMaxRealizationIndex() const
+	{
+		uint32_t maxIdx = 0;
+		for (const auto& [_, realMap] : _realizationTitleToIndexAndPropertiesUuid)
+			for (const auto& [idx, _uuid] : realMap)
+				if (idx > maxIdx) maxIdx = idx;
+		for (const auto& [_, realMap] : _realAndTimeSeriesToIndexAndPropertiesUuid)
+			for (const auto& [idx, _tsMap] : realMap)
+				if (idx > maxIdx) maxIdx = idx;
+		return maxIdx;
+	}
+
+	// Sorted union of all realization indices present in the loaded data
+	// (across realization-only and realization+time-series properties).
+	// Used by the XML proxy to populate the RealizationIndex dropdown so the
+	// user only sees indices that actually exist (e.g. "0, 23, 24" instead
+	// of an unbounded spinbox 0..24).
+	std::vector<uint32_t> getAvailableRealizationIndices() const
+	{
+		std::set<uint32_t> indices;
+		for (const auto& [_, realMap] : _realizationTitleToIndexAndPropertiesUuid)
+			for (const auto& [idx, _uuid] : realMap)
+				indices.insert(idx);
+		for (const auto& [_, realMap] : _realAndTimeSeriesToIndexAndPropertiesUuid)
+			for (const auto& [idx, _tsMap] : realMap)
+				indices.insert(idx);
+		return std::vector<uint32_t>(indices.begin(), indices.end());
 	}
 
 	/**

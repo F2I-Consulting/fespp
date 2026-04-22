@@ -155,6 +155,26 @@ public:
 	vtkGetMacro(RealizationIndex, int);
 	///@}
 
+	/**
+	 * String-typed setter used by the XML proxy when RealizationIndex is exposed
+	 * as a StringListDomain dropdown (so the user only sees indices that
+	 * actually exist in the loaded data, e.g. "0", "23", "24").
+	 */
+	void SetRealizationIndexAsString(const char* indexStr);
+
+	/**
+	 * Maximum realization index available in the loaded data. Information-only,
+	 * used by ParaView to set the RealizationIndex slider upper bound.
+	 */
+	int GetMaxRealizationIndex();
+
+	/**
+	 * Sorted list of realization indices that actually exist in the loaded data,
+	 * formatted as strings. Information-only, used by the XML proxy to populate
+	 * the RealizationIndex StringListDomain dropdown.
+	 */
+	vtkStringArray* GetAvailableRealizationIndices();
+
 		///@{
      /**
 	 * Get a list all file names as a vtkStringArray.

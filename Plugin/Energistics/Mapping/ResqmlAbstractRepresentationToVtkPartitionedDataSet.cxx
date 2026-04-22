@@ -55,7 +55,7 @@ ResqmlAbstractRepresentationToVtkPartitionedDataSet::ResqmlAbstractRepresentatio
 {
 }
 
-char * ResqmlAbstractRepresentationToVtkPartitionedDataSet::addDataArray(const std::string& p_uuid, uint32_t p_patchIndex)
+char * ResqmlAbstractRepresentationToVtkPartitionedDataSet::addDataArray(const std::string& p_uuid, uint32_t p_patchIndex, bool p_autoActivate)
 {
 	std::vector<RESQML2_NS::AbstractValuesProperty*> w_valuesPropertySet = getResqmlData()->getValuesPropertySet();
 	std::vector<RESQML2_NS::AbstractValuesProperty*>::iterator w_it = std::find_if(w_valuesPropertySet.begin(), w_valuesPropertySet.end(),
@@ -85,11 +85,13 @@ char * ResqmlAbstractRepresentationToVtkPartitionedDataSet::addDataArray(const s
 			case gsoap_eml2_3::eml23__IndexableElement::cells:
 			case gsoap_eml2_3::eml23__IndexableElement::triangles:
 				_vtkData->GetPartition(0)->GetCellData()->AddArray(w_fesppProperty->getVtkData());
-				ActiveProperty(w_fesppProperty->getVtkData()->GetName(), vtkDataObject::AttributeTypes::CELL);
+				if (p_autoActivate)
+					ActiveProperty(w_fesppProperty->getVtkData()->GetName(), vtkDataObject::AttributeTypes::CELL);
 				break;
 			case gsoap_eml2_3::eml23__IndexableElement::nodes:
 				_vtkData->GetPartition(0)->GetPointData()->AddArray(w_fesppProperty->getVtkData());
-				ActiveProperty(w_fesppProperty->getVtkData()->GetName(), vtkDataObject::AttributeTypes::POINT);
+				if (p_autoActivate)
+					ActiveProperty(w_fesppProperty->getVtkData()->GetName(), vtkDataObject::AttributeTypes::POINT);
 				break;
 			default:
 				throw std::invalid_argument("The property " + p_uuid + " is attached on a non supported topological element i.e. not cell, not point.");
