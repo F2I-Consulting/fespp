@@ -98,6 +98,22 @@ public:
 	uint32_t getCurrentRealizationIndex() const { return _currentRealizationIndex; }
 	void setCurrentRealizationIndex(uint32_t index)
 	{
+		// Skip duplicate sets: ParaView may push the same property value twice
+		// for a single slider move; the 2nd push would overwrite _oldRealizationIndex
+		// with the new value and break the swap detection in addDataToParent.
+		if (index == _currentRealizationIndex) return;
+		// Ignore indices that are not in the loaded data. ParaView pushes the
+		// XML default_values="0" at proxy creation time, which would overwrite
+		// the value picked by searchRealization() when the data uses non-zero
+		// realization indices (e.g. {23, 24}). Only accept values returned by
+		// getAvailableRealizationIndices().
+		bool valid = false;
+		for (const auto& [_, realMap] : _realizationTitleToIndexAndPropertiesUuid)
+			if (realMap.count(index)) { valid = true; break; }
+		if (!valid)
+			for (const auto& [_, realMap] : _realAndTimeSeriesToIndexAndPropertiesUuid)
+				if (realMap.count(index)) { valid = true; break; }
+		if (!valid) return;
 		_oldRealizationIndex = _currentRealizationIndex;
 		_currentRealizationIndex = index;
 	}

@@ -1455,9 +1455,19 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchRealiza
 		}
 	}
 
-	// Initialize the current index to 0 (first realization by default)
-	_currentRealizationIndex = 0;
-	_oldRealizationIndex = 0;
+	// Initialize the current index to the smallest available realization.
+	// Data may use non-contiguous indices (e.g. {23, 24}); initializing to 0
+	// would cause initial lookups to fail since 0 isn't in the map, leaving
+	// the dataset without the property array until the user moves the slider.
+	uint32_t minRealIdx = std::numeric_limits<uint32_t>::max();
+	for (const auto& [_, realMap] : _realizationTitleToIndexAndPropertiesUuid)
+		for (const auto& [idx, _uuid] : realMap)
+			if (idx < minRealIdx) minRealIdx = idx;
+	for (const auto& [_, realMap] : _realAndTimeSeriesToIndexAndPropertiesUuid)
+		for (const auto& [idx, _tsMap] : realMap)
+			if (idx < minRealIdx) minRealIdx = idx;
+	_currentRealizationIndex = (minRealIdx == std::numeric_limits<uint32_t>::max()) ? 0 : minRealIdx;
+	_oldRealizationIndex = _currentRealizationIndex;
 
 	return w_message;
 }
@@ -1588,7 +1598,6 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::loadMapper(const Tre
 void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::loadRepresentationMapper(const int p_nodeId, const uint32_t p_nbProcess, const uint32_t p_processId)
 {
 	const std::string w_uuid = std::string(_output->GetDataAssembly()->GetNodeName(p_nodeId)).substr(1);
-	vtkOutputWindowDisplayText(("[DEBUG loadRepresentationMapper] p_nodeId=" + std::to_string(p_nodeId) + " uuid='" + w_uuid + "'\n").c_str());
 	COMMON_NS::AbstractObject* const w_abstractObject = _repository->getDataObjectByUuid(w_uuid);
 
 	CommonAbstractObjectToVtkPartitionedDataSet* w_caotvpds = nullptr;
@@ -1656,16 +1665,13 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::loadRepresentationMa
 
 	if (w_caotvpds == nullptr)
 	{
-		vtkOutputWindowDisplayText(("[DEBUG loadRepresentationMapper] FAILED: no mapper created for uuid='" + w_uuid + "' (object=" + std::string(w_abstractObject ? w_abstractObject->getXmlTag() : "NULL") + ")\n").c_str());
 		return;
 	}
 
 	_nodeIdToMapper[p_nodeId] = w_caotvpds;
-	vtkOutputWindowDisplayText(("[DEBUG loadRepresentationMapper] mapper created for uuid='" + w_uuid + "'\n").c_str());
 	try
 	{ // load representation
 		_nodeIdToMapper[p_nodeId]->loadVtkObject();
-		vtkOutputWindowDisplayText(("[DEBUG loadRepresentationMapper] loadVtkObject() done, partitions=" + std::to_string(_nodeIdToMapper[p_nodeId]->getOutput()->GetNumberOfPartitions()) + "\n").c_str());
 	}
 	catch (const std::exception& e)
 	{
