@@ -34,6 +34,7 @@ under the License.
 #endif
 
 #include "../Tools/enum.h"
+#include "../Tools/Cursor.h"
 
 namespace common
 {
@@ -94,28 +95,20 @@ public:
 
 	std::vector<double> getTimes() { return _timesStepIndex; };
 
-	// Getter/Setter for the current realization index
-	uint32_t getCurrentRealizationIndex() const { return _currentRealizationIndex; }
+	// Getter/Setter for the current realization index.
+	// Duplicate-set handling and _old tracking live in Cursor. Validation
+	// (reject indices not in the loaded data, e.g. the XML default_values="0"
+	// push at proxy creation) is done via the predicate passed to set().
+	uint32_t getCurrentRealizationIndex() const { return _realizationCursor.current(); }
 	void setCurrentRealizationIndex(uint32_t index)
 	{
-		// Skip duplicate sets: ParaView may push the same property value twice
-		// for a single slider move; the 2nd push would overwrite _oldRealizationIndex
-		// with the new value and break the swap detection in addDataToParent.
-		if (index == _currentRealizationIndex) return;
-		// Ignore indices that are not in the loaded data. ParaView pushes the
-		// XML default_values="0" at proxy creation time, which would overwrite
-		// the value picked by searchRealization() when the data uses non-zero
-		// realization indices (e.g. {23, 24}). Only accept values returned by
-		// getAvailableRealizationIndices().
-		bool valid = false;
-		for (const auto& [_, realMap] : _realizationTitleToIndexAndPropertiesUuid)
-			if (realMap.count(index)) { valid = true; break; }
-		if (!valid)
+		_realizationCursor.set(index, [this](const uint32_t& v) {
+			for (const auto& [_, realMap] : _realizationTitleToIndexAndPropertiesUuid)
+				if (realMap.count(v)) return true;
 			for (const auto& [_, realMap] : _realAndTimeSeriesToIndexAndPropertiesUuid)
-				if (realMap.count(index)) { valid = true; break; }
-		if (!valid) return;
-		_oldRealizationIndex = _currentRealizationIndex;
-		_currentRealizationIndex = index;
+				if (realMap.count(v)) return true;
+			return false;
+		});
 	}
 
 	// Get available realizations for a specific property
@@ -248,15 +241,18 @@ private:
 	// time step values
 	std::map<double, std::string> _timesStepIndexToISODate;
 	std::vector<double> _timesStepIndex;
-	double _oldTimesStepIndex;
-	double _currentTimesStepIndex;
+	// (current, old) pair. Updated in getVtkPartitionedDatasSetCollection
+	// via set(p_time); committed at the end so the next call sees no change.
+	Cursor<double> _timeStepCursor{ 0.0 };
 
 	// realization values
 	// Note: Unlike TimeSeries, no global UUID because realizations are per-property
 	//      prop_title       realization_index   prop_uuid
 	std::map<std::string, std::map<uint32_t, std::string>> _realizationTitleToIndexAndPropertiesUuid;
-	uint32_t _oldRealizationIndex;       // Previously selected realization index
-	uint32_t _currentRealizationIndex;   // Currently selected realization index
+	// (current, old) pair. Initialized by searchRealization() to the smallest
+	// available index; updated by setCurrentRealizationIndex() (validated
+	// against the loaded data), committed at the end of getVtkPartitionedDatasSetCollection.
+	Cursor<uint32_t> _realizationCursor{ 0 };
 
 	// Properties with BOTH multi-realization AND TimeSeries (Realization parent + TimeSeries children)
 	// prop_title → realization_index → time_step_index → prop_uuid

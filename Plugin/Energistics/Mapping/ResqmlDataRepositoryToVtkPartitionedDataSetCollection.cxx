@@ -135,8 +135,6 @@ ResqmlDataRepositoryToVtkPartitionedDataSetCollection::ResqmlDataRepositoryToVtk
 	_selection(),
 	_currentSelection(),
 	_oldSelection(),
-	_oldTimesStepIndex(0.0),
-	_currentTimesStepIndex(0.0),
 	_selectionCleared(true)
 {
 	auto w_assembly = vtkSmartPointer<vtkDataAssembly>::New();
@@ -175,6 +173,8 @@ MapperType getMapperType(TreeViewNodeType p_type)
 	case TreeViewNodeType::WellboreChannel:
 	case TreeViewNodeType::WellboreMarker:
 	case TreeViewNodeType::TimeSeries:
+	case TreeViewNodeType::MultiRealization:
+	case TreeViewNodeType::MultiRealizationTimeSeries:
 		return MapperType::Data;
 	case TreeViewNodeType::Unknown:
 	case TreeViewNodeType::Collection:
@@ -465,35 +465,37 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::addDefaultToDataAsse
 	// type attribute
 	_output->GetDataAssembly()->SetAttribute(nodeId, "type", std::to_string(static_cast<int>(type)).c_str());
 
-	// label attribute
-	std::string w_representationVtkValidName;
-	if (type == TreeViewNodeType::Collection)
+	// label attribute (composite "kind_title" — kept for backwards display compat)
+	// + 'kind' (fine type Python uses) + 'title' (raw object title) attributes
+	// to avoid Python having to parse the label.
+	std::string w_kind;
+	std::string w_title;
+	if (type == TreeViewNodeType::Collection
+		|| type == TreeViewNodeType::Partial
+		|| type == TreeViewNodeType::Wellbore)
 	{
-		w_representationVtkValidName = MakeValidNodeName(("Collection_" + object->getTitle()).c_str());
+		// Enum-driven kinds (not FESAPI-derived): delegate the string to enum.h.
+		w_kind = treeViewNodeTypeName(type);
+		w_title = object->getTitle();
 	}
-	else if (type == TreeViewNodeType::Partial)
+	else if (type == TreeViewNodeType::SubRepresentation)
 	{
-		w_representationVtkValidName = MakeValidNodeName(("Partial_" + object->getTitle()).c_str());
-	}
-	else if (type == TreeViewNodeType::Wellbore)
-	{
-		w_representationVtkValidName = MakeValidNodeName(("Wellbore_" + object->getTitle()).c_str());
+		// Fine kind is FESAPI-derived (e.g. "Sub") — keep SimplifyXmlTag.
+		auto const* w_subrep = static_cast<RESQML2_NS::SubRepresentation const*>(object);
+		w_kind = SimplifyXmlTag(object->getXmlTag());
+		w_title = w_subrep->getSupportingRepresentation(0)->getTitle() + "_" + object->getTitle();
 	}
 	else
 	{
-		std::string w_typeRepresentation = SimplifyXmlTag(object->getXmlTag());
-		if (type == TreeViewNodeType::SubRepresentation)
-		{
-			auto const* w_subrep = static_cast<RESQML2_NS::SubRepresentation const*>(object);
-			w_representationVtkValidName = MakeValidNodeName((w_typeRepresentation + "_" + w_subrep->getSupportingRepresentation(0)->getTitle() + "_" + object->getTitle()).c_str());
-
-		}
-		else
-		{
-			w_representationVtkValidName = MakeValidNodeName((w_typeRepresentation + "_" + object->getTitle()).c_str());
-		}
+		// Fine kind is FESAPI-derived (e.g. "IjkGrid", "UnstructuredGrid",
+		// "ContinuousProperty", "Trajectory", "Frame"…) — keep SimplifyXmlTag.
+		w_kind = SimplifyXmlTag(object->getXmlTag());
+		w_title = object->getTitle();
 	}
+	const std::string w_representationVtkValidName = MakeValidNodeName((w_kind + "_" + w_title).c_str());
 	_output->GetDataAssembly()->SetAttribute(nodeId, "label", w_representationVtkValidName.c_str());
+	_output->GetDataAssembly()->SetAttribute(nodeId, "kind", w_kind.c_str());
+	_output->GetDataAssembly()->SetAttribute(nodeId, "title", w_title.c_str());
 
 	if (type != TreeViewNodeType::Partial)
 	{
@@ -961,6 +963,8 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchWellbor
 				int w_nodeId = _output->GetDataAssembly()->AddNode(this->MakeValidNodeName(("_" + w_wellboreCompletion->getUuid() + "_" + w_wellboreCompletion->getConnectionUid(WITSML2_1_NS::WellboreCompletion::WellReservoirConnectionType::PERFORATION, w_perforationIndex)).c_str()).c_str(), w_completionNodeId);
 				_output->GetDataAssembly()->SetAttribute(w_nodeId, "label", MakeValidNodeName((w_perforationName).c_str()).c_str());
 				_output->GetDataAssembly()->SetAttribute(w_nodeId, "type", std::to_string(static_cast<int>(TreeViewNodeType::Perforation)).c_str());
+				_output->GetDataAssembly()->SetAttribute(w_nodeId, "kind", treeViewNodeTypeName(TreeViewNodeType::Perforation));
+				_output->GetDataAssembly()->SetAttribute(w_nodeId, "title", w_perforationName.c_str());
 				_output->GetDataAssembly()->SetAttribute(w_nodeId, "connection", w_wellboreCompletion->getConnectionUid(WITSML2_1_NS::WellboreCompletion::WellReservoirConnectionType::PERFORATION, w_perforationIndex).c_str());
 				_output->GetDataAssembly()->SetAttribute(w_nodeId, "skin", w_perforationSkin.c_str());
 				_output->GetDataAssembly()->SetAttribute(w_nodeId, "diameter", w_perforationDiameter.c_str());
@@ -1126,6 +1130,8 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchTimeSer
 				auto w_nodeId = _output->GetDataAssembly()->AddNode(("_" + w_timeSeries->getUuid() + w_vtkValidName).c_str(), w_parentNodeId);
 				_output->GetDataAssembly()->SetAttribute(w_nodeId, "label", w_vtkValidName.c_str());
 				_output->GetDataAssembly()->SetAttribute(w_nodeId, "type", std::to_string(static_cast<int>(TreeViewNodeType::TimeSeries)).c_str());
+				_output->GetDataAssembly()->SetAttribute(w_nodeId, "kind", treeViewNodeTypeName(TreeViewNodeType::TimeSeries));
+				_output->GetDataAssembly()->SetAttribute(w_nodeId, "title", w_myPair.first.c_str());
 				if (auto it = w_propertyNameToMinPropValue.find(w_myPair.first); it != w_propertyNameToMinPropValue.end())
 				{
 					_output->GetDataAssembly()->SetAttribute(w_nodeId, "minvalue", std::to_string(static_cast<double>(it->second)).c_str());
@@ -1328,7 +1334,7 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchRealiza
 
 	// 2. Create the hierarchy in the TreeView
 	// One single Properties node per multi-realization property.
-	// The active realization is driven globally by _currentRealizationIndex,
+	// The active realization is driven globally by _realizationCursor,
 	// exposed in ParaView as the RealizationIndex source property.
 	for (const auto& [propName, w_propertyNodeSet] : propertyNameToNodeIdSet)
 	{
@@ -1346,22 +1352,21 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchRealiza
 		}
 
 		const std::string w_vtkValidName = MakeValidNodeName(propName.c_str());
-		// Synthetic node name: addDataToParent detects the "multireal_" prefix
-		// and resolves the UUID via _realizationTitleToIndexAndPropertiesUuid
-		// using the current RealizationIndex.
+		// Node name kept with the "multireal_" marker to remain unique in the
+		// assembly (we no longer dispatch on it — dispatch uses the type enum).
 		const int w_nodeId = _output->GetDataAssembly()->AddNode(
 			("_multireal_" + w_vtkValidName).c_str(),
 			w_parentNodeId
 		);
-		// Label prefix "Realization_" lets fespp_on_trame's label-based type detection
-		// recognize this as a multi-realization property and wire the slider accordingly.
-		const std::string w_label = "Realization_" + w_vtkValidName;
+		const std::string w_label = "MultiRealization_" + w_vtkValidName;
 		_output->GetDataAssembly()->SetAttribute(w_nodeId, "label", w_label.c_str());
 		_output->GetDataAssembly()->SetAttribute(
 			w_nodeId,
 			"type",
-			std::to_string(static_cast<int>(TreeViewNodeType::Properties)).c_str()
+			std::to_string(static_cast<int>(TreeViewNodeType::MultiRealization)).c_str()
 		);
+		_output->GetDataAssembly()->SetAttribute(w_nodeId, "kind", treeViewNodeTypeName(TreeViewNodeType::MultiRealization));
+		_output->GetDataAssembly()->SetAttribute(w_nodeId, "title", w_vtkValidName.c_str());
 		_output->GetDataAssembly()->SetAttribute(w_nodeId, "propTitle", propName.c_str());
 		_output->GetDataAssembly()->SetAttribute(w_nodeId, "realization_count",
 			std::to_string(_realizationTitleToIndexAndPropertiesUuid[propName].size()).c_str());
@@ -1384,8 +1389,8 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchRealiza
 
 	// 3. Handle properties with BOTH multi-realization AND TimeSeries.
 	// One single TimeSeries node per property; the active realization and
-	// time step are driven globally by _currentRealizationIndex and
-	// _currentTimesStepIndex.
+	// time step are driven globally by _realizationCursor and
+	// _timeStepCursor.
 	for (const auto& [propName, realizationMap] : _realAndTimeSeriesToIndexAndPropertiesUuid)
 	{
 		const std::string w_vtkValidName = MakeValidNodeName(propName.c_str());
@@ -1425,16 +1430,17 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchRealiza
 
 		const std::string tsUuid = _realAndTimeSeriesTsUuid.count(propName) > 0
 			? _realAndTimeSeriesTsUuid[propName] : std::string(36, '0');
-		// Synthetic node name: addDataToParent detects the "multirealts_" marker
-		// and resolves the UUID via _realAndTimeSeriesToIndexAndPropertiesUuid
-		// using the current RealizationIndex and time step.
+		// Node name kept with the "multirealts_" marker to remain unique in the
+		// assembly (we no longer dispatch on it — dispatch uses the type enum).
+		// The tsUuid prefix is used by addDataToParent to extract the TS UUID.
 		const std::string nodeName = "_" + tsUuid + "multirealts_" + w_vtkValidName;
 		const int w_nodeId = _output->GetDataAssembly()->AddNode(nodeName.c_str(), w_parentNodeId);
-		// Label prefix "RealizationTimeSeries_" lets fespp_on_trame recognize the combo.
-		const std::string w_label = "RealizationTimeSeries_" + w_vtkValidName;
+		const std::string w_label = "MultiRealizationTimeSeries_" + w_vtkValidName;
 		_output->GetDataAssembly()->SetAttribute(w_nodeId, "label", w_label.c_str());
 		_output->GetDataAssembly()->SetAttribute(w_nodeId, "type",
-			std::to_string(static_cast<int>(TreeViewNodeType::TimeSeries)).c_str());
+			std::to_string(static_cast<int>(TreeViewNodeType::MultiRealizationTimeSeries)).c_str());
+		_output->GetDataAssembly()->SetAttribute(w_nodeId, "kind", treeViewNodeTypeName(TreeViewNodeType::MultiRealizationTimeSeries));
+		_output->GetDataAssembly()->SetAttribute(w_nodeId, "title", w_vtkValidName.c_str());
 		_output->GetDataAssembly()->SetAttribute(w_nodeId, "propTitle", propName.c_str());
 		_output->GetDataAssembly()->SetAttribute(w_nodeId, "realization_count",
 			std::to_string(realizationMap.size()).c_str());
@@ -1466,8 +1472,7 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchRealiza
 	for (const auto& [_, realMap] : _realAndTimeSeriesToIndexAndPropertiesUuid)
 		for (const auto& [idx, _tsMap] : realMap)
 			if (idx < minRealIdx) minRealIdx = idx;
-	_currentRealizationIndex = (minRealIdx == std::numeric_limits<uint32_t>::max()) ? 0 : minRealIdx;
-	_oldRealizationIndex = _currentRealizationIndex;
+	_realizationCursor.reset(minRealIdx == std::numeric_limits<uint32_t>::max() ? 0 : minRealIdx);
 
 	return w_message;
 }
@@ -1811,52 +1816,7 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::addDataToParent(cons
 				if (abstractRepresentation->getOutput()->GetNumberOfPartitions() == 0) {
 					abstractRepresentation->loadVtkObject();
 				}
-
-				// Multi-realization property: synthetic node name is "multireal_<vtkName>".
-				// Resolve the actual property UUID via _realizationTitleToIndexAndPropertiesUuid
-				// using the global _currentRealizationIndex.
-				if (w_uuid.compare(0, 10, "multireal_") == 0)
-				{
-					const char* propTitleAttr = nullptr;
-					_output->GetDataAssembly()->GetAttribute(p_nodeId, "propTitle", propTitleAttr);
-					if (propTitleAttr == nullptr)
-					{
-						vtkOutputWindowDisplayErrorText(("Error: missing 'propTitle' attribute on multireal node " + w_uuid + "\n").c_str());
-						return;
-					}
-					const std::string propKey = propTitleAttr;
-					auto realMapIt = _realizationTitleToIndexAndPropertiesUuid.find(propKey);
-					if (realMapIt == _realizationTitleToIndexAndPropertiesUuid.end())
-						return;
-					auto& realMap = realMapIt->second;
-
-					// If the new realization has no entry for this property, keep
-					// the previous data unchanged (don't delete-without-replace).
-					auto newIt = realMap.find(_currentRealizationIndex);
-					if (newIt == realMap.end())
-						return;
-					const std::string addedUuid = newIt->second;
-
-					bool wasSwap = false;
-					if (_oldRealizationIndex != _currentRealizationIndex)
-					{
-						auto oldIt = realMap.find(_oldRealizationIndex);
-						if (oldIt != realMap.end() && oldIt->second != addedUuid)
-						{
-							abstractRepresentation->deleteDataArray(oldIt->second);
-							wasSwap = true;
-						}
-					}
-
-					// Initial add (first selection) keeps auto-activate so coloring
-					// follows the user's pick. A swap (realization changed) must not
-					// steal the active scalar from another selected property.
-					abstractRepresentation->addDataArray(addedUuid, 0, !wasSwap);
-				}
-				else
-				{
-					abstractRepresentation->addDataArray(w_uuid);
-				}
+				abstractRepresentation->addDataArray(w_uuid);
 			}
 			else
 			{
@@ -1868,6 +1828,117 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::addDataToParent(cons
 			vtkOutputWindowDisplayErrorText(("Error when initialize uuid: " + w_uuid + "\n" + e.what()).c_str());
 		}
 	}
+	else if (TreeViewNodeType::MultiRealization == p_type)
+	{
+		// One synthetic node per multi-realization property; the active UUID
+		// is resolved from _realizationTitleToIndexAndPropertiesUuid using
+		// the global _realizationCursor.
+		try
+		{
+			auto it = _nodeIdToMapper.find(w_nodeParent);
+			if (it == _nodeIdToMapper.end() || !it->second)
+			{
+				vtkOutputWindowDisplayErrorText(("Error: no representation mapper for multireal node " + w_uuid + "\n").c_str());
+				return;
+			}
+			auto* abstractRepresentation = static_cast<ResqmlAbstractRepresentationToVtkPartitionedDataSet*>(it->second);
+			if (abstractRepresentation->getOutput()->GetNumberOfPartitions() == 0)
+				abstractRepresentation->loadVtkObject();
+
+			const char* propTitleAttr = nullptr;
+			_output->GetDataAssembly()->GetAttribute(p_nodeId, "propTitle", propTitleAttr);
+			if (propTitleAttr == nullptr)
+			{
+				vtkOutputWindowDisplayErrorText(("Error: missing 'propTitle' attribute on multireal node " + w_uuid + "\n").c_str());
+				return;
+			}
+			auto realMapIt = _realizationTitleToIndexAndPropertiesUuid.find(propTitleAttr);
+			if (realMapIt == _realizationTitleToIndexAndPropertiesUuid.end())
+				return;
+			auto& realMap = realMapIt->second;
+
+			// If the new realization has no entry for this property, keep
+			// the previous data unchanged (don't delete-without-replace).
+			auto newIt = realMap.find(_realizationCursor.current());
+			if (newIt == realMap.end())
+				return;
+			const std::string addedUuid = newIt->second;
+
+			bool wasSwap = false;
+			if (_realizationCursor.changed())
+			{
+				auto oldIt = realMap.find(_realizationCursor.old());
+				if (oldIt != realMap.end() && oldIt->second != addedUuid)
+				{
+					abstractRepresentation->deleteDataArray(oldIt->second);
+					wasSwap = true;
+				}
+			}
+
+			// Initial add (first selection) keeps auto-activate so coloring
+			// follows the user's pick. A swap (realization changed) must not
+			// steal the active scalar from another selected property.
+			abstractRepresentation->addDataArray(addedUuid, 0, !wasSwap);
+		}
+		catch (const std::exception& e)
+		{
+			vtkOutputWindowDisplayErrorText(("Error when load multireal property uuid: " + w_uuid + "\n" + e.what()).c_str());
+		}
+	}
+	else if (TreeViewNodeType::MultiRealizationTimeSeries == p_type)
+	{
+		// One synthetic node per multi-realization+time-series property;
+		// active UUID resolved from _realAndTimeSeriesToIndexAndPropertiesUuid
+		// using global _realizationCursor + _timeStepCursor.
+		try
+		{
+			auto it = _nodeIdToMapper.find(w_nodeParent);
+			if (it == _nodeIdToMapper.end() || !it->second)
+				return;
+			auto* abstractRepresentation = static_cast<ResqmlAbstractRepresentationToVtkPartitionedDataSet*>(it->second);
+			if (abstractRepresentation->getOutput()->GetNumberOfPartitions() == 0)
+				abstractRepresentation->loadVtkObject();
+
+			const char* propTitleAttr = nullptr;
+			_output->GetDataAssembly()->GetAttribute(p_nodeId, "propTitle", propTitleAttr);
+			if (propTitleAttr == nullptr)
+			{
+				vtkOutputWindowDisplayErrorText(("Error: missing 'propTitle' attribute on multirealts node " + w_uuid + "\n").c_str());
+				return;
+			}
+			auto realMapIt = _realAndTimeSeriesToIndexAndPropertiesUuid.find(propTitleAttr);
+			if (realMapIt == _realAndTimeSeriesToIndexAndPropertiesUuid.end())
+				return;
+			auto& realMap = realMapIt->second;
+
+			auto lookup = [&](uint32_t r, double t) -> std::string {
+				auto rIt = realMap.find(r);
+				if (rIt == realMap.end()) return {};
+				auto tIt = rIt->second.find(static_cast<size_t>(t));
+				return tIt == rIt->second.end() ? std::string{} : tIt->second;
+			};
+
+			const std::string newUuid = lookup(_realizationCursor.current(), _timeStepCursor.current());
+			if (newUuid.empty())
+				return;
+
+			bool wasSwap = false;
+			if (_realizationCursor.changed() || _timeStepCursor.changed())
+			{
+				const std::string oldUuid = lookup(_realizationCursor.old(), _timeStepCursor.old());
+				if (!oldUuid.empty() && oldUuid != newUuid)
+				{
+					abstractRepresentation->deleteDataArray(oldUuid);
+					wasSwap = true;
+				}
+			}
+			abstractRepresentation->addDataArray(newUuid, 0, !wasSwap);
+		}
+		catch (const std::exception& e)
+		{
+			vtkOutputWindowDisplayErrorText(("Error when load multirealts property uuid: " + w_uuid + "\n" + e.what()).c_str());
+		}
+	}
 	else if (TreeViewNodeType::TimeSeries == p_type)
 	{
 		try
@@ -1875,98 +1946,39 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::addDataToParent(cons
 			const std::string w_tsUuid   = w_uuid.substr(0, 36);
 			const std::string w_nodeName = w_uuid.substr(36);
 
-			// Multi-realization + TimeSeries property: synthetic name is "<tsUuid>multirealts_<vtkName>".
-			// Both the active realization and time step are driven globally
-			// by _currentRealizationIndex and _currentTimesStepIndex.
-			if (w_nodeName.compare(0, 12, "multirealts_") == 0)
+			if (auto it = _nodeIdToMapper.find(w_nodeParent); it != _nodeIdToMapper.end() && it->second)
 			{
-				const char* propTitleAttr = nullptr;
-				_output->GetDataAssembly()->GetAttribute(p_nodeId, "propTitle", propTitleAttr);
-				if (propTitleAttr == nullptr)
-				{
-					vtkOutputWindowDisplayErrorText(("Error: missing 'propTitle' attribute on multirealts node " + w_uuid + "\n").c_str());
+				auto* abstractRepresentation = static_cast<ResqmlAbstractRepresentationToVtkPartitionedDataSet*>(it->second);
+				if (abstractRepresentation->getOutput()->GetNumberOfPartitions() == 0)
+					abstractRepresentation->loadVtkObject();
+
+				// Use .find() to avoid creating empty entries in the map and
+				// to safely skip when a step has no entry for this property
+				// (in that case keep the previous data unchanged).
+				auto lookupTs = [&](double t) -> std::string {
+					auto tsIt = _timeSeriesUuidAndTitleToIndexAndPropertiesUuid.find(w_tsUuid);
+					if (tsIt == _timeSeriesUuidAndTitleToIndexAndPropertiesUuid.end()) return {};
+					auto nIt = tsIt->second.find(w_nodeName);
+					if (nIt == tsIt->second.end()) return {};
+					auto sIt = nIt->second.find(t);
+					return sIt == nIt->second.end() ? std::string{} : sIt->second;
+				};
+
+				const bool isStepSwap = _timeStepCursor.changed();
+				const std::string newUuid = lookupTs(_timeStepCursor.current());
+				if (newUuid.empty())
 					return;
-				}
-				const std::string propKey = propTitleAttr;
 
-				if (auto it = _nodeIdToMapper.find(w_nodeParent); it != _nodeIdToMapper.end() && it->second)
+				if (isStepSwap)
 				{
-					auto* abstractRepresentation = static_cast<ResqmlAbstractRepresentationToVtkPartitionedDataSet*>(it->second);
-					if (abstractRepresentation->getOutput()->GetNumberOfPartitions() == 0)
-						abstractRepresentation->loadVtkObject();
-
-					auto realMapIt = _realAndTimeSeriesToIndexAndPropertiesUuid.find(propKey);
-					if (realMapIt == _realAndTimeSeriesToIndexAndPropertiesUuid.end())
-						return;
-					auto& realMap = realMapIt->second;
-
-					auto lookup = [&](uint32_t r, double t) -> std::string {
-						auto rIt = realMap.find(r);
-						if (rIt == realMap.end()) return {};
-						auto tIt = rIt->second.find(static_cast<size_t>(t));
-						return tIt == rIt->second.end() ? std::string{} : tIt->second;
-					};
-
-					// If the new (realization, step) combo has no data for this
-					// property, keep the previous array unchanged — don't delete
-					// without a replacement.
-					const std::string newUuid = lookup(_currentRealizationIndex, _currentTimesStepIndex);
-					if (newUuid.empty())
-						return;
-
-					bool wasSwap = false;
-					if (_oldRealizationIndex != _currentRealizationIndex
-						|| _oldTimesStepIndex != _currentTimesStepIndex)
-					{
-						const std::string oldUuid = lookup(_oldRealizationIndex, _oldTimesStepIndex);
-						if (!oldUuid.empty() && oldUuid != newUuid)
-						{
-							abstractRepresentation->deleteDataArray(oldUuid);
-							wasSwap = true;
-						}
-					}
-
-					// Initial add keeps auto-activate. A swap (real or step changed)
-					// must not steal the active scalar from another property.
-					abstractRepresentation->addDataArray(newUuid, 0, !wasSwap);
+					const std::string oldUuid = lookupTs(_timeStepCursor.old());
+					if (!oldUuid.empty() && oldUuid != newUuid)
+						abstractRepresentation->deleteDataArray(oldUuid);
 				}
-			}
-			else
-			{
-				if (auto it = _nodeIdToMapper.find(w_nodeParent); it != _nodeIdToMapper.end() && it->second)
-				{
-					auto* abstractRepresentation = static_cast<ResqmlAbstractRepresentationToVtkPartitionedDataSet*>(it->second);
-					if (abstractRepresentation->getOutput()->GetNumberOfPartitions() == 0)
-						abstractRepresentation->loadVtkObject();
-
-					// Use .find() to avoid creating empty entries in the map and
-					// to safely skip when a step has no entry for this property
-					// (in that case keep the previous data unchanged).
-					auto lookupTs = [&](double t) -> std::string {
-						auto tsIt = _timeSeriesUuidAndTitleToIndexAndPropertiesUuid.find(w_tsUuid);
-						if (tsIt == _timeSeriesUuidAndTitleToIndexAndPropertiesUuid.end()) return {};
-						auto nIt = tsIt->second.find(w_nodeName);
-						if (nIt == tsIt->second.end()) return {};
-						auto sIt = nIt->second.find(t);
-						return sIt == nIt->second.end() ? std::string{} : sIt->second;
-					};
-
-					const bool isStepSwap = (_oldTimesStepIndex != _currentTimesStepIndex);
-					const std::string newUuid = lookupTs(_currentTimesStepIndex);
-					if (newUuid.empty())
-						return;
-
-					if (isStepSwap)
-					{
-						const std::string oldUuid = lookupTs(_oldTimesStepIndex);
-						if (!oldUuid.empty() && oldUuid != newUuid)
-							abstractRepresentation->deleteDataArray(oldUuid);
-					}
-					// Initial add (first time the TS property is selected) keeps the
-					// auto-activate so coloring follows the user's pick. Step swaps
-					// must not steal the active scalar coloring.
-					abstractRepresentation->addDataArray(newUuid, 0, !isStepSwap);
-				}
+				// Initial add (first time the TS property is selected) keeps the
+				// auto-activate so coloring follows the user's pick. Step swaps
+				// must not steal the active scalar coloring.
+				abstractRepresentation->addDataArray(newUuid, 0, !isStepSwap);
 			}
 		}
 		catch (const std::exception& e)
@@ -2000,43 +2012,75 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::deleteMapper()
 		const std::string uuid_unselect = std::string(w_Assembly->GetNodeName(w_nodeId)).substr(1);
 
 		if (valueType == TreeViewNodeType::TimeSeries)
-		{ // TimeSerie properties deselection
+		{ // Plain TimeSerie properties deselection
 			const std::string w_tsUuid   = uuid_unselect.substr(0, 36);
 			const std::string w_nodeName = uuid_unselect.substr(36);
 
-			if (w_nodeName.compare(0, 12, "multirealts_") == 0)
+			const int w_nodeParent = w_Assembly->GetParent(w_Assembly->FindFirstNodeWithName(("_" + uuid_unselect).c_str()));
+			if (_nodeIdToMapper.find(w_nodeParent) != _nodeIdToMapper.end())
 			{
-				// Multi-realization + TimeSeries: resolve UUID via global indices.
-				const int nodeId = w_Assembly->FindFirstNodeWithName(("_" + uuid_unselect).c_str());
-				if (nodeId != -1)
-				{
-					const char* propTitleAttr = nullptr;
-					w_Assembly->GetAttribute(nodeId, "propTitle", propTitleAttr);
-					if (propTitleAttr == nullptr)
-						continue;
-					const std::string propKey = propTitleAttr;
-
-					const int repNodeParent = w_Assembly->GetParent(nodeId);
-					if (_nodeIdToMapper.find(repNodeParent) != _nodeIdToMapper.end())
-					{
-						auto& realMap = _realAndTimeSeriesToIndexAndPropertiesUuid[propKey];
-						if (realMap.count(_currentRealizationIndex) > 0
-							&& realMap[_currentRealizationIndex].count(static_cast<size_t>(_currentTimesStepIndex)) > 0)
-						{
-							static_cast<ResqmlAbstractRepresentationToVtkPartitionedDataSet*>(_nodeIdToMapper[repNodeParent])
-								->deleteDataArray(realMap[_currentRealizationIndex][static_cast<size_t>(_currentTimesStepIndex)]);
-						}
-					}
-				}
+				static_cast<ResqmlAbstractRepresentationToVtkPartitionedDataSet*>(_nodeIdToMapper[w_nodeParent])
+					->deleteDataArray(_timeSeriesUuidAndTitleToIndexAndPropertiesUuid[w_tsUuid][w_nodeName][_timeStepCursor.current()]);
 			}
-			else
+		}
+		else if (valueType == TreeViewNodeType::MultiRealizationTimeSeries)
+		{ // Multi-realization + TimeSeries: resolve UUID via global indices.
+			const int nodeId = w_Assembly->FindFirstNodeWithName(("_" + uuid_unselect).c_str());
+			if (nodeId == -1)
+				continue;
+			const char* propTitleAttr = nullptr;
+			w_Assembly->GetAttribute(nodeId, "propTitle", propTitleAttr);
+			if (propTitleAttr == nullptr)
+				continue;
+
+			const int repNodeParent = w_Assembly->GetParent(nodeId);
+			if (_nodeIdToMapper.find(repNodeParent) == _nodeIdToMapper.end())
+				continue;
+			auto realMapIt = _realAndTimeSeriesToIndexAndPropertiesUuid.find(propTitleAttr);
+			if (realMapIt == _realAndTimeSeriesToIndexAndPropertiesUuid.end())
+				continue;
+			auto& realMap = realMapIt->second;
+			auto rIt = realMap.find(_realizationCursor.current());
+			if (rIt == realMap.end())
+				continue;
+			auto tIt = rIt->second.find(static_cast<size_t>(_timeStepCursor.current()));
+			if (tIt == rIt->second.end())
+				continue;
+			static_cast<ResqmlAbstractRepresentationToVtkPartitionedDataSet*>(_nodeIdToMapper[repNodeParent])
+				->deleteDataArray(tIt->second);
+		}
+		else if (valueType == TreeViewNodeType::MultiRealization)
+		{
+			int w_nodeParent = _output->GetDataAssembly()->GetParent(w_nodeId);
+			uint32_t w_typeValue;
+			_output->GetDataAssembly()->GetAttribute(w_nodeParent, "type", w_typeValue);
+			TreeViewNodeType w_typeParent = static_cast<TreeViewNodeType>(w_typeValue);
+			while (w_typeParent == TreeViewNodeType::Collection)
 			{
-				const int w_nodeParent = w_Assembly->GetParent(w_Assembly->FindFirstNodeWithName(("_" + uuid_unselect).c_str()));
-				if (_nodeIdToMapper.find(w_nodeParent) != _nodeIdToMapper.end())
-				{
-					static_cast<ResqmlAbstractRepresentationToVtkPartitionedDataSet*>(_nodeIdToMapper[w_nodeParent])
-						->deleteDataArray(_timeSeriesUuidAndTitleToIndexAndPropertiesUuid[w_tsUuid][w_nodeName][_currentTimesStepIndex]);
-				}
+				w_nodeParent = _output->GetDataAssembly()->GetParent(w_nodeParent);
+				_output->GetDataAssembly()->GetAttribute(w_nodeParent, "type", w_typeValue);
+				w_typeParent = static_cast<TreeViewNodeType>(w_typeValue);
+			}
+			try
+			{
+				if (_nodeIdToMapper.find(w_nodeParent) == _nodeIdToMapper.end())
+					continue;
+				auto* abstractRepresentation = static_cast<ResqmlAbstractRepresentationToVtkPartitionedDataSet*>(_nodeIdToMapper[w_nodeParent]);
+				const char* propTitleAttr = nullptr;
+				w_Assembly->GetAttribute(w_nodeId, "propTitle", propTitleAttr);
+				if (propTitleAttr == nullptr)
+					continue;
+				auto realMapIt = _realizationTitleToIndexAndPropertiesUuid.find(propTitleAttr);
+				if (realMapIt == _realizationTitleToIndexAndPropertiesUuid.end())
+					continue;
+				auto rIt = realMapIt->second.find(_realizationCursor.current());
+				if (rIt == realMapIt->second.end())
+					continue;
+				abstractRepresentation->deleteDataArray(rIt->second);
+			}
+			catch (const std::exception& e)
+			{
+				vtkOutputWindowDisplayErrorText(("Error in multireal unload for uuid: " + uuid_unselect + "\n" + e.what()).c_str());
 			}
 		}
 		else if (valueType == TreeViewNodeType::Properties)
@@ -2048,7 +2092,6 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::deleteMapper()
 			while (w_typeParent == TreeViewNodeType::Collection)
 			{
 				w_nodeParent = _output->GetDataAssembly()->GetParent(w_nodeParent);
-				w_typeValue;
 				_output->GetDataAssembly()->GetAttribute(w_nodeParent, "type", w_typeValue);
 				w_typeParent = static_cast<TreeViewNodeType>(w_typeValue);
 			}
@@ -2058,23 +2101,7 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::deleteMapper()
 				if (_nodeIdToMapper.find(w_nodeParent) != _nodeIdToMapper.end())
 				{
 					auto* abstractRepresentation = static_cast<ResqmlAbstractRepresentationToVtkPartitionedDataSet*>(_nodeIdToMapper[w_nodeParent]);
-
-					if (uuid_unselect.compare(0, 10, "multireal_") == 0)
-					{
-						// Multi-realization property: resolve UUID via _currentRealizationIndex.
-						const char* propTitleAttr = nullptr;
-						w_Assembly->GetAttribute(w_nodeId, "propTitle", propTitleAttr);
-						if (propTitleAttr != nullptr)
-						{
-							auto& realMap = _realizationTitleToIndexAndPropertiesUuid[propTitleAttr];
-							if (realMap.count(_currentRealizationIndex) > 0)
-								abstractRepresentation->deleteDataArray(realMap[_currentRealizationIndex]);
-						}
-					}
-					else
-					{
-						abstractRepresentation->deleteDataArray(uuid_unselect);
-					}
+					abstractRepresentation->deleteDataArray(uuid_unselect);
 				}
 			}
 			catch (const std::exception& e)
@@ -2189,19 +2216,18 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::deleteMapper()
 
 vtkPartitionedDataSetCollection* ResqmlDataRepositoryToVtkPartitionedDataSetCollection::getVtkPartitionedDatasSetCollection(const double p_time, const uint32_t p_nbProcess, const uint32_t p_processId)
 {
-	// Detect a TimeControl/realization change BEFORE we update _currentTimesStepIndex.
-	// In that case ParaView triggers RequestData without a fresh selectNodeId batch,
-	// so _currentSelection is stale (= last node added). We must iterate _selection
-	// (the cumulative checked set) to refresh every loaded property's data.
-	const bool isTimeOrRealChange =
-		(p_time != _currentTimesStepIndex)
-		|| (_oldRealizationIndex != _currentRealizationIndex);
+	// Detect a TimeControl/realization change. On such a change, ParaView
+	// triggers RequestData without a fresh selectNodeId batch, so
+	// _currentSelection is stale (= last node added). We must iterate
+	// _selection (the cumulative checked set) to refresh every loaded
+	// property's data.
+	// Realization changes are already applied to the cursor (via the
+	// setter called externally by Python); time changes are applied here.
+	const bool timeChanged = _timeStepCursor.set(p_time);
+	const bool isTimeOrRealChange = timeChanged || _realizationCursor.changed();
 
-	if (p_time != _currentTimesStepIndex)
-	{
+	if (timeChanged)
 		_selectionCleared = true;
-		_currentTimesStepIndex = p_time;
-	}
 	ResetResqmlColor();
 
 	addResqmlColor();
@@ -2376,8 +2402,10 @@ vtkPartitionedDataSetCollection* ResqmlDataRepositoryToVtkPartitionedDataSetColl
 
 	_selectionCleared = false;
 	_output->Modified();
-	_oldTimesStepIndex = _currentTimesStepIndex;
-	_oldRealizationIndex = _currentRealizationIndex;
+	// Commit the cursors so subsequent calls with no further changes see
+	// changed()==false (no swap). Next external set() will bump old again.
+	_timeStepCursor.commit();
+	_realizationCursor.commit();
 	return _output;
 }
 

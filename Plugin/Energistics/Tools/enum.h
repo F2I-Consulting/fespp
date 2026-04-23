@@ -47,7 +47,42 @@ enum class TreeViewNodeType
 	TimeSeries,
 	Realization,
 	Perforation,
-	Partial
+	Partial,
+	// Synthetic types created by searchRealization() to fold per-realization
+	// (and per-realization+per-timestep) property nodes into a single tree node.
+	// Appended on purpose: existing serialized 'type' int values are unchanged.
+	// Python uses the string name (via the 'kind' attribute), not the int — so
+	// adding values here is also Python-safe.
+	MultiRealization,
+	MultiRealizationTimeSeries
 };
+
+// String name of a TreeViewNodeType. Used for the 'kind' DataAssembly attribute
+// shared with Python. Keep this list in sync with the enum above.
+inline const char* treeViewNodeTypeName(TreeViewNodeType p_type)
+{
+	switch (p_type)
+	{
+	case TreeViewNodeType::Unknown:                   return "Unknown";
+	case TreeViewNodeType::Collection:                return "Collection";
+	case TreeViewNodeType::Representation:            return "Representation";
+	case TreeViewNodeType::SubRepresentation:         return "SubRepresentation";
+	case TreeViewNodeType::Properties:                return "Properties";
+	case TreeViewNodeType::Wellbore:                  return "Wellbore";
+	case TreeViewNodeType::WellboreTrajectory:        return "WellboreTrajectory";
+	case TreeViewNodeType::WellboreFrame:             return "WellboreFrame";
+	case TreeViewNodeType::WellboreChannel:           return "WellboreChannel";
+	case TreeViewNodeType::WellboreMarkerFrame:       return "WellboreMarkerFrame";
+	case TreeViewNodeType::WellboreMarker:            return "WellboreMarker";
+	case TreeViewNodeType::WellboreCompletion:        return "WellboreCompletion";
+	case TreeViewNodeType::TimeSeries:                return "TimeSeries";
+	case TreeViewNodeType::Realization:               return "Realization";
+	case TreeViewNodeType::Perforation:               return "Perforation";
+	case TreeViewNodeType::Partial:                   return "Partial";
+	case TreeViewNodeType::MultiRealization:          return "MultiRealization";
+	case TreeViewNodeType::MultiRealizationTimeSeries:return "MultiRealizationTimeSeries";
+	}
+	return "Unknown";
+}
 
 #endif // ENUM_H
