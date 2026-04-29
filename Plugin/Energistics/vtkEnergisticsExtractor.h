@@ -53,17 +53,23 @@ protected:
 	int FillOutputPortInformation(int,
 		vtkInformation*);
 
+	int RequestDataObject(vtkInformation*,
+		vtkInformationVector**,
+		vtkInformationVector*);
+
+	int RequestInformation(vtkInformation*,
+		vtkInformationVector**,
+		vtkInformationVector*);
+
 	int RequestData(vtkInformation*,
 		vtkInformationVector**,
 		vtkInformationVector*);
-	
-	int ProcessRequest(vtkInformation*, 
-		vtkInformationVector**, 
+
+	int ProcessRequest(vtkInformation*,
+		vtkInformationVector**,
 		vtkInformationVector*) override;
 
 	std::string ExtractPath;
-
-	const char* dataType;
 };
 
 #endif

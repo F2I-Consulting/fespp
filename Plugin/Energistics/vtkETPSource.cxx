@@ -252,12 +252,11 @@ bool vtkETPSource::AddSelector(const char* selector)
 		int node_id = GetAssembly()->GetFirstNodeByPath(selector);
 		repository.selectNodeId(node_id);
 		_newSelection = true;
+		// See vtkEPCCollector::AddSelector: ParaView pushes selectors as a
+		// repeatable property; calling Update / UpdateInformation per
+		// AddSelector turns "set N selectors" into N full pipeline executions.
+		// Modified() suffices — ParaView re-executes once at the end.
 		Modified();
-		Modified();
-		Update();
-		UpdateDataObject();
-		UpdateInformation();
-		UpdateWholeExtent();
 		return true;
 	}
 	return false;

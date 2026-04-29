@@ -20,6 +20,7 @@ under the License.
 #define __vtkEPCCollector_h
 
 // include system
+#include <map>
 #include <string>
 #include <set>
 #include <utility>
@@ -195,6 +196,36 @@ public:
 
 	void ApplyColors();
 
+	/**
+	 * Programmatic per-representation extractor used by fespp_on_trame
+	 * through the proxy property mechanism (XML properties ExtractRepPath
+	 * and ExtractedRepProducerName).
+	 *
+	 * Aligns with the "WithoutCopy" semantics: creates an EnergisticsExtractor
+	 * filter chained on this collector for `rep_path` and registers it in the
+	 * "filters" group. The filter does a ShallowCopy in RequestData, so
+	 * upstream changes (selector add, realization swap, property addDataArray)
+	 * propagate naturally through the standard VTK Modified/RequestData flow.
+	 *
+	 * Idempotent: if a filter was already registered for `rep_path`, the
+	 * existing one is reused. Stores the registration name in
+	 * lastExtractedProducerName so the GetExtractedRepProducerName info
+	 * property can return it to the Python caller.
+	 *
+	 * SetExtractRepPath is the property command; GetExtractedRepProducerName
+	 * is the info-only readback. The two together let Python code do:
+	 *
+	 *   helper.Set(rep_path); proxy.UpdateVTKObjects()
+	 *   proxy.UpdatePropertyInformation()
+	 *   name = helper2.GetAsString()
+	 *   src  = <look up in filters/sources groups>
+	 */
+	void SetExtractRepPath(const char* rep_path);
+	// Returns a single-element vtkStringArray (the registration name) so it
+	// can be exposed via <StringArrayHelper /> in the XML proxy. Returning a
+	// raw const char* is rejected by ParaView's vtkSIDataArrayProperty.
+	vtkStringArray* GetExtractedRepProducerName();
+
 protected:
 	vtkEPCCollector();
 	~vtkEPCCollector() final;
@@ -205,9 +236,32 @@ private:
 
 	vtkSMSourceProxy* GetThisProxy();
 
-	void Extract(vtkSMSourceProxy*, int index);
-	void Copy(vtkSMSourceProxy*, int index);
+	// Two complementary extraction modes:
+	//
+	//   ExtractWithCopy    — produces a STANDALONE snapshot (PVTrivialProducer
+	//                        registered in "sources", holds a one-shot DeepCopy
+	//                        of the partition data, detached from this
+	//                        collector's pipeline). Frozen view; use for export
+	//                        or comparison against later states.
+	//
+	//   ExtractWithoutCopy — produces a SUB-SOURCE filter (EnergisticsExtractor
+	//                        registered in "filters", chained on this collector,
+	//                        ShallowCopy in RequestData). Live view; tracks
+	//                        upstream changes through the standard pipeline.
+	//
+	// Mnemonic: "with copy" = the data is copied into an independent object;
+	// "without copy" = no real data duplication, just a shallow share with
+	// a sub-pipeline that follows the source.
+	void ExtractWithCopy(vtkSMSourceProxy*, int index);
+	void ExtractWithoutCopy(vtkSMSourceProxy*, int index);
 	void ClearExtractAndCopy();
+
+	// Map rep_path → registered TrivialProducer name, for idempotent
+	// SetExtractRepPath. Last set name is mirrored in
+	// lastExtractedProducerName (1-element vtkStringArray) for the
+	// info-only readback by ParaView's StringArrayHelper.
+	std::map<std::string, std::string> repProducerNames;
+	vtkSmartPointer<vtkStringArray> lastExtractedProducerName;
 
 	vtkStringArray* GetHierarchyBlocks(std::string type); // types: "COPY", "REFERENCE"
 

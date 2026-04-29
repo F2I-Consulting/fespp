@@ -195,14 +195,13 @@ bool vtkEPCCollector::AddSelector(const char* path)
 			repository.selectNodeId(node_id);
 			ExtractTag = 0;
 			DataSetList = vtkStringArray::New();
-			/*
-				   if (repository.GetAssembly()->HasAttribute(node_id, "traj"))
-				   {
-					   int node_id_parent = repository.GetAssembly()->GetAttributeOrDefault(node_id, "traj", 0);
-				   }
-			*/
+			// Modified() marks the filter dirty; ParaView triggers the actual
+			// pipeline update once at the end of the batched property push
+			// (UpdatePipelineInformation / RequestData). Calling Update() here
+			// would force a full pipeline execution on every AddSelector,
+			// turning a "set N selectors" client call into N full executions
+			// (N times slower per added grid as N grows).
 			Modified();
-			Update();
 			return true;
 		}
 	}
@@ -220,8 +219,10 @@ void vtkEPCCollector::ClearSelectors()
 	if (!selectors.empty())
 	{
 		selectors.clear();
+		// See AddSelector: Modified() is enough; ParaView re-executes once
+		// at the end of the property push. Update() here would compound
+		// with the AddSelector calls into N+1 full pipeline executions.
 		Modified();
-		Update();
 	}
 }
 
@@ -414,7 +415,7 @@ void vtkEPCCollector::SetDataSetList(const char* name, int status)
 
 		if (readerProxy)
 		{
-			this->Extract(readerProxy, DataSetList->LookupValue(name));
+			this->ExtractWithCopy(readerProxy, DataSetList->LookupValue(name));
 		}
 	}
 }
@@ -439,7 +440,7 @@ void vtkEPCCollector::ClearDataSetListForCopy()
 }
 
 //------------------------------------------------------------------------------
-// For extract with copy: each block with selection status
+// For extract without copy: each block with selection status
 void vtkEPCCollector::SetDataSetListForCopy(const char* name, int status)
 {
 	if (status == 1)
@@ -448,7 +449,7 @@ void vtkEPCCollector::SetDataSetListForCopy(const char* name, int status)
 
 		if (readerProxy)
 		{
-			this->Copy(readerProxy, DataSetListForCopy->LookupValue(name));
+			this->ExtractWithoutCopy(readerProxy, DataSetListForCopy->LookupValue(name));
 		}
 	}
 }
@@ -461,15 +462,68 @@ vtkStringArray* vtkEPCCollector::GetAllDataSetForCopy()
 }
 
 //----------------------------------------------------------------------------
-// Create a new EnergisticsExtractor sub-pipeline 
-void vtkEPCCollector::Extract(vtkSMSourceProxy* readerProxy, int index)
+// "WithCopy" semantics: a fully INDEPENDENT snapshot of the partition data.
+// Implemented as a standalone PVTrivialProducer holding a one-shot DeepCopy.
+// The producer is registered in the "sources" group, detached from this
+// collector's pipeline — once created it does NOT track upstream changes.
+// Use this when you want a frozen view of the data (export, comparison).
+void vtkEPCCollector::ExtractWithCopy(vtkSMSourceProxy* /*readerProxy*/, int index)
 {
 	vtkSMSessionProxyManager* sessionProxyManager = vtkSMProxyManager::GetProxyManager()->GetActiveSessionProxyManager();
 
-	vtkSmartPointer<vtkStringArray> list = nullptr;
-	std::map<std::string, bool> map;
+	vtkSmartPointer<vtkPartitionedDataSetCollection> pdc = repository.getVtkPartitionedDatasSetCollection();
+	if (!pdc)
+	{
+		vtkWarningMacro(<< "No data available to copy.");
+		return;
+	}
+	vtkPartitionedDataSet* partitionedDataSet = pdc->GetPartitionedDataSet(index);
+	if (!partitionedDataSet || partitionedDataSet->GetNumberOfPartitions() == 0)
+	{
+		vtkWarningMacro(<< "No partition available at index " << index);
+		return;
+	}
+	vtkDataObject* original = partitionedDataSet->GetPartitionAsDataObject(0);
+	if (!original)
+	{
+		vtkWarningMacro(<< "Partition[0] is null at index " << index);
+		return;
+	}
 
-	list = DataSetList;
+	// One-shot DeepCopy: this snapshot lives independently of the source.
+	vtkSmartPointer<vtkDataObject> snapshot;
+	snapshot.TakeReference(original->NewInstance());
+	snapshot->DeepCopy(original);
+
+	vtkSMSourceProxy* producerProxy = vtkSMSourceProxy::SafeDownCast(sessionProxyManager->NewProxy("sources", "PVTrivialProducer"));
+	if (!producerProxy)
+	{
+		vtkWarningMacro(<< "Failed to create PVTrivialProducer proxy.");
+		return;
+	}
+	producerProxy->UpdateVTKObjects();
+
+	vtkPVTrivialProducer* realProducer = vtkPVTrivialProducer::SafeDownCast(producerProxy->GetClientSideObject());
+	if (realProducer)
+	{
+		realProducer->SetOutput(snapshot);
+	}
+
+	sessionProxyManager->RegisterProxy("sources", DataSetList->GetValue(index).c_str(), producerProxy);
+	producerProxy->Delete();
+}
+
+//----------------------------------------------------------------------------
+// "WithoutCopy" semantics: a sub-source FILTER chained on this collector
+// (registered in the "filters" group). The filter does a ShallowCopy in
+// RequestData (vtkEnergisticsExtractor) — no real data duplication, just
+// shared array pointers. Because the filter stays in the pipeline, upstream
+// updates (selector changes, realization swap, property addDataArray)
+// propagate naturally through the standard VTK Modified/RequestData flow.
+// Use this when you want a live, lightweight view of a specific block.
+void vtkEPCCollector::ExtractWithoutCopy(vtkSMSourceProxy* readerProxy, int index)
+{
+	vtkSMSessionProxyManager* sessionProxyManager = vtkSMProxyManager::GetProxyManager()->GetActiveSessionProxyManager();
 
 	vtkSMSourceProxy* extract = vtkSMSourceProxy::SafeDownCast(sessionProxyManager->NewProxy("filters", "EnergisticsExtractor"));
 	if (!extract)
@@ -478,11 +532,11 @@ void vtkEPCCollector::Extract(vtkSMSourceProxy* readerProxy, int index)
 		return;
 	}
 
-	// set the input
 	vtkSMInputProperty* inputProperty = vtkSMInputProperty::SafeDownCast(extract->GetProperty("Input"));
 	if (!inputProperty)
 	{
 		vtkWarningMacro(<< "EnergisticsExtractor proxy has no Input property.");
+		extract->Delete();
 		return;
 	}
 	inputProperty->SetInputConnection(0, readerProxy, 0);
@@ -509,50 +563,113 @@ void vtkEPCCollector::Extract(vtkSMSourceProxy* readerProxy, int index)
 		}
 	}
 
-
-
 	extract->UpdateVTKObjects();
 	extract->UpdatePipelineInformation();
 
 	vtkNew<vtkSMParaViewPipelineController> controller;
 	controller->InitializeProxy(extract);
-	controller->RegisterPipelineProxy(extract, list->GetValue(index).c_str());
+	controller->RegisterPipelineProxy(extract, DataSetListForCopy->GetValue(index).c_str());
+	extract->Delete();
 }
 
 //----------------------------------------------------------------------------
-// Create a new vtkDataSet pipeline
-void vtkEPCCollector::Copy(vtkSMSourceProxy* readerProxy, int index)
+// Programmatic per-representation extractor used by fespp_on_trame.
+// Aligns with the "WithoutCopy" semantics: creates an EnergisticsExtractor
+// FILTER chained on this collector (registered in the "filters" group). The
+// filter does a ShallowCopy in RequestData, so upstream changes (selector
+// add, realization swap, property addDataArray) propagate naturally — no
+// explicit Modified() bump required from the Python side.
+//
+// Idempotent: repeated calls for the same rep_path return the existing
+// registration name (cached in repProducerNames).
+//
+// Property command: triggers the per-rep filter creation and stores the
+// registration name in lastExtractedProducerName for the info-only readback
+// (GetExtractedRepProducerName). The Python side reads that name and
+// resolves it via the proxy manager (filters group).
+void vtkEPCCollector::SetExtractRepPath(const char* rep_path)
 {
-	vtkSMSessionProxyManager* sessionProxyManager = vtkSMProxyManager::GetProxyManager()->GetActiveSessionProxyManager();
-
-	vtkSmartPointer<vtkStringArray> list = nullptr;
-	std::map<std::string, bool> map;
-
-	list = DataSetListForCopy;
-
-	vtkSMSourceProxy* producerCopyProxy = vtkSMSourceProxy::SafeDownCast(sessionProxyManager->NewProxy("sources", "PVTrivialProducer"));
-	if (!producerCopyProxy)
-	{
-		vtkWarningMacro(<< "Failed to create PVTrivialProducer proxy.");
+	if (!lastExtractedProducerName)
+		lastExtractedProducerName = vtkSmartPointer<vtkStringArray>::New();
+	lastExtractedProducerName->SetNumberOfValues(0);
+	if (rep_path == nullptr || rep_path[0] == '\0')
 		return;
-	}
-	producerCopyProxy->UpdateVTKObjects();
-
-	auto* clientSideObject = producerCopyProxy->GetClientSideObject();
-	vtkPVTrivialProducer* realProducer = vtkPVTrivialProducer::SafeDownCast(clientSideObject);
-	if (realProducer)
+	const std::string key(rep_path);
+	vtkSMSessionProxyManager* spm = vtkSMProxyManager::GetProxyManager()->GetActiveSessionProxyManager();
+	auto cached = repProducerNames.find(key);
+	if (cached != repProducerNames.end())
 	{
-		vtkSmartPointer<vtkPartitionedDataSetCollection> pdc = repository.getVtkPartitionedDatasSetCollection();
-		if (!pdc)
+		// Reuse only if the registered proxy still exists; the Python side
+		// may have called Delete() on a previous release() and we'd return
+		// a stale name otherwise. Search the "filters" group (where
+		// RegisterPipelineProxy puts EnergisticsExtractor) and fall back to
+		// "sources" for compatibility with old saved sessions.
+		if (spm && (spm->GetProxy("filters", cached->second.c_str()) != nullptr
+		            || spm->GetProxy("sources", cached->second.c_str()) != nullptr))
 		{
-			vtkWarningMacro(<< "No data available to copy.");
+			lastExtractedProducerName->InsertNextValue(cached->second);
 			return;
 		}
-		vtkPartitionedDataSet* partitionedDataSet = pdc->GetPartitionedDataSet(index);
-		realProducer->SetOutput(partitionedDataSet->GetPartitionAsDataObject(0));
+		repProducerNames.erase(cached);
 	}
 
-	sessionProxyManager->RegisterProxy("sources", list->GetValue(index).c_str(), producerCopyProxy);
+	vtkDataAssembly* assembly = repository.GetAssembly();
+	if (!assembly)
+		return;
+	int node = assembly->GetFirstNodeByPath(rep_path);
+	if (node < 0)
+		return;
+	auto indices = assembly->GetDataSetIndices(node);
+	if (indices.empty())
+		return;
+
+	vtkSMSourceProxy* readerProxy = GetThisProxy();
+	if (!readerProxy)
+		return;
+
+	vtkSMSourceProxy* extract = vtkSMSourceProxy::SafeDownCast(spm->NewProxy("filters", "EnergisticsExtractor"));
+	if (!extract)
+	{
+		vtkWarningMacro(<< "Failed to create EnergisticsExtractor for " << rep_path);
+		return;
+	}
+
+	vtkSMInputProperty* inputProperty = vtkSMInputProperty::SafeDownCast(extract->GetProperty("Input"));
+	if (!inputProperty)
+	{
+		vtkWarningMacro(<< "EnergisticsExtractor has no Input property.");
+		extract->Delete();
+		return;
+	}
+	inputProperty->SetInputConnection(0, readerProxy, 0);
+
+	vtkSMPropertyHelper(extract, "ExtractPath").Set(rep_path);
+	extract->UpdateVTKObjects();
+	extract->UpdatePipelineInformation();
+
+	// Build a registration name unique per rep_path. The leading '/' and any
+	// '/' in the path are not valid in proxy registration names.
+	std::string regName = "rep";
+	for (const char* p = rep_path; *p; ++p)
+		regName += (*p == '/' ? '_' : *p);
+
+	vtkNew<vtkSMParaViewPipelineController> controller;
+	controller->InitializeProxy(extract);
+	controller->RegisterPipelineProxy(extract, regName.c_str());
+	extract->Delete();
+
+	repProducerNames[key] = regName;
+	lastExtractedProducerName->InsertNextValue(regName);
+}
+
+// Info-only readback: returns a 1-element vtkStringArray with the
+// registration name set by the most recent SetExtractRepPath call. Empty
+// array if SetExtractRepPath failed or wasn't called.
+vtkStringArray* vtkEPCCollector::GetExtractedRepProducerName()
+{
+	if (!lastExtractedProducerName)
+		lastExtractedProducerName = vtkSmartPointer<vtkStringArray>::New();
+	return lastExtractedProducerName;
 }
 
 //----------------------------------------------------------------------------

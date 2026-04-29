@@ -56,11 +56,23 @@
 			<IntVectorProperty name="ExtractTag" command="GetExtractTag" information_only="1">
 			</IntVectorProperty>
 
+			<!-- extractMode=1 shows DataSetListForCopy → ExtractWithoutCopy: a
+			     SUB-SOURCE filter (EnergisticsExtractor in the "filters" group),
+			     ShallowCopy in RequestData. The filter is chained on this
+			     collector so it tracks upstream changes (selectors, realization
+			     swap, property addDataArray) through the standard pipeline.
+			     extractMode=2 shows DataSetList → ExtractWithCopy: a STANDALONE
+			     snapshot (PVTrivialProducer in the "sources" group) holding a
+			     one-shot DeepCopy. Detached from this collector's pipeline —
+			     does NOT track upstream changes. Use for export / comparison.
+			     The internal property names (DataSetList / DataSetListForCopy)
+			     are kept as-is for backwards compatibility with saved state
+			     files. -->
 			<IntVectorProperty name="extractMode" number_of_elements="1" default_values="0" label="">
 				<EnumerationDomain name="enum">
 					<Entry text="Extract..." value="0" />
-					<Entry text="Extract with copy" value="1" />
-					<Entry text="Extract without copy" value="2" />
+					<Entry text="Extract without copy" value="1" />
+					<Entry text="Extract with copy" value="2" />
 				</EnumerationDomain>
 				<Hints>
 					<PropertyWidgetDecorator type="GenericDecorator" mode="visibility" property="ExtractTag" value="0"/>
@@ -70,7 +82,8 @@
 			<StringVectorProperty command="GetAllDataSet" information_only="1" name="DataSetInfo">
 				<StringArrayHelper />
 			</StringVectorProperty>
-			<StringVectorProperty name="DataSetList" command="SetDataSetList" clean_command="ClearDataSetList" number_of_elements="2" repeat_command="1" number_of_elements_per_command="2" element_types="2 0" label="object to extract">
+			<!-- DataSetList: shown when extractMode=2 ("Extract with copy"). Internal name kept for state-file backwards compat. -->
+			<StringVectorProperty name="DataSetList" command="SetDataSetList" clean_command="ClearDataSetList" number_of_elements="2" repeat_command="1" number_of_elements_per_command="2" element_types="2 0" label="object to copy">
 				<ArraySelectionDomain name="array_list">
 					<RequiredProperties>
 						<Property function="DataSetInfo" name="DataSetInfo" />
@@ -86,7 +99,8 @@
 			<StringVectorProperty command="GetAllDataSetForCopy" information_only="1" name="DataSetInfoForCopy">
 				<StringArrayHelper />
 			</StringVectorProperty>
-			<StringVectorProperty name="DataSetListForCopy" command="SetDataSetListForCopy" clean_command="ClearDataSetListForCopy" number_of_elements="2" repeat_command="1" number_of_elements_per_command="2" element_types="2 0" label="object to copy">
+			<!-- DataSetListForCopy: shown when extractMode=1 ("Extract without copy"). Internal name kept for state-file backwards compat. -->
+			<StringVectorProperty name="DataSetListForCopy" command="SetDataSetListForCopy" clean_command="ClearDataSetListForCopy" number_of_elements="2" repeat_command="1" number_of_elements_per_command="2" element_types="2 0" label="object to extract">
 				<ArraySelectionDomain name="array_list">
 					<RequiredProperties>
 						<Property function="DataSetInfoForCopy" name="DataSetInfoForCopy" />
@@ -97,6 +111,27 @@
 					<PropertyWidgetDecorator type="GenericDecorator" mode="visibility" property="ExtractTag" value="0"/>
 					<WidgetHeight number_of_rows="20" />
 				</Hints>
+			</StringVectorProperty>
+
+			<!-- Programmatic per-rep extract used by fespp_on_trame.
+			     Setting ExtractRepPath to a rep_path triggers SetExtractRepPath
+			     in C++ which creates an EnergisticsExtractor filter chained on
+			     this collector (registered in the "filters" group) and stores
+			     the registration name. The filter does ShallowCopy in
+			     RequestData, so upstream changes propagate naturally — no
+			     explicit Modified() bump from Python is needed. The info-only
+			     ExtractedRepProducerName property exposes the registration name
+			     back to Python so it can resolve the proxy via the proxy
+			     manager (filters group, fall back to sources for legacy).
+			     panel_visibility="never" hides them from the GUI; they are
+			     only meant to be driven programmatically. -->
+			<StringVectorProperty name="ExtractRepPath" command="SetExtractRepPath"
+				number_of_elements="1" panel_visibility="never">
+			</StringVectorProperty>
+			<StringVectorProperty name="ExtractedRepProducerName"
+				command="GetExtractedRepProducerName" information_only="1"
+				panel_visibility="never">
+				<StringArrayHelper />
 			</StringVectorProperty>
 
 			<!-- Wellbore marker properties: -->

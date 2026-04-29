@@ -30,6 +30,7 @@ VtkAssembly => TreeView:
 #include "ResqmlDataRepositoryToVtkPartitionedDataSetCollection.h"
 
 #include <algorithm>
+#include <chrono>
 #include <vector>
 #include <set>
 #include <list>
@@ -1479,7 +1480,14 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchRealiza
 
 std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::selectNodeId(int p_node)
 {
-	_currentSelection.clear();
+	// _currentSelection accumulates within a batch (one batch = ParaView
+	// pushing the full Selectors list, which starts with ClearSelectors →
+	// clearSelection() → _currentSelection.clear()). Earlier this function
+	// cleared _currentSelection itself, but that only worked because each
+	// AddSelector call ran a full pipeline Update before the next clear.
+	// With Update() removed for performance (one batched execution at the
+	// end), clearing here would leave only the LAST AddSelector's nodes
+	// visible to RequestData, dropping every prior selector in the batch.
 	if (p_node != 0)
 	{
 		selectNodeIdParent(p_node);
@@ -1994,9 +2002,12 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::addDataToParent(cons
  */
 void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::deleteMapper()
 {
-	// initialization the output (VtkPartitionedDatasSetCollection) with same vtkDataAssembly
-	vtkSmartPointer<vtkDataAssembly> w_Assembly = vtkSmartPointer<vtkDataAssembly>::New();
-	w_Assembly->DeepCopy(_output->GetDataAssembly());
+	// Reuse the existing assembly pointer instead of DeepCopy: the previous
+	// _output still owns the assembly while we hold a smart pointer to it,
+	// so it survives the _output reassignment. Skipping DeepCopy saves
+	// O(assembly_size) work — the assembly grows with N grids/properties
+	// and DeepCopy was a measurable per-add cost.
+	vtkSmartPointer<vtkDataAssembly> w_Assembly = _output->GetDataAssembly();
 	_output = vtkSmartPointer<vtkPartitionedDataSetCollection>::New();
 	_output->SetDataAssembly(w_Assembly);
 
@@ -2216,6 +2227,12 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::deleteMapper()
 
 vtkPartitionedDataSetCollection* ResqmlDataRepositoryToVtkPartitionedDataSetCollection::getVtkPartitionedDatasSetCollection(const double p_time, const uint32_t p_nbProcess, const uint32_t p_processId)
 {
+	using clk = std::chrono::steady_clock;
+	const auto t_start = clk::now();
+	auto ms_since = [&t_start](const clk::time_point& t) {
+		return std::chrono::duration_cast<std::chrono::milliseconds>(t - t_start).count();
+	};
+
 	// Detect a TimeControl/realization change. On such a change, ParaView
 	// triggers RequestData without a fresh selectNodeId batch, so
 	// _currentSelection is stale (= last node added). We must iterate
@@ -2228,45 +2245,44 @@ vtkPartitionedDataSetCollection* ResqmlDataRepositoryToVtkPartitionedDataSetColl
 
 	if (timeChanged)
 		_selectionCleared = true;
-	ResetResqmlColor();
 
+	const auto t0 = clk::now();
+	ResetResqmlColor();
+	const auto t1 = clk::now();
 	addResqmlColor();
+	const auto t2 = clk::now();
 
 	if (_selectionCleared) {
 		deleteMapper();
 	}
+	const auto t3 = clk::now();
 
 	const std::set<int>& nodesToProcess = isTimeOrRealChange ? _selection : _currentSelection;
+	vtkOutputWindowDisplayText(("[PERF getVPDSC] enter timeOrReal=" + std::string(isTimeOrRealChange ? "1" : "0")
+		+ " currentSel=" + std::to_string(_currentSelection.size())
+		+ " selection=" + std::to_string(_selection.size())
+		+ " nodesToProcess=" + std::to_string(nodesToProcess.size())
+		+ " ResetColor=" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count()) + "ms"
+		+ " addColor=" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count()) + "ms"
+		+ " deleteMapper=" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(t3 - t2).count()) + "ms\n").c_str());
 
-	// On a TimeControl/Realization change, only swap the data of the property
-	// currently displayed as the active scalar. Other selected properties keep
-	// their current data unchanged (their array would not be visible anyway).
-	// Comparison uses MakeValidNodeName since property titles are sanitized
-	// before being set as VTK array names — that is the form ParaView returns
-	// in ColorArrayName.
-	std::string activeColorArrayName;
-	if (isTimeOrRealChange)
-	{
-		vtkSMPVRepresentationProxy* rep = getRepresentation();
-		if (rep && rep->GetProperty("ColorArrayName"))
-		{
-			vtkSMPropertyHelper helper(rep, "ColorArrayName");
-			if (helper.GetNumberOfElements() >= 5)
-			{
-				const char* name = helper.GetAsString(4);
-				if (name) activeColorArrayName = name;
-			}
-		}
-	}
-
-	// vtkParitionedDataSetCollection - hierarchy - build
-	// foreach selection node init object
+	// vtkParitionedDataSetCollection - hierarchy - build.
+	// On a TimeControl/Realization change we run addDataToParent for EVERY
+	// selected Data node (not only the active scalar). The wasSwap flag in
+	// addDataToParent guarantees that a non-active multireal swapped in the
+	// background does NOT steal the active color (autoActivate=false).
+	// Rationale: keeping every loaded array in sync with the cursor means
+	// activating any prop later shows the right realization without lazy
+	// catch-up logic to maintain. See git log for the earlier active-only
+	// skip and why it was abandoned (state divergence on activation).
+	const auto t_iter_start = clk::now();
 	auto w_it = nodesToProcess.begin();
 	while (w_it != nodesToProcess.end())
 	{
 		uint32_t w_typeValue;
 		_output->GetDataAssembly()->GetAttribute(*w_it, "type", w_typeValue);
 		TreeViewNodeType w_type = static_cast<TreeViewNodeType>(w_typeValue);
+		const std::string nodeUuid = std::string(_output->GetDataAssembly()->GetNodeName(*w_it)).substr(1);
 
 		// init MapperSet && save nodeId for attach to vtkPartitionedDataSetcollection
 		if (getMapperType(w_type) == MapperType::MapperSet)
@@ -2274,7 +2290,11 @@ vtkPartitionedDataSetCollection* ResqmlDataRepositoryToVtkPartitionedDataSetColl
 			// initialize mapperSet with nodeId
 			if (_nodeIdToMapperSet.find(*w_it) == _nodeIdToMapperSet.end())
 			{
+				const auto ti0 = clk::now();
 				initMapperSet(w_type, *w_it, p_nbProcess, p_processId);
+				const auto ti1 = clk::now();
+				vtkOutputWindowDisplayText(("[PERF init] MapperSet uuid=" + nodeUuid
+					+ " " + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(ti1 - ti0).count()) + "ms\n").c_str());
 			}
 			++w_it;
 		}
@@ -2283,7 +2303,15 @@ vtkPartitionedDataSetCollection* ResqmlDataRepositoryToVtkPartitionedDataSetColl
 			// load mapper with nodeId
 			if (_nodeIdToMapper.find(*w_it) == _nodeIdToMapper.end())
 			{
+				const auto ti0 = clk::now();
 				loadMapper(w_type, *w_it, p_nbProcess, p_processId);
+				const auto ti1 = clk::now();
+				vtkOutputWindowDisplayText(("[PERF init] Mapper uuid=" + nodeUuid
+					+ " " + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(ti1 - ti0).count()) + "ms\n").c_str());
+			}
+			else
+			{
+				vtkOutputWindowDisplayText(("[PERF init] Mapper uuid=" + nodeUuid + " (cached, skip)\n").c_str());
 			}
 			++w_it;
 		}
@@ -2293,58 +2321,23 @@ vtkPartitionedDataSetCollection* ResqmlDataRepositoryToVtkPartitionedDataSetColl
 		}
 		else if (getMapperType(w_type) == MapperType::Data)
 		{
-			// On a TimeControl/Realization change, skip Data nodes that are
-			// not the active scalar. Their data stays unchanged — re-running
-			// the swap would either steal the active color or clear data when
-			// the new step has no entry for this property.
-			if (isTimeOrRealChange && !activeColorArrayName.empty())
-			{
-				const char* propTitleAttr = nullptr;
-				_output->GetDataAssembly()->GetAttribute(*w_it, "propTitle", propTitleAttr);
-				std::string propVtkName;
-				if (propTitleAttr != nullptr)
-				{
-					propVtkName = MakeValidNodeName(propTitleAttr);
-				}
-				else
-				{
-					// Plain Properties / TimeSeries node (no propTitle attribute):
-					// resolve the title from the repository via the node UUID.
-					std::string w_uuid = std::string(_output->GetDataAssembly()->GetNodeName(*w_it)).substr(1);
-					if (w_type == TreeViewNodeType::TimeSeries && w_uuid.size() > 36)
-					{
-						// pick any concrete property UUID for this TS node to read its title
-						const std::string tsUuid = w_uuid.substr(0, 36);
-						const std::string title  = w_uuid.substr(36);
-						auto tsIt = _timeSeriesUuidAndTitleToIndexAndPropertiesUuid.find(tsUuid);
-						if (tsIt != _timeSeriesUuidAndTitleToIndexAndPropertiesUuid.end())
-						{
-							auto nameIt = tsIt->second.find(title);
-							if (nameIt != tsIt->second.end() && !nameIt->second.empty())
-							{
-								if (auto* obj = _repository->getDataObjectByUuid(nameIt->second.begin()->second))
-									propVtkName = MakeValidNodeName(obj->getTitle().c_str());
-							}
-						}
-					}
-					else if (w_type == TreeViewNodeType::Properties)
-					{
-						if (auto* obj = _repository->getDataObjectByUuid(w_uuid))
-							propVtkName = MakeValidNodeName(obj->getTitle().c_str());
-					}
-				}
-
-				if (propVtkName != activeColorArrayName)
-				{
-					++w_it;
-					continue;
-				}
-			}
+			const auto ti0 = clk::now();
 			addDataToParent(w_type, *w_it, p_nbProcess, p_processId);
+			const auto ti1 = clk::now();
+			const auto dur = std::chrono::duration_cast<std::chrono::milliseconds>(ti1 - ti0).count();
+			if (dur > 0)
+			{
+				vtkOutputWindowDisplayText(("[PERF init] Data type=" + std::to_string(static_cast<int>(w_type))
+					+ " uuid=" + nodeUuid + " " + std::to_string(dur) + "ms\n").c_str());
+			}
 			++w_it;
 		}
 	}
+	const auto t_iter_end = clk::now();
+	vtkOutputWindowDisplayText(("[PERF getVPDSC] init loop total="
+		+ std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(t_iter_end - t_iter_start).count()) + "ms\n").c_str());
 
+	const auto t_load_start = clk::now();
 	unsigned int w_PartitionIndex = _output->GetNumberOfPartitionedDataSets();
 	// foreach selection node load object — same source as the init loop above.
 	for (const int w_nodeSelection : nodesToProcess)
@@ -2352,6 +2345,7 @@ vtkPartitionedDataSetCollection* ResqmlDataRepositoryToVtkPartitionedDataSetColl
 		uint32_t w_typeValue;
 		_output->GetDataAssembly()->GetAttribute(w_nodeSelection, "type", w_typeValue);
 		TreeViewNodeType w_type = static_cast<TreeViewNodeType>(w_typeValue);
+		const std::string nodeUuid = std::string(_output->GetDataAssembly()->GetNodeName(w_nodeSelection)).substr(1);
 
 		if (getMapperType(w_type) == MapperType::MapperSet)
 		{
@@ -2360,7 +2354,11 @@ vtkPartitionedDataSetCollection* ResqmlDataRepositoryToVtkPartitionedDataSetColl
 			{
 				try
 				{
+					const auto tl0 = clk::now();
 					_nodeIdToMapperSet[w_nodeSelection]->loadVtkObject();
+					const auto tl1 = clk::now();
+					vtkOutputWindowDisplayText(("[PERF load] MapperSet uuid=" + nodeUuid
+						+ " " + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(tl1 - tl0).count()) + "ms\n").c_str());
 
 					for (auto partition : _nodeIdToMapperSet[w_nodeSelection]->getMapperSet())
 					{
@@ -2400,12 +2398,20 @@ vtkPartitionedDataSetCollection* ResqmlDataRepositoryToVtkPartitionedDataSetColl
 		}
 	}
 
+	const auto t_load_end = clk::now();
+	vtkOutputWindowDisplayText(("[PERF getVPDSC] load loop total="
+		+ std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(t_load_end - t_load_start).count()) + "ms\n").c_str());
+
 	_selectionCleared = false;
 	_output->Modified();
 	// Commit the cursors so subsequent calls with no further changes see
 	// changed()==false (no swap). Next external set() will bump old again.
 	_timeStepCursor.commit();
 	_realizationCursor.commit();
+
+	const auto t_end = clk::now();
+	vtkOutputWindowDisplayText(("[PERF getVPDSC] TOTAL "
+		+ std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(t_end - t_start).count()) + "ms\n").c_str());
 	return _output;
 }
 
