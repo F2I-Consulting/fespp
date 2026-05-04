@@ -119,6 +119,15 @@ public:
    */
   vtkGetMacro(AssemblyTag, int);
 
+  /**
+   * Live pointer to the data assembly held by the underlying repository
+   * (the same one returned by GetAssembly), exposed under a unique name
+   * to avoid any conflict with the parent class's wrapping. Used by
+   * fespp_on_trame to read the freshly-rebuilt assembly after a
+   * SetTreeHierarchyMode change without paying for a full UpdatePipeline.
+   */
+  vtkDataAssembly* GetLiveAssembly();
+
   vtkGetMacro(ExtractTag, int);
 
   	///@{
@@ -154,6 +163,40 @@ public:
 	 */
 	vtkSetMacro(RealizationIndex, int);
 	vtkGetMacro(RealizationIndex, int);
+	///@}
+
+	///@{
+	/**
+	 * Explicit selection mode. When 0 (default), a selector implicitly
+	 * includes all descendants of the matched node — required for ParaView
+	 * GUI's data_assembly_editor widget which collapses fully-selected
+	 * subtrees to the parent path.
+	 *
+	 * When 1, descendant inclusion is disabled for non-grouping nodes
+	 * (Representation, Property, Trajectory, ...) — the selector is taken
+	 * literally. Grouping nodes (Collection, Wellbore, Partial) still
+	 * propagate so that selecting a Wellbore or a PropertySet folder loads
+	 * everything underneath.
+	 *
+	 * Used by fespp_on_trame to support per-node independent checkboxes in
+	 * its VTreeview UI (the user can pick a grid alone without its
+	 * properties).
+	 */
+	void SetExplicitSelection(bool value);
+	vtkGetMacro(ExplicitSelection, bool);
+	///@}
+
+	///@{
+	/**
+	 * Tree hierarchy mode (TreeHierarchyMode enum in enum.h).
+	 *  0 = Flat (default, legacy behavior).
+	 *  1 = ByInterpretation: reps grouped under their Interpretation parent.
+	 *  2 = ByFeatureAndInterpretation: reps grouped under Feature → Interpretation.
+	 * Changing the mode triggers a rebuild of the data assembly the next time
+	 * RequestData runs.
+	 */
+	void SetTreeHierarchyMode(int value);
+	vtkGetMacro(TreeHierarchyMode, int);
 	///@}
 
 	/**
@@ -296,6 +339,13 @@ private:
 
 	// Active realization index for Realization nodes (multi-realization without TimeSeries)
 	int RealizationIndex = 0;
+
+	// Explicit selection mode (see header doc above). Default false for
+	// backwards compatibility with ParaView GUI's data_assembly_editor.
+	bool ExplicitSelection = false;
+
+	// Tree hierarchy mode. See SetTreeHierarchyMode. Default 0 = Flat.
+	int TreeHierarchyMode = 0;
 
 	// Resqml
 	ResqmlDataRepositoryToVtkPartitionedDataSetCollection repository;

@@ -134,6 +134,54 @@
 				<StringArrayHelper />
 			</StringVectorProperty>
 
+			<!-- ExplicitSelection: when 0 (default), a selector path implicitly
+			     includes all descendants of the matched node — required for
+			     ParaView GUI's data_assembly_editor widget which collapses
+			     fully-selected subtrees to the parent path.
+			     When 1, descendant inclusion is disabled for non-grouping
+			     nodes (Representation, Property, Trajectory, ...) — the
+			     selector is taken literally. Grouping nodes (Collection,
+			     Wellbore, Partial) still propagate so that selecting a
+			     Wellbore folder loads everything underneath.
+			     panel_visibility="never": this is a programmatic flag toggled
+			     by fespp_on_trame at boot, not a user-facing setting. -->
+			<IntVectorProperty name="ExplicitSelection"
+				command="SetExplicitSelection"
+				number_of_elements="1"
+				default_values="0"
+				panel_visibility="never">
+				<BooleanDomain name="bool" />
+			</IntVectorProperty>
+
+			<!-- TreeHierarchyMode: layout of the data assembly tree.
+			     0 = Flat (default, legacy behavior).
+			     1 = ByInterpretation (reps grouped under their Interpretation).
+			     2 = ByFeatureAndInterpretation (reps grouped under Feature → Interpretation).
+			     Visible in ParaView's property panel so a user can switch
+			     layouts without going through fespp_on_trame; switching
+			     triggers a live rebuild of the assembly via SetTreeHierarchyMode
+			     → repository.rebuildAssembly(). -->
+			<IntVectorProperty name="TreeHierarchyMode"
+				label="Tree Hierarchy"
+				command="SetTreeHierarchyMode"
+				number_of_elements="1"
+				default_values="0">
+				<EnumerationDomain name="enum">
+					<Entry value="0" text="Flat" />
+					<Entry value="1" text="By Interpretation" />
+					<Entry value="2" text="By Feature and Interpretation" />
+				</EnumerationDomain>
+				<Documentation>
+					Layout of the data assembly tree. Flat keeps the
+					legacy behavior (representations directly under the
+					root). By Interpretation groups representations under
+					their Interpretation parent. By Feature and
+					Interpretation adds an extra Feature grouping above
+					the Interpretation. Switching rebuilds the assembly
+					in place from the already-loaded fesapi repository.
+				</Documentation>
+			</IntVectorProperty>
+
 			<!-- Wellbore marker properties: -->
 			<!-- enable/disable Marker orientation -->
 			<IntVectorProperty name="MarkerOrientation" command="setMarkerOrientation" number_of_elements="1" default_values="1">

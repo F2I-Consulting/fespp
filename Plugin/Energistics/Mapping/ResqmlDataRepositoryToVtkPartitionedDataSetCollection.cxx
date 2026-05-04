@@ -66,6 +66,7 @@ VtkAssembly => TreeView:
 #include <fesapi/common/EpcDocument.h>
 #include <fesapi/eml2/TimeSeries.h>
 #include <fesapi/resqml2/Grid2dRepresentation.h>
+#include <fesapi/resqml2/AbstractFeature.h>
 #include <fesapi/resqml2/AbstractFeatureInterpretation.h>
 #include <fesapi/resqml2/AbstractIjkGridRepresentation.h>
 #include <fesapi/resqml2/PointSetRepresentation.h>
@@ -80,6 +81,7 @@ VtkAssembly => TreeView:
 #include <fesapi/resqml2/WellboreTrajectoryRepresentation.h>
 #include <fesapi/resqml2/ContinuousProperty.h>
 #include <fesapi/resqml2/DiscreteProperty.h>
+#include <fesapi/resqml2/CategoricalProperty.h>
 #include <fesapi/resqml2/WellboreFeature.h>
 #include <fesapi/resqml2/RepresentationSetRepresentation.h>
 #include <fesapi/resqml2_0_1/PropertySet.h>
@@ -193,6 +195,32 @@ MapperType getMapperType(TreeViewNodeType p_type)
 	default:
 		return MapperType::Folder;
 	}
+}
+
+// Map a RESQML AbstractProperty to the matching TreeView property kind name
+// ("ContinuousProperty" / "DiscreteProperty" / "CategoricalProperty"). Takes
+// the wider AbstractProperty base type so it accepts pointers from both
+// `TimeSeries::getPropertySet()` (returns AbstractProperty*) and
+// `Representation::getValuesPropertySet()` (returns AbstractValuesProperty*).
+// dynamic_cast to a sibling subclass works fine as long as RTTI is enabled
+// (which it is — the existing code at lines ~1054/1082 already uses the same
+// pattern on AbstractValuesProperty pointers).
+//
+// Used to set the "propKind" attribute on synthetic TimeSeries /
+// MultiRealization / MultiRealizationTimeSeries nodes — those collapse the
+// per-time / per-realization sub-tree into a single leaf, so without this
+// attribute the Python side could only see the synthetic kind ("TimeSeries"
+// etc.) and not the underlying property type that drives the icon and the
+// color editor (Categorical/Discrete need a list-of-values editor instead
+// of the continuous LUT editor).
+namespace {
+const char* propKindName(RESQML2_NS::AbstractProperty const* prop)
+{
+	if (dynamic_cast<RESQML2_NS::CategoricalProperty const*>(prop)) return "CategoricalProperty";
+	if (dynamic_cast<RESQML2_NS::DiscreteProperty const*>(prop)) return "DiscreteProperty";
+	if (dynamic_cast<RESQML2_NS::ContinuousProperty const*>(prop)) return "ContinuousProperty";
+	return "Property";
+}
 }
 
 // This function replaces the VTK function this->MakeValidNodeName(),
@@ -422,6 +450,111 @@ namespace
 	}
 }
 
+int ResqmlDataRepositoryToVtkPartitionedDataSetCollection::resolveGroupingParent(
+	resqml2::AbstractRepresentation const* p_representation, int p_parent)
+{
+	// Flat mode (or rep without interpretation): nothing to insert.
+	if (_treeHierarchyMode == TreeHierarchyMode::Flat || p_representation == nullptr)
+	{
+		return p_parent;
+	}
+	auto const* w_interp = p_representation->getInterpretation();
+	if (w_interp == nullptr)
+	{
+		return p_parent;
+	}
+
+	auto* w_assembly = _output->GetDataAssembly();
+	int w_effectiveParent = p_parent;
+
+	// ByFeatureAndInterpretation: insert a Feature node first, then nest
+	// the Interpretation under it.
+	if (_treeHierarchyMode == TreeHierarchyMode::ByFeatureAndInterpretation)
+	{
+		auto const* w_feature = w_interp->getInterpretedFeature();
+		if (w_feature != nullptr)
+		{
+			const std::string w_fNodeName = "_feature_" + w_feature->getUuid();
+			int w_fId = w_assembly->FindFirstNodeWithName(w_fNodeName.c_str());
+			if (w_fId == -1)
+			{
+				w_fId = w_assembly->AddNode(w_fNodeName.c_str(), w_effectiveParent);
+				w_assembly->SetAttribute(w_fId, "type",
+					std::to_string(static_cast<int>(TreeViewNodeType::Feature)).c_str());
+				w_assembly->SetAttribute(w_fId, "kind", "Feature");
+				const std::string w_label = MakeValidNodeName(("Feature_" + w_feature->getTitle()).c_str());
+				w_assembly->SetAttribute(w_fId, "label", w_label.c_str());
+				w_assembly->SetAttribute(w_fId, "title", w_feature->getTitle().c_str());
+			}
+			w_effectiveParent = w_fId;
+		}
+	}
+
+	// Both ByInterpretation and ByFeatureAndInterpretation insert an
+	// Interpretation node (under root, or under the Feature created above).
+	const std::string w_iNodeName = "_interp_" + w_interp->getUuid();
+	int w_iId = w_assembly->FindFirstNodeWithName(w_iNodeName.c_str());
+	if (w_iId == -1)
+	{
+		w_iId = w_assembly->AddNode(w_iNodeName.c_str(), w_effectiveParent);
+		w_assembly->SetAttribute(w_iId, "type",
+			std::to_string(static_cast<int>(TreeViewNodeType::Interpretation)).c_str());
+		w_assembly->SetAttribute(w_iId, "kind", "Interpretation");
+		const std::string w_label = MakeValidNodeName(("Interpretation_" + w_interp->getTitle()).c_str());
+		w_assembly->SetAttribute(w_iId, "label", w_label.c_str());
+		w_assembly->SetAttribute(w_iId, "title", w_interp->getTitle().c_str());
+	}
+	return w_iId;
+}
+
+std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::rebuildAssembly()
+{
+	// Drop every per-node-id cache. They all index by node ids that will
+	// change once the assembly is reset.
+	for (auto& kv : _nodeIdToMapper)
+	{
+		delete kv.second;
+	}
+	_nodeIdToMapper.clear();
+	for (auto& kv : _nodeIdToMapperSet)
+	{
+		delete kv.second;
+	}
+	_nodeIdToMapperSet.clear();
+
+	_selection.clear();
+	_currentSelection.clear();
+	_oldSelection.clear();
+	_selectionCleared = true;
+
+	_blocksColors.clear();
+	_blockColorsMap.clear();
+
+	// Reset the assembly to a fresh empty tree (root only). Re-set the root
+	// name to "data" — Initialize() reverts it to vtkDataAssembly's default
+	// ("DataAssembly"), which would shift every NodePath from "/data/..."
+	// to the default-named root and break Python code that hard-codes
+	// "/data" (e.g. representation.BlockSelectors = ['/data'] in
+	// fespp_engine.py, plus the FindFirstNodeWithName("data") lookups).
+	auto* w_assembly = _output->GetDataAssembly();
+	if (w_assembly != nullptr)
+	{
+		w_assembly->Initialize();
+		w_assembly->SetRootNodeName("data");
+	}
+
+	// Re-traverse every previously loaded file so the in-memory fesapi
+	// repository is reflected in the new tree layout. Data is NOT re-read
+	// from disk — we only rebuild the assembly from objects already in
+	// _repository.
+	std::string w_message;
+	for (const auto& w_fileName : _files)
+	{
+		w_message += buildDataAssemblyFromDataObjectRepo(w_fileName.c_str());
+	}
+	return w_message;
+}
+
 std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::buildDataAssemblyFromDataObjectRepo(const char* p_fileName)
 {
 	std::vector<RESQML2_NS::AbstractRepresentation const*> w_allReps;
@@ -436,10 +569,13 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::buildDataAsse
 	sortAndAdd(_repository->getUnstructuredGridRepresentationSet(), w_allReps);
 
 	// See https://stackoverflow.com/questions/15347123/how-to-construct-a-stdstring-from-a-stdvectorstring
+	// In non-Flat tree hierarchy modes, resolveGroupingParent inserts
+	// Feature/Interpretation grouping nodes above each top-level rep.
 	std::string w_message = std::accumulate(std::begin(w_allReps), std::end(w_allReps), std::string{},
 		[&](std::string& message, RESQML2_NS::AbstractRepresentation const* rep)
 		{
-			return message += searchRepresentations(rep);
+			const int parentNode = resolveGroupingParent(rep, 0);
+			return message += searchRepresentations(rep, parentNode);
 		});
 	// get WellboreTrajectory
 	w_message += searchWellboreTrajectory(p_fileName);
@@ -1001,11 +1137,13 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchTimeSer
 			std::map<std::string, std::vector<int>> w_propertyNameToNodeIdSet;
 			std::map<std::string, double> w_propertyNameToMinPropValue;
 			std::map<std::string, double> w_propertyNameToMaxPropValue;
+			std::map<std::string, std::string> w_propertyNameToKind;
 			for (auto* w_prop : w_timeSeries->getPropertySet())
 			{
 				if (w_prop->getXmlTag() == RESQML2_NS::ContinuousProperty::XML_TAG ||
 					w_prop->getXmlTag() == RESQML2_NS::DiscreteProperty::XML_TAG)
 				{
+					w_propertyNameToKind[w_prop->getTitle()] = propKindName(w_prop);
 					auto w_nodeId = (_output->GetDataAssembly()->FindFirstNodeWithName(("_" + w_prop->getUuid()).c_str()));
 					if (w_nodeId == -1)
 					{
@@ -1133,6 +1271,10 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchTimeSer
 				_output->GetDataAssembly()->SetAttribute(w_nodeId, "type", std::to_string(static_cast<int>(TreeViewNodeType::TimeSeries)).c_str());
 				_output->GetDataAssembly()->SetAttribute(w_nodeId, "kind", treeViewNodeTypeName(TreeViewNodeType::TimeSeries));
 				_output->GetDataAssembly()->SetAttribute(w_nodeId, "title", w_myPair.first.c_str());
+				if (auto kindIt = w_propertyNameToKind.find(w_myPair.first); kindIt != w_propertyNameToKind.end())
+				{
+					_output->GetDataAssembly()->SetAttribute(w_nodeId, "propKind", kindIt->second.c_str());
+				}
 				if (auto it = w_propertyNameToMinPropValue.find(w_myPair.first); it != w_propertyNameToMinPropValue.end())
 				{
 					_output->GetDataAssembly()->SetAttribute(w_nodeId, "minvalue", std::to_string(static_cast<double>(it->second)).c_str());
@@ -1163,6 +1305,7 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchRealiza
 	std::map<std::string, int> propertyNameToParentNode;
 	std::map<std::string, double> propertyNameToGlobalMin;
 	std::map<std::string, double> propertyNameToGlobalMax;
+	std::map<std::string, std::string> propertyNameToKind;
 
 	// Iterate through all representations in the repository
 	std::vector<RESQML2_NS::AbstractRepresentation const*> w_allReps;
@@ -1246,6 +1389,12 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchRealiza
 
 					// Collect all nodes for this property (different realizations)
 					propertyNameToNodeIdSet[propTitle].push_back(w_nodeId);
+
+					// Record the underlying property kind for the synthetic node.
+					if (propertyNameToKind.find(propTitle) == propertyNameToKind.end())
+					{
+						propertyNameToKind[propTitle] = propKindName(prop);
+					}
 
 					// Remember the parent (same for all realizations of a property)
 					if (propertyNameToParentNode.find(propTitle) == propertyNameToParentNode.end())
@@ -1369,6 +1518,10 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchRealiza
 		_output->GetDataAssembly()->SetAttribute(w_nodeId, "kind", treeViewNodeTypeName(TreeViewNodeType::MultiRealization));
 		_output->GetDataAssembly()->SetAttribute(w_nodeId, "title", w_vtkValidName.c_str());
 		_output->GetDataAssembly()->SetAttribute(w_nodeId, "propTitle", propName.c_str());
+		if (auto kindIt = propertyNameToKind.find(propName); kindIt != propertyNameToKind.end())
+		{
+			_output->GetDataAssembly()->SetAttribute(w_nodeId, "propKind", kindIt->second.c_str());
+		}
 		_output->GetDataAssembly()->SetAttribute(w_nodeId, "realization_count",
 			std::to_string(_realizationTitleToIndexAndPropertiesUuid[propName].size()).c_str());
 		// CSV of actual realization indices (e.g. "23,24") — fespp_on_trame
@@ -1400,6 +1553,7 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchRealiza
 		double globalMin = std::numeric_limits<double>::max();
 		double globalMax = std::numeric_limits<double>::lowest();
 		bool hasMinMax = false;
+		std::string mrtsKind;
 
 		for (const auto& [realIdx, timeMap] : realizationMap)
 		{
@@ -1413,6 +1567,10 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchRealiza
 				nodesToRemove.push_back(nodeId);
 
 				auto* prop = _repository->getDataObjectByUuid<RESQML2_NS::AbstractValuesProperty>(propUuid);
+				if (mrtsKind.empty() && prop)
+				{
+					mrtsKind = propKindName(prop);
+				}
 				if (auto* contProp = dynamic_cast<RESQML2_NS::ContinuousProperty*>(prop))
 				{
 					const auto minV = static_cast<double>(contProp->getMinimumValue());
@@ -1443,6 +1601,10 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchRealiza
 		_output->GetDataAssembly()->SetAttribute(w_nodeId, "kind", treeViewNodeTypeName(TreeViewNodeType::MultiRealizationTimeSeries));
 		_output->GetDataAssembly()->SetAttribute(w_nodeId, "title", w_vtkValidName.c_str());
 		_output->GetDataAssembly()->SetAttribute(w_nodeId, "propTitle", propName.c_str());
+		if (!mrtsKind.empty())
+		{
+			_output->GetDataAssembly()->SetAttribute(w_nodeId, "propKind", mrtsKind.c_str());
+		}
 		_output->GetDataAssembly()->SetAttribute(w_nodeId, "realization_count",
 			std::to_string(realizationMap.size()).c_str());
 		// CSV of actual realization indices (e.g. "23,24") — same purpose as above.
@@ -1495,7 +1657,35 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::selectNodeId(
 		_currentSelection.insert(p_node);
 		_oldSelection.erase(p_node);
 	}
-	selectNodeIdChildren(p_node);
+
+	// Children-walk strategy:
+	//   - Legacy mode (_explicitSelection=false) : always propagate to
+	//     descendants. Required for ParaView GUI's data_assembly_editor
+	//     widget which collapses fully-selected subtrees to a single parent
+	//     path — without this, checking a parent in the GUI would only load
+	//     the parent, dropping all the children the user expected.
+	//   - Explicit mode (_explicitSelection=true) : only propagate when the
+	//     node is a pure grouping (Collection, Wellbore, Partial). For real
+	//     objects (Representation, Property, Trajectory, ...) the selector
+	//     is taken literally and children are NOT auto-included. fespp_on_trame
+	//     uses this mode + UI-side expansion (`update_selected` handler)
+	//     to give users per-node independent checkboxes.
+	bool propagateToChildren = !_explicitSelection;
+	if (_explicitSelection && p_node != 0)
+	{
+		uint32_t typeVal = 0;
+		if (_output->GetDataAssembly()->GetAttribute(p_node, "type", typeVal))
+		{
+			if (isGroupingType(static_cast<TreeViewNodeType>(typeVal)))
+			{
+				propagateToChildren = true;
+			}
+		}
+	}
+	if (propagateToChildren)
+	{
+		selectNodeIdChildren(p_node);
+	}
 
 	_selection.insert(_currentSelection.begin(), _currentSelection.end());
 	return "";

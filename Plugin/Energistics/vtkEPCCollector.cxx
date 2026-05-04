@@ -263,6 +263,44 @@ void vtkEPCCollector::setMarkerSize(int size)
 }
 
 //----------------------------------------------------------------------------
+void vtkEPCCollector::SetExplicitSelection(bool value)
+{
+	if (this->ExplicitSelection != value)
+	{
+		this->ExplicitSelection = value;
+		repository.setExplicitSelection(value);
+		Modified();
+	}
+}
+
+//----------------------------------------------------------------------------
+void vtkEPCCollector::SetTreeHierarchyMode(int value)
+{
+	if (this->TreeHierarchyMode != value)
+	{
+		this->TreeHierarchyMode = value;
+		// Fully qualify the enum: the int member also called TreeHierarchyMode
+		// shadows the unqualified name in this scope.
+		repository.setTreeHierarchyMode(static_cast<::TreeHierarchyMode>(value));
+		// Live rebuild — re-traverse the in-memory fesapi repository so the
+		// assembly reflects the new layout without requiring a re-import.
+		// Bump AssemblyTag so the proxy info system signals the change to
+		// downstream consumers (Python's update_data_information reads the
+		// fresh assembly via GetClientSideObject().GetOutput()->GetDataAssembly).
+		repository.rebuildAssembly();
+		// Drop pending-selector paths — their node ids belonged to the
+		// previous assembly layout. Keeping them around would cause
+		// GetFirstNodeByPath to log "Invalid parameters" warnings on each
+		// RequestData. The user must re-check what they want under the
+		// new layout.
+		selectorNotLoaded.clear();
+		selectors.clear();
+		++this->AssemblyTag;
+		Modified();
+	}
+}
+
+//----------------------------------------------------------------------------
 int vtkEPCCollector::GetMaxRealizationIndex()
 {
 	return static_cast<int>(repository.getMaxRealizationIndex());
@@ -394,6 +432,12 @@ void vtkEPCCollector::PrintSelf(ostream& os, vtkIndent indent)
 
 //----------------------------------------------------------------------------
 vtkDataAssembly* vtkEPCCollector::GetAssembly()
+{
+	return repository.GetAssembly();
+}
+
+//----------------------------------------------------------------------------
+vtkDataAssembly* vtkEPCCollector::GetLiveAssembly()
 {
 	return repository.GetAssembly();
 }

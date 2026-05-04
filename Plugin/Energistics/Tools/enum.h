@@ -54,8 +54,39 @@ enum class TreeViewNodeType
 	// Python uses the string name (via the 'kind' attribute), not the int — so
 	// adding values here is also Python-safe.
 	MultiRealization,
-	MultiRealizationTimeSeries
+	MultiRealizationTimeSeries,
+	// Grouping nodes used by the alternate tree hierarchy modes
+	// (ByInterpretation, ByFeatureAndInterpretation). They have no VTK
+	// object behind them — selecting one propagates to all descendants.
+	Feature,
+	Interpretation
 };
+
+// Three layouts for the tree built from the data repository:
+// - Flat: Representation directly under root (or under Wellbore for wells),
+//   Properties under Rep. Default; matches legacy behavior.
+// - ByInterpretation: Reps are grouped under their Interpretation parent.
+// - ByFeatureAndInterpretation: Reps are grouped under Feature → Interpretation.
+enum class TreeHierarchyMode
+{
+	Flat = 0,
+	ByInterpretation = 1,
+	ByFeatureAndInterpretation = 2
+};
+
+// True when the node is a "pure grouping" — i.e. has no VTK object behind it,
+// just organizes children. Used by the explicit-selection mode to decide
+// whether `selectNodeIdChildren` should propagate downward: groupings DO
+// propagate (selecting a Wellbore loads everything in it), real objects DO
+// NOT (selecting a grid loads only its geometry, not its properties).
+inline bool isGroupingType(TreeViewNodeType p_type)
+{
+	return p_type == TreeViewNodeType::Collection
+		|| p_type == TreeViewNodeType::Wellbore
+		|| p_type == TreeViewNodeType::Partial
+		|| p_type == TreeViewNodeType::Feature
+		|| p_type == TreeViewNodeType::Interpretation;
+}
 
 // String name of a TreeViewNodeType. Used for the 'kind' DataAssembly attribute
 // shared with Python. Keep this list in sync with the enum above.
@@ -81,6 +112,8 @@ inline const char* treeViewNodeTypeName(TreeViewNodeType p_type)
 	case TreeViewNodeType::Partial:                   return "Partial";
 	case TreeViewNodeType::MultiRealization:          return "MultiRealization";
 	case TreeViewNodeType::MultiRealizationTimeSeries:return "MultiRealizationTimeSeries";
+	case TreeViewNodeType::Feature:                   return "Feature";
+	case TreeViewNodeType::Interpretation:            return "Interpretation";
 	}
 	return "Unknown";
 }

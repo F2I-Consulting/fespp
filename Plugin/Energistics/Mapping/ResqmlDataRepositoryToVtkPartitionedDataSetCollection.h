@@ -90,6 +90,28 @@ public:
 	void setMarkerOrientation(bool p_orientation);
 	void setMarkerSize(uint32_t p_size);
 
+	// Selection mode. When false (default), `selectNodeId` propagates to ALL
+	// descendants of the matched node (legacy compat with ParaView GUI's
+	// data_assembly_editor widget). When true, propagation only happens for
+	// pure grouping types (Collection, Wellbore, Partial — see
+	// `isGroupingType` in enum.h). Used by fespp_on_trame for its
+	// independent-selection treeview.
+	void setExplicitSelection(bool value) { _explicitSelection = value; }
+
+	// Layout of the assembly tree. Changing it flags the assembly for a
+	// rebuild — call rebuildAssembly() afterwards to re-traverse the
+	// already-loaded fesapi repository with the new layout. See
+	// TreeHierarchyMode in enum.h.
+	void setTreeHierarchyMode(TreeHierarchyMode mode) { _treeHierarchyMode = mode; }
+
+	// Discards the current vtkDataAssembly + per-node mapper/selection
+	// caches and re-traverses the in-memory fesapi repository to rebuild
+	// it from scratch with the current TreeHierarchyMode. Used to apply a
+	// live mode change without re-reading EPC files from disk. Returns
+	// concatenated warnings/messages from the traversal (same convention
+	// as buildDataAssemblyFromDataObjectRepo).
+	std::string rebuildAssembly();
+
 	vtkPartitionedDataSetCollection *getVtkPartitionedDatasSetCollection(const double p_time, const uint32_t p_nbProcess = 1, const uint32_t p_processId = 0);
 	vtkPartitionedDataSetCollection* getVtkPartitionedDatasSetCollection() { return _output; };
 
@@ -169,6 +191,15 @@ private:
 	int addNodeToDataAssembly(common::AbstractObject const* object,const TreeViewNodeType type, int nodeId_parent); // return new nodeId
 	void addDefaultToDataAssemblyNode(common::AbstractObject const* object, const TreeViewNodeType type, int nodeId);
 
+	// Helper for the alternate tree hierarchy modes (ByInterpretation,
+	// ByFeatureAndInterpretation). Given a top-level representation and a
+	// logical parent (typically 0 = root), returns the effective parent
+	// node id — inserting Feature and/or Interpretation grouping nodes
+	// between root and the rep depending on _treeHierarchyMode. Idempotent:
+	// existing grouping nodes are reused (looked up by uuid). Returns
+	// p_parent unchanged for Flat mode or when the rep has no interpretation.
+	int resolveGroupingParent(resqml2::AbstractRepresentation const* p_representation, int p_parent);
+
 	std::string searchWellboreTrajectory(const std::string& p_fileName);												  // traj
 	std::string searchWellboreFrame(const resqml2::WellboreTrajectoryRepresentation* w_wellboreTrajectory, int p_nodeId); // frame/markerFrame + chanel + marker
 	std::string searchWellboreCompletion(const resqml2::WellboreFeature* w_wellboreTrajectory, int p_nodeId);			  // completion + perforation
@@ -220,6 +251,15 @@ private:
 
 	bool _markerOrientation;
 	uint32_t _markerSize;
+
+	// See setExplicitSelection. Default false → legacy "propagate to all
+	// descendants on selection" behavior preserved for ParaView GUI users.
+	bool _explicitSelection = false;
+
+	// See setTreeHierarchyMode. Default Flat → legacy assembly layout.
+	// Modes ByInterpretation / ByFeatureAndInterpretation insert grouping
+	// nodes (Feature, Interpretation) above the representations.
+	TreeHierarchyMode _treeHierarchyMode = TreeHierarchyMode::Flat;
 
 	common::DataObjectRepository *_repository;
 

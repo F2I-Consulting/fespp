@@ -124,24 +124,29 @@ int vtkEnergisticsExtractor::RequestDataObject(
 	}
 
 	vtkDataObject* currentOutput = outInfo->Get(vtkDataObject::DATA_OBJECT());
-	const char* desiredClass = sample ? sample->GetClassName() : "vtkPolyData";
-	if (!currentOutput || strcmp(currentOutput->GetClassName(), desiredClass) != 0)
+	if (sample)
 	{
-		vtkSmartPointer<vtkDataObject> newOutput;
-		if (sample)
+		// Replace only if the type doesn't match — type-exact NewInstance().
+		const char* desiredClass = sample->GetClassName();
+		if (!currentOutput || strcmp(currentOutput->GetClassName(), desiredClass) != 0)
 		{
-			// Type-exact NewInstance() avoids enumerating every possible class.
+			vtkSmartPointer<vtkDataObject> newOutput;
 			newOutput.TakeReference(sample->NewInstance());
+			outInfo->Set(vtkDataObject::DATA_OBJECT(), newOutput);
 		}
-		else
-		{
-			// Empty placeholder satisfying downstream's "must be a vtkDataSet"
-			// requirement; will be replaced on the next pass once input data
-			// is populated.
-			newOutput.TakeReference(vtkPolyData::New());
-		}
-		outInfo->Set(vtkDataObject::DATA_OBJECT(), newOutput);
 	}
+	else if (!currentOutput)
+	{
+		// First call with no input data ready — use vtkPolyData placeholder.
+		// Will be replaced on the next pass once input is populated.
+		vtkSmartPointer<vtkPolyData> placeholder;
+		placeholder.TakeReference(vtkPolyData::New());
+		outInfo->Set(vtkDataObject::DATA_OBJECT(), placeholder);
+	}
+	// else: input is transiently empty but a previous output type is known
+	// (e.g. vtkExplicitStructuredGrid set by an earlier pass). Keep it —
+	// downgrading to vtkPolyData here breaks downstream filters that
+	// require the original concrete type (ExplicitStructuredGridCrop, …).
 	return 1;
 }
 
