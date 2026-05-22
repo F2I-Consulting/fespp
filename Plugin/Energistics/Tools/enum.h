@@ -30,6 +30,9 @@ enum class MapperType
 	MapperSet
 };
 
+// Tree node kinds set as the "type" attribute on each vtkDataAssembly
+// node. Python (the trame app) reads them as strings via the parallel
+// "kind" attribute — see treeViewNodeTypeName below.
 enum class TreeViewNodeType
 {
 	Unknown,
@@ -48,25 +51,25 @@ enum class TreeViewNodeType
 	Realization,
 	Perforation,
 	Partial,
-	// Synthetic types created by searchRealization() to fold per-realization
-	// (and per-realization+per-timestep) property nodes into a single tree node.
-	// Appended on purpose: existing serialized 'type' int values are unchanged.
-	// Python uses the string name (via the 'kind' attribute), not the int — so
-	// adding values here is also Python-safe.
+	// Synthetic types created by searchRealization() to fold per-
+	// realization (and per-realization+per-timestep) property nodes
+	// into a single tree leaf. Appended on purpose: existing
+	// serialized 'type' int values are unchanged.
 	MultiRealization,
 	MultiRealizationTimeSeries,
-	// Grouping nodes used by the alternate tree hierarchy modes
-	// (ByInterpretation, ByFeatureAndInterpretation). They have no VTK
-	// object behind them — selecting one propagates to all descendants.
+	// Grouping nodes inserted by the alternate tree hierarchy modes
+	// (ByInterpretation, ByFeatureAndInterpretation). They have no
+	// VTK object behind them — selecting one propagates to all
+	// descendants.
 	Feature,
 	Interpretation
 };
 
 // Three layouts for the tree built from the data repository:
-// - Flat: Representation directly under root (or under Wellbore for wells),
-//   Properties under Rep. Default; matches legacy behavior.
-// - ByInterpretation: Reps are grouped under their Interpretation parent.
-// - ByFeatureAndInterpretation: Reps are grouped under Feature → Interpretation.
+// - Flat: representations directly under root (legacy, default).
+// - ByInterpretation: representations grouped under their Interpretation.
+// - ByFeatureAndInterpretation: representations grouped under
+//   Feature → Interpretation.
 enum class TreeHierarchyMode
 {
 	Flat = 0,
@@ -74,22 +77,26 @@ enum class TreeHierarchyMode
 	ByFeatureAndInterpretation = 2
 };
 
-// True when the node is a "pure grouping" — i.e. has no VTK object behind it,
-// just organizes children. Used by the explicit-selection mode to decide
-// whether `selectNodeIdChildren` should propagate downward: groupings DO
-// propagate (selecting a Wellbore loads everything in it), real objects DO
-// NOT (selecting a grid loads only its geometry, not its properties).
+// True when the node is a "pure grouping" — has no VTK object behind
+// it, just organises children. Used by the explicit-selection mode
+// (vtkEPCCollector::ExplicitSelection) to decide whether
+// selectNodeIdChildren should propagate downward: groupings DO
+// propagate (selecting a Wellbore or Feature loads everything in it),
+// real objects DO NOT (selecting a grid loads only its geometry, not
+// its properties).
 inline bool isGroupingType(TreeViewNodeType p_type)
 {
 	return p_type == TreeViewNodeType::Collection
 		|| p_type == TreeViewNodeType::Wellbore
 		|| p_type == TreeViewNodeType::Partial
 		|| p_type == TreeViewNodeType::Feature
-		|| p_type == TreeViewNodeType::Interpretation;
+		|| p_type == TreeViewNodeType::Interpretation
+		|| p_type == TreeViewNodeType::MultiRealization
+		|| p_type == TreeViewNodeType::MultiRealizationTimeSeries;
 }
 
-// String name of a TreeViewNodeType. Used for the 'kind' DataAssembly attribute
-// shared with Python. Keep this list in sync with the enum above.
+// String name of a TreeViewNodeType. Used for the "kind" attribute
+// shared with Python — keep in sync with the enum above.
 inline const char* treeViewNodeTypeName(TreeViewNodeType p_type)
 {
 	switch (p_type)

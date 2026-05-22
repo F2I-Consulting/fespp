@@ -120,11 +120,12 @@ public:
   vtkGetMacro(AssemblyTag, int);
 
   /**
-   * Live pointer to the data assembly held by the underlying repository
-   * (the same one returned by GetAssembly), exposed under a unique name
-   * to avoid any conflict with the parent class's wrapping. Used by
-   * fespp_on_trame to read the freshly-rebuilt assembly after a
-   * SetTreeHierarchyMode change without paying for a full UpdatePipeline.
+   * Live pointer to the data assembly held by the underlying
+   * repository (same instance returned by GetAssembly), exposed
+   * under a unique name to dodge any wrapping conflict with the
+   * parent class's GetAssembly. Used by fespp_on_trame to read the
+   * freshly-rebuilt assembly after SetTreeHierarchyMode without
+   * paying for a full UpdatePipeline.
    */
   vtkDataAssembly* GetLiveAssembly();
 
@@ -159,28 +160,21 @@ public:
 
 	///@{
 	/**
-	 * Index of the active realization for Realization nodes (multi-realization without TimeSeries).
-	 */
-	vtkSetMacro(RealizationIndex, int);
-	vtkGetMacro(RealizationIndex, int);
-	///@}
-
-	///@{
-	/**
-	 * Explicit selection mode. When 0 (default), a selector implicitly
-	 * includes all descendants of the matched node — required for ParaView
-	 * GUI's data_assembly_editor widget which collapses fully-selected
+	 * Explicit selection mode.
+	 * When 0 (default), a selector implicitly includes all descendants
+	 * of the matched node — required for ParaView GUI's
+	 * data_assembly_editor widget which collapses fully-selected
 	 * subtrees to the parent path.
 	 *
 	 * When 1, descendant inclusion is disabled for non-grouping nodes
-	 * (Representation, Property, Trajectory, ...) — the selector is taken
-	 * literally. Grouping nodes (Collection, Wellbore, Partial) still
-	 * propagate so that selecting a Wellbore or a PropertySet folder loads
-	 * everything underneath.
+	 * (Representation, Property, Trajectory, ...) — the selector path
+	 * is taken literally. Grouping nodes (Collection, Wellbore,
+	 * Partial, Feature, Interpretation — see isGroupingType in
+	 * enum.h) still propagate so that selecting a Wellbore or a
+	 * PropertySet folder loads everything underneath.
 	 *
-	 * Used by fespp_on_trame to support per-node independent checkboxes in
-	 * its VTreeview UI (the user can pick a grid alone without its
-	 * properties).
+	 * Used by fespp_on_trame to support per-node independent
+	 * checkboxes in its VTreeview UI.
 	 */
 	void SetExplicitSelection(bool value);
 	vtkGetMacro(ExplicitSelection, bool);
@@ -188,36 +182,18 @@ public:
 
 	///@{
 	/**
-	 * Tree hierarchy mode (TreeHierarchyMode enum in enum.h).
-	 *  0 = Flat (default, legacy behavior).
-	 *  1 = ByInterpretation: reps grouped under their Interpretation parent.
-	 *  2 = ByFeatureAndInterpretation: reps grouped under Feature → Interpretation.
-	 * Changing the mode triggers a rebuild of the data assembly the next time
-	 * RequestData runs.
+	 * Tree hierarchy mode — see TreeHierarchyMode in enum.h.
+	 *   0 = Flat (legacy default).
+	 *   1 = ByInterpretation: reps grouped under their Interpretation.
+	 *   2 = ByFeatureAndInterpretation: reps grouped under
+	 *       Feature → Interpretation.
+	 * Changing the mode triggers an immediate, in-place rebuild of
+	 * the data assembly via repository.rebuildAssembly() — no need to
+	 * re-import the EPC files.
 	 */
 	void SetTreeHierarchyMode(int value);
 	vtkGetMacro(TreeHierarchyMode, int);
 	///@}
-
-	/**
-	 * String-typed setter used by the XML proxy when RealizationIndex is exposed
-	 * as a StringListDomain dropdown (so the user only sees indices that
-	 * actually exist in the loaded data, e.g. "0", "23", "24").
-	 */
-	void SetRealizationIndexAsString(const char* indexStr);
-
-	/**
-	 * Maximum realization index available in the loaded data. Information-only,
-	 * used by ParaView to set the RealizationIndex slider upper bound.
-	 */
-	int GetMaxRealizationIndex();
-
-	/**
-	 * Sorted list of realization indices that actually exist in the loaded data,
-	 * formatted as strings. Information-only, used by the XML proxy to populate
-	 * the RealizationIndex StringListDomain dropdown.
-	 */
-	vtkStringArray* GetAvailableRealizationIndices();
 
 		///@{
      /**
@@ -336,9 +312,6 @@ private:
 	// Wellbores Properties
 	bool MarkerOrientation;
 	int MarkerSize;
-
-	// Active realization index for Realization nodes (multi-realization without TimeSeries)
-	int RealizationIndex = 0;
 
 	// Explicit selection mode (see header doc above). Default false for
 	// backwards compatibility with ParaView GUI's data_assembly_editor.

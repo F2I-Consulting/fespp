@@ -55,9 +55,18 @@ ResqmlPropertyToVtkDataArray::ResqmlPropertyToVtkDataArray(const RESQML2_NS::Abs
 	uint32_t jCellCount,
 	uint32_t kCellCount,
 	uint32_t initKIndex,
-	uint64_t patch_index)
+	uint64_t patch_index,
+	const std::string& nameSuffix)
 {
 	uint64_t nbElement = getNumberOfValues(valuesProperty, cellCount, pointCount);
+
+	// Final VTK array name = sanitized title + caller-supplied suffix.
+	// Empty suffix (default) reproduces the legacy "name == sanitized
+	// title" behaviour; a non-empty suffix (e.g. "_real_3") is used by
+	// the per-property multi-realization load to disambiguate
+	// concurrent realizations of the same property.
+	const std::string w_baseName = MakeValidNodeName(valuesProperty->getTitle().c_str());
+	const std::string w_arrayName = w_baseName + nameSuffix;
 
 	if (nbElement > 0)
 	{
@@ -87,7 +96,7 @@ ResqmlPropertyToVtkDataArray::ResqmlPropertyToVtkDataArray(const RESQML2_NS::Abs
 			{
 				vtkOutputWindowDisplayErrorText("error in : propertyValue->getDimensionsCountOfPatch (values different of 1 or 3)\n");
 			}
-			cellDataFloat->SetName(MakeValidNodeName(valuesProperty->getTitle().c_str()).c_str());
+			cellDataFloat->SetName(w_arrayName.c_str());
 			cellDataFloat->SetArray(valuesFloatSet, nbElement, 0, vtkAbstractArray::VTK_DATA_ARRAY_DELETE);
 			
 			dataArray = cellDataFloat;
@@ -115,7 +124,7 @@ ResqmlPropertyToVtkDataArray::ResqmlPropertyToVtkDataArray(const RESQML2_NS::Abs
 			{
 				vtkOutputWindowDisplayErrorText("error in : propertyValue->getDimensionsCountOfPatch (values different of 1 or 3)\n");
 			}
-			cellDataInt->SetName(MakeValidNodeName(valuesProperty->getTitle().c_str()).c_str());
+			cellDataInt->SetName(w_arrayName.c_str());
 			cellDataInt->SetArray(valuesIntSet, nbElement, 0, vtkAbstractArray::VTK_DATA_ARRAY_DELETE);
 
 			dataArray = cellDataInt;
@@ -143,7 +152,7 @@ ResqmlPropertyToVtkDataArray::ResqmlPropertyToVtkDataArray(const RESQML2_NS::Abs
 			{
 				vtkOutputWindowDisplayErrorText("error in : propertyValue->getDimensionsCountOfPatch (values different of 1 or 3)\n");
 			}
-			cellDataInt->SetName(MakeValidNodeName(valuesProperty->getTitle().c_str()).c_str());
+			cellDataInt->SetName(w_arrayName.c_str());
 			cellDataInt->SetArray(valuesIntSet, nbElement, 0, vtkAbstractArray::VTK_DATA_ARRAY_DELETE);
 
 			dataArray = cellDataInt;
@@ -197,14 +206,21 @@ std::string ResqmlPropertyToVtkDataArray::MakeValidNodeName(const char* p_name)
 ResqmlPropertyToVtkDataArray::ResqmlPropertyToVtkDataArray(resqml2::AbstractValuesProperty const* valuesProperty,
 	uint64_t cellCount,
 	uint64_t pointCount,
-	uint64_t patch_index)
+	uint64_t patch_index,
+	const std::string& nameSuffix)
 {
 	uint64_t numberOfValues = getNumberOfValues(valuesProperty, cellCount, pointCount);
 
 	if (numberOfValues > 0)
 	{
 		const uint64_t elementCountPerValue = valuesProperty->getValueCountPerIndexableElement();
-		const std::string name = valuesProperty->getTitle();
+		// Mirror the multi-processor ctor: append the optional suffix
+		// to the title so the per-property MR load can attach
+		// concurrent realizations under distinct VTK array names.
+		// Note: this code path keeps the historical "use raw title,
+		// no MakeValidNodeName" behaviour for backwards compat — only
+		// the suffix is concatenated.
+		const std::string name = valuesProperty->getTitle() + nameSuffix;
 		const std::string xmlTag = valuesProperty->getXmlTag();
 		if (xmlTag == resqml2::ContinuousProperty::XML_TAG)
 		{

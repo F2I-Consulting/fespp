@@ -55,7 +55,8 @@ ResqmlAbstractRepresentationToVtkPartitionedDataSet::ResqmlAbstractRepresentatio
 {
 }
 
-char * ResqmlAbstractRepresentationToVtkPartitionedDataSet::addDataArray(const std::string& p_uuid, uint32_t p_patchIndex, bool p_autoActivate)
+char * ResqmlAbstractRepresentationToVtkPartitionedDataSet::addDataArray(const std::string& p_uuid, uint32_t p_patchIndex, bool p_autoActivate,
+	const std::string& p_arrayNameSuffix)
 {
 	std::vector<RESQML2_NS::AbstractValuesProperty*> w_valuesPropertySet = getResqmlData()->getValuesPropertySet();
 	std::vector<RESQML2_NS::AbstractValuesProperty*>::iterator w_it = std::find_if(w_valuesPropertySet.begin(), w_valuesPropertySet.end(),
@@ -64,9 +65,37 @@ char * ResqmlAbstractRepresentationToVtkPartitionedDataSet::addDataArray(const s
 
 	if (w_it != std::end(w_valuesPropertySet))
 	{
-		if (_uuidToVtkDataArray.count(p_uuid) == 0) // create new property
+		// If the uuid is already loaded but with a different VTK array
+		// name than what `p_arrayNameSuffix` would produce, force a
+		// reload. Without this guard the per-property multi-realization
+		// flow can't transition a uuid loaded in legacy mode (suffix="")
+		// to per-property mode (suffix="_real_<N>") — the count > 0
+		// check would otherwise short-circuit the re-add.
+		if (_uuidToVtkDataArray.count(p_uuid) > 0)
+		{
+			// Construct the expected name using the same logic each
+			// ctor uses. Hyperslabed ctor goes through MakeValidNodeName;
+			// the non-hyperslabed ctor uses the raw title.
+			auto const* const w_resqmlProp = *w_it;
+			const std::string w_expectedName = _isHyperslabed
+				? (ResqmlPropertyToVtkDataArray::MakeValidNodeName(w_resqmlProp->getTitle().c_str())
+				   + p_arrayNameSuffix)
+				: (w_resqmlProp->getTitle() + p_arrayNameSuffix);
+			const std::string w_actualName = getDataArrayName(p_uuid);
+			if (w_actualName == w_expectedName)
+			{
+				return nullptr; // already loaded under the right name
+			}
+			// Name mismatch (typically a mode transition) — drop and
+			// fall through to recreate with the correct name.
+			deleteDataArray(p_uuid);
+		}
 		{
 			auto const* const w_resqmlProp = *w_it;
+			// The suffix flows through to ResqmlPropertyToVtkDataArray's ctor
+			// where it's appended to the property's sanitized title before
+			// SetName is called on the underlying vtkDataArray. Empty (the
+			// default) means "behave exactly like the legacy code path".
 			ResqmlPropertyToVtkDataArray* w_fesppProperty = _isHyperslabed
 				? new ResqmlPropertyToVtkDataArray(w_resqmlProp,
 					_iCellCount * _jCellCount * (_maxKIndex - _initKIndex),
@@ -75,11 +104,13 @@ char * ResqmlAbstractRepresentationToVtkPartitionedDataSet::addDataArray(const s
 					_jCellCount,
 					_maxKIndex - _initKIndex,
 					_initKIndex,
-					p_patchIndex)
+					p_patchIndex,
+					p_arrayNameSuffix)
 				: new ResqmlPropertyToVtkDataArray(w_resqmlProp,
 					_iCellCount * _jCellCount * _kCellCount,
 					_pointCount,
-					p_patchIndex);
+					p_patchIndex,
+					p_arrayNameSuffix);
 			switch (w_resqmlProp->getAttachmentKind())
 			{
 			case gsoap_eml2_3::eml23__IndexableElement::cells:
@@ -106,6 +137,17 @@ char * ResqmlAbstractRepresentationToVtkPartitionedDataSet::addDataArray(const s
 		throw std::invalid_argument("The property " + p_uuid + "cannot be added since it is not contained in the representation " + getResqmlData()->getUuid());
 	}
 	return nullptr;
+}
+
+std::string ResqmlAbstractRepresentationToVtkPartitionedDataSet::getDataArrayName(const std::string& p_uuid) const
+{
+	auto it = _uuidToVtkDataArray.find(p_uuid);
+	if (it == _uuidToVtkDataArray.end() || it->second == nullptr)
+		return {};
+	auto vtkData = it->second->getVtkData();
+	if (!vtkData || !vtkData->GetName())
+		return {};
+	return std::string(vtkData->GetName());
 }
 
 void ResqmlAbstractRepresentationToVtkPartitionedDataSet::deleteDataArray(const std::string& p_uuid)

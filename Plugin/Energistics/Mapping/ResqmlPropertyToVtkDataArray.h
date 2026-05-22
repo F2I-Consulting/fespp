@@ -23,6 +23,8 @@ under the License.
 #include <vtkSmartPointer.h>
 #include <vtkDataArray.h>
 
+#include <string>
+
 #include <fesapi/nsDefinitions.h>
 
 namespace RESQML2_NS
@@ -43,7 +45,14 @@ class ResqmlPropertyToVtkDataArray
 {
 public:
 	/**
-	 * Constructor for multi-processor
+	 * Constructor for multi-processor.
+	 *
+	 * `nameSuffix` (default empty) is appended verbatim to the
+	 * sanitized property title used as the VTK array name. Used by the
+	 * per-property multi-realization load path to disambiguate
+	 * concurrent realizations of the same property (e.g. "K_real_3"
+	 * vs "K_real_7" both attached to the same partition). When empty,
+	 * the array name is the property's sanitized title as before.
 	 */
 	ResqmlPropertyToVtkDataArray(const RESQML2_NS::AbstractValuesProperty* resqmlProperty,
 		uint64_t cellCount,
@@ -52,22 +61,34 @@ public:
 		uint32_t jCellCount,
 		uint32_t kCellCount,
 		uint32_t initKIndex,
-		uint64_t patch_index);
+		uint64_t patch_index,
+		const std::string& nameSuffix = std::string());
 
 	/**
-	 * Constructor
+	 * Constructor.
+	 *
+	 * `nameSuffix` (default empty) — see the multi-processor ctor above.
 	 */
 	ResqmlPropertyToVtkDataArray(RESQML2_NS::AbstractValuesProperty const* resqmlProperty,
 		uint64_t cellCount,
 		uint64_t pointCount,
-		uint64_t patch_index);
+		uint64_t patch_index,
+		const std::string& nameSuffix = std::string());
 
 	~ResqmlPropertyToVtkDataArray() = default;
 
 	vtkSmartPointer<vtkDataArray> getVtkData() { return dataArray; }
 
+	/**
+	 * Build a VTK-friendly node name from a RESQML title by stripping
+	 * characters outside `[-.0-9A-Z_a-z]`. Exposed publicly so callers
+	 * (e.g. the per-property MR load) can reconstruct the expected VTK
+	 * array name for a given title + suffix without having to know
+	 * which constructor was used to load the data.
+	 */
+	static std::string MakeValidNodeName(const char* p_name);
+
 private:
-	std::string MakeValidNodeName(const char* p_name);
 
 	uint64_t getNumberOfValues(RESQML2_NS::AbstractValuesProperty const* resqmlProperty,
 		uint64_t cellCount,

@@ -198,29 +198,13 @@
 				</Hints>
 			</PropertyGroup>
 
-			<!-- Multi-realization: max index available in the loaded data -->
-			<IntVectorProperty name="MaxRealizationIndex" command="GetMaxRealizationIndex" information_only="1">
-				<SimpleIntInformationHelper />
-			</IntVectorProperty>
-			<!-- Sorted list of realization indices that actually exist in the data,
-			     formatted as strings (e.g. "0", "23", "24"). Drives the dropdown. -->
-			<StringVectorProperty name="AvailableRealizationIndices" command="GetAvailableRealizationIndices" information_only="1">
-				<StringArrayHelper />
-			</StringVectorProperty>
-			<!-- Active realization index (shared across all multi-realization properties).
-			     Exposed as a dropdown so the user only sees indices that exist in the data. -->
-			<StringVectorProperty name="RealizationIndex" command="SetRealizationIndexAsString" number_of_elements="1" default_values="0" label="Realization">
-				<StringListDomain name="list">
-					<RequiredProperties>
-						<Property function="ArrayList" name="AvailableRealizationIndices" />
-					</RequiredProperties>
-				</StringListDomain>
-				<Documentation>Index of the active realization. Applies to every multi-realization property in the data set.</Documentation>
-				<Hints>
-					<!-- Hide the dropdown when there is no multi-realization data (max == 0) -->
-					<PropertyWidgetDecorator type="GenericDecorator" mode="visibility" property="MaxRealizationIndex" value="0" inverse="1" />
-				</Hints>
-			</StringVectorProperty>
+			<!-- Multi-realization selection is driven directly by the data
+			     assembly tree: each MR / MR+TS parent node carries one
+			     child per realization index (type=Properties for MR,
+			     type=TimeSeries for MR+TS), toggled via the standard
+			     BlockSelectors widget. Checking the parent propagates to
+			     all realizations; checking individual children loads a
+			     subset. -->
 		</SourceProxy>
 
 		<!-- ================- - EPC READER - -==================================== -->
@@ -437,6 +421,33 @@
 				<PipelineIcon name=":/pqWidgets/Icons/pqExtractSelection.svg" />
 			</Hints>
 
+		</SourceProxy>
+
+		<!-- ================- - View-scoped clone of EPCCollector - -============== -->
+		<!-- Pass-through filter that ShallowCopy's an upstream             -->
+		<!-- vtkPartitionedDataSetCollection (data + assembly). One         -->
+		<!-- instance per render view in fespp_on_trame: each view's        -->
+		<!-- slice / clip / threshold filters chain off this clone instead  -->
+		<!-- of the shared EPCCollector source. ShallowCopy keeps data      -->
+		<!-- buffers shared — N clones cost N proxies, not N×data.          -->
+		<SourceProxy name="EPCViewClone" class="vtkEPCViewClone" label="EPC view clone">
+			<Documentation long_help="Per-view ShallowCopy passthrough of an EPCCollector.">
+			</Documentation>
+
+			<InputProperty command="SetInputConnection" name="Input">
+				<ProxyGroupDomain name="groups">
+					<Group name="sources" />
+					<Group name="filters" />
+				</ProxyGroupDomain>
+				<DataTypeDomain name="input_type">
+					<DataType value="vtkPartitionedDataSetCollection" />
+				</DataTypeDomain>
+				<Documentation>The EPCCollector source (or another vtkPartitionedDataSetCollection-producing filter) this view clones.</Documentation>
+			</InputProperty>
+
+			<Hints>
+				<Visibility replace_input="0" />
+			</Hints>
 		</SourceProxy>
 	</ProxyGroup>
 

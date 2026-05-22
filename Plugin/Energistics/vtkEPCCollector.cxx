@@ -279,64 +279,23 @@ void vtkEPCCollector::SetTreeHierarchyMode(int value)
 	if (this->TreeHierarchyMode != value)
 	{
 		this->TreeHierarchyMode = value;
-		// Fully qualify the enum: the int member also called TreeHierarchyMode
-		// shadows the unqualified name in this scope.
+		// Qualify the enum explicitly: the int member by the same
+		// name shadows the unqualified token in this scope.
 		repository.setTreeHierarchyMode(static_cast<::TreeHierarchyMode>(value));
-		// Live rebuild — re-traverse the in-memory fesapi repository so the
-		// assembly reflects the new layout without requiring a re-import.
-		// Bump AssemblyTag so the proxy info system signals the change to
-		// downstream consumers (Python's update_data_information reads the
-		// fresh assembly via GetClientSideObject().GetOutput()->GetDataAssembly).
+		// Re-traverse the in-memory fesapi repository so the
+		// assembly reflects the new layout without requiring an EPC
+		// re-import.
 		repository.rebuildAssembly();
-		// Drop pending-selector paths — their node ids belonged to the
-		// previous assembly layout. Keeping them around would cause
-		// GetFirstNodeByPath to log "Invalid parameters" warnings on each
-		// RequestData. The user must re-check what they want under the
-		// new layout.
+		// Drop pending and active selector paths — their node ids
+		// belonged to the previous layout. Keeping them around
+		// would cause GetFirstNodeByPath to log "Invalid parameters"
+		// warnings on each RequestData; the user must re-pick what
+		// they want under the new layout.
 		selectorNotLoaded.clear();
 		selectors.clear();
 		++this->AssemblyTag;
 		Modified();
 	}
-}
-
-//----------------------------------------------------------------------------
-int vtkEPCCollector::GetMaxRealizationIndex()
-{
-	return static_cast<int>(repository.getMaxRealizationIndex());
-}
-
-//----------------------------------------------------------------------------
-void vtkEPCCollector::SetRealizationIndexAsString(const char* indexStr)
-{
-	if (!indexStr || !*indexStr) return;
-	try
-	{
-		const int idx = std::stoi(indexStr);
-		if (idx != RealizationIndex)
-		{
-			RealizationIndex = idx;
-			this->Modified();
-		}
-	}
-	catch (const std::exception&)
-	{
-		// Ignore malformed values; the dropdown will only feed valid ones.
-	}
-}
-
-//----------------------------------------------------------------------------
-vtkStringArray* vtkEPCCollector::GetAvailableRealizationIndices()
-{
-	// Held as a member-like static so the returned pointer stays valid until
-	// the next call (ParaView reads it during proxy update).
-	static vtkSmartPointer<vtkStringArray> result;
-	result = vtkSmartPointer<vtkStringArray>::New();
-	for (uint32_t idx : repository.getAvailableRealizationIndices())
-	{
-		result->InsertNextValue(std::to_string(idx).c_str());
-	}
-	return result;
 }
 
 //------------------------------------------------------------------------------
@@ -394,9 +353,6 @@ int vtkEPCCollector::RequestData(vtkInformation* info,
 	auto* outInfo = outputVector->GetInformationObject(0);
 	// current timeStep value
 	double requestedTimeStep = outInfo->Get(vtkStreamingDemandDrivenPipeline::UPDATE_TIME_STEP());
-
-	// Propagate active realization index to the mapping layer
-	repository.setCurrentRealizationIndex(static_cast<uint32_t>(RealizationIndex));
 
 	bool dataLoaded = false;
 	try

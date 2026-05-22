@@ -90,93 +90,33 @@ public:
 	void setMarkerOrientation(bool p_orientation);
 	void setMarkerSize(uint32_t p_size);
 
-	// Selection mode. When false (default), `selectNodeId` propagates to ALL
-	// descendants of the matched node (legacy compat with ParaView GUI's
-	// data_assembly_editor widget). When true, propagation only happens for
-	// pure grouping types (Collection, Wellbore, Partial — see
-	// `isGroupingType` in enum.h). Used by fespp_on_trame for its
+	// Selection mode. When false (default), selectNodeId propagates to
+	// ALL descendants of the matched node (legacy compat with the
+	// ParaView GUI's data_assembly_editor widget). When true,
+	// propagation only happens for pure grouping types — see
+	// isGroupingType in enum.h. Used by fespp_on_trame for its
 	// independent-selection treeview.
 	void setExplicitSelection(bool value) { _explicitSelection = value; }
 
-	// Layout of the assembly tree. Changing it flags the assembly for a
-	// rebuild — call rebuildAssembly() afterwards to re-traverse the
-	// already-loaded fesapi repository with the new layout. See
-	// TreeHierarchyMode in enum.h.
+	// Layout of the assembly tree. Changing the value flags the
+	// assembly for a rebuild — call rebuildAssembly() afterwards to
+	// re-traverse the already-loaded fesapi repository with the new
+	// layout. See TreeHierarchyMode in enum.h.
 	void setTreeHierarchyMode(TreeHierarchyMode mode) { _treeHierarchyMode = mode; }
 
-	// Discards the current vtkDataAssembly + per-node mapper/selection
-	// caches and re-traverses the in-memory fesapi repository to rebuild
-	// it from scratch with the current TreeHierarchyMode. Used to apply a
-	// live mode change without re-reading EPC files from disk. Returns
-	// concatenated warnings/messages from the traversal (same convention
-	// as buildDataAssemblyFromDataObjectRepo).
+	// Drop the current vtkDataAssembly and per-node mapper/selection
+	// caches, then re-traverse the in-memory fesapi repository to
+	// rebuild the assembly from scratch with the current
+	// TreeHierarchyMode. Lets a mode change apply without re-reading
+	// EPC files from disk. Returns concatenated warnings/messages
+	// from the traversal (same convention as
+	// buildDataAssemblyFromDataObjectRepo).
 	std::string rebuildAssembly();
 
 	vtkPartitionedDataSetCollection *getVtkPartitionedDatasSetCollection(const double p_time, const uint32_t p_nbProcess = 1, const uint32_t p_processId = 0);
 	vtkPartitionedDataSetCollection* getVtkPartitionedDatasSetCollection() { return _output; };
 
 	std::vector<double> getTimes() { return _timesStepIndex; };
-
-	// Getter/Setter for the current realization index.
-	// Duplicate-set handling and _old tracking live in Cursor. Validation
-	// (reject indices not in the loaded data, e.g. the XML default_values="0"
-	// push at proxy creation) is done via the predicate passed to set().
-	uint32_t getCurrentRealizationIndex() const { return _realizationCursor.current(); }
-	void setCurrentRealizationIndex(uint32_t index)
-	{
-		_realizationCursor.set(index, [this](const uint32_t& v) {
-			for (const auto& [_, realMap] : _realizationTitleToIndexAndPropertiesUuid)
-				if (realMap.count(v)) return true;
-			for (const auto& [_, realMap] : _realAndTimeSeriesToIndexAndPropertiesUuid)
-				if (realMap.count(v)) return true;
-			return false;
-		});
-	}
-
-	// Get available realizations for a specific property
-	std::map<uint32_t, std::string> getRealizationIndicesForProperty(const std::string& propertyTitle) const
-	{
-		std::map<uint32_t, std::string> result;
-		if (_realizationTitleToIndexAndPropertiesUuid.count(propertyTitle) > 0)
-		{
-			for (const auto& pair : _realizationTitleToIndexAndPropertiesUuid.at(propertyTitle))
-			{
-				result[pair.first] = "Realization " + std::to_string(pair.first);
-			}
-		}
-		return result;
-	}
-
-	// Maximum realization index across all multi-realization properties (both
-	// realization-only and realization+time-series maps). Returns 0 if none.
-	uint32_t getMaxRealizationIndex() const
-	{
-		uint32_t maxIdx = 0;
-		for (const auto& [_, realMap] : _realizationTitleToIndexAndPropertiesUuid)
-			for (const auto& [idx, _uuid] : realMap)
-				if (idx > maxIdx) maxIdx = idx;
-		for (const auto& [_, realMap] : _realAndTimeSeriesToIndexAndPropertiesUuid)
-			for (const auto& [idx, _tsMap] : realMap)
-				if (idx > maxIdx) maxIdx = idx;
-		return maxIdx;
-	}
-
-	// Sorted union of all realization indices present in the loaded data
-	// (across realization-only and realization+time-series properties).
-	// Used by the XML proxy to populate the RealizationIndex dropdown so the
-	// user only sees indices that actually exist (e.g. "0, 23, 24" instead
-	// of an unbounded spinbox 0..24).
-	std::vector<uint32_t> getAvailableRealizationIndices() const
-	{
-		std::set<uint32_t> indices;
-		for (const auto& [_, realMap] : _realizationTitleToIndexAndPropertiesUuid)
-			for (const auto& [idx, _uuid] : realMap)
-				indices.insert(idx);
-		for (const auto& [_, realMap] : _realAndTimeSeriesToIndexAndPropertiesUuid)
-			for (const auto& [idx, _tsMap] : realMap)
-				indices.insert(idx);
-		return std::vector<uint32_t>(indices.begin(), indices.end());
-	}
 
 	/**
 	 * @return selection parent
@@ -191,13 +131,15 @@ private:
 	int addNodeToDataAssembly(common::AbstractObject const* object,const TreeViewNodeType type, int nodeId_parent); // return new nodeId
 	void addDefaultToDataAssemblyNode(common::AbstractObject const* object, const TreeViewNodeType type, int nodeId);
 
-	// Helper for the alternate tree hierarchy modes (ByInterpretation,
-	// ByFeatureAndInterpretation). Given a top-level representation and a
-	// logical parent (typically 0 = root), returns the effective parent
-	// node id — inserting Feature and/or Interpretation grouping nodes
-	// between root and the rep depending on _treeHierarchyMode. Idempotent:
-	// existing grouping nodes are reused (looked up by uuid). Returns
-	// p_parent unchanged for Flat mode or when the rep has no interpretation.
+	// Helper for the alternate tree hierarchy modes
+	// (ByInterpretation, ByFeatureAndInterpretation). Given a
+	// top-level representation and a logical parent (typically
+	// 0 = root), returns the effective parent node id — inserting
+	// Feature and/or Interpretation grouping nodes between root and
+	// the rep based on _treeHierarchyMode. Idempotent: existing
+	// grouping nodes are reused (looked up by uuid). Returns
+	// p_parent unchanged for Flat mode or when the rep has no
+	// interpretation.
 	int resolveGroupingParent(resqml2::AbstractRepresentation const* p_representation, int p_parent);
 
 	std::string searchWellboreTrajectory(const std::string& p_fileName);												  // traj
@@ -252,13 +194,15 @@ private:
 	bool _markerOrientation;
 	uint32_t _markerSize;
 
-	// See setExplicitSelection. Default false → legacy "propagate to all
-	// descendants on selection" behavior preserved for ParaView GUI users.
+	// See setExplicitSelection. Default false → legacy "propagate to
+	// all descendants on selection" behaviour preserved for ParaView
+	// GUI users.
 	bool _explicitSelection = false;
 
-	// See setTreeHierarchyMode. Default Flat → legacy assembly layout.
-	// Modes ByInterpretation / ByFeatureAndInterpretation insert grouping
-	// nodes (Feature, Interpretation) above the representations.
+	// See setTreeHierarchyMode. Default Flat → legacy assembly
+	// layout. Modes ByInterpretation / ByFeatureAndInterpretation
+	// insert Feature / Interpretation grouping nodes above the
+	// representations.
 	TreeHierarchyMode _treeHierarchyMode = TreeHierarchyMode::Flat;
 
 	common::DataObjectRepository *_repository;
@@ -289,10 +233,6 @@ private:
 	// Note: Unlike TimeSeries, no global UUID because realizations are per-property
 	//      prop_title       realization_index   prop_uuid
 	std::map<std::string, std::map<uint32_t, std::string>> _realizationTitleToIndexAndPropertiesUuid;
-	// (current, old) pair. Initialized by searchRealization() to the smallest
-	// available index; updated by setCurrentRealizationIndex() (validated
-	// against the loaded data), committed at the end of getVtkPartitionedDatasSetCollection.
-	Cursor<uint32_t> _realizationCursor{ 0 };
 
 	// Properties with BOTH multi-realization AND TimeSeries (Realization parent + TimeSeries children)
 	// prop_title → realization_index → time_step_index → prop_uuid

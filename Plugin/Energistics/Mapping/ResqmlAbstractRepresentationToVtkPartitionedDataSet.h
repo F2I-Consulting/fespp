@@ -58,13 +58,47 @@ public:
 	 * the active scalar coloring on the representation. Set this to false
 	 * for swap operations (multi-realization or time-step changes) where the
 	 * user has already chosen which array drives the coloring.
+	 *
+	 * `p_arrayNameSuffix` (default empty) is appended to the VTK array name
+	 * derived from the property's title. The per-property multi-realization
+	 * load uses this to materialize concurrent realizations of the same
+	 * property under distinct names (e.g. "K_real_3", "K_real_7"). When
+	 * empty, the array name matches the property's sanitized title exactly,
+	 * preserving legacy single-realization behaviour.
+	 *
+	 * The map keyed by UUID is unchanged — each realization of a property
+	 * has its own RESQML UUID, so concurrent realizations naturally take
+	 * separate map slots. The suffix only affects the VTK array name shown
+	 * downstream in ColorBy / scalar selectors.
 	 */
-	char * addDataArray(const std::string &p_uuid, uint32_t p_patchIndex = 0, bool p_autoActivate = true);
+	char * addDataArray(const std::string &p_uuid, uint32_t p_patchIndex = 0, bool p_autoActivate = true,
+		const std::string& p_arrayNameSuffix = std::string());
 
 	/**
 	 * remove a resqml property to VtkPartitionedDataSet
 	 */
 	void deleteDataArray(const std::string &p_uuid);
+
+	/**
+	 * True iff the given RESQML property UUID is currently materialised
+	 * on this representation (i.e. its data array has been added via
+	 * addDataArray and not yet removed). Used by the per-property
+	 * multi-realization load to compute the diff between "what the
+	 * user wants loaded" and "what's actually in the partition".
+	 */
+	bool hasDataArray(const std::string& p_uuid) const
+	{
+		return _uuidToVtkDataArray.count(p_uuid) > 0;
+	}
+
+	/**
+	 * Return the VTK array name currently bound to `p_uuid`, or empty
+	 * string when the uuid isn't loaded. Lets callers detect a
+	 * suffix-mismatch case (the same uuid loaded under a different name,
+	 * typically after a legacy ↔ per-property mode transition for
+	 * multi-realization properties).
+	 */
+	std::string getDataArrayName(const std::string& p_uuid) const;
 
 	/**
 	 *
