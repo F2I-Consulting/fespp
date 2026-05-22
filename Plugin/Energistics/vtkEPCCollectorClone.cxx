@@ -16,15 +16,15 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 -----------------------------------------------------------------------*/
-#include "vtkEPCViewClone.h"
+#include "vtkEPCCollectorClone.h"
 
 #include <vtkObjectFactory.h>
 #include <vtkPartitionedDataSetCollection.h>
 
-vtkStandardNewMacro(vtkEPCViewClone);
+vtkStandardNewMacro(vtkEPCCollectorClone);
 
 //-----------------------------------------------------------------------------
-vtkEPCViewClone::vtkEPCViewClone()
+vtkEPCCollectorClone::vtkEPCCollectorClone()
 {
 	// vtkPartitionedDataSetCollectionAlgorithm's default ctor already
 	// sets one input + one output port, both typed
@@ -32,7 +32,7 @@ vtkEPCViewClone::vtkEPCViewClone()
 }
 
 //-----------------------------------------------------------------------------
-int vtkEPCViewClone::RequestData(vtkInformation* /*request*/,
+int vtkEPCCollectorClone::RequestData(vtkInformation* /*request*/,
 	vtkInformationVector** inputVector,
 	vtkInformationVector* outputVector)
 {
@@ -46,9 +46,9 @@ int vtkEPCViewClone::RequestData(vtkInformation* /*request*/,
 
 	// ShallowCopy on vtkPartitionedDataSetCollection brings over the
 	// partitioned datasets (sharing the underlying vtkDataObject
-	// buffers) AND the vtkDataAssembly — so the per-view clone
-	// stays in lockstep with its upstream EPCCollector without any
-	// per-update bookkeeping.
+	// buffers) AND the vtkDataAssembly — so the clone stays in
+	// lockstep with its upstream EPCCollector without any per-update
+	// bookkeeping.
 	output->ShallowCopy(input);
 	return 1;
 }

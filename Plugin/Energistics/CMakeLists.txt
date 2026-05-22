@@ -4,7 +4,7 @@ set(ALL_FESPP_ENERGISTICS_CLASSES
   	vtkEPCWriter
 	vtkEnergisticsExtractor
 	vtkEPCCollector
-	vtkEPCViewClone
+	vtkEPCCollectorClone
 )
 
 include(${CMAKE_CURRENT_SOURCE_DIR}/Mapping/CMakeLists.txt)

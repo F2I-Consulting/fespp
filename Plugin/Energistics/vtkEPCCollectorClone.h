@@ -17,8 +17,8 @@ specific language governing permissions and limitations
 under the License.
 -----------------------------------------------------------------------*/
 
-#ifndef vtkEPCViewClone_h
-#define vtkEPCViewClone_h
+#ifndef vtkEPCCollectorClone_h
+#define vtkEPCCollectorClone_h
 
 // FESPP
 #include "EnergisticsModule.h"
@@ -27,15 +27,15 @@ under the License.
 #include <vtkPartitionedDataSetCollectionAlgorithm.h>
 
 /**
- * @brief View-scoped pass-through clone of a vtkEPCCollector.
+ * @brief Pass-through ShallowCopy of a vtkEPCCollector output.
  *
  * Drop-in placeholder in the SM proxy graph that simply
  * ShallowCopy's its input vtkPartitionedDataSetCollection (data
- * blocks AND assembly) onto its output. Designed to give each
- * per-view sub-pipeline its own "scene root" without duplicating
- * the data — every downstream filter (slice, clip, threshold,
- * etc.) chains on a view-local proxy whose contents track the
- * shared vtkEPCCollector through PV's native pipeline propagation.
+ * blocks AND assembly) onto its output. Plugin-agnostic — it knows
+ * nothing about "views"; downstream callers (e.g. fespp_on_trame's
+ * per-view scenes) chain whatever sub-pipeline they need on this
+ * clone, and the data tracks the upstream EPCCollector through PV's
+ * native pipeline propagation.
  *
  * Memory: ShallowCopy shares buffers, so N clones cost N proxy
  * objects but no extra data arrays.
@@ -43,23 +43,23 @@ under the License.
  * Companion to the trame-side `ViewScene` class — see the python
  * refactor in `fespp-on-trame/doc/REFACTOR_VIEW_SCENES.md`.
  */
-class ENERGISTICS_EXPORT vtkEPCViewClone : public vtkPartitionedDataSetCollectionAlgorithm
+class ENERGISTICS_EXPORT vtkEPCCollectorClone : public vtkPartitionedDataSetCollectionAlgorithm
 {
 public:
-	static vtkEPCViewClone* New();
-	vtkTypeMacro(vtkEPCViewClone, vtkPartitionedDataSetCollectionAlgorithm);
+	static vtkEPCCollectorClone* New();
+	vtkTypeMacro(vtkEPCCollectorClone, vtkPartitionedDataSetCollectionAlgorithm);
 
 protected:
-	vtkEPCViewClone();
-	~vtkEPCViewClone() override = default;
+	vtkEPCCollectorClone();
+	~vtkEPCCollectorClone() override = default;
 
 	int RequestData(vtkInformation*,
 		vtkInformationVector**,
 		vtkInformationVector*) override;
 
 private:
-	vtkEPCViewClone(const vtkEPCViewClone&) = delete;
-	void operator=(const vtkEPCViewClone&) = delete;
+	vtkEPCCollectorClone(const vtkEPCCollectorClone&) = delete;
+	void operator=(const vtkEPCCollectorClone&) = delete;
 };
 
 #endif

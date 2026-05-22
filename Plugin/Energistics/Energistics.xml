@@ -423,15 +423,17 @@
 
 		</SourceProxy>
 
-		<!-- ================- - View-scoped clone of EPCCollector - -============== -->
+		<!-- ================- - Clone of an EPCCollector output - -============== -->
 		<!-- Pass-through filter that ShallowCopy's an upstream             -->
-		<!-- vtkPartitionedDataSetCollection (data + assembly). One         -->
-		<!-- instance per render view in fespp_on_trame: each view's        -->
-		<!-- slice / clip / threshold filters chain off this clone instead  -->
-		<!-- of the shared EPCCollector source. ShallowCopy keeps data      -->
-		<!-- buffers shared — N clones cost N proxies, not N×data.          -->
-		<SourceProxy name="EPCViewClone" class="vtkEPCViewClone" label="EPC view clone">
-			<Documentation long_help="Per-view ShallowCopy passthrough of an EPCCollector.">
+		<!-- vtkPartitionedDataSetCollection (data + assembly). The         -->
+		<!-- plugin makes no assumption about how callers use it; in        -->
+		<!-- fespp_on_trame each render view holds one clone so its         -->
+		<!-- per-view sub-pipeline (slice / clip / etc.) chains off a      -->
+		<!-- view-local proxy instead of the shared EPCCollector. Memory:   -->
+		<!-- ShallowCopy keeps buffers shared — N clones cost N proxies,    -->
+		<!-- not N×data.                                                    -->
+		<SourceProxy name="EPCCollectorClone" class="vtkEPCCollectorClone" label="EPC collector clone">
+			<Documentation long_help="ShallowCopy passthrough of an EPCCollector output.">
 			</Documentation>
 
 			<InputProperty command="SetInputConnection" name="Input">
@@ -442,7 +444,7 @@
 				<DataTypeDomain name="input_type">
 					<DataType value="vtkPartitionedDataSetCollection" />
 				</DataTypeDomain>
-				<Documentation>The EPCCollector source (or another vtkPartitionedDataSetCollection-producing filter) this view clones.</Documentation>
+				<Documentation>The EPCCollector source (or another vtkPartitionedDataSetCollection-producing filter) this clone passes through.</Documentation>
 			</InputProperty>
 
 			<Hints>
