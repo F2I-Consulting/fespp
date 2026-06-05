@@ -531,6 +531,17 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::rebuildAssemb
 	_blocksColors.clear();
 	_blockColorsMap.clear();
 
+	// Drop the synth-consumed UUID cache so the first traversal of
+	// the rebuilt assembly can repopulate it. Without this reset,
+	// searchProperties / searchTimeSeries / searchRealization would
+	// skip every previously-consumed property and leave the rebuilt
+	// tree without its TimeSeries / Realization synthetic nodes.
+	_consumedPropUuids.clear();
+	_realizationTitleToIndexAndPropertiesUuid.clear();
+	_realAndTimeSeriesToIndexAndPropertiesUuid.clear();
+	_realAndTimeSeriesTsUuid.clear();
+	_timeSeriesUuidAndTitleToIndexAndPropertiesUuid.clear();
+
 	// Reset the assembly to a fresh empty tree (root only) and re-set
 	// the root name to "data". Initialize() reverts it to
 	// vtkDataAssembly's default ("DataAssembly"), which would shift
@@ -849,6 +860,16 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchPropert
 	{
 		try
 		{
+			// Skip properties already consumed by a synthetic TimeSeries
+			// / MultiRealization / MultiRealizationTimeSeries node on a
+			// previous addFile() call. Re-adding them here as direct rep
+			// children would cause searchTimeSeries() / searchRealization()
+			// to re-consume them AND create a duplicate synth.
+			if (_consumedPropUuids.count(w_property->getUuid()) > 0)
+			{
+				continue;
+			}
+
 			if (w_property->isPartial())
 			{
 				if (_output->GetDataAssembly()->FindFirstNodeWithName(("_" + w_property->getUuid()).c_str()) == -1)
@@ -1170,11 +1191,13 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchTimeSer
 								_timesStepIndex.push_back(timeIdx);
 								_realAndTimeSeriesToIndexAndPropertiesUuid[w_prop->getTitle()][realIdx][timeIdx] = w_prop->getUuid();
 								_realAndTimeSeriesTsUuid[w_prop->getTitle()] = w_timeSeries->getUuid();
+								_consumedPropUuids.insert(w_prop->getUuid());
 								// Leave the individual node in the tree for searchRealization() to handle
 							}
 							else
 							{
 								w_propertyNameToNodeIdSet[w_prop->getTitle()].push_back(w_nodeId);
+								_consumedPropUuids.insert(w_prop->getUuid());
 								if (w_prop->getSingleTimestamp() != -1)
 								{
 									const size_t w_timeIndexInTimeSeries = w_timeSeries->getTimestampIndex(w_prop->getSingleTimestamp());
@@ -1357,6 +1380,18 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchRealiza
 					continue;
 				}
 
+				// Skip properties already consumed by a synthetic MR / MR+TS
+				// node on a previous addFile(). The synth's children stay
+				// in the tree under the synth — re-iterating them here would
+				// collect those children into propertyNameToNodeIdSet, then
+				// `RemoveNode + AddNode` would tear the MR apart and rebuild
+				// it under itself as a child (parent lookup returns the
+				// existing synth, not the rep).
+				if (_consumedPropUuids.count(prop->getUuid()) > 0)
+				{
+					continue;
+				}
+
 				// DETECTION: Check if THIS property has realization indices
 				if (prop->hasRealizationIndices())
 				{
@@ -1388,6 +1423,7 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchRealiza
 
 					// Store in the mapping structure (per-property)
 					_realizationTitleToIndexAndPropertiesUuid[propTitle][realizationIndex] = prop->getUuid();
+					_consumedPropUuids.insert(prop->getUuid());
 
 					// Collect all nodes for this property (different realizations)
 					propertyNameToNodeIdSet[propTitle].push_back(w_nodeId);
@@ -2125,15 +2161,6 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::addDataToParent(cons
 
 				const bool isStepSwap = _timeStepCursor.changed();
 				const std::string newUuid = lookupTs(_timeStepCursor.current());
-				if (newUuid.empty())
-					return;
-
-				if (isStepSwap)
-				{
-					const std::string oldUuid = lookupTs(_timeStepCursor.old());
-					if (!oldUuid.empty() && oldUuid != newUuid)
-						abstractRepresentation->deleteDataArray(oldUuid);
-				}
 				// Multi-realization+TS child carries a realization_index
 				// attribute — the suffix keeps concurrent realizations from
 				// colliding on SetName when they share an underlying title.
@@ -2144,6 +2171,61 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::addDataToParent(cons
 				const std::string suffix = realIdxAttr
 					? std::string("_real_") + realIdxAttr
 					: std::string{};
+				// Canonical shared name for this TS property's real arrays AND
+				// its NaN placeholder (mode-aware: raw title vs MakeValidNodeName,
+				// resolved inside the rep so this dispatch never duplicates the
+				// _isHyperslabed branch). For a plain-TS leaf the "title" attr is
+				// the raw property title (set at this file:1298); for an MR+TS
+				// child the attr is ABSENT (node created without a "title"), so
+				// w_nanName stays empty and the NaN operations below self-skip
+				// (MR+TS NaN-on-scrub is out of scope, same as prior behaviour).
+				const char* w_title = nullptr;
+				_output->GetDataAssembly()->GetAttribute(p_nodeId, "title", w_title);
+				const std::string w_titleStr = (w_title != nullptr) ? std::string(w_title) : std::string();
+				const std::string w_nanName = abstractRepresentation->resolveDataArrayName(w_titleStr, suffix);
+
+				if (newUuid.empty())
+				{
+					// No property data at the current step. NaN-fill EVERY cell so
+					// the step renders transparent (app NaN opacity == 0), on BOTH
+					// fresh activation and a scrub-onto-empty step swap. (Previously
+					// a swap-onto-empty returned without doing anything, leaving the
+					// previous step's data resident — the Change-A bug.)
+					if (isStepSwap)
+					{
+						// Remove the PREVIOUS step's real array (UUID-tracked) first;
+						// otherwise addNaNFillDataArray's idempotency guard short-
+						// circuits and the stale data persists.
+						const std::string oldUuid = lookupTs(_timeStepCursor.old());
+						if (!oldUuid.empty())
+							abstractRepresentation->deleteDataArray(oldUuid);
+					}
+					// Clear any stale NaN placeholder under the shared name (e.g.
+					// from a prior empty step) then (re)add a fresh one. With the
+					// real array just removed, the idempotency guard now passes and
+					// the NaN fill actually paints; ColorBy was already bound to the
+					// shared name, so the grid goes transparent on the scrub.
+					if (!w_nanName.empty())
+						abstractRepresentation->removeDataArrayByName(w_nanName);
+					if (!w_titleStr.empty())
+						abstractRepresentation->addNaNFillDataArray(
+							w_titleStr, suffix, /*autoActivate*/ !isStepSwap);
+					return;
+				}
+
+				if (isStepSwap)
+				{
+					const std::string oldUuid = lookupTs(_timeStepCursor.old());
+					if (!oldUuid.empty() && oldUuid != newUuid)
+						abstractRepresentation->deleteDataArray(oldUuid);
+				}
+				// Evict a lingering NaN placeholder under the shared name before
+				// the real array reclaims it (covers the empty->data and
+				// data->empty->data cycles; also robust when the old step was
+				// empty so there was no real oldUuid to delete above). No-op if
+				// no NaN array is present.
+				if (!w_nanName.empty())
+					abstractRepresentation->removeDataArrayByName(w_nanName);
 				// Initial add (first time the TS property is selected) keeps the
 				// auto-activate so coloring follows the user's pick. Step swaps
 				// must not steal the active scalar coloring.
@@ -2211,8 +2293,29 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::deleteMapper()
 			}
 			if (_nodeIdToMapper.find(w_nodeParent) != _nodeIdToMapper.end())
 			{
-				static_cast<ResqmlAbstractRepresentationToVtkPartitionedDataSet*>(_nodeIdToMapper[w_nodeParent])
-					->deleteDataArray(_timeSeriesUuidAndTitleToIndexAndPropertiesUuid[w_tsUuid][w_nodeName][_timeStepCursor.current()]);
+				auto* w_rep = static_cast<ResqmlAbstractRepresentationToVtkPartitionedDataSet*>(_nodeIdToMapper[w_nodeParent]);
+				// Avoid operator[]: a .find() lookup so an empty step does not
+				// default-insert a spurious [current()]="" entry into the map.
+				if (auto tsIt = _timeSeriesUuidAndTitleToIndexAndPropertiesUuid.find(w_tsUuid);
+					tsIt != _timeSeriesUuidAndTitleToIndexAndPropertiesUuid.end())
+				{
+					if (auto nIt = tsIt->second.find(w_nodeName); nIt != tsIt->second.end())
+					{
+						if (auto sIt = nIt->second.find(_timeStepCursor.current()); sIt != nIt->second.end())
+							w_rep->deleteDataArray(sIt->second);
+					}
+				}
+				// The current step may be empty (NaN-filled placeholder, untracked
+				// by UUID); deleteDataArray cannot reach it, so remove it by name.
+				// Plain-TS deselect uses an empty suffix (the placeholder was
+				// added with empty suffix); MR+TS children have no "title" attr so
+				// resolveDataArrayName returns empty and this self-skips.
+				const char* w_dTitle = nullptr;
+				w_Assembly->GetAttribute(
+					w_Assembly->FindFirstNodeWithName(("_" + uuid_unselect).c_str()), "title", w_dTitle);
+				if (w_dTitle != nullptr && w_dTitle[0] != '\0')
+					w_rep->removeDataArrayByName(
+						w_rep->resolveDataArrayName(std::string(w_dTitle), std::string()));
 			}
 		}
 		else if (valueType == TreeViewNodeType::Properties)

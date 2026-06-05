@@ -19,6 +19,12 @@ under the License.
 #include "Mapping/ResqmlPropertyToVtkDataArray.h"
 #include "vtkMath.h"
 
+#include <algorithm>
+#include <cstdint>
+#include <limits>
+#include <utility>
+#include <vector>
+
 // FESAPI
 #include <fesapi/resqml2/CategoricalProperty.h>
 #include <fesapi/resqml2/ContinuousProperty.h>
@@ -26,6 +32,7 @@ under the License.
 #include <fesapi/resqml2_2/ContinuousColorMap.h>
 #include <fesapi/resqml2/DiscreteProperty.h>
 #include <fesapi/resqml2_2/DiscreteColorMap.h>
+#include <fesapi/resqml2/StringTableLookup.h>
 #include <fesapi/eml2/PropertyKind.h>
 #include <fesapi/eml2_3/GraphicalInformationSet.h>
 
@@ -163,6 +170,15 @@ ResqmlPropertyToVtkDataArray::ResqmlPropertyToVtkDataArray(const RESQML2_NS::Abs
 			{
 				applyResqmlPropKindColorMapToVtkDataArray(propKind);
 			}
+
+			// Propagate the StringTableLookup labels to the LUT (same
+			// rationale as in the single-processor constructor below).
+			auto const* catProp = static_cast<RESQML2_NS::CategoricalProperty const*>(valuesProperty);
+			RESQML2_NS::StringTableLookup* lookup = catProp->getStringLookup();
+			if (lookup != nullptr && lookup->getItemCount() > 0)
+			{
+				applyStringTableLookupToLut(lookup);
+			}
 		}
 		else
 		{
@@ -200,6 +216,31 @@ std::string ResqmlPropertyToVtkDataArray::MakeValidNodeName(const char* p_name)
 		return "_" + w_result;
 	}
 	return w_result;
+}
+
+// -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+vtkSmartPointer<vtkDataArray> ResqmlPropertyToVtkDataArray::buildDoubleArrayWithNullAsNaN(
+	const int32_t* p_src,
+	int64_t p_nullValue,
+	uint64_t p_tupleCount,
+	int p_componentCount,
+	const std::string& p_name)
+{
+	const uint64_t w_total = p_tupleCount * static_cast<uint64_t>(p_componentCount);
+	double* w_dbl = new double[w_total]; // handed to VTK below (VTK_DATA_ARRAY_DELETE)
+	const double w_nan = std::numeric_limits<double>::quiet_NaN();
+	for (uint64_t i = 0; i < w_total; ++i)
+	{
+		// int32 values are exact in double; only the FESAPI null becomes NaN.
+		w_dbl[i] = (static_cast<int64_t>(p_src[i]) == p_nullValue)
+			? w_nan
+			: static_cast<double>(p_src[i]);
+	}
+	vtkSmartPointer<vtkDoubleArray> w_arr = vtkSmartPointer<vtkDoubleArray>::New();
+	w_arr->SetNumberOfComponents(p_componentCount);
+	w_arr->SetName(p_name.c_str());
+	w_arr->SetArray(w_dbl, w_total, 0, vtkAbstractArray::VTK_DATA_ARRAY_DELETE);
+	return w_arr;
 }
 
 // -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
@@ -251,21 +292,47 @@ ResqmlPropertyToVtkDataArray::ResqmlPropertyToVtkDataArray(resqml2::AbstractValu
 			(xmlTag == resqml2::CategoricalProperty::XML_TAG &&
 				static_cast<resqml2::CategoricalProperty const*>(valuesProperty)->getStringLookup() != nullptr))
 		{
-			int32_t* values = new int32_t[numberOfValues * elementCountPerValue]; // deleted by VTK data vtkSmartPointer
-			valuesProperty->getArrayOfValuesOfPatch(patch_index, values);
+			int32_t* values = new int32_t[numberOfValues * elementCountPerValue]; // freed below after copy into the double array
+			// getArrayOfValuesOfPatch fills `values` and returns NumberArrayStatistics
+			// whose getNullValue() is the property's integer null/sentinel (in the
+			// default path this comes from the persisted statistics, which derive
+			// from getNullValueOfPatch — no extra HDF5 read). For PVTregionPVTNUM
+			// this is INT_MAX on the cells the property does not cover.
+			const int64_t w_nullValue =
+				valuesProperty->getArrayOfValuesOfPatch(patch_index, values).getNullValue();
 
-			vtkSmartPointer<vtkIntArray> cellDataInt = vtkSmartPointer<vtkIntArray>::New();
-			cellDataInt->SetNumberOfComponents(elementCountPerValue);
-			cellDataInt->SetName(name.c_str());
-			cellDataInt->SetArray(values, numberOfValues * elementCountPerValue, 0, vtkAbstractArray::VTK_DATA_ARRAY_DELETE);
-			dataArray = cellDataInt;
-			
+			// Emit a vtkDoubleArray mapping the null value -> quiet_NaN so
+			// uncovered cells render via the LUT's NanColor/NanOpacity
+			// (transparent) instead of clamping to the max-LUT color. Integer
+			// category values are preserved exactly; the categorical editor and
+			// the StringTableLookup annotations key on integer VALUE, not dtype.
+			dataArray = buildDoubleArrayWithNullAsNaN(
+				values, w_nullValue, numberOfValues,
+				static_cast<int>(elementCountPerValue), name);
+			delete[] values;
+
 			dataArray->Modified();
 
 			eml2::PropertyKind* propKind = valuesProperty->getPropertyKind();
 			if (propKind)
 			{
 				applyResqmlPropKindColorMapToVtkDataArray(propKind);
+			}
+
+			// Propagate the StringTableLookup (RESQML "facies index → name"
+			// map) into the corresponding ParaView LUT's Annotations so the
+			// color bar, the Color Editor and the threshold panel all show
+			// the human-readable labels. The LUT proxy is fetched (and
+			// created on demand) via vtkSMTransferFunctionManager so the
+			// annotations are in place by the time ColorBy first runs.
+			if (xmlTag == resqml2::CategoricalProperty::XML_TAG)
+			{
+				auto const* catProp = static_cast<resqml2::CategoricalProperty const*>(valuesProperty);
+				RESQML2_NS::StringTableLookup* lookup = catProp->getStringLookup();
+				if (lookup != nullptr && lookup->getItemCount() > 0)
+				{
+					applyStringTableLookupToLut(lookup);
+				}
 			}
 		}
 		else
@@ -294,6 +361,100 @@ uint64_t ResqmlPropertyToVtkDataArray::getNumberOfValues(resqml2::AbstractValues
 	{
 		throw std::invalid_argument("Property indexable element must be points or cells.");
 	}
+}
+
+void ResqmlPropertyToVtkDataArray::applyStringTableLookupToLut(RESQML2_NS::StringTableLookup* lookup)
+{
+	if (lookup == nullptr || dataArray == nullptr)
+	{
+		return;
+	}
+	vtkSMSessionProxyManager* activeSessionProxyManager =
+		vtkSMProxyManager::GetProxyManager()->GetActiveSessionProxyManager();
+	if (!activeSessionProxyManager)
+	{
+		vtkOutputWindowDisplayErrorText("vtkSMSessionProxyManager not found.\n");
+		return;
+	}
+	vtkNew<vtkSMTransferFunctionManager> mgr;
+	vtkSMTransferFunctionProxy* lutProxy = vtkSMTransferFunctionProxy::SafeDownCast(
+		mgr->GetColorTransferFunction(dataArray->GetName(), activeSessionProxyManager));
+	if (!lutProxy)
+	{
+		vtkOutputWindowDisplayErrorText(
+			(std::string(dataArray->GetName()) + " LUT not found.\n").c_str());
+		return;
+	}
+
+	// Switch the LUT into IndexedLookup mode — ParaView's categorical
+	// rendering: discrete swatches, one annotation per (value, label)
+	// pair, color bar shows labels instead of a gradient. Without
+	// IndexedLookup=1 the Annotations would be ignored and the color
+	// bar would stay continuous (the bug that prompted this code).
+	vtkSMPropertyHelper(lutProxy, "IndexedLookup", true).Set(1);
+
+	// Annotations: ParaView expects a flat string list
+	// [value0, label0, value1, label1, ...]. We get the (key, value)
+	// pairs via the StringTableLookup's map and serialize the keys to
+	// strings.
+	const std::unordered_map<int64_t, std::string> w_map = lookup->getMap();
+	const uint64_t n = w_map.size();
+
+	// Sort by key so the categorical UI shows entries in a stable order.
+	std::vector<std::pair<int64_t, std::string>> w_sorted(w_map.begin(), w_map.end());
+	std::sort(w_sorted.begin(), w_sorted.end(),
+		[](const std::pair<int64_t, std::string>& p_a,
+			const std::pair<int64_t, std::string>& p_b) {
+				return p_a.first < p_b.first;
+		});
+
+	vtkSMPropertyHelper(lutProxy, "Annotations").SetNumberOfElements(0);
+	vtkSMPropertyHelper(lutProxy, "Annotations").SetNumberOfElements(static_cast<unsigned int>(n * 2));
+	for (uint64_t i = 0; i < n; ++i)
+	{
+		vtkSMPropertyHelper(lutProxy, "Annotations").Set(
+			static_cast<unsigned int>(2 * i), std::to_string(w_sorted[i].first).c_str());
+		vtkSMPropertyHelper(lutProxy, "Annotations").Set(
+			static_cast<unsigned int>(2 * i + 1), w_sorted[i].second.c_str());
+	}
+
+	// Seed IndexedColors with a default palette when the LUT doesn't
+	// have one yet (first activation). We use a simple HSV cycle —
+	// the CategoricalColorEditor on the trame side overrides these
+	// with user-edited colors when they exist. Without seeding the
+	// indexed colors here the LUT would still be in IndexedLookup
+	// mode but with no swatches, producing a black color bar.
+	vtkSMPropertyHelper colHelper(lutProxy, "IndexedColors");
+	if (colHelper.GetNumberOfElements() < n * 3)
+	{
+		std::vector<double> w_colors(n * 3);
+		for (uint64_t i = 0; i < n; ++i)
+		{
+			// HSV: hue spread across the wheel, full saturation and
+			// value. Skip pure red (h=0) by offsetting so categories
+			// don't look like a Continuous rainbow.
+			const double w_hue = (static_cast<double>(i) + 0.5) / static_cast<double>(n);
+			double w_rgb[3];
+			vtkMath::HSVToRGB(w_hue, 1.0, 1.0, w_rgb, w_rgb + 1, w_rgb + 2);
+			w_colors[3 * i + 0] = w_rgb[0];
+			w_colors[3 * i + 1] = w_rgb[1];
+			w_colors[3 * i + 2] = w_rgb[2];
+		}
+		colHelper.Set(w_colors.data(), static_cast<unsigned int>(w_colors.size()));
+	}
+
+	// IndexedOpacities seeding: one entry per category, fully opaque.
+	// Same rationale as IndexedColors — without this the LUT's
+	// EnableOpacityMapping wouldn't pick up the alpha channel.
+	vtkSMPropertyHelper opHelper(lutProxy, "IndexedOpacities");
+	if (opHelper.GetNumberOfElements() < n)
+	{
+		std::vector<double> w_op(n, 1.0);
+		opHelper.Set(w_op.data(), static_cast<unsigned int>(w_op.size()));
+		vtkSMPropertyHelper(lutProxy, "EnableOpacityMapping").Set(1);
+	}
+
+	lutProxy->UpdateVTKObjects();
 }
 
 void ResqmlPropertyToVtkDataArray::applyResqmlPropKindColorMapToVtkDataArray(eml2::PropertyKind* propertyKind)

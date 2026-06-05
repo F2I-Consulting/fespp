@@ -75,9 +75,63 @@ public:
 		const std::string& p_arrayNameSuffix = std::string());
 
 	/**
+	 * Add a NaN-filled placeholder vtkDoubleArray sized to the
+	 * representation's cell count, attached to the rep's CellData
+	 * under the name derived from p_baseName + p_arrayNameSuffix
+	 * (with the same MakeValidNodeName sanitization the regular
+	 * load path uses). Used by the TimeSeries dispatch when the
+	 * current time step has no underlying property values — without
+	 * a placeholder array, the rep's downstream pipeline (slicers,
+	 * ColorBy, Threshold, …) emits "missing input" errors and
+	 * eventually crashes the renderer; with a NaN-filled array the
+	 * pipeline stays valid, Threshold(Between, -inf, +inf) drops
+	 * NaN cells silently, and ColorBy paints with the LUT's NaN
+	 * color so the user gets a clear "no data here" visual.
+	 *
+	 * Idempotent: if an array under the resolved name already exists
+	 * in CellData, this is a no-op (the previous step's data is
+	 * preserved — see the "keep previous" comment in the TS dispatch).
+	 *
+	 * `p_autoActivate` mirrors `addDataArray` semantics — true on
+	 * first activation so ColorBy follows the user's pick, false
+	 * on time-step swaps.
+	 *
+	 * Returns the resolved VTK array name (owned by the array), or
+	 * nullptr when the rep's cell count is 0.
+	 */
+	char * addNaNFillDataArray(const std::string& p_baseName,
+		const std::string& p_arrayNameSuffix = std::string(),
+		bool p_autoActivate = true);
+
+	/**
 	 * remove a resqml property to VtkPartitionedDataSet
 	 */
 	void deleteDataArray(const std::string &p_uuid);
+
+	/**
+	 * Resolve the VTK array name that BOTH the regular load path and the
+	 * NaN-fill placeholder use for a given property title + suffix,
+	 * honouring the current load mode:
+	 *   - non-hyperslabed (single-proc ctor, ResqmlPropertyToVtkDataArray
+	 *     .cxx:237): raw title + suffix
+	 *   - hyperslabed (multi-proc ctor, .cxx:73-74): MakeValidNodeName(title)
+	 *     + suffix
+	 * Lets the TimeSeries dispatch evict / re-add a NaN placeholder by name
+	 * without reproducing the _isHyperslabed branch.
+	 */
+	std::string resolveDataArrayName(const std::string& p_title,
+		const std::string& p_arrayNameSuffix = std::string()) const;
+
+	/**
+	 * Remove an array by NAME from this rep's Cell and Point data WITHOUT
+	 * touching _uuidToVtkDataArray. This is the teardown path for the
+	 * NaN-fill placeholder, which is intentionally NOT tracked by UUID so
+	 * deleteDataArray() (UUID-keyed) structurally cannot reach it. No-op if
+	 * no array of that name is present. Only ever called when no real
+	 * (UUID-tracked) array is resident under that name, so it never tears a
+	 * tracked array out from under the map.
+	 */
+	void removeDataArrayByName(const std::string& p_arrayName);
 
 	/**
 	 * True iff the given RESQML property UUID is currently materialised

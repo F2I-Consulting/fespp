@@ -20,10 +20,13 @@ under the License.
 
 #include <algorithm>
 #include <array>
+#include <cmath>
+#include <limits>
 
 // include VTK library
 #include <vtkCellData.h>
 #include <vtkDataSet.h>
+#include <vtkDoubleArray.h>
 #include <vtkPointData.h>
 
 // FESAPI
@@ -137,6 +140,91 @@ char * ResqmlAbstractRepresentationToVtkPartitionedDataSet::addDataArray(const s
 		throw std::invalid_argument("The property " + p_uuid + "cannot be added since it is not contained in the representation " + getResqmlData()->getUuid());
 	}
 	return nullptr;
+}
+
+char * ResqmlAbstractRepresentationToVtkPartitionedDataSet::addNaNFillDataArray(
+	const std::string& p_baseName,
+	const std::string& p_arrayNameSuffix,
+	bool p_autoActivate)
+{
+	const uint64_t cellCount = _isHyperslabed
+		? static_cast<uint64_t>(_iCellCount) * _jCellCount * (_maxKIndex - _initKIndex)
+		: static_cast<uint64_t>(_iCellCount) * _jCellCount * _kCellCount;
+	if (cellCount == 0)
+		return nullptr;
+
+	const std::string w_arrayName = resolveDataArrayName(p_baseName, p_arrayNameSuffix);
+
+	auto* w_cellData = _vtkData->GetPartition(0)->GetCellData();
+
+	// Idempotent: if the array already exists (e.g. the previous time
+	// step is still resident under "keep previous" semantics), do not
+	// overwrite it.
+	if (w_cellData->HasArray(w_arrayName.c_str()))
+		return w_cellData->GetArray(w_arrayName.c_str())->GetName();
+
+	vtkSmartPointer<vtkDoubleArray> w_nanArr = vtkSmartPointer<vtkDoubleArray>::New();
+	w_nanArr->SetName(w_arrayName.c_str());
+	w_nanArr->SetNumberOfComponents(1);
+	w_nanArr->SetNumberOfTuples(cellCount);
+	const double w_nan = std::numeric_limits<double>::quiet_NaN();
+	double* w_buf = w_nanArr->GetPointer(0);
+	std::fill(w_buf, w_buf + cellCount, w_nan);
+	w_cellData->AddArray(w_nanArr);
+	if (p_autoActivate)
+		ActiveProperty(w_arrayName.c_str(), vtkDataObject::AttributeTypes::CELL);
+	_vtkData->Modified();
+	return w_cellData->GetArray(w_arrayName.c_str())->GetName();
+}
+
+std::string ResqmlAbstractRepresentationToVtkPartitionedDataSet::resolveDataArrayName(
+	const std::string& p_title, const std::string& p_arrayNameSuffix) const
+{
+	if (p_title.empty())
+		return std::string();
+	// Mirror the ctor naming rule exactly: hyperslabed (multi-proc) ctor
+	// sanitizes via MakeValidNodeName (ResqmlPropertyToVtkDataArray.cxx:73-74);
+	// non-hyperslabed (single-proc) ctor keeps the raw title (.cxx:237). The
+	// NaN placeholder must land under the SAME name as the real array so the
+	// data<->empty handoff is a single shared name.
+	return _isHyperslabed
+		? (ResqmlPropertyToVtkDataArray::MakeValidNodeName(p_title.c_str()) + p_arrayNameSuffix)
+		: (p_title + p_arrayNameSuffix);
+}
+
+void ResqmlAbstractRepresentationToVtkPartitionedDataSet::removeDataArrayByName(
+	const std::string& p_arrayName)
+{
+	if (p_arrayName.empty())
+		return;
+	// SAFETY: never remove a REAL (UUID-tracked) array. The NaN-fill
+	// placeholder and the real per-step arrays share the SAME VTK array
+	// name (the property title), so a blind RemoveArray here would tear
+	// out the real array on a normal load — and because the UUID entry
+	// in _uuidToVtkDataArray survives, addDataArray's collision guard
+	// (which trusts the map) would then SKIP re-adding it, leaving the
+	// property invisible. Only proceed when NO tracked array currently
+	// owns this name, i.e. the name belongs to an untracked NaN
+	// placeholder.
+	for (const auto& w_kv : _uuidToVtkDataArray)
+	{
+		if (w_kv.second != nullptr)
+		{
+			vtkSmartPointer<vtkDataArray> w_vtk = w_kv.second->getVtkData();
+			if (w_vtk != nullptr && w_vtk->GetName() != nullptr
+				&& p_arrayName == w_vtk->GetName())
+			{
+				return; // real array under this name — leave it for addDataArray to manage
+			}
+		}
+	}
+	auto* w_cellData = _vtkData->GetPartition(0)->GetCellData();
+	if (w_cellData->HasArray(p_arrayName.c_str()))
+		w_cellData->RemoveArray(p_arrayName.c_str());
+	auto* w_pointData = _vtkData->GetPartition(0)->GetPointData();
+	if (w_pointData->HasArray(p_arrayName.c_str()))
+		w_pointData->RemoveArray(p_arrayName.c_str());
+	_vtkData->Modified();
 }
 
 std::string ResqmlAbstractRepresentationToVtkPartitionedDataSet::getDataArrayName(const std::string& p_uuid) const

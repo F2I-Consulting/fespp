@@ -222,6 +222,15 @@ private:
 
 	std::set<std::string> _files;
 
+	// Property UUIDs already consumed by a synthetic TimeSeries /
+	// MultiRealization / MultiRealizationTimeSeries node. searchProperties()
+	// skips them so re-running addFile() after the first synth pass doesn't
+	// re-introduce them as direct rep children (which would then be
+	// re-consumed AND a fresh synth created, duplicating the synthetic node).
+	// Populated lazily by searchTimeSeries() and searchRealization() the
+	// first time they group these properties under a synth.
+	std::set<std::string> _consumedPropUuids;
+
 	// time step values
 	std::map<double, std::string> _timesStepIndexToISODate;
 	std::vector<double> _timesStepIndex;

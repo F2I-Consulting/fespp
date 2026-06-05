@@ -30,6 +30,7 @@ under the License.
 namespace RESQML2_NS
 {
 	class AbstractValuesProperty;
+	class StringTableLookup;
 }
 namespace eml2
 {
@@ -94,7 +95,36 @@ private:
 		uint64_t cellCount,
 		uint64_t pointCount);
 
+	/**
+	 * Build a vtkDoubleArray from an int32 buffer, substituting the FESAPI
+	 * integer null/sentinel value (p_nullValue) with quiet_NaN(). RESQML
+	 * discrete/categorical values read here are int32 (|x| < 2^31 < 2^53),
+	 * so every non-null value round-trips through double EXACTLY; only the
+	 * uncovered/null cells become NaN and thus render with the LUT's
+	 * NanColor/NanOpacity (transparent). Do NOT widen the source read to
+	 * int64 without revisiting this exactness guarantee. Returns a named,
+	 * ready-to-attach double array; the categorical LUT keys on integer
+	 * VALUE (not dtype) so the StringTableLookup annotations still match.
+	 */
+	static vtkSmartPointer<vtkDataArray> buildDoubleArrayWithNullAsNaN(
+		const int32_t* p_src,
+		int64_t p_nullValue,
+		uint64_t p_tupleCount,
+		int p_componentCount,
+		const std::string& p_name);
+
 	void applyResqmlPropKindColorMapToVtkDataArray(eml2::PropertyKind* propertyKind);
+
+	/**
+	 * Populate the active ParaView LUT for `dataArray` from a RESQML
+	 * StringTableLookup (the "facies index → name" map). Switches the
+	 * LUT into IndexedLookup mode, fills `Annotations` with the
+	 * key/label pairs, and seeds `IndexedColors` / `IndexedOpacities`
+	 * with a default HSV palette so the categorical color bar renders
+	 * out of the box. The trame side's CategoricalColorEditor can
+	 * later override the colors per user pick.
+	 */
+	void applyStringTableLookupToLut(RESQML2_NS::StringTableLookup* lookup);
 
 	vtkSmartPointer<vtkDataArray> dataArray;
 };

@@ -16,12 +16,16 @@
 			<StringVectorProperty command="GetAllFiles" information_only="1" name="FilesInfo">
 				<StringArrayHelper />
 			</StringVectorProperty>
+			<!-- NOTE: this property used to carry an <ArraySelectionDomain> on
+			     top of `FilesInfo`. ArraySelectionDomain implicitly stores its
+			     values as (name, "0"|"1") pairs, but SetFiles only pushes the
+			     path (the C++ side at vtkEPCCollector.cxx:152 already filters
+			     out the "0"/"1" state strings) — so the underlying storage was
+			     always odd-length. Result: pvsimple.Trace and state-save would
+			     crash with "size that is not a multiple of 2" as soon as any
+			     EPC file was loaded. The domain was also dead UI machinery
+			     because `panel_visibility="never"` hides the property anyway. -->
 			<StringVectorProperty name="Files" command="SetFiles" number_of_elements="1" repeat_command="1" label="all files loaded" panel_visibility="never">
-				<ArraySelectionDomain name="array_list" attribute_type="Scalars">
-					<RequiredProperties>
-						<Property function="FilesInfo" name="FilesInfo" />
-					</RequiredProperties>
-				</ArraySelectionDomain >
 				<Documentation>List files loaded...</Documentation>
 			</StringVectorProperty>
 
@@ -68,7 +72,14 @@
 			     The internal property names (DataSetList / DataSetListForCopy)
 			     are kept as-is for backwards compatibility with saved state
 			     files. -->
-			<IntVectorProperty name="extractMode" number_of_elements="1" default_values="0" label="">
+			<!-- NOTE: do NOT use `label=""` here. PV's smtrace runs
+			     `sanitize_label("")` → returns `None` because `not ""` is true
+			     → `PropertyTraceHelper` then aborts with
+			     `AssertionError: type(propertyname) == str`. Use a real label
+			     (or omit the attribute so PV derives one from the name). The
+			     combo's first <Entry text="Extract..."> already plays the
+			     "no title" role in the panel. -->
+			<IntVectorProperty name="extractMode" number_of_elements="1" default_values="0" label="Extract Mode">
 				<EnumerationDomain name="enum">
 					<Entry text="Extract..." value="0" />
 					<Entry text="Extract without copy" value="1" />

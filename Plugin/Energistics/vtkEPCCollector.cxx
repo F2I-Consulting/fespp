@@ -515,7 +515,8 @@ void vtkEPCCollector::ExtractWithCopy(vtkSMSourceProxy* /*readerProxy*/, int ind
 
 //----------------------------------------------------------------------------
 // "WithoutCopy" semantics: a sub-source FILTER chained on this collector
-// (registered in the "filters" group). The filter does a ShallowCopy in
+// (registered in the "sources" group — RegisterPipelineProxy puts
+// pipeline-typed proxies there). The filter does a ShallowCopy in
 // RequestData (vtkEnergisticsExtractor) — no real data duplication, just
 // shared array pointers. Because the filter stays in the pipeline, upstream
 // updates (selector changes, realization swap, property addDataArray)
@@ -575,9 +576,10 @@ void vtkEPCCollector::ExtractWithoutCopy(vtkSMSourceProxy* readerProxy, int inde
 //----------------------------------------------------------------------------
 // Programmatic per-representation extractor used by fespp_on_trame.
 // Aligns with the "WithoutCopy" semantics: creates an EnergisticsExtractor
-// FILTER chained on this collector (registered in the "filters" group). The
-// filter does a ShallowCopy in RequestData, so upstream changes (selector
-// add, realization swap, property addDataArray) propagate naturally — no
+// FILTER chained on this collector (registered in the "sources" group —
+// RegisterPipelineProxy puts pipeline-typed proxies there). The filter
+// does a ShallowCopy in RequestData, so upstream changes (selector add,
+// realization swap, property addDataArray) propagate naturally — no
 // explicit Modified() bump required from the Python side.
 //
 // Idempotent: repeated calls for the same rep_path return the existing
@@ -586,7 +588,7 @@ void vtkEPCCollector::ExtractWithoutCopy(vtkSMSourceProxy* readerProxy, int inde
 // Property command: triggers the per-rep filter creation and stores the
 // registration name in lastExtractedProducerName for the info-only readback
 // (GetExtractedRepProducerName). The Python side reads that name and
-// resolves it via the proxy manager (filters group).
+// resolves it via the proxy manager (sources group).
 void vtkEPCCollector::SetExtractRepPath(const char* rep_path)
 {
 	if (!lastExtractedProducerName)
@@ -601,11 +603,13 @@ void vtkEPCCollector::SetExtractRepPath(const char* rep_path)
 	{
 		// Reuse only if the registered proxy still exists; the Python side
 		// may have called Delete() on a previous release() and we'd return
-		// a stale name otherwise. Search the "filters" group (where
-		// RegisterPipelineProxy puts EnergisticsExtractor) and fall back to
-		// "sources" for compatibility with old saved sessions.
-		if (spm && (spm->GetProxy("filters", cached->second.c_str()) != nullptr
-		            || spm->GetProxy("sources", cached->second.c_str()) != nullptr))
+		// a stale name otherwise. Search the "sources" group (where
+		// RegisterPipelineProxy actually puts EnergisticsExtractor — the
+		// older comment said "filters" but RegisterPipelineProxy registers
+		// pipeline-typed proxies in "sources"; we keep the "filters" lookup
+		// as a defensive fallback for old saved sessions).
+		if (spm && (spm->GetProxy("sources", cached->second.c_str()) != nullptr
+		            || spm->GetProxy("filters", cached->second.c_str()) != nullptr))
 		{
 			lastExtractedProducerName->InsertNextValue(cached->second);
 			return;
