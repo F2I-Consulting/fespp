@@ -23,6 +23,7 @@ under the License.
 #include <algorithm>
 #include <limits>
 #include <sstream>
+#include <unordered_set>
 
 #include "vtkEnergisticsExtractor.h"
 
@@ -159,15 +160,36 @@ vtkStringArray* vtkEPCCollector::GetAllFiles() // call only by GUI
 
 			if (Controller->GetLocalProcessId() == 0 && !msg.empty())
 			{
-				// Cap the warning string. addFile returns FESAPI's accumulated
-				// deserialize warnings; on a large OSDU EPC (drogon: 840 objects)
-				// this can be many KB/MB. Dumping it via vtkWarningMacro -> the
-				// stderr tee can block (full pipe buffer) and freeze the whole
-				// info pull. Truncate to keep the diagnostic without the stall.
-				const std::string w_capped = msg.size() > 2000
-					? (msg.substr(0, 2000) + "\n... [" + std::to_string(msg.size()) + " chars total, truncated]\n")
-					: msg;
-				vtkWarningMacro(<< w_capped);
+				// addFile returns FESAPI's accumulated deserialize warnings —
+				// many KB/MB on a large OSDU EPC (drogon: 840 objects) and
+				// massively repetitive. Split on '\n' and emit each line on its
+				// own, skipping exact-duplicate complete lines. Dedup collapses
+				// the volume so the stderr tee never floods; an overall char cap
+				// is kept as a safety net for a file with many DISTINCT warnings.
+				const std::size_t w_charCap = 16000; // overall limit, then stop
+				std::unordered_set<std::string> w_seen;
+				std::size_t w_emitted = 0;
+				bool w_truncated = false;
+				std::istringstream w_iss(msg);
+				std::string w_line;
+				while (std::getline(w_iss, w_line))
+				{
+					if (w_line.empty() || !w_seen.insert(w_line).second)
+					{
+						continue; // empty or already-emitted (duplicate) line
+					}
+					if (w_emitted + w_line.size() > w_charCap)
+					{
+						w_truncated = true;
+						break;
+					}
+					vtkWarningMacro(<< w_line);
+					w_emitted += w_line.size();
+				}
+				if (w_truncated)
+				{
+					vtkWarningMacro(<< "... [FESAPI warnings truncated at " << w_charCap << " chars]");
+				}
 			}
 			Modified();
 			Update();
