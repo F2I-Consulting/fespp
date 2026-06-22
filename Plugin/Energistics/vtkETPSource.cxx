@@ -151,12 +151,8 @@ void vtkETPSource::confirmConnectionClicked()
 
 		const auto dataspaces = repository.connect(ETPUrl, OSDUDataPartition, ETPTokenType + " " + ETPToken, ProxyUrl, ProxyTokenType + " " + ProxyToken);
 
-		// Debug: log number of dataspaces returned
-		vtkOutputWindowDisplayText(("Number of dataspaces returned: " + std::to_string(dataspaces.size())).c_str());
-
 		for (const std::string dataspace : dataspaces)
 		{
-			vtkOutputWindowDisplayText(("Adding dataspace: " + dataspace).c_str());
 			AllDataspaces->InsertNextValue(vtkStdString(dataspace));
 		}
 

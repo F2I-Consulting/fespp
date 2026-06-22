@@ -76,14 +76,14 @@ char * ResqmlAbstractRepresentationToVtkPartitionedDataSet::addDataArray(const s
 		// check would otherwise short-circuit the re-add.
 		if (_uuidToVtkDataArray.count(p_uuid) > 0)
 		{
-			// Construct the expected name using the same logic each
-			// ctor uses. Hyperslabed ctor goes through MakeValidNodeName;
-			// the non-hyperslabed ctor uses the raw title.
+			// Construct the expected name using the same logic each ctor
+			// uses. BOTH ctors now go through MakeValidNodeName (the
+			// single-proc ctor was aligned), so this must too or the
+			// reload guard mismatches and forces a needless delete+recreate.
 			auto const* const w_resqmlProp = *w_it;
-			const std::string w_expectedName = _isHyperslabed
-				? (ResqmlPropertyToVtkDataArray::MakeValidNodeName(w_resqmlProp->getTitle().c_str())
-				   + p_arrayNameSuffix)
-				: (w_resqmlProp->getTitle() + p_arrayNameSuffix);
+			const std::string w_expectedName =
+				ResqmlPropertyToVtkDataArray::MakeValidNodeName(w_resqmlProp->getTitle().c_str())
+				+ p_arrayNameSuffix;
 			const std::string w_actualName = getDataArrayName(p_uuid);
 			if (w_actualName == w_expectedName)
 			{
@@ -182,14 +182,12 @@ std::string ResqmlAbstractRepresentationToVtkPartitionedDataSet::resolveDataArra
 {
 	if (p_title.empty())
 		return std::string();
-	// Mirror the ctor naming rule exactly: hyperslabed (multi-proc) ctor
-	// sanitizes via MakeValidNodeName (ResqmlPropertyToVtkDataArray.cxx:73-74);
-	// non-hyperslabed (single-proc) ctor keeps the raw title (.cxx:237). The
-	// NaN placeholder must land under the SAME name as the real array so the
-	// data<->empty handoff is a single shared name.
-	return _isHyperslabed
-		? (ResqmlPropertyToVtkDataArray::MakeValidNodeName(p_title.c_str()) + p_arrayNameSuffix)
-		: (p_title + p_arrayNameSuffix);
+	// Mirror the ctor naming rule exactly. BOTH ctors now sanitize via
+	// MakeValidNodeName (the single-proc ctor was aligned to the multi-proc
+	// one), so the NaN placeholder lands under the SAME name as the real
+	// array — the data<->empty handoff stays a single shared name regardless
+	// of proc mode.
+	return ResqmlPropertyToVtkDataArray::MakeValidNodeName(p_title.c_str()) + p_arrayNameSuffix;
 }
 
 void ResqmlAbstractRepresentationToVtkPartitionedDataSet::removeDataArrayByName(

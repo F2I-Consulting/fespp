@@ -358,8 +358,6 @@ std::vector<std::string> ResqmlDataRepositoryToVtkPartitionedDataSetCollection::
 		attempts++;
 	}
 
-	vtkOutputWindowDisplayText(("Dataspaces received after " + std::to_string(attempts) + " attempts: " + std::to_string(w_dataspaces.size())).c_str());
-
 	std::transform(w_dataspaces.begin(), w_dataspaces.end(), std::back_inserter(w_result),
 		[](const Energistics::Etp::v12::Datatypes::Object::Dataspace& w_ds)
 		{ return w_ds.uri; });
@@ -380,13 +378,31 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::disconnect()
 //----------------------------------------------------------------------------
 std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::addFile(const char* p_fileName)
 {
-
-	COMMON_NS::EpcDocument w_pck(p_fileName);
-	_repository->clearWarnings();
-	std::string w_message = w_pck.deserializeInto(*_repository);
-	_files.insert(p_fileName);
-	w_message += buildDataAssemblyFromDataObjectRepo(p_fileName);
-	return w_message;
+	// Defense-in-depth backstop (the outermost catch is at vtkEPCCollector
+	// GetAllFiles, but rebuildAssembly / dataspace paths also reach here):
+	// the EpcDocument ctor (bad zip/container) and deserializeInto (bad
+	// schema/gsoap) THROW on a malformed EPC; never let that escape.
+	try
+	{
+		COMMON_NS::EpcDocument w_pck(p_fileName);
+		_repository->clearWarnings();
+		std::string w_message = w_pck.deserializeInto(*_repository);
+		_files.insert(p_fileName); // only AFTER a successful deserialize
+		w_message += buildDataAssemblyFromDataObjectRepo(p_fileName);
+		return w_message;
+	}
+	catch (const std::exception& e)
+	{
+		std::string w_err = std::string("FESAPI error loading '") + p_fileName + "': " + e.what() + "\n";
+		vtkOutputWindowDisplayErrorText(w_err.c_str());
+		return w_err;
+	}
+	catch (...)
+	{
+		std::string w_err = std::string("Unknown error loading '") + p_fileName + "'\n";
+		vtkOutputWindowDisplayErrorText(w_err.c_str());
+		return w_err;
+	}
 }
 
 //----------------------------------------------------------------------------
@@ -585,10 +601,21 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::buildDataAsse
 	// In non-Flat tree hierarchy modes, resolveGroupingParent inserts
 	// Feature/Interpretation grouping nodes above each top-level rep.
 	std::string w_message = std::accumulate(std::begin(w_allReps), std::end(w_allReps), std::string{},
-		[&](std::string& message, RESQML2_NS::AbstractRepresentation const* rep)
+		[&](std::string& message, RESQML2_NS::AbstractRepresentation const* rep) -> std::string&
 		{
-			const int parentNode = resolveGroupingParent(rep, 0);
-			return message += searchRepresentations(rep, parentNode);
+			// Per-representation isolation: a single malformed rep is
+			// skipped + logged instead of aborting the whole file.
+			try
+			{
+				const int parentNode = resolveGroupingParent(rep, 0);
+				message += searchRepresentations(rep, parentNode);
+			}
+			catch (const std::exception& e)
+			{
+				const std::string w_uuid = (rep != nullptr ? rep->getUuid() : std::string("<null>"));
+				vtkOutputWindowDisplayErrorText(("Skipping representation uuid=" + w_uuid + ": " + e.what() + "\n").c_str());
+			}
+			return message;
 		});
 	// get WellboreTrajectory
 	w_message += searchWellboreTrajectory(p_fileName);
@@ -633,7 +660,9 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::addDefaultToDataAsse
 		// Fine kind is FESAPI-derived (e.g. "Sub") — keep SimplifyXmlTag.
 		auto const* w_subrep = static_cast<RESQML2_NS::SubRepresentation const*>(object);
 		w_kind = SimplifyXmlTag(object->getXmlTag());
-		w_title = w_subrep->getSupportingRepresentation(0)->getTitle() + "_" + object->getTitle();
+		// getSupportingRepresentation(0) can be null on a partial/dangling subrep.
+		auto const* w_support = w_subrep->getSupportingRepresentation(0);
+		w_title = (w_support != nullptr ? w_support->getTitle() : std::string("<no support>")) + "_" + object->getTitle();
 	}
 	else
 	{
@@ -929,6 +958,10 @@ int ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchRepresentationS
 					for (unsigned int targetIndex = 0; targetIndex < graphicalInformationSet->getTargetObjectCount(i); ++targetIndex)
 					{
 						COMMON_NS::AbstractObject const* targetObject = graphicalInformationSet->getTargetObject(i, targetIndex);
+						if (targetObject == nullptr)
+						{
+							continue;
+						}
 						if (targetObject->getUuid() == p_rsr->getUuid())
 						{
 							if (graphicalInformationSet->hasDefaultColor(targetObject)) {
@@ -969,55 +1002,82 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchWellbor
 
 	for (auto* w_wellboreTrajectory : _repository->getWellboreTrajectoryRepresentationSet())
 	{
-		const auto* w_wellboreFeature = dynamic_cast<RESQML2_NS::WellboreFeature*>(w_wellboreTrajectory->getInterpretation()->getInterpretedFeature());
-
-		int w_nodeId = 0;
-		int w_initNodeId = 0;
-		if (_output->GetDataAssembly()->FindFirstNodeWithName(("_" + w_wellboreTrajectory->getUuid()).c_str()) == -1)
-		{ // verify uuid exist in treeview
-		  // To shorten the xmlTag by removing �Representation� from the end.
-
-			for (resqml2::RepresentationSetRepresentation* w_rsr : w_wellboreTrajectory->getRepresentationSetRepresentationSet())
+		// Most-exposed parse function on malformed data: getInterpretation(),
+		// getInterpretedFeature() and getMdDatum() can all return null, and any
+		// FESAPI getter here can throw. Guard the whole per-trajectory body so a
+		// single bad wellbore is skipped + logged, never crashing the load.
+		try
+		{
+			auto* w_interp = w_wellboreTrajectory->getInterpretation();
+			if (w_interp == nullptr)
 			{
-				w_initNodeId = searchRepresentationSetRepresentation(w_rsr);
+				vtkOutputWindowDisplayWarningText(("Skipping wellbore trajectory uuid=" + w_wellboreTrajectory->getUuid() + ": no interpretation\n").c_str());
+				continue;
+			}
+			const auto* w_wellboreFeature = dynamic_cast<RESQML2_NS::WellboreFeature*>(w_interp->getInterpretedFeature());
+			if (w_wellboreFeature == nullptr)
+			{
+				vtkOutputWindowDisplayWarningText(("Skipping wellbore trajectory uuid=" + w_wellboreTrajectory->getUuid() + ": no wellbore feature\n").c_str());
+				continue;
 			}
 
-			if (_output->GetDataAssembly()->FindFirstNodeWithName(("_" + w_wellboreFeature->getUuid()).c_str()) == -1)
-			{
-				w_initNodeId = addNodeToDataAssembly(w_wellboreFeature, TreeViewNodeType::Wellbore, w_initNodeId);
-			}
+			int w_nodeId = 0;
+			int w_initNodeId = 0;
+			if (_output->GetDataAssembly()->FindFirstNodeWithName(("_" + w_wellboreTrajectory->getUuid()).c_str()) == -1)
+			{ // verify uuid exist in treeview
+			  // To shorten the xmlTag by removing �Representation� from the end.
 
-			std::string w_vtkValidName = "";
-			if (w_wellboreTrajectory->isPartial())
-			{
-				w_nodeId = addNodeToDataAssembly(w_wellboreTrajectory, TreeViewNodeType::Partial, w_initNodeId);
-				_output->GetDataAssembly()->SetAttribute(w_nodeId, "supporttype", std::to_string(static_cast<int>(TreeViewNodeType::WellboreTrajectory)).c_str());
+				for (resqml2::RepresentationSetRepresentation* w_rsr : w_wellboreTrajectory->getRepresentationSetRepresentationSet())
+				{
+					w_initNodeId = searchRepresentationSetRepresentation(w_rsr);
+				}
+
+				if (_output->GetDataAssembly()->FindFirstNodeWithName(("_" + w_wellboreFeature->getUuid()).c_str()) == -1)
+				{
+					w_initNodeId = addNodeToDataAssembly(w_wellboreFeature, TreeViewNodeType::Wellbore, w_initNodeId);
+				}
+
+				std::string w_vtkValidName = "";
+				if (w_wellboreTrajectory->isPartial())
+				{
+					w_nodeId = addNodeToDataAssembly(w_wellboreTrajectory, TreeViewNodeType::Partial, w_initNodeId);
+					_output->GetDataAssembly()->SetAttribute(w_nodeId, "supporttype", std::to_string(static_cast<int>(TreeViewNodeType::WellboreTrajectory)).c_str());
+				}
+				else
+				{
+					w_nodeId = addNodeToDataAssembly(w_wellboreTrajectory, TreeViewNodeType::WellboreTrajectory, w_initNodeId);
+				}
 			}
 			else
 			{
-				w_nodeId = addNodeToDataAssembly(w_wellboreTrajectory, TreeViewNodeType::WellboreTrajectory, w_initNodeId);
-			}
-		}
-		else
-		{
-			if (!w_wellboreTrajectory->isPartial()) {
-				int w_type;
-				 _output->GetDataAssembly()->GetAttribute(_output->GetDataAssembly()->FindFirstNodeWithName(("_" + w_wellboreFeature->getUuid()).c_str()), "type", w_type);
-				if (w_type == static_cast<int>(TreeViewNodeType::Partial)) {
-					w_nodeId = _output->GetDataAssembly()->FindFirstNodeWithName(("_" + w_wellboreTrajectory->getUuid()).c_str());
-					addDefaultToDataAssemblyNode(w_wellboreTrajectory, TreeViewNodeType::WellboreTrajectory, w_nodeId);
+				if (!w_wellboreTrajectory->isPartial()) {
+					int w_type;
+					 _output->GetDataAssembly()->GetAttribute(_output->GetDataAssembly()->FindFirstNodeWithName(("_" + w_wellboreFeature->getUuid()).c_str()), "type", w_type);
+					if (w_type == static_cast<int>(TreeViewNodeType::Partial)) {
+						w_nodeId = _output->GetDataAssembly()->FindFirstNodeWithName(("_" + w_wellboreTrajectory->getUuid()).c_str());
+						addDefaultToDataAssemblyNode(w_wellboreTrajectory, TreeViewNodeType::WellboreTrajectory, w_nodeId);
+					}
 				}
 			}
+
+			// add MdDatum position attribute — getMdDatum() may be null.
+			auto* w_mdDatum = w_wellboreTrajectory->getMdDatum();
+			if (w_mdDatum != nullptr)
+			{
+				const double x_MdDatum = w_mdDatum->getXInGlobalCrs();
+				const double y_MdDatum = w_mdDatum->getYInGlobalCrs();
+				const double z_MdDatum = w_mdDatum->getZInGlobalCrs();
+				_output->GetDataAssembly()->SetAttribute(w_nodeId, "mdDatumPosition", (std::to_string(x_MdDatum) + "," + std::to_string(y_MdDatum) + "," + std::to_string(z_MdDatum)).c_str());
+			}
+
+			w_result += searchWellboreFrame(w_wellboreTrajectory, w_initNodeId);
+			w_result += searchWellboreCompletion(w_wellboreFeature, w_initNodeId);
 		}
-
-		// add MdDatum position attribute
-		double x_MdDatum = w_wellboreTrajectory->getMdDatum()->getXInGlobalCrs();
-		double y_MdDatum = w_wellboreTrajectory->getMdDatum()->getYInGlobalCrs();
-		double z_MdDatum = w_wellboreTrajectory->getMdDatum()->getZInGlobalCrs();
-		_output->GetDataAssembly()->SetAttribute(w_nodeId, "mdDatumPosition", (std::to_string(x_MdDatum) + "," + std::to_string(y_MdDatum) + "," + std::to_string(z_MdDatum)).c_str());
-
-		w_result += searchWellboreFrame(w_wellboreTrajectory, w_initNodeId);
-		w_result += searchWellboreCompletion(w_wellboreFeature, w_initNodeId);
+		catch (const std::exception& e)
+		{
+			vtkOutputWindowDisplayErrorText(("Skipping wellbore trajectory uuid=" + (w_wellboreTrajectory != nullptr ? w_wellboreTrajectory->getUuid() : std::string("<null>")) + ": " + e.what() + "\n").c_str());
+			continue;
+		}
 	}
 	return w_result;
 }
@@ -1037,6 +1097,30 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchWellbor
 				// chanel
 				for (auto* w_property : w_wellboreFrame->getValuesPropertySet())
 				{
+					if (w_property == nullptr)
+					{
+						continue;
+					}
+					if (w_property->isPartial())
+					{
+						// PARTIAL wellbore-channel stub: only Title + UUID are
+						// readable. ADD it as a Partial node (the Partial branch
+						// in addDefaultToDataAssemblyNode reads only
+						// treeViewNodeTypeName + getTitle, and the FESAPI-metadata
+						// block is guarded out for Partial — so no "cannot get
+						// anything but a Title and an UUID from a partial ..."
+						// throw) so the UI shows it marked !!!PARTIAL!!! and
+						// uncheckable, instead of skipping it (or aborting the
+						// whole wellbore trajectory). getMapperType(Partial)=Folder,
+						// so even if its id reaches a selection the load loop
+						// no-ops — no data access, no crash.
+						if (_output->GetDataAssembly()->FindFirstNodeWithName(("_" + w_property->getUuid()).c_str()) == -1)
+						{
+							int w_partialId = addNodeToDataAssembly(w_property, TreeViewNodeType::Partial, w_frameNodeId);
+							_output->GetDataAssembly()->SetAttribute(w_partialId, "supporttype", "WellboreChannel");
+						}
+						continue;
+					}
 					int w_nodeId = addNodeToDataAssembly(w_property, TreeViewNodeType::WellboreChannel, w_frameNodeId);
 				}
 			}
@@ -1892,6 +1976,12 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::loadRepresentationMa
 
 	CommonAbstractObjectToVtkPartitionedDataSet* w_caotvpds = nullptr;
 
+	// Per-type mapper ctors call FESAPI geometry getters that can throw or
+	// deref null (e.g. getSupportingRepresentation(0) on a dangling subrep).
+	// Guard the whole ctor chain so a single bad rep is skipped (w_caotvpds
+	// stays null -> early return below) instead of crashing.
+	try
+	{
 	if (auto* w_ijkGrid = dynamic_cast<RESQML2_NS::AbstractIjkGridRepresentation*>(w_abstractObject); w_ijkGrid != nullptr)
 	{
 		w_caotvpds = new ResqmlIjkGridToVtkExplicitStructuredGrid(w_ijkGrid, p_processId, p_nbProcess);
@@ -1951,6 +2041,12 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::loadRepresentationMa
 		{
 			vtkOutputWindowDisplayWarningText(("FESPP only supports IJK Grid or UnstructuredGrid as supporting representation of subrepresentation  (for uuid: " + w_uuid + ")\n").c_str());
 		}
+	}
+	}
+	catch (const std::exception& e)
+	{
+		vtkOutputWindowDisplayErrorText(("Error building mapper uuid: " + w_uuid + "\n" + e.what()).c_str());
+		w_caotvpds = nullptr;
 	}
 
 	if (w_caotvpds == nullptr)
@@ -2453,12 +2549,6 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::deleteMapper()
 
 vtkPartitionedDataSetCollection* ResqmlDataRepositoryToVtkPartitionedDataSetCollection::getVtkPartitionedDatasSetCollection(const double p_time, const uint32_t p_nbProcess, const uint32_t p_processId)
 {
-	using clk = std::chrono::steady_clock;
-	const auto t_start = clk::now();
-	auto ms_since = [&t_start](const clk::time_point& t) {
-		return std::chrono::duration_cast<std::chrono::milliseconds>(t - t_start).count();
-	};
-
 	// Detect a TimeControl change. On such a change, ParaView triggers
 	// RequestData without a fresh selectNodeId batch, so _currentSelection
 	// is stale (= last node added). We must iterate _selection (the
@@ -2468,25 +2558,14 @@ vtkPartitionedDataSetCollection* ResqmlDataRepositoryToVtkPartitionedDataSetColl
 	if (timeChanged)
 		_selectionCleared = true;
 
-	const auto t0 = clk::now();
 	ResetResqmlColor();
-	const auto t1 = clk::now();
 	addResqmlColor();
-	const auto t2 = clk::now();
 
 	if (_selectionCleared) {
 		deleteMapper();
 	}
-	const auto t3 = clk::now();
 
 	const std::set<int>& nodesToProcess = timeChanged ? _selection : _currentSelection;
-	vtkOutputWindowDisplayText(("[PERF getVPDSC] enter timeChanged=" + std::string(timeChanged ? "1" : "0")
-		+ " currentSel=" + std::to_string(_currentSelection.size())
-		+ " selection=" + std::to_string(_selection.size())
-		+ " nodesToProcess=" + std::to_string(nodesToProcess.size())
-		+ " ResetColor=" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count()) + "ms"
-		+ " addColor=" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count()) + "ms"
-		+ " deleteMapper=" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(t3 - t2).count()) + "ms\n").c_str());
 
 	// vtkParitionedDataSetCollection - hierarchy - build.
 	// On a TimeControl change we run addDataToParent for EVERY selected
@@ -2494,14 +2573,12 @@ vtkPartitionedDataSetCollection* ResqmlDataRepositoryToVtkPartitionedDataSetColl
 	// step. The autoActivate flag in addDataToParent is set to false on
 	// step swaps so the active scalar coloring isn't stolen by a
 	// background swap.
-	const auto t_iter_start = clk::now();
 	auto w_it = nodesToProcess.begin();
 	while (w_it != nodesToProcess.end())
 	{
 		uint32_t w_typeValue;
 		_output->GetDataAssembly()->GetAttribute(*w_it, "type", w_typeValue);
 		TreeViewNodeType w_type = static_cast<TreeViewNodeType>(w_typeValue);
-		const std::string nodeUuid = std::string(_output->GetDataAssembly()->GetNodeName(*w_it)).substr(1);
 
 		// init MapperSet && save nodeId for attach to vtkPartitionedDataSetcollection
 		if (getMapperType(w_type) == MapperType::MapperSet)
@@ -2509,11 +2586,7 @@ vtkPartitionedDataSetCollection* ResqmlDataRepositoryToVtkPartitionedDataSetColl
 			// initialize mapperSet with nodeId
 			if (_nodeIdToMapperSet.find(*w_it) == _nodeIdToMapperSet.end())
 			{
-				const auto ti0 = clk::now();
 				initMapperSet(w_type, *w_it, p_nbProcess, p_processId);
-				const auto ti1 = clk::now();
-				vtkOutputWindowDisplayText(("[PERF init] MapperSet uuid=" + nodeUuid
-					+ " " + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(ti1 - ti0).count()) + "ms\n").c_str());
 			}
 			++w_it;
 		}
@@ -2522,15 +2595,7 @@ vtkPartitionedDataSetCollection* ResqmlDataRepositoryToVtkPartitionedDataSetColl
 			// load mapper with nodeId
 			if (_nodeIdToMapper.find(*w_it) == _nodeIdToMapper.end())
 			{
-				const auto ti0 = clk::now();
 				loadMapper(w_type, *w_it, p_nbProcess, p_processId);
-				const auto ti1 = clk::now();
-				vtkOutputWindowDisplayText(("[PERF init] Mapper uuid=" + nodeUuid
-					+ " " + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(ti1 - ti0).count()) + "ms\n").c_str());
-			}
-			else
-			{
-				vtkOutputWindowDisplayText(("[PERF init] Mapper uuid=" + nodeUuid + " (cached, skip)\n").c_str());
 			}
 			++w_it;
 		}
@@ -2540,23 +2605,11 @@ vtkPartitionedDataSetCollection* ResqmlDataRepositoryToVtkPartitionedDataSetColl
 		}
 		else if (getMapperType(w_type) == MapperType::Data)
 		{
-			const auto ti0 = clk::now();
 			addDataToParent(w_type, *w_it, p_nbProcess, p_processId);
-			const auto ti1 = clk::now();
-			const auto dur = std::chrono::duration_cast<std::chrono::milliseconds>(ti1 - ti0).count();
-			if (dur > 0)
-			{
-				vtkOutputWindowDisplayText(("[PERF init] Data type=" + std::to_string(static_cast<int>(w_type))
-					+ " uuid=" + nodeUuid + " " + std::to_string(dur) + "ms\n").c_str());
-			}
 			++w_it;
 		}
 	}
-	const auto t_iter_end = clk::now();
-	vtkOutputWindowDisplayText(("[PERF getVPDSC] init loop total="
-		+ std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(t_iter_end - t_iter_start).count()) + "ms\n").c_str());
 
-	const auto t_load_start = clk::now();
 	unsigned int w_PartitionIndex = _output->GetNumberOfPartitionedDataSets();
 	// foreach selection node load object — same source as the init loop above.
 	for (const int w_nodeSelection : nodesToProcess)
@@ -2573,11 +2626,7 @@ vtkPartitionedDataSetCollection* ResqmlDataRepositoryToVtkPartitionedDataSetColl
 			{
 				try
 				{
-					const auto tl0 = clk::now();
 					_nodeIdToMapperSet[w_nodeSelection]->loadVtkObject();
-					const auto tl1 = clk::now();
-					vtkOutputWindowDisplayText(("[PERF load] MapperSet uuid=" + nodeUuid
-						+ " " + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(tl1 - tl0).count()) + "ms\n").c_str());
 
 					for (auto partition : _nodeIdToMapperSet[w_nodeSelection]->getMapperSet())
 					{
@@ -2600,7 +2649,26 @@ vtkPartitionedDataSetCollection* ResqmlDataRepositoryToVtkPartitionedDataSetColl
 				}
 				catch (const std::exception& e)
 				{
-					vtkOutputWindowDisplayErrorText(("FESAPI Error for uuid " + std::string(_output->GetDataAssembly()->GetNodeName(w_nodeSelection)).substr(1) + " : " + e.what() + "\n").c_str());
+					vtkOutputWindowDisplayErrorText(("FESAPI Error for uuid " + nodeUuid + " : " + e.what() + "\n").c_str());
+					// The MapperSet load threw partway (e.g. a partial property
+					// with no values on a wellbore frame). The partition-setting
+					// loop above was skipped, leaving this selected assembly node
+					// WITHOUT a partition. A dangling node makes the downstream
+					// render / color path deref a null partition and hard-crash
+					// the process. Attach an EMPTY partition so the node stays
+					// valid (renders as nothing) instead of dangling.
+					try
+					{
+						vtkNew<vtkPartitionedDataSet> w_emptyPds;
+						_output->SetPartitionedDataSet(w_PartitionIndex, w_emptyPds);
+						_output->GetMetaData(w_PartitionIndex)->Set(vtkCompositeDataSet::NAME(), nodeUuid.c_str());
+						GetAssembly()->AddDataSetIndex(w_nodeSelection, w_PartitionIndex);
+						w_PartitionIndex++;
+					}
+					catch (...)
+					{
+						// nothing more we can safely do; never rethrow
+					}
 				}
 			}
 		}
@@ -2609,17 +2677,37 @@ vtkPartitionedDataSetCollection* ResqmlDataRepositoryToVtkPartitionedDataSetColl
 			// load mapper representation
 			if (_nodeIdToMapper.find(w_nodeSelection) != _nodeIdToMapper.end())
 			{
-				_output->SetPartitionedDataSet(w_PartitionIndex, _nodeIdToMapper[w_nodeSelection]->getOutput());
-				_output->GetMetaData(w_PartitionIndex)->Set(vtkCompositeDataSet::NAME(), _nodeIdToMapper[w_nodeSelection]->getTitle() + '(' + _nodeIdToMapper[w_nodeSelection]->getUuid() + ')');
-				GetAssembly()->AddDataSetIndex(w_nodeSelection, w_PartitionIndex); // attach hierarchy to assembly
-				w_PartitionIndex++;
+				try
+				{
+					auto* w_mapper = _nodeIdToMapper[w_nodeSelection];
+					vtkSmartPointer<vtkPartitionedDataSet> w_out =
+						(w_mapper != nullptr) ? w_mapper->getOutput() : nullptr;
+					if (w_out != nullptr)
+					{
+						_output->SetPartitionedDataSet(w_PartitionIndex, w_out);
+						_output->GetMetaData(w_PartitionIndex)->Set(vtkCompositeDataSet::NAME(), w_mapper->getTitle() + '(' + w_mapper->getUuid() + ')');
+						GetAssembly()->AddDataSetIndex(w_nodeSelection, w_PartitionIndex); // attach hierarchy to assembly
+						w_PartitionIndex++;
+					}
+					else
+					{
+						// Null output (failed/partial geometry): attach an empty
+						// partition so the node is not left dangling -> no
+						// downstream null-deref crash.
+						vtkNew<vtkPartitionedDataSet> w_emptyPds;
+						_output->SetPartitionedDataSet(w_PartitionIndex, w_emptyPds);
+						_output->GetMetaData(w_PartitionIndex)->Set(vtkCompositeDataSet::NAME(), nodeUuid.c_str());
+						GetAssembly()->AddDataSetIndex(w_nodeSelection, w_PartitionIndex);
+						w_PartitionIndex++;
+					}
+				}
+				catch (const std::exception& e)
+				{
+					vtkOutputWindowDisplayErrorText(("FESAPI Error for uuid " + nodeUuid + " : " + e.what() + "\n").c_str());
+				}
 			}
 		}
 	}
-
-	const auto t_load_end = clk::now();
-	vtkOutputWindowDisplayText(("[PERF getVPDSC] load loop total="
-		+ std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(t_load_end - t_load_start).count()) + "ms\n").c_str());
 
 	_selectionCleared = false;
 	_output->Modified();
@@ -2627,9 +2715,6 @@ vtkPartitionedDataSetCollection* ResqmlDataRepositoryToVtkPartitionedDataSetColl
 	// changed()==false (no swap). Next external set() will bump old again.
 	_timeStepCursor.commit();
 
-	const auto t_end = clk::now();
-	vtkOutputWindowDisplayText(("[PERF getVPDSC] TOTAL "
-		+ std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(t_end - t_start).count()) + "ms\n").c_str());
 	return _output;
 }
 

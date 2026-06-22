@@ -269,7 +269,19 @@ int vtkEnergisticsExtractor::RequestData(vtkInformation* vtkNotUsed(request),
 		int node = input->GetDataAssembly()->GetFirstNodeByPath(ExtractPath.c_str());
 		if (node > -1)
 		{
-			partitionIndex = input->GetDataAssembly()->GetDataSetIndices(node)[0];
+			// A node may carry NO dataset index: a container node whose index
+			// lives on its child partitions (a WellboreFrame / WellboreMarkerFrame
+			// node — see ResqmlDataRepositoryToVtkPartitionedDataSetCollection.cxx
+			// where AddDataSetIndex targets the per-channel/per-marker CHILD node,
+			// not the frame), or a not-yet-loaded child. GetDataSetIndices()
+			// then returns an EMPTY vector and `[0]` is a hard out-of-bounds
+			// read → process segfault. RequestDataObject() and RequestInformation()
+			// already guard this; RequestData() must too.
+			const auto indices = input->GetDataAssembly()->GetDataSetIndices(node);
+			if (!indices.empty())
+			{
+				partitionIndex = indices[0];
+			}
 		}
 	}
 

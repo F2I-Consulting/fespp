@@ -100,12 +100,9 @@ void ResqmlPointSetToVtkPolyVertex::loadVtkObject()
 	}
 
 	if (nanFound) {
-		vtkOutputWindowDisplayText(("WARNING: Coordinates in " +
+		vtkOutputWindowDisplayWarningText(("Coordinates in " +
 			pointSet->getTitle() +
 			" contained NaN values, which have been replaced by 0.0.").c_str());
-	}
-	if (shouldBe2D) {
-		vtkOutputWindowDisplayText((pointSet->getTitle() + " is in 2D (z = 0)").c_str());
 	}
 
 	vtkSmartPointer<vtkDoubleArray> pointsArray = vtkSmartPointer<vtkDoubleArray>::New();

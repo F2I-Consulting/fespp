@@ -69,7 +69,6 @@ colorApplyLoading(false)
 {
 	SetNumberOfInputPorts(0);
 	SetController(vtkMultiProcessController::GetGlobalController());
-	vtkOutputWindowDisplayText("fespp build: " __DATE__ " " __TIME__ "\n");
 }
 
 vtkEPCCollector::~vtkEPCCollector()
@@ -116,7 +115,30 @@ vtkStringArray* vtkEPCCollector::GetAllFiles() // call only by GUI
 		auto search = FileNamesLoaded.find(file_property);
 		if (search == FileNamesLoaded.end())
 		{
-			std::string msg = repository.addFile(file_property.c_str());
+			// addFile() runs the WHOLE FESAPI deserialize + assembly build
+			// synchronously on the client info-property pull. Any std::exception
+			// escaping here crosses the C++/Python boundary uncaught ->
+			// std::terminate -> SIGABRT ("Connection Closed", no Python traceback)
+			// on a malformed / unsupported EPC. Catch it, log it via the VTK
+			// output (teed into the Python session log), and DO NOT rethrow so the
+			// session survives with an empty/partial tree. (A hard SIGSEGV
+			// null-deref inside the build is NOT catchable here — those are
+			// guarded individually in the assembly builders.)
+			std::string msg;
+			try
+			{
+				msg = repository.addFile(file_property.c_str());
+			}
+			catch (const std::exception& e)
+			{
+				msg = "Error loading EPC '" + file_property + "': " + e.what() + "\n";
+				vtkOutputWindowDisplayErrorText(msg.c_str());
+			}
+			catch (...)
+			{
+				msg = "Unknown fatal error loading EPC '" + file_property + "'\n";
+				vtkOutputWindowDisplayErrorText(msg.c_str());
+			}
 
 			FileNamesLoaded.insert(file_property);
 			// add selector — collect resolved paths first to avoid erasing during iteration
@@ -137,7 +159,15 @@ vtkStringArray* vtkEPCCollector::GetAllFiles() // call only by GUI
 
 			if (Controller->GetLocalProcessId() == 0 && !msg.empty())
 			{
-				vtkWarningMacro(<< msg);
+				// Cap the warning string. addFile returns FESAPI's accumulated
+				// deserialize warnings; on a large OSDU EPC (drogon: 840 objects)
+				// this can be many KB/MB. Dumping it via vtkWarningMacro -> the
+				// stderr tee can block (full pipe buffer) and freeze the whole
+				// info pull. Truncate to keep the diagnostic without the stall.
+				const std::string w_capped = msg.size() > 2000
+					? (msg.substr(0, 2000) + "\n... [" + std::to_string(msg.size()) + " chars total, truncated]\n")
+					: msg;
+				vtkWarningMacro(<< w_capped);
 			}
 			Modified();
 			Update();
@@ -284,8 +314,21 @@ void vtkEPCCollector::SetTreeHierarchyMode(int value)
 		repository.setTreeHierarchyMode(static_cast<::TreeHierarchyMode>(value));
 		// Re-traverse the in-memory fesapi repository so the
 		// assembly reflects the new layout without requiring an EPC
-		// re-import.
-		repository.rebuildAssembly();
+		// re-import. Guard: rebuildAssembly is the second parse entry
+		// (tree-mode toggle) — an escaping exception here would also
+		// terminate the process.
+		try
+		{
+			repository.rebuildAssembly();
+		}
+		catch (const std::exception& e)
+		{
+			vtkOutputWindowDisplayErrorText((std::string("Error rebuilding assembly: ") + e.what() + "\n").c_str());
+		}
+		catch (...)
+		{
+			vtkOutputWindowDisplayErrorText("Unknown error rebuilding assembly\n");
+		}
 		// Drop pending and active selector paths — their node ids
 		// belonged to the previous layout. Keeping them around
 		// would cause GetFirstNodeByPath to log "Invalid parameters"
@@ -304,19 +347,29 @@ int vtkEPCCollector::RequestInformation(vtkInformation* vtkNotUsed(request),
 {
 	vtkInformation* outInfo = outputVector->GetInformationObject(0);
 	outInfo->Remove(vtkStreamingDemandDrivenPipeline::TIME_STEPS());
-	const std::vector<double> times = repository.getTimes();
-
-	if (times.size() > (std::numeric_limits<int>::max)())
+	// Guard: getTimes() + the out_of_range throw below are unguarded and
+	// would cross into ParaView/Python uncaught. Keep the method noexcept
+	// in practice.
+	try
 	{
-		throw std::out_of_range("Too much times.");
+		const std::vector<double> times = repository.getTimes();
+
+		if (times.size() > (std::numeric_limits<int>::max)())
+		{
+			throw std::out_of_range("Too much times.");
+		}
+
+		if (!times.empty())
+		{
+			const auto minmax = std::minmax_element(begin(times), end(times));
+			outInfo->Set(vtkStreamingDemandDrivenPipeline::TIME_STEPS(), &times[0], static_cast<int>(times.size()));
+			static double timeRange[] = { *minmax.first, *minmax.second };
+			outInfo->Set(vtkStreamingDemandDrivenPipeline::TIME_RANGE(), timeRange, 2);
+		}
 	}
-
-	if (!times.empty())
+	catch (const std::exception& e)
 	{
-		const auto minmax = std::minmax_element(begin(times), end(times));
-		outInfo->Set(vtkStreamingDemandDrivenPipeline::TIME_STEPS(), &times[0], static_cast<int>(times.size()));
-		static double timeRange[] = { *minmax.first, *minmax.second };
-		outInfo->Set(vtkStreamingDemandDrivenPipeline::TIME_RANGE(), timeRange, 2);
+		vtkOutputWindowDisplayErrorText((std::string("RequestInformation error: ") + e.what() + "\n").c_str());
 	}
 	return 1;
 }

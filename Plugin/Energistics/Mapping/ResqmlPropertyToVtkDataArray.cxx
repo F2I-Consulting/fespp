@@ -123,7 +123,7 @@ ResqmlPropertyToVtkDataArray::ResqmlPropertyToVtkDataArray(const RESQML2_NS::Abs
 			{
 				valuesProperty->getIntValuesOf3dPatch(patch_index, valuesIntSet, iCellCount, jCellCount, kCellCount, 0, 0, initKIndex);
 			}
-			else if (valuesProperty->getDimensionsCountOfPatch(0) == 1)
+			else if (valuesProperty->getDimensionsCountOfPatch(patch_index) == 1)
 			{
 				valuesProperty->getIntValuesOfPatch(patch_index, valuesIntSet, &numValuesInEachDimension, &offsetInEachDimension, 1);
 			}
@@ -255,13 +255,14 @@ ResqmlPropertyToVtkDataArray::ResqmlPropertyToVtkDataArray(resqml2::AbstractValu
 	if (numberOfValues > 0)
 	{
 		const uint64_t elementCountPerValue = valuesProperty->getValueCountPerIndexableElement();
-		// Mirror the multi-processor ctor: append the optional suffix
-		// to the title so the per-property MR load can attach
-		// concurrent realizations under distinct VTK array names.
-		// Note: this code path keeps the historical "use raw title,
-		// no MakeValidNodeName" behaviour for backwards compat — only
-		// the suffix is concatenated.
-		const std::string name = valuesProperty->getTitle() + nameSuffix;
+		// Sanitize the title through MakeValidNodeName, exactly like the
+		// multi-processor ctor, then append the optional suffix (per-property
+		// MR realizations). The single-proc path is the DEFAULT (non-MPI)
+		// path, so without this its VTK array names carried raw titles
+		// (spaces/parens/units) while the Python side computes
+		// make_valid_vtk_name(title) — a silent mismatch that blanked the
+		// COE / broke stats for any title with stripped chars.
+		const std::string name = MakeValidNodeName(valuesProperty->getTitle().c_str()) + nameSuffix;
 		const std::string xmlTag = valuesProperty->getXmlTag();
 		if (xmlTag == resqml2::ContinuousProperty::XML_TAG)
 		{

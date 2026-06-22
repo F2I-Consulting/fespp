@@ -77,17 +77,26 @@ void ResqmlTriangulatedSetToVtkPartitionedDataSet::loadVtkObject()
 	_vtkData->Modified();
 }
 
-void ResqmlTriangulatedSetToVtkPartitionedDataSet::addDataArray(const std::string &p_uuid)
+char * ResqmlTriangulatedSetToVtkPartitionedDataSet::addDataArray(const std::string &p_uuid, uint32_t /*p_patchIndex*/, bool p_autoActivate, const std::string& p_arrayNameSuffix)
 {
 	vtkSmartPointer<vtkPartitionedDataSet> partition = vtkSmartPointer<vtkPartitionedDataSet>::New();
 
+	// Load the property on each patch's own sub-rep (which carries that
+	// patch's point / triangle counts). The incoming patch index is
+	// ignored — every patch loads its own.
+	char * result = nullptr;
 	for (auto& [patchIndex, rep] : patchIndex_to_ResqmlTriangulated)
 	{
-		rep->addDataArray(p_uuid, patchIndex);
+		char * name = rep->addDataArray(p_uuid, patchIndex, p_autoActivate, p_arrayNameSuffix);
+		if (name != nullptr)
+		{
+			result = name;
+		}
 		partition->SetPartition(patchIndex, rep->getOutput()->GetPartitionAsDataObject(0));
 		partition->GetMetaData(patchIndex)->Set(vtkCompositeDataSet::NAME(), ("Patch " + std::to_string(patchIndex)).c_str());
 	}
 
 	_vtkData = partition;
 	_vtkData->Modified();
+	return result;
 }

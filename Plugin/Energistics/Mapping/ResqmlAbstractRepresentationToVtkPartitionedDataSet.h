@@ -71,7 +71,7 @@ public:
 	 * separate map slots. The suffix only affects the VTK array name shown
 	 * downstream in ColorBy / scalar selectors.
 	 */
-	char * addDataArray(const std::string &p_uuid, uint32_t p_patchIndex = 0, bool p_autoActivate = true,
+	virtual char * addDataArray(const std::string &p_uuid, uint32_t p_patchIndex = 0, bool p_autoActivate = true,
 		const std::string& p_arrayNameSuffix = std::string());
 
 	/**

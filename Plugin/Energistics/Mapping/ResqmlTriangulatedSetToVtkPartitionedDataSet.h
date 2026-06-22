@@ -49,9 +49,13 @@ public:
 	void loadVtkObject() override;
 
 	/**
-	 * add a RESQML property to vtkDataSet
+	 * add a RESQML property to vtkDataSet, PER PATCH: each sub-rep carries
+	 * its own patch point / triangle counts (the container's are
+	 * all-patches totals).
 	 */
-	void addDataArray(const std::string &p_uuid);
+	char * addDataArray(const std::string &p_uuid, uint32_t p_patchIndex = 0,
+		bool p_autoActivate = true,
+		const std::string& p_arrayNameSuffix = std::string()) override;
 
 protected:
 	const RESQML2_NS::TriangulatedSetRepresentation *getResqmlData() const;

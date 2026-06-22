@@ -17,6 +17,7 @@ specific language governing permissions and limitations
 under the License.
 -----------------------------------------------------------------------*/
 #include "ResqmlWellboreChannelToVtkPolyData.h"
+#include "ResqmlPropertyToVtkDataArray.h"  // MakeValidNodeName (public static)
 
 #include <vtkPointData.h>
 #include <vtkTubeFilter.h>
@@ -90,9 +91,16 @@ void ResqmlWellboreChannelToVtkPolyData::loadVtkObject()
 	channelPolyline->SetPoints(vtkPts);
 	channelPolyline->SetLines(lines);
 
-	// Varying tube radius
+	// Varying tube radius. The VTK ARRAY name MUST go through
+	// MakeValidNodeName so it matches what the Python side computes via
+	// make_valid_vtk_name(title) — exactly like grid/UG properties. The
+	// human-readable title stays raw (assembly 'title' attribute,
+	// partition metadata), so this changes no displayed label, only the
+	// internal scalar-array identifier ParaView colours by.
+	const std::string w_arrayName =
+		ResqmlPropertyToVtkDataArray::MakeValidNodeName(_abstractProperty->getTitle().c_str());
 	auto tubeRadius = vtkSmartPointer<vtkDoubleArray>::New();
-	tubeRadius->SetName(_abstractProperty->getTitle().c_str());
+	tubeRadius->SetName(w_arrayName.c_str());
 	tubeRadius->SetNumberOfTuples(_pointCount);
 	bool hasNANValue = false;
 	if (dynamic_cast<RESQML2_NS::ContinuousProperty const*>(_abstractProperty) != nullptr)
@@ -140,7 +148,9 @@ void ResqmlWellboreChannelToVtkPolyData::loadVtkObject()
 	}
 
 	channelPolyline->GetPointData()->AddArray(tubeRadius);
-	channelPolyline->GetPointData()->SetActiveScalars(_abstractProperty->getTitle().c_str());
+	// Activate the SAME (sanitized) name just set on the array — must stay
+	// in lockstep with the SetName above, or the active-scalar lookup fails.
+	channelPolyline->GetPointData()->SetActiveScalars(w_arrayName.c_str());
 
 	// Build the tube
 	vtkSmartPointer<vtkTubeFilter> tubeFilter = vtkSmartPointer<vtkTubeFilter>::New();

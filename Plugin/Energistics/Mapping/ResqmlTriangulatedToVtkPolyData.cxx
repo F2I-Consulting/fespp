@@ -42,6 +42,8 @@ ResqmlTriangulatedToVtkPolyData::ResqmlTriangulatedToVtkPolyData(const RESQML2_N
 	  patch_index(patch_index)
 {
 	_pointCount = triangulated->getXyzPointCountOfPatch(patch_index);
+	// Triangles are this patch's cells.
+	_iCellCount = static_cast<uint32_t>(triangulated->getTriangleCountOfPatch(patch_index));
 
 	_vtkData = vtkSmartPointer<vtkPartitionedDataSet>::New();
 
