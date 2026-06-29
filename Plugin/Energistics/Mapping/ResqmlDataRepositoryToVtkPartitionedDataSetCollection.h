@@ -49,6 +49,7 @@ namespace resqml2
 	class PropertySet;
 	class WellboreTrajectoryRepresentation;
 	class WellboreFeature;
+	class BlockedWellboreRepresentation;
 }
 
 namespace resqml2_0_1
@@ -144,6 +145,9 @@ private:
 
 	std::string searchWellboreTrajectory(const std::string& p_fileName);												  // traj
 	std::string searchWellboreFrame(const resqml2::WellboreTrajectoryRepresentation* w_wellboreTrajectory, int p_nodeId); // frame/markerFrame + chanel + marker
+	// BlockedWellbore: attaches a node UNDER its supporting grid (not the well) +
+	// rides the intersected cell indices / trajectory uuid as node attributes.
+	void addBlockedWellboreUnderGrid(const resqml2::BlockedWellboreRepresentation* p_blockedWellbore, const std::string& p_trajectoryUuid);
 	std::string searchWellboreCompletion(const resqml2::WellboreFeature* w_wellboreTrajectory, int p_nodeId);			  // completion + perforation
 	std::string searchRepresentations(resqml2::AbstractRepresentation const *p_representation, int p_nodeId = 0 /* 0 is root's id*/);
 	int searchRepresentationSetRepresentation(resqml2::RepresentationSetRepresentation const *p_rsr, int p_nodeId = 0 /* 0 is root's id*/);
@@ -176,6 +180,9 @@ private:
 	void loadMapper(const TreeViewNodeType p_type, const int p_nodeId,const uint32_t p_nbProcess, const uint32_t p_processId);
 	void loadRepresentationMapper(const int p_nodeId, const uint32_t p_nbProcess, const uint32_t p_processId);
 	void loadWellboreTrajectoryMapper(const int p_nodeId);
+	// BlockedWellbore: builds the subset of its supporting grid's cells the
+	// wellbore is blocked in (IjkGrid or UnstructuredGrid support).
+	void loadBlockedWellboreMapper(const int p_nodeId, const uint32_t p_nbProcess, const uint32_t p_processId);
 	/**
  * add data to parent nodeId
  */

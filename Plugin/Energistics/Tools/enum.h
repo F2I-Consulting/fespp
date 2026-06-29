@@ -62,7 +62,19 @@ enum class TreeViewNodeType
 	// VTK object behind them — selecting one propagates to all
 	// descendants.
 	Feature,
-	Interpretation
+	Interpretation,
+	// Appended on purpose (keeps existing serialized int values stable).
+	// A BlockedWellbore is a WellboreFrame subclass, but FESPP attaches it
+	// UNDER its supporting grid (not the well) — selecting it acts as a cell
+	// filter on that grid (the cell indices ride on the node as attributes).
+	BlockedWellbore,
+	// Appended on purpose (keeps existing serialized int values stable).
+	// A grid (IjkGrid / UnstructuredGrid) is wrapped in a GridContainer folder
+	// that holds a "Full Geometry" rep child plus the grid's SubReps and
+	// BlockedWellbores as sibling reps. The folder has no VTK object — a checked
+	// folder renders nothing — so checking a sub-object never drags the full
+	// grid geometry into the view.
+	GridContainer
 };
 
 // Three layouts for the tree built from the data repository:
@@ -92,7 +104,10 @@ inline bool isGroupingType(TreeViewNodeType p_type)
 		|| p_type == TreeViewNodeType::Feature
 		|| p_type == TreeViewNodeType::Interpretation
 		|| p_type == TreeViewNodeType::MultiRealization
-		|| p_type == TreeViewNodeType::MultiRealizationTimeSeries;
+		|| p_type == TreeViewNodeType::MultiRealizationTimeSeries
+		// A grid container folder groups the grid's reps; checking it propagates
+		// the selection to its Full Geometry / SubRep / BlockedWellbore children.
+		|| p_type == TreeViewNodeType::GridContainer;
 }
 
 // String name of a TreeViewNodeType. Used for the "kind" attribute
@@ -121,6 +136,8 @@ inline const char* treeViewNodeTypeName(TreeViewNodeType p_type)
 	case TreeViewNodeType::MultiRealizationTimeSeries:return "MultiRealizationTimeSeries";
 	case TreeViewNodeType::Feature:                   return "Feature";
 	case TreeViewNodeType::Interpretation:            return "Interpretation";
+	case TreeViewNodeType::BlockedWellbore:           return "BlockedWellbore";
+	case TreeViewNodeType::GridContainer:             return "GridContainer";
 	}
 	return "Unknown";
 }

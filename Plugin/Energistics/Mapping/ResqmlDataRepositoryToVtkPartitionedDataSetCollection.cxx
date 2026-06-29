@@ -77,6 +77,8 @@ VtkAssembly => TreeView:
 #include <fesapi/resqml2/UnstructuredGridRepresentation.h>
 #include <fesapi/resqml2/WellboreMarkerFrameRepresentation.h>
 #include <fesapi/resqml2/WellboreFrameRepresentation.h>
+#include <fesapi/resqml2/BlockedWellboreRepresentation.h>
+#include <fesapi/resqml2/AbstractGridRepresentation.h>
 #include <fesapi/resqml2/WellboreMarker.h>
 #include <fesapi/resqml2/WellboreTrajectoryRepresentation.h>
 #include <fesapi/resqml2/ContinuousProperty.h>
@@ -117,6 +119,7 @@ VtkAssembly => TreeView:
 #include "Mapping/ResqmlWellboreTrajectoryToVtkPolyData.h"
 #include "Mapping/ResqmlWellboreMarkerFrameToVtkPartitionedDataSet.h"
 #include "Mapping/ResqmlWellboreFrameToVtkPartitionedDataSet.h"
+#include "Mapping/ResqmlBlockedWellboreToVtkUnstructuredGrid.h"
 #include "Mapping/WitsmlWellboreCompletionToVtkPartitionedDataSet.h"
 #include "Mapping/WitsmlWellboreCompletionPerforationToVtkPolyData.h"
 #include "Mapping/CommonAbstractObjectSetToVtkPartitionedDataSetSet.h"
@@ -183,10 +186,17 @@ MapperType getMapperType(TreeViewNodeType p_type)
 	case TreeViewNodeType::Collection:
 	case TreeViewNodeType::Wellbore:
 	case TreeViewNodeType::Partial:
+	// The grid container folder has no VTK object — it only groups the grid's
+	// Full Geometry / SubRep / BlockedWellbore reps, so a checked folder renders
+	// nothing and never drags the full grid into the view.
+	case TreeViewNodeType::GridContainer:
 		return MapperType::Folder;
 	case TreeViewNodeType::Representation:
 	case TreeViewNodeType::SubRepresentation:
 	case TreeViewNodeType::WellboreTrajectory:
+	// BlockedWellbore produces real geometry — the subset of supporting-grid cells
+	// the wellbore is blocked in (see loadBlockedWellboreMapper).
+	case TreeViewNodeType::BlockedWellbore:
 		return MapperType::Mapper;
 	case TreeViewNodeType::WellboreMarkerFrame:
 	case TreeViewNodeType::WellboreFrame:
@@ -649,7 +659,8 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::addDefaultToDataAsse
 	std::string w_title;
 	if (type == TreeViewNodeType::Collection
 		|| type == TreeViewNodeType::Partial
-		|| type == TreeViewNodeType::Wellbore)
+		|| type == TreeViewNodeType::Wellbore
+		|| type == TreeViewNodeType::GridContainer)
 	{
 		// Enum-driven kinds (not FESAPI-derived): delegate the string to enum.h.
 		w_kind = treeViewNodeTypeName(type);
@@ -768,7 +779,28 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchReprese
 				}
 				w_type = TreeViewNodeType::SubRepresentation;
 			}
-			p_nodeId = addNodeToDataAssembly(p_representation, w_type, p_nodeId);
+			// A grid (IjkGrid / UnstructuredGrid) is wrapped in a GridContainer
+			// folder holding a "Full Geometry" rep child; the grid's SubReps and
+			// BlockedWellbores then hang as siblings of Full Geometry under the
+			// folder. A checked folder renders nothing, so checking a sub-object
+			// never drags the whole grid into the view. The Full Geometry node
+			// KEEPS the grid uuid name (_<uuid>), so every uuid-based mapper lookup
+			// (loadRepresentationMapper, SubRep / BlockedWellbore supporting grid)
+			// resolves to it unchanged — the tree just gains a folder above it.
+			if (w_type == TreeViewNodeType::Representation &&
+				(dynamic_cast<RESQML2_NS::AbstractIjkGridRepresentation const*>(p_representation) != nullptr ||
+				 dynamic_cast<RESQML2_NS::UnstructuredGridRepresentation const*>(p_representation) != nullptr))
+			{
+				const int w_gridFolderId = _output->GetDataAssembly()->AddNode(
+					("_gridfolder_" + p_representation->getUuid()).c_str(), p_nodeId);
+				addDefaultToDataAssemblyNode(p_representation, TreeViewNodeType::GridContainer, w_gridFolderId);
+				p_nodeId = addNodeToDataAssembly(p_representation, TreeViewNodeType::Representation, w_gridFolderId);
+				_output->GetDataAssembly()->SetAttribute(p_nodeId, "title", "Full Geometry");
+			}
+			else
+			{
+				p_nodeId = addNodeToDataAssembly(p_representation, w_type, p_nodeId);
+			}
 		}
 	}
 	else
@@ -1089,6 +1121,40 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchWellbor
 	{
 		if (_output->GetDataAssembly()->FindFirstNodeWithName(("_" + w_wellboreFrame->getUuid()).c_str()) == -1)
 		{ // verify uuid exist in treeview
+			// BlockedWellbore is a WellboreFrame subclass, but it belongs UNDER its
+			// supporting grid (not the well) and acts as a cell filter. Detect it by
+			// XML TAG (robust — a dynamic_cast across the FESAPI .so boundary can
+			// silently fail) and route it away from the plain WellboreFrame branch.
+			auto* w_blockedWellbore = dynamic_cast<RESQML2_NS::BlockedWellboreRepresentation const*>(w_wellboreFrame);
+			const bool w_isBlocked = w_wellboreFrame->getXmlTag().find("BlockedWellbore") != std::string::npos;
+			if (w_isBlocked || w_blockedWellbore != nullptr)
+			{
+				// Get the typed pointer robustly: dynamic_cast can fail across the
+				// FESAPI .so boundary, so fall back to the repository's typed getter
+				// (no cross-module RTTI), matched by uuid.
+				RESQML2_NS::BlockedWellboreRepresentation const* w_bw = w_blockedWellbore;
+				if (w_bw == nullptr)
+				{
+					for (auto* w_cand : _repository->getDataObjects<RESQML2_NS::BlockedWellboreRepresentation>())
+					{
+						if (w_cand != nullptr && w_cand->getUuid() == w_wellboreFrame->getUuid())
+						{
+							w_bw = w_cand;
+							break;
+						}
+					}
+				}
+				if (w_bw != nullptr)
+				{
+					addBlockedWellboreUnderGrid(w_bw, p_wellboreTrajectory->getUuid());
+				}
+				else
+				{
+					vtkOutputWindowDisplayErrorText(("[BW DIAG] " + w_wellboreFrame->getUuid()
+						+ " blocked by tag but no typed match in getDataObjects — cannot read cells\n").c_str());
+				}
+				continue; // never show a blocked well under the wellbore
+			}
 		  // common with wellboreMarkerFrame & WellboreFrame
 			auto* w_wellboreMarkerFrame = dynamic_cast<RESQML2_NS::WellboreMarkerFrameRepresentation const*>(w_wellboreFrame);
 			if (w_wellboreMarkerFrame == nullptr)
@@ -1136,6 +1202,102 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchWellbor
 		}
 	}
 	return w_result;
+}
+
+// BlockedWellbore: attach a node UNDER its supporting grid (not the well) and
+// ride the intersected grid-cell indices + the trajectory uuid on the node as
+// attributes, so the Python side can (a) filter the grid to those cells on
+// selection and (b) force the referenced trajectory to display. The per-interval
+// cellIndices / gridIndices arrays are sized to the frame's interval count
+// (= node count - 1); a null entry means the interval crosses no cell / grid. We
+// deliberately ignore intersected faces and intersection points for now.
+void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::addBlockedWellboreUnderGrid(
+	RESQML2_NS::BlockedWellboreRepresentation const* p_blockedWellbore,
+	const std::string& p_trajectoryUuid)
+{
+	try
+	{
+		const uint64_t w_mdCount = p_blockedWellbore->getMdValuesCount();
+		const uint64_t w_cellCount = p_blockedWellbore->getCellCount(); // non-null cells
+		if (w_mdCount == 0 || w_cellCount == 0 || p_blockedWellbore->getSupportingGridRepresentationCount() == 0)
+		{
+			return;
+		}
+
+		// FESAPI fills these per-interval arrays; their size is the frame's
+		// interval count, which has NO getter and is NOT always nodeCount-1 (the
+		// testingPackage blocked well uses intervalCount == nodeCount). Allocate
+		// to getMdValuesCount() (always >= interval count) so the fill can never
+		// overflow; the loop below stops after getCellCount() non-null cells —
+		// which all sit inside the written prefix — so the over-allocated tail is
+		// never read. A null entry means the interval crosses no cell / grid.
+		std::vector<int64_t> w_cellIndices(w_mdCount);
+		const int64_t w_cellNull = p_blockedWellbore->getCellIndices(w_cellIndices.data());
+		std::vector<int8_t> w_gridIndices(w_mdCount);
+		const int8_t w_gridNull = p_blockedWellbore->getGridIndices(w_gridIndices.data());
+
+		// SCAFFOLD: handle the FIRST supporting grid (the single-grid common case;
+		// multi-grid blocked wells are rare — revisit when a test case needs them).
+		RESQML2_NS::AbstractGridRepresentation* w_grid = p_blockedWellbore->getSupportingGridRepresentation(0);
+		if (w_grid == nullptr)
+		{
+			return;
+		}
+		const int w_gridNodeId = _output->GetDataAssembly()->FindFirstNodeWithName(("_" + w_grid->getUuid()).c_str());
+		if (w_gridNodeId == -1)
+		{
+			vtkOutputWindowDisplayWarningText(("Blocked wellbore uuid=" + p_blockedWellbore->getUuid()
+				+ ": supporting grid " + w_grid->getUuid() + " not in the tree, skipping\n").c_str());
+			return;
+		}
+
+		// CSV of the blocked cell indices belonging to that grid (grid index 0;
+		// a null grid index is treated as grid 0). This is the Python filter input.
+		// Stop once we have visited all getCellCount() non-null cells — they all
+		// live in the written interval-count prefix, so we never touch the
+		// over-allocated tail.
+		std::string w_cellCsv;
+		uint64_t w_seen = 0;  // non-null cells visited (across grids) -> stop condition
+		uint64_t w_added = 0; // cells written to the CSV (this grid)
+		for (uint64_t i = 0; i < w_mdCount && w_seen < w_cellCount; ++i)
+		{
+			if (w_cellIndices[i] == w_cellNull)
+			{
+				continue;
+			}
+			++w_seen;
+			const int w_g = (w_gridIndices[i] == w_gridNull) ? 0 : static_cast<int>(w_gridIndices[i]);
+			if (w_g != 0)
+			{
+				continue; // a cell of another supporting grid (multi-grid) — not this scaffold's grid
+			}
+			if (w_added > 0)
+			{
+				w_cellCsv += ",";
+			}
+			w_cellCsv += std::to_string(w_cellIndices[i]);
+			++w_added;
+		}
+
+		// Attach the blocked well as a SIBLING of the grid's Full Geometry rep —
+		// i.e. under the grid's container folder (the parent of the _<uuid> node),
+		// not under the rep itself.
+		const int w_gridFolderId = _output->GetDataAssembly()->GetParent(w_gridNodeId);
+		const int w_bwNodeId = addNodeToDataAssembly(p_blockedWellbore, TreeViewNodeType::BlockedWellbore, w_gridFolderId);
+		_output->GetDataAssembly()->SetAttribute(w_bwNodeId, "cellIndices", w_cellCsv.c_str());
+		_output->GetDataAssembly()->SetAttribute(w_bwNodeId, "cellCount", std::to_string(w_added).c_str());
+		_output->GetDataAssembly()->SetAttribute(w_bwNodeId, "supportingGridUuid", w_grid->getUuid().c_str());
+		if (!p_trajectoryUuid.empty())
+		{
+			_output->GetDataAssembly()->SetAttribute(w_bwNodeId, "trajectoryUuid", p_trajectoryUuid.c_str());
+		}
+	}
+	catch (const std::exception& e)
+	{
+		vtkOutputWindowDisplayErrorText(("Skipping blocked wellbore uuid="
+			+ (p_blockedWellbore != nullptr ? p_blockedWellbore->getUuid() : std::string("<null>"))
+			+ ": " + e.what() + "\n").c_str());
+	}
 }
 
 std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchWellboreCompletion(const RESQML2_NS::WellboreFeature* p_wellboreFeature, int p_nodeId)
@@ -1823,6 +1985,10 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::selectNodeId(
 	// visible to RequestData, dropping every prior selector in the batch.
 	if (p_node != 0)
 	{
+		// Walk up adding ancestors to the selection. Grids are now CONTAINER
+		// folders (MapperType::Folder) that render nothing, so a child rep
+		// (Full Geometry / SubRep / BlockedWellbore) checking its grid folder is
+		// harmless — no need to special-case the BlockedWellbore here.
 		selectNodeIdParent(p_node);
 
 		_currentSelection.insert(p_node);
@@ -1967,6 +2133,10 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::loadMapper(const Tre
 	{
 		loadRepresentationMapper(p_nodeId, p_nbProcess, p_processId);
 	}
+	else if (TreeViewNodeType::BlockedWellbore == p_type)
+	{
+		loadBlockedWellboreMapper(p_nodeId, p_nbProcess, p_processId);
+	}
 }
 
 void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::loadRepresentationMapper(const int p_nodeId, const uint32_t p_nbProcess, const uint32_t p_processId)
@@ -2062,6 +2232,82 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::loadRepresentationMa
 	catch (const std::exception& e)
 	{
 		vtkOutputWindowDisplayErrorText(("Error when rendering uuid: " + w_uuid + "\n" + e.what()).c_str());
+	}
+}
+
+void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::loadBlockedWellboreMapper(const int p_nodeId, const uint32_t p_nbProcess, const uint32_t p_processId)
+{
+	const std::string w_uuid = std::string(_output->GetDataAssembly()->GetNodeName(p_nodeId)).substr(1);
+	COMMON_NS::AbstractObject* const w_abstractObject = _repository->getDataObjectByUuid(w_uuid);
+
+	// Robust typed pointer (dynamic_cast can fail across the FESAPI .so boundary;
+	// fall back to the repository's typed getter matched by uuid).
+	RESQML2_NS::BlockedWellboreRepresentation* w_blockedWellbore = dynamic_cast<RESQML2_NS::BlockedWellboreRepresentation*>(w_abstractObject);
+	if (w_blockedWellbore == nullptr)
+	{
+		for (auto* w_cand : _repository->getDataObjects<RESQML2_NS::BlockedWellboreRepresentation>())
+		{
+			if (w_cand != nullptr && w_cand->getUuid() == w_uuid)
+			{
+				w_blockedWellbore = w_cand;
+				break;
+			}
+		}
+	}
+	if (w_blockedWellbore == nullptr)
+	{
+		vtkOutputWindowDisplayErrorText(("Error object type in vtkDataAssembly for blocked wellbore uuid: " + w_uuid + "\n").c_str());
+		return;
+	}
+
+	CommonAbstractObjectToVtkPartitionedDataSet* w_caotvpds = nullptr;
+	try
+	{
+		// The supporting grid may be an IjkGrid or an UnstructuredGrid — reuse its
+		// already-built mapper (create it if absent), then pass it as the common
+		// base to the single BlockedWellbore mapper which branches on the kind.
+		RESQML2_NS::AbstractGridRepresentation* w_grid = w_blockedWellbore->getSupportingGridRepresentation(0);
+		if (auto* w_ijkGrid = dynamic_cast<RESQML2_NS::AbstractIjkGridRepresentation*>(w_grid); w_ijkGrid != nullptr)
+		{
+			const int w_supportingNodeId = _output->GetDataAssembly()->FindFirstNodeWithName(("_" + w_ijkGrid->getUuid()).c_str());
+			if (_nodeIdToMapper.find(w_supportingNodeId) == _nodeIdToMapper.end())
+			{
+				_nodeIdToMapper[w_supportingNodeId] = new ResqmlIjkGridToVtkExplicitStructuredGrid(w_ijkGrid);
+			}
+			w_caotvpds = new ResqmlBlockedWellboreToVtkUnstructuredGrid(w_blockedWellbore, dynamic_cast<ResqmlAbstractRepresentationToVtkPartitionedDataSet*>(_nodeIdToMapper[w_supportingNodeId]), p_processId, p_nbProcess);
+		}
+		else if (auto* w_unstructuredGrid = dynamic_cast<RESQML2_NS::UnstructuredGridRepresentation*>(w_grid); w_unstructuredGrid != nullptr)
+		{
+			const int w_supportingNodeId = _output->GetDataAssembly()->FindFirstNodeWithName(("_" + w_unstructuredGrid->getUuid()).c_str());
+			if (_nodeIdToMapper.find(w_supportingNodeId) == _nodeIdToMapper.end())
+			{
+				_nodeIdToMapper[w_supportingNodeId] = new ResqmlUnstructuredGridToVtkUnstructuredGrid(w_unstructuredGrid);
+			}
+			w_caotvpds = new ResqmlBlockedWellboreToVtkUnstructuredGrid(w_blockedWellbore, dynamic_cast<ResqmlAbstractRepresentationToVtkPartitionedDataSet*>(_nodeIdToMapper[w_supportingNodeId]), p_processId, p_nbProcess);
+		}
+		else
+		{
+			vtkOutputWindowDisplayWarningText(("FESPP only supports IjkGrid or UnstructuredGrid as the supporting grid of a blocked wellbore (uuid: " + w_uuid + ")\n").c_str());
+		}
+	}
+	catch (const std::exception& e)
+	{
+		vtkOutputWindowDisplayErrorText(("Error building blocked wellbore mapper uuid: " + w_uuid + "\n" + e.what()).c_str());
+		w_caotvpds = nullptr;
+	}
+
+	if (w_caotvpds == nullptr)
+	{
+		return;
+	}
+	_nodeIdToMapper[p_nodeId] = w_caotvpds;
+	try
+	{
+		_nodeIdToMapper[p_nodeId]->loadVtkObject();
+	}
+	catch (const std::exception& e)
+	{
+		vtkOutputWindowDisplayErrorText(("Error when rendering blocked wellbore uuid: " + w_uuid + "\n" + e.what()).c_str());
 	}
 }
 
@@ -2487,6 +2733,26 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::deleteMapper()
 			catch (const std::exception& e)
 			{
 				vtkOutputWindowDisplayErrorText(("Error in subrepresentation unload for uuid: " + uuid_unselect + "\n" + e.what()).c_str());
+			}
+		}
+		else if (valueType == TreeViewNodeType::BlockedWellbore)
+		{
+			try
+			{
+				if (auto it = _nodeIdToMapper.find(w_nodeId); it != _nodeIdToMapper.end())
+				{
+					// release the refcount taken on the supporting grid mapper
+					if (auto* w_bw = dynamic_cast<ResqmlBlockedWellboreToVtkUnstructuredGrid*>(it->second); w_bw != nullptr)
+					{
+						w_bw->unregisterToMapperSupportingGrid();
+					}
+					delete it->second;
+					_nodeIdToMapper.erase(it);
+				}
+			}
+			catch (const std::exception& e)
+			{
+				vtkOutputWindowDisplayErrorText(("Error in blocked wellbore unload for uuid: " + uuid_unselect + "\n" + e.what()).c_str());
 			}
 		}
 		else if (valueType == TreeViewNodeType::Representation ||

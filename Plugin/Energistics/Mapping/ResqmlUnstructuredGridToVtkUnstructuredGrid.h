@@ -135,5 +135,6 @@ private:
 							   uint64_t cellIndex);
 
 	friend class ResqmlUnstructuredGridSubRepToVtkUnstructuredGrid;
+	friend class ResqmlBlockedWellboreToVtkUnstructuredGrid;
 };
 #endif

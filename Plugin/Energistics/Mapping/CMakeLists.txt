@@ -2,6 +2,7 @@ set	(FESPP_ENERGISTICS_MAPPING_SOURCES
 		${CMAKE_CURRENT_SOURCE_DIR}/Mapping/CommonAbstractObjectSetToVtkPartitionedDataSetSet.cxx
 		${CMAKE_CURRENT_SOURCE_DIR}/Mapping/CommonAbstractObjectToVtkPartitionedDataSet.cxx
 		${CMAKE_CURRENT_SOURCE_DIR}/Mapping/ResqmlAbstractRepresentationToVtkPartitionedDataSet.cxx
+		${CMAKE_CURRENT_SOURCE_DIR}/Mapping/ResqmlBlockedWellboreToVtkUnstructuredGrid.cxx
 		${CMAKE_CURRENT_SOURCE_DIR}/Mapping/ResqmlDataRepositoryToVtkPartitionedDataSetCollection.cxx
 		${CMAKE_CURRENT_SOURCE_DIR}/Mapping/ResqmlGrid2dToVtkStructuredGrid.cxx
 		${CMAKE_CURRENT_SOURCE_DIR}/Mapping/ResqmlIjkGridSubRepToVtkExplicitStructuredGrid.cxx
@@ -26,6 +27,7 @@ set	(FESPP_ENERGISTICS_MAPPING_HEADERS
 		${CMAKE_CURRENT_SOURCE_DIR}/Mapping/CommonAbstractObjectSetToVtkPartitionedDataSetSet.h
 		${CMAKE_CURRENT_SOURCE_DIR}/Mapping/CommonAbstractObjectToVtkPartitionedDataSet.h
 		${CMAKE_CURRENT_SOURCE_DIR}/Mapping/ResqmlAbstractRepresentationToVtkPartitionedDataSet.h
+		${CMAKE_CURRENT_SOURCE_DIR}/Mapping/ResqmlBlockedWellboreToVtkUnstructuredGrid.h
 		${CMAKE_CURRENT_SOURCE_DIR}/Mapping/ResqmlDataRepositoryToVtkPartitionedDataSetCollection.h
 		${CMAKE_CURRENT_SOURCE_DIR}/Mapping/ResqmlGrid2dToVtkStructuredGrid.h
 		${CMAKE_CURRENT_SOURCE_DIR}/Mapping/ResqmlIjkGridSubRepToVtkExplicitStructuredGrid.h
