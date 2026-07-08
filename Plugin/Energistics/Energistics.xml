@@ -144,6 +144,17 @@
 				panel_visibility="never">
 				<StringArrayHelper />
 			</StringVectorProperty>
+			<!-- Symmetric teardown of ExtractRepPath: setting this to a
+			     rep_path unregisters (pipeline-controller cascade) the
+			     EnergisticsExtractor previously created for that path and
+			     clears the cached registration name. No-op for unknown
+			     paths. NOTE: the SM property only pushes on VALUE CHANGE —
+			     to remove the same path twice (extract / remove / extract /
+			     remove) reset it to "" in between. -->
+			<StringVectorProperty name="RemoveExtractRepPath"
+				command="RemoveExtractRepPath"
+				number_of_elements="1" panel_visibility="never">
+			</StringVectorProperty>
 
 			<!-- ExplicitSelection: when 0 (default), a selector path implicitly
 			     includes all descendants of the matched node — required for

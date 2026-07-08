@@ -245,6 +245,16 @@ public:
 	// raw const char* is rejected by ParaView's vtkSIDataArrayProperty.
 	vtkStringArray* GetExtractedRepProducerName();
 
+	/**
+	 * Symmetric teardown of SetExtractRepPath (XML property
+	 * RemoveExtractRepPath): unregisters the EnergisticsExtractor created
+	 * for `rep_path` through the pipeline controller (cascading delete of
+	 * the C++ filter and its per-rep resources) and forgets the cached
+	 * registration name so a later SetExtractRepPath recreates it fresh.
+	 * No-op for an unknown path or an already-deleted proxy.
+	 */
+	void RemoveExtractRepPath(const char* rep_path);
+
 protected:
 	vtkEPCCollector();
 	~vtkEPCCollector() final;

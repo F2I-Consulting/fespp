@@ -190,6 +190,9 @@ MapperType getMapperType(TreeViewNodeType p_type)
 	// Full Geometry / SubRep / BlockedWellbore reps, so a checked folder renders
 	// nothing and never drags the full grid into the view.
 	case TreeViewNodeType::GridContainer:
+	case TreeViewNodeType::PropertiesFolder:
+	case TreeViewNodeType::SubRepresentationFolder:
+	case TreeViewNodeType::BlockedWellboreFolder:
 		return MapperType::Folder;
 	case TreeViewNodeType::Representation:
 	case TreeViewNodeType::SubRepresentation:
@@ -647,6 +650,62 @@ int ResqmlDataRepositoryToVtkPartitionedDataSetCollection::addNodeToDataAssembly
 	return new_nodeId;
 }
 
+int ResqmlDataRepositoryToVtkPartitionedDataSetCollection::findOrCreateGridSubFolder(
+	const std::string& p_namePrefix, const std::string& p_gridUuid,
+	TreeViewNodeType p_type, const char* p_title, int p_containerId)
+{
+	auto* w_assembly = _output->GetDataAssembly();
+	const std::string w_nodeName = p_namePrefix + p_gridUuid;
+	int w_id = w_assembly->FindFirstNodeWithName(w_nodeName.c_str());
+	if (w_id == -1)
+	{
+		w_id = w_assembly->AddNode(w_nodeName.c_str(), p_containerId);
+		w_assembly->SetAttribute(w_id, "type", std::to_string(static_cast<int>(p_type)).c_str());
+		w_assembly->SetAttribute(w_id, "kind", treeViewNodeTypeName(p_type));
+		w_assembly->SetAttribute(w_id, "label", MakeValidNodeName(p_title).c_str());
+		w_assembly->SetAttribute(w_id, "title", p_title);
+	}
+	return w_id;
+}
+
+int ResqmlDataRepositoryToVtkPartitionedDataSetCollection::resolveGridGeometryRepId(int p_nodeId)
+{
+	auto* w_assembly = _output->GetDataAssembly();
+	int w_cur = p_nodeId;
+	uint32_t w_typeVal = 0;
+	while (w_cur > 0)
+	{
+		if (!w_assembly->GetAttribute(w_cur, "type", w_typeVal)) return -1;
+		const TreeViewNodeType w_t = static_cast<TreeViewNodeType>(w_typeVal);
+		if (w_t == TreeViewNodeType::GridContainer) break;
+		// A property under a SubRepresentation / BlockedWellbore belongs to that
+		// sub-object (its own representation), NOT the grid geometry — do not
+		// resolve the grid geometry for it, else checking a sub-object's property
+		// would drag the whole grid into the view.
+		if (w_t == TreeViewNodeType::SubRepresentation
+			|| w_t == TreeViewNodeType::SubRepresentationFolder
+			|| w_t == TreeViewNodeType::BlockedWellbore
+			|| w_t == TreeViewNodeType::BlockedWellboreFolder)
+			return -1;
+		w_cur = w_assembly->GetParent(w_cur);
+	}
+	if (w_cur <= 0) return -1;
+	// GridContainer -> (PropertiesFolder) -> geometry Representation leaf.
+	for (int w_child : w_assembly->GetChildNodes(w_cur))
+	{
+		if (w_assembly->GetAttribute(w_child, "type", w_typeVal) &&
+			static_cast<TreeViewNodeType>(w_typeVal) == TreeViewNodeType::Representation)
+			return w_child;
+		for (int w_gchild : w_assembly->GetChildNodes(w_child))
+		{
+			if (w_assembly->GetAttribute(w_gchild, "type", w_typeVal) &&
+				static_cast<TreeViewNodeType>(w_typeVal) == TreeViewNodeType::Representation)
+				return w_gchild;
+		}
+	}
+	return -1;
+}
+
 void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::addDefaultToDataAssemblyNode(common::AbstractObject const* object, const TreeViewNodeType type, int nodeId)
 {
 	// type attribute
@@ -660,7 +719,10 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::addDefaultToDataAsse
 	if (type == TreeViewNodeType::Collection
 		|| type == TreeViewNodeType::Partial
 		|| type == TreeViewNodeType::Wellbore
-		|| type == TreeViewNodeType::GridContainer)
+		|| type == TreeViewNodeType::GridContainer
+		|| type == TreeViewNodeType::PropertiesFolder
+		|| type == TreeViewNodeType::SubRepresentationFolder
+		|| type == TreeViewNodeType::BlockedWellboreFolder)
 	{
 		// Enum-driven kinds (not FESAPI-derived): delegate the string to enum.h.
 		w_kind = treeViewNodeTypeName(type);
@@ -794,8 +856,18 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchReprese
 				const int w_gridFolderId = _output->GetDataAssembly()->AddNode(
 					("_gridfolder_" + p_representation->getUuid()).c_str(), p_nodeId);
 				addDefaultToDataAssemblyNode(p_representation, TreeViewNodeType::GridContainer, w_gridFolderId);
-				p_nodeId = addNodeToDataAssembly(p_representation, TreeViewNodeType::Representation, w_gridFolderId);
-				_output->GetDataAssembly()->SetAttribute(p_nodeId, "title", "Full Geometry");
+				// properties/ folder holding the geometry rep as a LEAF sibling of the
+				// real props. The geometry KEEPS name "_<uuid>" + kind so every uuid /
+				// mapper / SubRep / BlockedWellbore lookup still resolves; "SolidColor"
+				// is a display title only.
+				const int w_propsFolderId = findOrCreateGridSubFolder(
+					"_propsfolder_", p_representation->getUuid(),
+					TreeViewNodeType::PropertiesFolder, "properties", w_gridFolderId);
+				const int w_geomNodeId = addNodeToDataAssembly(p_representation, TreeViewNodeType::Representation, w_propsFolderId);
+				_output->GetDataAssembly()->SetAttribute(w_geomNodeId, "title", "SolidColor");
+				// Hand the props folder down so searchProperties attaches props here
+				// (siblings of the geometry leaf), not under the geometry rep.
+				p_nodeId = w_propsFolderId;
 			}
 			else
 			{
@@ -844,6 +916,22 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchReprese
 		}
 	}
 
+	// SolidColor variant: searchSubRepresentation/searchProperties expect the
+	// grid's PropertiesFolder as p_nodeId (as on first traversal). On re-traversal
+	// (companion EPC) the grid was resolved by its "_<uuid>" name to the geometry
+	// rep, so if p_nodeId is a grid geometry rep (parent is a PropertiesFolder)
+	// hand its parent down; harmless on first traversal (p_nodeId already the folder).
+	{
+		const int w_pf = _output->GetDataAssembly()->GetParent(p_nodeId);
+		uint32_t w_pfType = 0;
+		if (w_pf > 0
+			&& _output->GetDataAssembly()->GetAttribute(w_pf, "type", w_pfType)
+			&& static_cast<TreeViewNodeType>(w_pfType) == TreeViewNodeType::PropertiesFolder)
+		{
+			p_nodeId = w_pf;
+		}
+	}
+
 	// add sub representation with properties (only for ijkGrid and unstructured grid)
 	if (dynamic_cast<RESQML2_NS::AbstractIjkGridRepresentation const*>(p_representation) != nullptr ||
 		dynamic_cast<RESQML2_NS::UnstructuredGridRepresentation const*>(p_representation) != nullptr)
@@ -863,13 +951,22 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchSubRepr
 	try
 	{
 		auto w_subRepresentationSet = p_representation->getSubRepresentationSet();
-		std::sort(w_subRepresentationSet.begin(), w_subRepresentationSet.end(), lexicographicalComparison);
-
-		w_message = std::accumulate(std::begin(w_subRepresentationSet), std::end(w_subRepresentationSet), std::string{},
-			[&](std::string& message, RESQML2_NS::SubRepresentation* b)
-			{
-				return message += searchRepresentations(b, _output->GetDataAssembly()->GetParent(p_nodeParent));
-			});
+		if (!w_subRepresentationSet.empty())
+		{
+			std::sort(w_subRepresentationSet.begin(), w_subRepresentationSet.end(), lexicographicalComparison);
+			// p_nodeParent is the grid's properties/ folder; its parent is the grid
+			// container. Route SubReps into a dedicated SubRep/ folder under it (created
+			// lazily so grids without SubReps show no empty folder).
+			const int w_containerId = _output->GetDataAssembly()->GetParent(p_nodeParent);
+			const int w_subRepFolderId = findOrCreateGridSubFolder(
+				"_subrepfolder_", p_representation->getUuid(),
+				TreeViewNodeType::SubRepresentationFolder, "SubRep", w_containerId);
+			w_message = std::accumulate(std::begin(w_subRepresentationSet), std::end(w_subRepresentationSet), std::string{},
+				[&](std::string& message, RESQML2_NS::SubRepresentation* b)
+				{
+					return message += searchRepresentations(b, w_subRepFolderId);
+				});
+		}
 	}
 	catch (const std::exception& e)
 	{
@@ -1279,11 +1376,15 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::addBlockedWellboreUn
 			++w_added;
 		}
 
-		// Attach the blocked well as a SIBLING of the grid's Full Geometry rep —
-		// i.e. under the grid's container folder (the parent of the _<uuid> node),
-		// not under the rep itself.
-		const int w_gridFolderId = _output->GetDataAssembly()->GetParent(w_gridNodeId);
-		const int w_bwNodeId = addNodeToDataAssembly(p_blockedWellbore, TreeViewNodeType::BlockedWellbore, w_gridFolderId);
+		// The geometry rep now lives inside properties/, so GetParent(w_gridNodeId)
+		// is that props folder; the grid container is one level up. Group all the
+		// grid's blocked wellbores under a "block wellbore" folder there.
+		const int w_propsFolderId = _output->GetDataAssembly()->GetParent(w_gridNodeId);
+		const int w_containerId = _output->GetDataAssembly()->GetParent(w_propsFolderId);
+		const int w_bwFolderId = findOrCreateGridSubFolder(
+			"_bwfolder_", w_grid->getUuid(),
+			TreeViewNodeType::BlockedWellboreFolder, "block wellbore", w_containerId);
+		const int w_bwNodeId = addNodeToDataAssembly(p_blockedWellbore, TreeViewNodeType::BlockedWellbore, w_bwFolderId);
 		_output->GetDataAssembly()->SetAttribute(w_bwNodeId, "cellIndices", w_cellCsv.c_str());
 		_output->GetDataAssembly()->SetAttribute(w_bwNodeId, "cellCount", std::to_string(w_added).c_str());
 		_output->GetDataAssembly()->SetAttribute(w_bwNodeId, "supportingGridUuid", w_grid->getUuid().c_str());
@@ -1993,6 +2094,22 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::selectNodeId(
 
 		_currentSelection.insert(p_node);
 		_oldSelection.erase(p_node);
+
+		// SolidColor variant: the grid geometry rep is a SIBLING of the props (under
+		// PropertiesFolder), so a lone grid Property / TimeSeries / MultiRealization
+		// leaf would render nothing. Pull the sibling geometry in (add-only). It is a
+		// Representation (not grouping) -> no children cascade -> geometry ALONE.
+		// resolveGridGeometryRepId returns -1 for non-grid nodes AND for nodes under
+		// a SubRepresentation/BlockedWellbore, so wellbore/marker props and sub-object
+		// props never drag in the grid geometry; it returns the geometry rep itself
+		// for the geometry rep, so skip re-adding the node we are already selecting.
+		const int w_geomRep = resolveGridGeometryRepId(p_node);
+		if (w_geomRep > 0 && w_geomRep != p_node)
+		{
+			_currentSelection.insert(w_geomRep);
+			_oldSelection.erase(w_geomRep);
+			selectNodeIdParent(w_geomRep);
+		}
 	}
 
 	// Children-walk strategy:
@@ -2356,6 +2473,16 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::addDataToParent(cons
 		_output->GetDataAssembly()->GetAttribute(w_nodeParent, "type", value_type);
 		w_typeParent = static_cast<TreeViewNodeType>(value_type);
 	}
+	// SolidColor variant: a GRID property's geometry rep is a SIBLING under the
+	// PropertiesFolder, so the up-walk stops on the folder/container (no mapper).
+	// Redirect to the geometry sibling so _nodeIdToMapper resolves (else the
+	// property never colours: "representation for property ... not exist").
+	if (w_typeParent == TreeViewNodeType::PropertiesFolder
+		|| w_typeParent == TreeViewNodeType::GridContainer)
+	{
+		const int w_geomRep = resolveGridGeometryRepId(p_nodeId);
+		if (w_geomRep > 0) w_nodeParent = w_geomRep;
+	}
 
 	if (TreeViewNodeType::Perforation == p_type)
 	{
@@ -2633,6 +2760,15 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::deleteMapper()
 				w_Assembly->GetAttribute(w_nodeParent, "type", w_typeValue);
 				w_typeParent = static_cast<TreeViewNodeType>(w_typeValue);
 			}
+			// SolidColor variant: redirect a grid TS property to the sibling
+			// geometry rep so deleteDataArray reaches the mapper (else array leak).
+			if (w_typeParent == TreeViewNodeType::PropertiesFolder
+				|| w_typeParent == TreeViewNodeType::GridContainer)
+			{
+				const int w_geomRep = resolveGridGeometryRepId(
+					w_Assembly->FindFirstNodeWithName(("_" + uuid_unselect).c_str()));
+				if (w_geomRep > 0) w_nodeParent = w_geomRep;
+			}
 			if (_nodeIdToMapper.find(w_nodeParent) != _nodeIdToMapper.end())
 			{
 				auto* w_rep = static_cast<ResqmlAbstractRepresentationToVtkPartitionedDataSet*>(_nodeIdToMapper[w_nodeParent]);
@@ -2675,6 +2811,14 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::deleteMapper()
 				w_typeParent = static_cast<TreeViewNodeType>(w_typeValue);
 			}
 
+			// SolidColor variant: redirect a grid property to the sibling geometry
+			// rep so deleteDataArray reaches the mapper (else the array leaks).
+			if (w_typeParent == TreeViewNodeType::PropertiesFolder
+				|| w_typeParent == TreeViewNodeType::GridContainer)
+			{
+				const int w_geomRep = resolveGridGeometryRepId(w_nodeId);
+				if (w_geomRep > 0) w_nodeParent = w_geomRep;
+			}
 			try
 			{
 				if (_nodeIdToMapper.find(w_nodeParent) != _nodeIdToMapper.end())
@@ -2859,9 +3003,25 @@ vtkPartitionedDataSetCollection* ResqmlDataRepositoryToVtkPartitionedDataSetColl
 		else if (getMapperType(w_type) == MapperType::Mapper)
 		{
 			// load mapper with nodeId
-			if (_nodeIdToMapper.find(*w_it) == _nodeIdToMapper.end())
+			auto w_mapperIt = _nodeIdToMapper.find(*w_it);
+			if (w_mapperIt == _nodeIdToMapper.end())
 			{
 				loadMapper(w_type, *w_it, p_nbProcess, p_processId);
+			}
+			else if (w_mapperIt->second != nullptr)
+			{
+				// SolidColor variant: a BlockedWellbore / SubRepresentation loaded
+				// first plants a points-only supporting-grid stub at this SAME node
+				// id (0 partitions -- only getVtkPoints ran on it). Presence alone
+				// would skip the build forever, leaving an empty grid. Build the
+				// cells IN PLACE (never recreate: BW/SubRep mappers keep a raw
+				// pointer to this supporting mapper). Mirrors the Properties-path
+				// repair (getOutput()->GetNumberOfPartitions()==0 -> loadVtkObject).
+				auto* w_rep = static_cast<ResqmlAbstractRepresentationToVtkPartitionedDataSet*>(w_mapperIt->second);
+				if (w_rep->getOutput()->GetNumberOfPartitions() == 0)
+				{
+					w_rep->loadVtkObject();
+				}
 			}
 			++w_it;
 		}

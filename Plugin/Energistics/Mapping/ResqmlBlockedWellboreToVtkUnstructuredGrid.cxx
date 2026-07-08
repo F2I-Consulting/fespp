@@ -25,7 +25,7 @@ under the License.
 
 // include VTK library
 #include <vtkSmartPointer.h>
-#include <vtkHexahedron.h>
+#include <vtkCellType.h>
 #include <vtkIdList.h>
 #include <vtkUnstructuredGrid.h>
 
@@ -105,6 +105,9 @@ void ResqmlBlockedWellboreToVtkUnstructuredGrid::loadVtkObject()
 			return;
 		}
 		mapperSupportingGrid->registerSubRep();
+		// One hexahedron per blocked cell, 8 ids each — exact one-shot allocation.
+		w_vtkUnstructuredGrid->AllocateExact(static_cast<vtkIdType>(w_blockedCells.size()),
+			static_cast<vtkIdType>(w_blockedCells.size()) * 8);
 		w_vtkUnstructuredGrid->SetPoints(w_ijkMapper->getVtkPoints());
 
 		// hexahedron node ordering per ParaView convention (handedness-aware)
@@ -129,12 +132,13 @@ void ResqmlBlockedWellboreToVtkUnstructuredGrid::loadVtkObject()
 				{
 					if (w_indice < w_blockedCells.size() && w_blockedCells[w_indice] == static_cast<int64_t>(w_cellIndex))
 					{
-						vtkSmartPointer<vtkHexahedron> w_hex = vtkSmartPointer<vtkHexahedron>::New();
+						vtkIdType w_hexPointIds[8];
 						for (uint_fast8_t w_c = 0; w_c < 8; ++w_c)
 						{
-							w_hex->GetPointIds()->SetId(w_c, w_ijkGrid->getXyzPointIndexFromCellCorner(w_i, w_j, w_k, w_corner[w_c]));
+							w_hexPointIds[w_c] = static_cast<vtkIdType>(
+								w_ijkGrid->getXyzPointIndexFromCellCorner(w_i, w_j, w_k, w_corner[w_c]));
 						}
-						w_vtkUnstructuredGrid->InsertNextCell(w_hex->GetCellType(), w_hex->GetPointIds());
+						w_vtkUnstructuredGrid->InsertNextCell(VTK_HEXAHEDRON, 8, w_hexPointIds);
 						++w_indice;
 					}
 					++w_cellIndex;

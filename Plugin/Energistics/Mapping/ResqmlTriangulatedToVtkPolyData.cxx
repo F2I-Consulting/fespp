@@ -24,7 +24,8 @@ under the License.
 #include <vtkCellArray.h>
 #include <vtkSmartPointer.h>
 #include <vtkDoubleArray.h>
-#include <vtkTriangle.h>
+#include <vtkIdTypeArray.h>
+#include <vtkNew.h>
 #include <vtkPolyData.h>
 
 // include F2i-consulting Energistics Standards API
@@ -98,18 +99,31 @@ void ResqmlTriangulatedToVtkPolyData::loadVtkObject()
 	vtk_polydata->SetPoints(vtkPts);
 
 	// CELLS
+	// Offsets + connectivity are allocated ONCE at their exact final size
+	// (T+1 and 3*T ids). The previous per-triangle InsertNextCell pattern
+	// grew the connectivity geometrically (realloc + copy churn) — on a
+	// multi-million-triangle surface the transient peak was ~2x the final
+	// tens-of-MB array and drove the all-surfaces mass-load std::bad_alloc.
 	const size_t previousPatchesNodeCount = getPreviousPatchesNodeCount();
-	vtkSmartPointer<vtkCellArray> triangulatedRepresentationTriangles = vtkSmartPointer<vtkCellArray>::New();
-	std::unique_ptr<unsigned int[]> triangleIndices(new unsigned int[triangulated->getTriangleCountOfPatch(this->patch_index) * 3]);
+	const vtkIdType triangleCount = static_cast<vtkIdType>(triangulated->getTriangleCountOfPatch(this->patch_index));
+	std::unique_ptr<unsigned int[]> triangleIndices(new unsigned int[triangleCount * 3]);
 	triangulated->getTriangleNodeIndicesOfPatch(this->patch_index, triangleIndices.get());
-	for (auto p = 0; p < triangulated->getTriangleCountOfPatch(this->patch_index); ++p)
+
+	vtkNew<vtkIdTypeArray> offsets;
+	offsets->SetNumberOfValues(triangleCount + 1);
+	vtkNew<vtkIdTypeArray> connectivity;
+	connectivity->SetNumberOfValues(triangleCount * 3);
+	for (vtkIdType p = 0; p < triangleCount; ++p)
 	{
-		vtkSmartPointer<vtkTriangle> triangulatedRepresentationTriangle = vtkSmartPointer<vtkTriangle>::New();
-		triangulatedRepresentationTriangle->GetPointIds()->SetId(0, triangleIndices[p * 3] - previousPatchesNodeCount);
-		triangulatedRepresentationTriangle->GetPointIds()->SetId(1, triangleIndices[p * 3 + 1] - previousPatchesNodeCount);
-		triangulatedRepresentationTriangle->GetPointIds()->SetId(2, triangleIndices[p * 3 + 2] - previousPatchesNodeCount);
-		triangulatedRepresentationTriangles->InsertNextCell(triangulatedRepresentationTriangle);
+		offsets->SetValue(p, 3 * p);
+		connectivity->SetValue(3 * p, static_cast<vtkIdType>(triangleIndices[p * 3] - previousPatchesNodeCount));
+		connectivity->SetValue(3 * p + 1, static_cast<vtkIdType>(triangleIndices[p * 3 + 1] - previousPatchesNodeCount));
+		connectivity->SetValue(3 * p + 2, static_cast<vtkIdType>(triangleIndices[p * 3 + 2] - previousPatchesNodeCount));
 	}
+	offsets->SetValue(triangleCount, 3 * triangleCount);
+
+	vtkSmartPointer<vtkCellArray> triangulatedRepresentationTriangles = vtkSmartPointer<vtkCellArray>::New();
+	triangulatedRepresentationTriangles->SetData(offsets, connectivity);
 	vtk_polydata->SetPolys(triangulatedRepresentationTriangles);
 
 	_vtkData->SetPartition(0, vtk_polydata);

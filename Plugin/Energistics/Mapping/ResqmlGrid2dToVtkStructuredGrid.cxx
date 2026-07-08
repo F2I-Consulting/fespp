@@ -21,7 +21,6 @@ under the License.
 // include VTK library
 #include <vtkSmartPointer.h>
 #include <vtkPointData.h>
-#include <vtkCellArray.h>
 
 // include F2i-consulting Energistics Standards API
 #include <fesapi/eml2/AbstractLocal3dCrs.h>
@@ -73,8 +72,10 @@ void ResqmlGrid2dToVtkStructuredGrid::loadVtkObject()
 	std::unique_ptr<double[]> z(new double[nbNodeI * nbNodeJ]);
 	grid2D->getZValuesInGlobalCrs(z.get());
 
+	// Pre-size the points once (nbNodeI*nbNodeJ is known) — InsertNextPoint
+	// grew the array geometrically with realloc+copy churn on large surfaces.
 	vtkSmartPointer<vtkPoints> points = vtkSmartPointer<vtkPoints>::New();
-	vtkSmartPointer<vtkCellArray> vertices = vtkSmartPointer<vtkCellArray>::New();
+	points->SetNumberOfPoints(static_cast<vtkIdType>(_pointCount));
 
 	std::vector< vtkIdType> blankPts;
 
@@ -84,12 +85,12 @@ void ResqmlGrid2dToVtkStructuredGrid::loadVtkObject()
 		{
 			const size_t ptId = i + j * nbNodeI;
 
-				vtkIdType pid = points->InsertNextPoint(
+				points->SetPoint(static_cast<vtkIdType>(ptId),
 					originX + i * XIOffset + j * XJOffset,
 					originY + i * YIOffset + j * YJOffset,
 					z[ptId] * zIndice);
 				if (std::isnan(z[ptId])) {
-					blankPts.push_back(pid);
+					blankPts.push_back(static_cast<vtkIdType>(ptId));
 				}
 		}
 	}

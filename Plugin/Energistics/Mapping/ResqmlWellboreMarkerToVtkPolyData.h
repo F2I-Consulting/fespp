@@ -53,6 +53,12 @@ protected:
 private:
 	void createDisk(uint32_t markerIndex);
 	void createSphere(uint32_t markerIndex);
+	// Attach the categorical id of p_markerName to the generated geometry:
+	// cell int array "MarkerNameId" (same id for every marker sharing the
+	// name, across wells) + field-data vtkStringArray "MarkerNames" (index
+	// i = name for id i) so Python can build LUT annotations from any
+	// marker block without per-marker proxies.
+	void tagMarkerName(const std::string& p_markerName);
 
 	bool _orientation;
 	uint32_t _size;

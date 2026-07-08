@@ -74,7 +74,18 @@ enum class TreeViewNodeType
 	// BlockedWellbores as sibling reps. The folder has no VTK object — a checked
 	// folder renders nothing — so checking a sub-object never drags the full
 	// grid geometry into the view.
-	GridContainer
+	GridContainer,
+	// Appended on purpose (keeps existing serialized int values stable).
+	// A per-grid folder that groups ALL of a grid's BlockedWellbores under ONE
+	// grouping node, so the UI can select them with a single path (the folder
+	// auto-expands to its children via selectNodeIdChildren). No VTK object.
+	BlockedWellboreFolder,
+	// Per-grid folder holding the grid GEOMETRY leaf ("_<uuid>" Representation,
+	// displayed "SolidColor") as a SIBLING of the real properties. NOT a grouping
+	// type (see isGroupingType) so checking it does not cascade. No VTK object.
+	PropertiesFolder,
+	// Per-grid folder grouping ALL of a grid's SubRepresentations. No VTK object.
+	SubRepresentationFolder
 };
 
 // Three layouts for the tree built from the data repository:
@@ -107,7 +118,13 @@ inline bool isGroupingType(TreeViewNodeType p_type)
 		|| p_type == TreeViewNodeType::MultiRealizationTimeSeries
 		// A grid container folder groups the grid's reps; checking it propagates
 		// the selection to its Full Geometry / SubRep / BlockedWellbore children.
-		|| p_type == TreeViewNodeType::GridContainer;
+		|| p_type == TreeViewNodeType::GridContainer
+		// A BlockedWellbore folder groups a grid's blocked wellbores; checking it
+		// propagates the selection to every blocked-wellbore child.
+		|| p_type == TreeViewNodeType::BlockedWellboreFolder
+		// PropertiesFolder is DELIBERATELY NOT grouping — checking it must NOT
+		// cascade to geometry + all props. Still MapperType::Folder (renders nothing).
+		|| p_type == TreeViewNodeType::SubRepresentationFolder;
 }
 
 // String name of a TreeViewNodeType. Used for the "kind" attribute
@@ -138,6 +155,9 @@ inline const char* treeViewNodeTypeName(TreeViewNodeType p_type)
 	case TreeViewNodeType::Interpretation:            return "Interpretation";
 	case TreeViewNodeType::BlockedWellbore:           return "BlockedWellbore";
 	case TreeViewNodeType::GridContainer:             return "GridContainer";
+		case TreeViewNodeType::BlockedWellboreFolder:     return "BlockedWellboreFolder";
+		case TreeViewNodeType::PropertiesFolder:          return "PropertiesFolder";
+		case TreeViewNodeType::SubRepresentationFolder:   return "SubRepresentationFolder";
 	}
 	return "Unknown";
 }

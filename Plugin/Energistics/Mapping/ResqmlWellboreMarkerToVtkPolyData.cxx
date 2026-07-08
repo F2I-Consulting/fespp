@@ -27,6 +27,11 @@ under the License.
 #include <vtkDiskSource.h>
 #include <vtkSphereSource.h>
 #include <vtkPolyData.h>
+#include <vtkCellData.h>
+#include <vtkFieldData.h>
+#include <vtkIntArray.h>
+#include <vtkNew.h>
+#include <vtkStringArray.h>
 
 #include <fesapi/eml2/AbstractLocal3dCrs.h>
 #include <fesapi/resqml2/WellboreMarker.h>
@@ -50,6 +55,33 @@ ResqmlWellboreMarkerToVtkPolyData::ResqmlWellboreMarkerToVtkPolyData(const resqm
 const RESQML2_NS::WellboreMarkerFrameRepresentation *ResqmlWellboreMarkerToVtkPolyData::getResqmlData() const
 {
 	return static_cast<const RESQML2_NS::WellboreMarkerFrameRepresentation *>(_resqmlData);
+}
+
+namespace
+{
+	// Process-wide marker-name -> categorical id registry. Ids are assigned
+	// on first sight and NEVER reassigned, so a given geological name keeps
+	// the same id across wells and across load/unload cycles of the session
+	// — the stability contract the Python categorical LUT relies on.
+	std::vector<std::string>& markerNameTable()
+	{
+		static std::vector<std::string> w_names;
+		return w_names;
+	}
+
+	int markerNameId(const std::string& p_name)
+	{
+		auto& w_names = markerNameTable();
+		for (size_t w_i = 0; w_i < w_names.size(); ++w_i)
+		{
+			if (w_names[w_i] == p_name)
+			{
+				return static_cast<int>(w_i);
+			}
+		}
+		w_names.push_back(p_name);
+		return static_cast<int>(w_names.size() - 1);
+	}
 }
 
 //----------------------------------------------------------------------------
@@ -86,8 +118,44 @@ void ResqmlWellboreMarkerToVtkPolyData::loadVtkObject()
 			{
 				createSphere(w_mIndex);
 			}
+			tagMarkerName(w_markerSet[w_mIndex]->getTitle());
 		}
 	}
+}
+
+//----------------------------------------------------------------------------
+void ResqmlWellboreMarkerToVtkPolyData::tagMarkerName(const std::string& p_markerName)
+{
+	// Partition 0 is absent when no geometry was generated (NaN position
+	// with orientation on) — nothing to tag then.
+	vtkPolyData* w_polydata = vtkPolyData::SafeDownCast(_vtkData->GetPartition(0));
+	if (w_polydata == nullptr)
+	{
+		return;
+	}
+	const int w_id = markerNameId(p_markerName);
+
+	// One value per cell: the whole disk/sphere IS the marker, but a CELL
+	// array keeps it usable by cell-keyed consumers (categorical LUT,
+	// threshold, per-cell picking).
+	vtkNew<vtkIntArray> w_ids;
+	w_ids->SetName("MarkerNameId");
+	w_ids->SetNumberOfValues(w_polydata->GetNumberOfCells());
+	w_ids->FillValue(w_id);
+	w_polydata->GetCellData()->AddArray(w_ids);
+
+	// Snapshot of the full id -> name table (index i = name for id i). It
+	// only ever GROWS, so any block's table covers at least its own id;
+	// take the longest table across blocks for the complete mapping.
+	const auto& w_names = markerNameTable();
+	vtkNew<vtkStringArray> w_nameTable;
+	w_nameTable->SetName("MarkerNames");
+	w_nameTable->SetNumberOfValues(static_cast<vtkIdType>(w_names.size()));
+	for (size_t w_i = 0; w_i < w_names.size(); ++w_i)
+	{
+		w_nameTable->SetValue(static_cast<vtkIdType>(w_i), w_names[w_i]);
+	}
+	w_polydata->GetFieldData()->AddArray(w_nameTable);
 }
 
 namespace

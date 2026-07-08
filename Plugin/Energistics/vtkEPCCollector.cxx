@@ -741,6 +741,37 @@ void vtkEPCCollector::SetExtractRepPath(const char* rep_path)
 	lastExtractedProducerName->InsertNextValue(regName);
 }
 
+//----------------------------------------------------------------------------
+// Mirror of SetExtractRepPath: drop the per-rep EnergisticsExtractor. The
+// pipeline-controller UnRegisterProxy is the cascade used everywhere else
+// for teardown — it releases the SM registration AND the server-side filter
+// so an unload actually frees the C++ per-rep resources.
+void vtkEPCCollector::RemoveExtractRepPath(const char* rep_path)
+{
+	if (rep_path == nullptr || rep_path[0] == '\0')
+		return;
+	const auto it = repProducerNames.find(std::string(rep_path));
+	if (it == repProducerNames.end())
+		return;
+
+	vtkSMSessionProxyManager* spm = vtkSMProxyManager::GetProxyManager()->GetActiveSessionProxyManager();
+	if (spm)
+	{
+		// RegisterPipelineProxy registers pipeline-typed proxies in "sources";
+		// "filters" kept as a defensive fallback (same rationale as the reuse
+		// path in SetExtractRepPath).
+		vtkSMProxy* extract = spm->GetProxy("sources", it->second.c_str());
+		if (extract == nullptr)
+			extract = spm->GetProxy("filters", it->second.c_str());
+		if (extract != nullptr)
+		{
+			vtkNew<vtkSMParaViewPipelineController> controller;
+			controller->UnRegisterProxy(extract);
+		}
+	}
+	repProducerNames.erase(it);
+}
+
 // Info-only readback: returns a 1-element vtkStringArray with the
 // registration name set by the most recent SetExtractRepPath call. Empty
 // array if SetExtractRepPath failed or wasn't called.

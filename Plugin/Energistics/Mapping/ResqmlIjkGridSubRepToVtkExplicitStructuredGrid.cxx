@@ -23,10 +23,10 @@ under the License.
 // include VTK library
 #include <vtkSmartPointer.h>
 #include <vtkCellData.h>
+#include <vtkCellType.h>
 #include <vtkDataArray.h>
 #include <vtkDoubleArray.h>
 #include <vtkEmptyCell.h>
-#include <vtkHexahedron.h>
 #include <vtkUnstructuredGrid.h>
 
 // include FESAPI
@@ -97,6 +97,11 @@ void ResqmlIjkGridSubRepToVtkExplicitStructuredGrid::loadVtkObject()
 	std::unique_ptr<uint64_t[]> elementIndices(new uint64_t[elementCountOfPatch]);
 	subRep->getElementIndicesOfPatch(0, 0, elementIndices.get());
 
+	// One hexahedron per subrep element, 8 ids each — allocate the cell
+	// arrays once instead of letting InsertNextCell grow them geometrically.
+	vtk_unstructuredGrid->AllocateExact(static_cast<vtkIdType>(elementCountOfPatch),
+		static_cast<vtkIdType>(elementCountOfPatch) * 8);
+
 	_iCellCount = supportingGrid->getICellCount();
 	_jCellCount = supportingGrid->getJCellCount();
 	_kCellCount = supportingGrid->getKCellCount();
@@ -111,14 +116,13 @@ void ResqmlIjkGridSubRepToVtkExplicitStructuredGrid::loadVtkObject()
 			{
 				if (elementIndices[indice] == cellIndex)
 				{
-					vtkSmartPointer<vtkHexahedron> hex = vtkSmartPointer<vtkHexahedron>::New();
-
+					vtkIdType hexPointIds[8];
 					for (uint_fast8_t cornerId = 0; cornerId < 8; ++cornerId)
 					{
-						hex->GetPointIds()->SetId(cornerId,
+						hexPointIds[cornerId] = static_cast<vtkIdType>(
 							supportingGrid->getXyzPointIndexFromCellCorner(vtkICellIndex, vtkJCellIndex, vtkKCellIndex, correspondingResqmlCornerId[cornerId]));
 					}
-					vtk_unstructuredGrid->InsertNextCell(hex->GetCellType(), hex->GetPointIds());
+					vtk_unstructuredGrid->InsertNextCell(VTK_HEXAHEDRON, 8, hexPointIds);
 					indice++;
 				}
 				++cellIndex;

@@ -71,6 +71,24 @@ public:
 	ResqmlDataRepositoryToVtkPartitionedDataSetCollection();
 	~ResqmlDataRepositoryToVtkPartitionedDataSetCollection();
 	// --------------- PART: TreeView ---------------------
+	// The assembly is a single live vtkDataAssembly, EXTENDED INCREMENTALLY
+	// via AddNode/SetAttribute on every addFile/addDataspace traversal — it
+	// is never rebuilt through XML serialize/parse round-trips. The only
+	// from-scratch rebuild is rebuildAssembly() (explicit tree-mode change).
+	//
+	// NODE-NAME CONTRACT (fespp_on_trame V2 relies on it): every node name is
+	// deterministic and derived from RESQML/WITSML identity — reloading the
+	// same EPC set yields the same node PATHS regardless of load order:
+	//   objects                  "_<uuid>"
+	//   grid container folders   "_gridfolder_<uuid>" / "_propsfolder_<uuid>"
+	//                            / "_subrepfolder_<uuid>"
+	//   feature/interp grouping  "_feature_<uuid>" / "_interp_<uuid>"
+	//   perforations             "_<uuid>_<connectionUid>" (sanitized)
+	//   synthetic TimeSeries     "_<tsUuid><sanitized kind_title>"
+	//   synthetic realizations   "_multireal_<sanitized title>" (+ "_<propUuid>"
+	//                            children); MR+TS "_<tsUuid>multirealts_<...>"
+	// No insertion-order counter is ever part of a node name. Node IDs (ints)
+	// are NOT stable across rebuilds — always address nodes by path.
 	vtkDataAssembly* GetAssembly() { return _output->GetDataAssembly(); };
 
 	//---------------------------------
@@ -131,6 +149,14 @@ private:
 	std::string buildDataAssemblyFromDataObjectRepo(const char *p_fileName);
 	int addNodeToDataAssembly(common::AbstractObject const* object,const TreeViewNodeType type, int nodeId_parent); // return new nodeId
 	void addDefaultToDataAssemblyNode(common::AbstractObject const* object, const TreeViewNodeType type, int nodeId);
+	// Find-or-create a grid container grouping sub-folder (properties/SubRep/BW).
+	// Idempotent via synthetic name "<prefix><gridUuid>".
+	int findOrCreateGridSubFolder(const std::string& p_namePrefix, const std::string& p_gridUuid,
+		TreeViewNodeType p_type, const char* p_title, int p_containerId);
+	// SIBLING resolver: from a grid Property/TS/MR node whose chain ends at
+	// PropertiesFolder->GridContainer, return the geometry rep node id ("_<uuid>"
+	// Representation child of the GridContainer). Returns -1 for non-grid nodes.
+	int resolveGridGeometryRepId(int p_nodeId);
 
 	// Helper for the alternate tree hierarchy modes
 	// (ByInterpretation, ByFeatureAndInterpretation). Given a
