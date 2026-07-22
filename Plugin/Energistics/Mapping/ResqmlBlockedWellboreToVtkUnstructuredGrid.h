@@ -28,8 +28,16 @@ under the License.
 
 #include "ResqmlAbstractRepresentationToVtkPartitionedDataSet.h"
 
+// include system
+#include <cstdint>
+#include <map>
+#include <set>
+#include <string>
+#include <vector>
+
 // include VTK
 #include <vtkSmartPointer.h>
+#include <vtkType.h>
 #include <vtkUnstructuredGrid.h>
 
 namespace RESQML2_NS
@@ -58,9 +66,54 @@ public:
 	 */
 	std::string unregisterToMapperSupportingGrid();
 
+	/**
+	 * mirror the supporting grid's CELL arrays onto this wellbore's cells:
+	 * bwArray[k] = gridArray[_blockedCells[k]] — an exact restriction, no
+	 * interpolation. A blocked wellbore carries no RESQML property of its own,
+	 * so this is what lets it be coloured / thresholded by its grid's
+	 * properties even when the grid itself is hidden.
+	 *
+	 * Idempotent and safe to call at any time: a no-op while this wellbore or
+	 * the supporting grid is not loaded. Only the arrays a previous call
+	 * mirrored are evicted, never an array the wellbore legitimately owns.
+	 *
+	 * p_gridMapper is passed IN and never read back from mapperSupportingGrid:
+	 * the caller owns the mapper lifetimes and thereby guarantees it is alive
+	 * (mapperSupportingGrid is a raw, non-owning pointer that a grid unload can
+	 * leave dangling).
+	 */
+	void syncCellDataFromSupportingGrid(ResqmlAbstractRepresentationToVtkPartitionedDataSet *p_gridMapper);
+
 protected:
 	const RESQML2_NS::BlockedWellboreRepresentation *getResqmlData() const;
 
 	ResqmlAbstractRepresentationToVtkPartitionedDataSet *mapperSupportingGrid;
+
+	/** Flat cell indices of the supporting grid this wellbore is blocked in —
+	 *  ascending and duplicate-free. VTK cell k of this wellbore IS the
+	 *  supporting grid's flat cell _blockedCells[k]: loadVtkObject inserts the
+	 *  cells in that very order (ascending flat scan). */
+	std::vector<int64_t> _blockedCells;
+
+	/** Flat cell count of the supporting grid. A grid CELL array is only
+	 *  addressable by _blockedCells when it holds exactly that many tuples
+	 *  (a K-hyperslabbed grid array is shifted/shorter — skip it). Left at 0
+	 *  on a multi-supporting-grid wellbore, which disables the mirror rather
+	 *  than guessing which grid the flat indices belong to. */
+	uint64_t _supportingCellCount = 0;
+
+	/** Names of the cell arrays THIS class mirrored, so a later sync evicts
+	 *  only its own leftovers. */
+	std::set<std::string> _syncedArrayNames;
+
+	/** MTime of the grid array behind each mirrored name, at copy time. The
+	 *  collection re-pushes the WHOLE selection on every batch, so without
+	 *  this memo a click costs O(N_props² x N_wellbores) tuple copies. */
+	std::map<std::string, vtkMTimeType> _syncedArrayMTimes;
+
+	/** The refcount on the supporting grid mapper is taken at most once per
+	 *  mapper instance — loadVtkObject can run several times (stub repair,
+	 *  re-selection) while unregisterToMapperSupportingGrid runs once. */
+	bool _registeredOnSupportingGrid = false;
 };
 #endif

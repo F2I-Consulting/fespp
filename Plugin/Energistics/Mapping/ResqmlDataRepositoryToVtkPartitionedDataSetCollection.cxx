@@ -706,6 +706,72 @@ int ResqmlDataRepositoryToVtkPartitionedDataSetCollection::resolveGridGeometryRe
 	return -1;
 }
 
+void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::fanOutCellDataToBlockedWellbores(
+	int p_gridGeomNodeId, ResqmlAbstractRepresentationToVtkPartitionedDataSet* p_gridMapper)
+{
+	if (p_gridMapper == nullptr || p_gridGeomNodeId <= 0)
+	{
+		return;
+	}
+	auto* w_assembly = _output->GetDataAssembly();
+	uint32_t w_typeVal = 0;
+
+	// Walk up to the GridContainer. Only a PropertiesFolder may sit in between
+	// (the SolidColor layout: GridContainer -> PropertiesFolder -> geometry rep).
+	// Anything else means this is not a grid geometry rep — in particular a
+	// SubRepresentation, whose arrays are sized to ITS cell subset and would
+	// never be addressable by the wellbores' flat grid indices.
+	int w_cur = w_assembly->GetParent(p_gridGeomNodeId);
+	while (w_cur > 0)
+	{
+		if (!w_assembly->GetAttribute(w_cur, "type", w_typeVal))
+		{
+			return;
+		}
+		const TreeViewNodeType w_t = static_cast<TreeViewNodeType>(w_typeVal);
+		if (w_t == TreeViewNodeType::GridContainer)
+		{
+			break;
+		}
+		if (w_t != TreeViewNodeType::PropertiesFolder)
+		{
+			return;
+		}
+		w_cur = w_assembly->GetParent(w_cur);
+	}
+	if (w_cur <= 0)
+	{
+		return;
+	}
+
+	// The "block wellbore" folder is a DIRECT child of the container
+	// (findOrCreateGridSubFolder with the "_bwfolder_" prefix), and the wellbore
+	// nodes are its direct children — hence traverse_subtree=false on both, which
+	// also keeps us off the property nodes of a big grid.
+	for (int w_child : w_assembly->GetChildNodes(w_cur, /*traverse_subtree=*/false))
+	{
+		if (!w_assembly->GetAttribute(w_child, "type", w_typeVal)
+			|| static_cast<TreeViewNodeType>(w_typeVal) != TreeViewNodeType::BlockedWellboreFolder)
+		{
+			continue;
+		}
+		for (int w_bwNode : w_assembly->GetChildNodes(w_child, /*traverse_subtree=*/false))
+		{
+			// An UNCHECKED blocked wellbore has no mapper: skip it, never build
+			// one here (it would show up unasked and cost a full load).
+			auto w_it = _nodeIdToMapper.find(w_bwNode);
+			if (w_it == _nodeIdToMapper.end() || w_it->second == nullptr)
+			{
+				continue;
+			}
+			if (auto* w_bw = dynamic_cast<ResqmlBlockedWellboreToVtkUnstructuredGrid*>(w_it->second); w_bw != nullptr)
+			{
+				w_bw->syncCellDataFromSupportingGrid(p_gridMapper);
+			}
+		}
+	}
+}
+
 void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::addDefaultToDataAssemblyNode(common::AbstractObject const* object, const TreeViewNodeType type, int nodeId)
 {
 	// type attribute
@@ -2583,6 +2649,11 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::addDataToParent(cons
 					? std::string("_real_") + realIdxAttr
 					: std::string{};
 				abstractRepresentation->addDataArray(w_uuid, 0, true, suffix);
+				// Blocked wellbores of this grid borrow its cell arrays. Called
+				// unconditionally: addDataArray no-ops when the array is already
+				// loaded, yet a wellbore checked AFTER the property still has to
+				// receive its copy.
+				fanOutCellDataToBlockedWellbores(w_nodeParent, abstractRepresentation);
 			}
 			else
 			{
@@ -2679,6 +2750,9 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::addDataToParent(cons
 					if (!w_titleStr.empty())
 						abstractRepresentation->addNaNFillDataArray(
 							w_titleStr, suffix, /*autoActivate*/ !isStepSwap);
+					// Mirror the NaN fill too, else the wellbores would keep the
+					// previous step's values while the grid goes transparent.
+					fanOutCellDataToBlockedWellbores(w_nodeParent, abstractRepresentation);
 					return;
 				}
 
@@ -2699,6 +2773,13 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::addDataToParent(cons
 				// auto-activate so coloring follows the user's pick. Step swaps
 				// must not steal the active scalar coloring.
 				abstractRepresentation->addDataArray(newUuid, 0, !isStepSwap, suffix);
+				// The ONLY site that keeps the wellbores in sync on a step change:
+				// their mapper is neither deleted (deleteMapper only walks
+				// _oldSelection) nor reloaded (it still has its partition), so
+				// without this push they would silently display step N-1 while the
+				// grid displays N. The array name is stable across steps, so the
+				// mirror replaces it by name (the grid array's MTime bumped).
+				fanOutCellDataToBlockedWellbores(w_nodeParent, abstractRepresentation);
 			}
 		}
 		catch (const std::exception& e)
@@ -2825,6 +2906,12 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::deleteMapper()
 				{
 					auto* abstractRepresentation = static_cast<ResqmlAbstractRepresentationToVtkPartitionedDataSet*>(_nodeIdToMapper[w_nodeParent]);
 					abstractRepresentation->deleteDataArray(uuid_unselect);
+					// EVICTION: the blocked wellbores mirror this grid's cell
+					// arrays — re-sync so the copy of the array the user just
+					// unchecked leaves the wells too. Without this, unchecking
+					// the LAST grid property leaves the wells painted with a
+					// value the grid no longer carries. No-op for non-grid reps.
+					fanOutCellDataToBlockedWellbores(w_nodeParent, abstractRepresentation);
 				}
 			}
 			catch (const std::exception& e)

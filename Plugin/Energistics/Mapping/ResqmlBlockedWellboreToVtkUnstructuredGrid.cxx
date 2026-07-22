@@ -20,13 +20,22 @@ under the License.
 
 #include <algorithm>
 #include <array>
+#include <cstring>
 #include <memory>
+#include <set>
+#include <string>
+#include <utility>
 #include <vector>
 
 // include VTK library
 #include <vtkSmartPointer.h>
+#include <vtkCellData.h>
 #include <vtkCellType.h>
+#include <vtkDataArray.h>
+#include <vtkDataSet.h>
+#include <vtkDataSetAttributes.h>
 #include <vtkIdList.h>
+#include <vtkLookupTable.h>
 #include <vtkUnstructuredGrid.h>
 
 // include FESAPI
@@ -60,6 +69,14 @@ const RESQML2_NS::BlockedWellboreRepresentation* ResqmlBlockedWellboreToVtkUnstr
 //----------------------------------------------------------------------------
 void ResqmlBlockedWellboreToVtkUnstructuredGrid::loadVtkObject()
 {
+	// A (re)load rebuilds partition 0 from scratch, so every mirrored cell array
+	// goes away with the previous vtkUnstructuredGrid: drop the correspondence
+	// cache too, and let the sync at the end of this method rebuild it.
+	_blockedCells.clear();
+	_syncedArrayNames.clear();
+	_syncedArrayMTimes.clear();
+	_supportingCellCount = 0;
+
 	RESQML2_NS::BlockedWellboreRepresentation const* w_blockedWellbore = getResqmlData();
 	RESQML2_NS::AbstractGridRepresentation* w_grid = w_blockedWellbore->getSupportingGridRepresentation(0);
 	if (w_grid == nullptr)
@@ -87,6 +104,11 @@ void ResqmlBlockedWellboreToVtkUnstructuredGrid::loadVtkObject()
 		}
 	}
 	std::sort(w_blockedCells.begin(), w_blockedCells.end());
+	// A cell the trajectory enters twice would stall the ascending flat scan
+	// below (it never rewinds), silently dropping every later cell — and it
+	// would break the cell k <-> w_blockedCells[k] correspondence that the
+	// property mirroring relies on.
+	w_blockedCells.erase(std::unique(w_blockedCells.begin(), w_blockedCells.end()), w_blockedCells.end());
 	if (w_blockedCells.empty())
 	{
 		return;
@@ -104,7 +126,13 @@ void ResqmlBlockedWellboreToVtkUnstructuredGrid::loadVtkObject()
 			vtkOutputWindowDisplayWarningText(("BlockedWellbore (" + w_blockedWellbore->getUuid() + "): supporting IjkGrid mapper missing\n").c_str());
 			return;
 		}
-		mapperSupportingGrid->registerSubRep();
+		if (!_registeredOnSupportingGrid)
+		{
+			// At most once per mapper instance: loadVtkObject can run again (stub
+			// repair, re-selection) while the unregister on unload runs once.
+			mapperSupportingGrid->registerSubRep();
+			_registeredOnSupportingGrid = true;
+		}
 		// One hexahedron per blocked cell, 8 ids each — exact one-shot allocation.
 		w_vtkUnstructuredGrid->AllocateExact(static_cast<vtkIdType>(w_blockedCells.size()),
 			static_cast<vtkIdType>(w_blockedCells.size()) * 8);
@@ -121,6 +149,10 @@ void ResqmlBlockedWellboreToVtkUnstructuredGrid::loadVtkObject()
 		_iCellCount = w_ijkGrid->getICellCount();
 		_jCellCount = w_ijkGrid->getJCellCount();
 		_kCellCount = w_ijkGrid->getKCellCount();
+		// NOT this wellbore's cell count: the flat scan below reuses these as its
+		// bounds. Keep the grid's flat cell count apart, it is the yardstick the
+		// cell-array mirroring validates the grid's arrays against.
+		_supportingCellCount = w_ijkGrid->getCellCount();
 
 		uint64_t w_cellIndex = 0;
 		size_t w_indice = 0;
@@ -146,6 +178,12 @@ void ResqmlBlockedWellboreToVtkUnstructuredGrid::loadVtkObject()
 			}
 		}
 		w_ijkGrid->unloadSplitInformation();
+		// The flat scan only advances on an exact match, so a (bogus) index at or
+		// beyond ni*nj*nk sits unmatched at the sorted tail: the cells actually
+		// inserted are exactly the prefix [0, w_indice). Truncate so the
+		// cell k <-> w_blockedCells[k] correspondence stays exact — otherwise the
+		// sync's count guard would silently disable the mirror on this wellbore.
+		w_blockedCells.resize(w_indice);
 	}
 	// --- UnstructuredGrid support: build each blocked cell from the supporting
 	// grid's face topology (cf. ResqmlUnstructuredGridSubRepToVtkUnstructuredGrid).
@@ -157,7 +195,13 @@ void ResqmlBlockedWellboreToVtkUnstructuredGrid::loadVtkObject()
 			vtkOutputWindowDisplayWarningText(("BlockedWellbore (" + w_blockedWellbore->getUuid() + "): supporting UnstructuredGrid mapper missing\n").c_str());
 			return;
 		}
-		mapperSupportingGrid->registerSubRep();
+		if (!_registeredOnSupportingGrid)
+		{
+			// Same once-per-instance guard as the IjkGrid branch above.
+			mapperSupportingGrid->registerSubRep();
+			_registeredOnSupportingGrid = true;
+		}
+		_supportingCellCount = w_unstructuredGrid->getCellCount();
 		w_vtkUnstructuredGrid->Allocate(static_cast<vtkIdType>(w_blockedCells.size()));
 		w_vtkUnstructuredGrid->SetPoints(w_unstrMapper->getVtkPoints());
 
@@ -225,11 +269,180 @@ void ResqmlBlockedWellboreToVtkUnstructuredGrid::loadVtkObject()
 
 	_vtkData->SetPartition(0, w_vtkUnstructuredGrid);
 	_vtkData->Modified();
+
+	// Cells were inserted in ascending flat order, so VTK cell k IS the grid's
+	// flat cell w_blockedCells[k]. Keep that mapping: it is the whole basis of
+	// the cell-property restriction.
+	_blockedCells = std::move(w_blockedCells);
+
+	// Several supporting grids: the flat indices could belong to any of them
+	// and loadVtkObject built everything against grid 0 only. Refuse to guess —
+	// a wrong-but-plausible PORO on a wellbore is worse than no colour at all.
+	// Leaving the count at 0 keeps every sync a no-op for this wellbore.
+	if (w_blockedWellbore->getSupportingGridRepresentationCount() > 1)
+	{
+		_supportingCellCount = 0;
+	}
+
+	// The supporting grid may already carry the cell properties the user checked
+	// BEFORE this wellbore (the common order: a property's node id is lower than
+	// a blocked wellbore's, so it is processed first). A no-op while the grid is
+	// still a points-only stub — the collection pushes to us later in that case.
+	// mapperSupportingGrid was just dereferenced above (getVtkPoints), so it is
+	// alive here.
+	syncCellDataFromSupportingGrid(mapperSupportingGrid);
+}
+
+//----------------------------------------------------------------------------
+void ResqmlBlockedWellboreToVtkUnstructuredGrid::syncCellDataFromSupportingGrid(ResqmlAbstractRepresentationToVtkPartitionedDataSet* p_gridMapper)
+{
+	if (p_gridMapper == nullptr || _blockedCells.empty() || _supportingCellCount == 0)
+	{
+		return;
+	}
+
+	// This wellbore loaded?
+	if (_vtkData == nullptr || _vtkData->GetNumberOfPartitions() == 0)
+	{
+		return;
+	}
+	vtkDataSet* w_bwDataSet = vtkDataSet::SafeDownCast(_vtkData->GetPartition(0));
+	if (w_bwDataSet == nullptr)
+	{
+		return;
+	}
+
+	// Supporting grid loaded? A points-only stub has no partition — not an
+	// error, the properties simply are not there yet.
+	vtkSmartPointer<vtkPartitionedDataSet> w_gridOutput = p_gridMapper->getOutput();
+	if (w_gridOutput == nullptr || w_gridOutput->GetNumberOfPartitions() == 0)
+	{
+		return;
+	}
+	vtkDataSet* w_gridDataSet = vtkDataSet::SafeDownCast(w_gridOutput->GetPartition(0));
+	if (w_gridDataSet == nullptr)
+	{
+		return;
+	}
+
+	vtkCellData* w_gridCellData = w_gridDataSet->GetCellData();
+	vtkCellData* w_bwCellData = w_bwDataSet->GetCellData();
+	if (w_gridCellData == nullptr || w_bwCellData == nullptr)
+	{
+		return;
+	}
+
+	// One VTK cell per blocked cell, in the same order — the correspondence is
+	// only sound if the counts still agree.
+	const vtkIdType w_bwCellCount = w_bwDataSet->GetNumberOfCells();
+	if (w_bwCellCount != static_cast<vtkIdType>(_blockedCells.size()))
+	{
+		return;
+	}
+	// _blockedCells is sorted, so front()/back() bound every index: this is what
+	// makes the SetTuple reads below unconditionally in range.
+	if (_blockedCells.front() < 0
+		|| static_cast<uint64_t>(_blockedCells.back()) >= _supportingCellCount)
+	{
+		return;
+	}
+
+	std::set<std::string> w_freshNames;
+	std::map<std::string, vtkMTimeType> w_freshMTimes;
+	const int w_arrayCount = w_gridCellData->GetNumberOfArrays();
+	for (int w_a = 0; w_a < w_arrayCount; ++w_a)
+	{
+		vtkDataArray* w_gridArray = w_gridCellData->GetArray(w_a);
+		if (w_gridArray == nullptr)
+		{
+			continue;
+		}
+		const char* w_name = w_gridArray->GetName();
+		if (w_name == nullptr || w_name[0] == '\0')
+		{
+			continue; // an unnamed array can be neither mirrored nor evicted by name
+		}
+		// VTK-internal bookkeeping of the supporting grid, never property data:
+		// vtkGhostType would import the grid's dead-cell blanking (VTK honours
+		// the name and installs it as the live ghost array) and silently hide
+		// wellbore cells; ConnectivityFlags is vtkExplicitStructuredGrid face
+		// bookkeeping, meaningless on this vtkUnstructuredGrid.
+		if (std::strcmp(w_name, vtkDataSetAttributes::GhostArrayName()) == 0
+			|| std::strcmp(w_name, "ConnectivityFlags") == 0)
+		{
+			continue;
+		}
+		// _blockedCells holds FLAT grid indices: they only address this array's
+		// tuples when it covers the WHOLE grid. A K-hyperslabbed array (multi
+		// process) is shorter and shifted — skip rather than mis-map.
+		if (w_gridArray->GetNumberOfTuples() != static_cast<vtkIdType>(_supportingCellCount))
+		{
+			continue;
+		}
+
+		// The collection re-pushes the WHOLE selection every batch, so this sync
+		// runs O(N_props) times per click: skip the copy when the grid array has
+		// not changed since we last mirrored it (a time-step swap reloads the
+		// grid array in place and bumps its MTime, so it is never missed).
+		const auto w_seen = _syncedArrayMTimes.find(w_name);
+		if (w_seen != _syncedArrayMTimes.end()
+			&& w_seen->second == w_gridArray->GetMTime()
+			&& w_bwCellData->HasArray(w_name))
+		{
+			w_freshNames.insert(w_name);
+			w_freshMTimes[w_name] = w_seen->second;
+			continue;
+		}
+
+		// NewInstance keeps the grid's concrete type (double / float / int ...)
+		// and SetTuple copies the whole tuple, so vectorial properties ride along
+		// untouched. No hard-coded cast, no interpolation.
+		vtkSmartPointer<vtkDataArray> w_bwArray;
+		w_bwArray.TakeReference(w_gridArray->NewInstance());
+		w_bwArray->SetName(w_name);
+		w_bwArray->SetNumberOfComponents(w_gridArray->GetNumberOfComponents());
+		w_bwArray->SetNumberOfTuples(w_bwCellCount);
+		for (vtkIdType w_k = 0; w_k < w_bwCellCount; ++w_k)
+		{
+			w_bwArray->SetTuple(w_k, static_cast<vtkIdType>(_blockedCells[w_k]), w_gridArray);
+		}
+		// Categorical / property-kind colour map, if the grid's array carries one.
+		w_bwArray->SetLookupTable(w_gridArray->GetLookupTable());
+
+		w_bwCellData->AddArray(w_bwArray); // replaces the homonym, if any
+		w_freshNames.insert(w_name);
+		w_freshMTimes[w_name] = w_gridArray->GetMTime();
+	}
+
+	// Evict only what a PREVIOUS sync mirrored and that the grid no longer
+	// carries (property unchecked, time step swapped to another array name...).
+	for (const std::string& w_stale : _syncedArrayNames)
+	{
+		if (w_freshNames.find(w_stale) == w_freshNames.end())
+		{
+			w_bwCellData->RemoveArray(w_stale.c_str());
+		}
+	}
+	_syncedArrayNames = std::move(w_freshNames);
+	_syncedArrayMTimes = std::move(w_freshMTimes);
+
+	// Follow the grid's active scalars when it has some, so the wellbore colours
+	// with it out of the box. Best effort: the app binds ColorBy by name anyway.
+	vtkDataArray* w_gridScalars = w_gridCellData->GetScalars();
+	if (w_gridScalars != nullptr && w_gridScalars->GetName() != nullptr
+		&& w_bwCellData->HasArray(w_gridScalars->GetName()))
+	{
+		w_bwCellData->SetActiveScalars(w_gridScalars->GetName());
+	}
+
+	w_bwDataSet->Modified();
+	_vtkData->Modified();
 }
 
 //----------------------------------------------------------------------------
 std::string ResqmlBlockedWellboreToVtkUnstructuredGrid::unregisterToMapperSupportingGrid()
 {
 	this->mapperSupportingGrid->unregisterSubRep();
+	_registeredOnSupportingGrid = false;
 	return this->mapperSupportingGrid->getUuid();
 }
