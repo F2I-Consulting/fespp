@@ -1395,10 +1395,38 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchWellbor
 			else
 			{ // WellboreMarkerFrame
 				int w_frameNodeId = addNodeToDataAssembly(w_wellboreFrame, TreeViewNodeType::WellboreMarkerFrame, p_nodeId);
-				// marker
-				for (auto* w_wellboreMarker : w_wellboreMarkerFrame->getWellboreMarkerSet())
+				// Ride each marker's MD on its node ("md" attribute): the
+				// Python tree sorts marker siblings by DEPTH instead of
+				// name. Marker set index i pairs with mdValues[i] on the
+				// frame. The MD buffer is sized to the LARGER of the two
+				// counts — getMdAsDoubleValues writes getMdValuesCount()
+				// values, which is not guaranteed to equal the marker
+				// count on off-spec files.
+				auto w_markerSet = w_wellboreMarkerFrame->getWellboreMarkerSet();
+				const size_t w_mdCount = w_wellboreMarkerFrame->getMdValuesCount();
+				std::vector<double> w_mds(
+					w_mdCount > w_markerSet.size() ? w_mdCount : w_markerSet.size(), 0.0);
+				bool w_hasMds = false;
+				try
 				{
-					int w_nodeId = addNodeToDataAssembly(w_wellboreMarker, TreeViewNodeType::WellboreMarker, w_frameNodeId);
+					if (w_mdCount >= w_markerSet.size() && !w_markerSet.empty())
+					{
+						w_wellboreMarkerFrame->getMdAsDoubleValues(w_mds.data());
+						w_hasMds = true;
+					}
+				}
+				catch (const std::exception&)
+				{
+					// unreadable MDs — the tree keeps name order
+				}
+				// marker
+				for (size_t w_i = 0; w_i < w_markerSet.size(); ++w_i)
+				{
+					int w_nodeId = addNodeToDataAssembly(w_markerSet[w_i], TreeViewNodeType::WellboreMarker, w_frameNodeId);
+					if (w_hasMds && w_mds[w_i] == w_mds[w_i])
+					{
+						_output->GetDataAssembly()->SetAttribute(w_nodeId, "md", std::to_string(w_mds[w_i]).c_str());
+					}
 				}
 			}
 		}
