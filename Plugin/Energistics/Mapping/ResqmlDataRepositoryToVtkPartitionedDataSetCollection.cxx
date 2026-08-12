@@ -64,6 +64,7 @@ VtkAssembly => TreeView:
 // FESAPI includes
 #include <fesapi/common/DataObjectRepository.h>
 #include <fesapi/common/EpcDocument.h>
+#include <fesapi/eml2/PropertyKind.h>
 #include <fesapi/eml2/TimeSeries.h>
 #include <fesapi/resqml2/Grid2dRepresentation.h>
 #include <fesapi/resqml2/AbstractFeature.h>
@@ -233,6 +234,31 @@ const char* propKindName(RESQML2_NS::AbstractProperty const* prop)
 	if (dynamic_cast<RESQML2_NS::DiscreteProperty const*>(prop)) return "DiscreteProperty";
 	if (dynamic_cast<RESQML2_NS::ContinuousProperty const*>(prop)) return "ContinuousProperty";
 	return "Property";
+}
+
+// PWLS / local property-kind TITLE ("volume", "depth", …) — the
+// geology-level classification, distinct from propKindName's VALUE
+// type above. Feeds the "propertyKind" assembly attribute. Empty when
+// the property references no PropertyKind OBJECT: a RESQML 2.0.1
+// property bound to a STANDARD Energistics kind has nothing to read
+// through this API (getPropertyKind may throw there, hence the
+// catch-all).
+std::string propertyKindTitle(RESQML2_NS::AbstractProperty const* prop)
+{
+	try
+	{
+		EML2_NS::PropertyKind* w_pk =
+			const_cast<RESQML2_NS::AbstractProperty*>(prop)->getPropertyKind();
+		if (w_pk != nullptr)
+		{
+			return w_pk->getTitle();
+		}
+	}
+	catch (const std::exception&)
+	{
+		// standard 2.0.1 Energistics kind — no object to read
+	}
+	return std::string();
 }
 }
 
@@ -814,6 +840,19 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::addDefaultToDataAsse
 	_output->GetDataAssembly()->SetAttribute(nodeId, "label", w_representationVtkValidName.c_str());
 	_output->GetDataAssembly()->SetAttribute(nodeId, "kind", w_kind.c_str());
 	_output->GetDataAssembly()->SetAttribute(nodeId, "title", w_title.c_str());
+
+	// PWLS / local property-kind title (volume, depth, …) on plain
+	// property leaves — the synthetic TS / MR nodes get the same
+	// attribute from their name→kind maps. Absent when the property
+	// has no PropertyKind object (standard 2.0.1 Energistics kind).
+	if (auto const* w_prop = dynamic_cast<RESQML2_NS::AbstractProperty const*>(object))
+	{
+		const std::string w_pkTitle = propertyKindTitle(w_prop);
+		if (!w_pkTitle.empty())
+		{
+			_output->GetDataAssembly()->SetAttribute(nodeId, "propertyKind", w_pkTitle.c_str());
+		}
+	}
 
 	if (type != TreeViewNodeType::Partial)
 	{
@@ -1574,12 +1613,14 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchTimeSer
 			std::map<std::string, double> w_propertyNameToMinPropValue;
 			std::map<std::string, double> w_propertyNameToMaxPropValue;
 			std::map<std::string, std::string> w_propertyNameToKind;
+			std::map<std::string, std::string> w_propertyNameToPwlsKind;
 			for (auto* w_prop : w_timeSeries->getPropertySet())
 			{
 				if (w_prop->getXmlTag() == RESQML2_NS::ContinuousProperty::XML_TAG ||
 					w_prop->getXmlTag() == RESQML2_NS::DiscreteProperty::XML_TAG)
 				{
 					w_propertyNameToKind[w_prop->getTitle()] = propKindName(w_prop);
+					w_propertyNameToPwlsKind[w_prop->getTitle()] = propertyKindTitle(w_prop);
 					auto w_nodeId = (_output->GetDataAssembly()->FindFirstNodeWithName(("_" + w_prop->getUuid()).c_str()));
 					if (w_nodeId == -1)
 					{
@@ -1713,6 +1754,11 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchTimeSer
 				{
 					_output->GetDataAssembly()->SetAttribute(w_nodeId, "propKind", kindIt->second.c_str());
 				}
+				if (auto pkIt = w_propertyNameToPwlsKind.find(w_myPair.first);
+					pkIt != w_propertyNameToPwlsKind.end() && !pkIt->second.empty())
+				{
+					_output->GetDataAssembly()->SetAttribute(w_nodeId, "propertyKind", pkIt->second.c_str());
+				}
 				if (auto it = w_propertyNameToMinPropValue.find(w_myPair.first); it != w_propertyNameToMinPropValue.end())
 				{
 					_output->GetDataAssembly()->SetAttribute(w_nodeId, "minvalue", std::to_string(static_cast<double>(it->second)).c_str());
@@ -1744,6 +1790,7 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchRealiza
 	std::map<std::string, double> propertyNameToGlobalMin;
 	std::map<std::string, double> propertyNameToGlobalMax;
 	std::map<std::string, std::string> propertyNameToKind;
+	std::map<std::string, std::string> propertyNameToPwlsKind;
 
 	// Iterate through all representations in the repository
 	std::vector<RESQML2_NS::AbstractRepresentation const*> w_allReps;
@@ -1845,6 +1892,10 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchRealiza
 					if (propertyNameToKind.find(propTitle) == propertyNameToKind.end())
 					{
 						propertyNameToKind[propTitle] = propKindName(prop);
+					}
+					if (propertyNameToPwlsKind.find(propTitle) == propertyNameToPwlsKind.end())
+					{
+						propertyNameToPwlsKind[propTitle] = propertyKindTitle(prop);
 					}
 
 					// Remember the parent (same for all realizations of a property)
@@ -1974,6 +2025,11 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchRealiza
 		{
 			_output->GetDataAssembly()->SetAttribute(w_nodeId, "propKind", kindIt->second.c_str());
 		}
+		if (auto pkIt = propertyNameToPwlsKind.find(propName);
+			pkIt != propertyNameToPwlsKind.end() && !pkIt->second.empty())
+		{
+			_output->GetDataAssembly()->SetAttribute(w_nodeId, "propertyKind", pkIt->second.c_str());
+		}
 		_output->GetDataAssembly()->SetAttribute(w_nodeId, "realization_count",
 			std::to_string(_realizationTitleToIndexAndPropertiesUuid[propName].size()).c_str());
 		// CSV of actual realization indices (e.g. "23,24") — fespp_on_trame
@@ -2014,6 +2070,12 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchRealiza
 			{
 				_output->GetDataAssembly()->SetAttribute(childId, "propKind",
 					kindIt->second.c_str());
+			}
+			if (auto pkIt = propertyNameToPwlsKind.find(propName);
+				pkIt != propertyNameToPwlsKind.end() && !pkIt->second.empty())
+			{
+				_output->GetDataAssembly()->SetAttribute(childId, "propertyKind",
+					pkIt->second.c_str());
 			}
 		}
 	}
