@@ -64,6 +64,7 @@ VtkAssembly => TreeView:
 // FESAPI includes
 #include <fesapi/common/DataObjectRepository.h>
 #include <fesapi/common/EpcDocument.h>
+#include <fesapi/resqml2/ContinuousProperty.h>
 #include <fesapi/eml2/PropertyKind.h>
 #include <fesapi/eml2/TimeSeries.h>
 #include <fesapi/resqml2/Grid2dRepresentation.h>
@@ -238,27 +239,49 @@ const char* propKindName(RESQML2_NS::AbstractProperty const* prop)
 
 // PWLS / local property-kind TITLE ("volume", "depth", …) — the
 // geology-level classification, distinct from propKindName's VALUE
-// type above. Feeds the "propertyKind" assembly attribute. Empty when
-// the property references no PropertyKind OBJECT: a RESQML 2.0.1
-// property bound to a STANDARD Energistics kind has nothing to read
-// through this API (getPropertyKind may throw there, hence the
-// catch-all).
+// type above. Feeds the "propertyKind" assembly attribute.
+//
+// RESQML has two ways of saying the same thing: a local or PWLS kind is a real
+// PropertyKind OBJECT, while a STANDARD Energistics kind is only an enum with
+// no object behind it. This code read the object alone, so every standard-kind
+// property came out with an empty title — the RESQML 2.0.1 case, which is MOST
+// files: all 254 of Drogon's properties take that path, leaving its 21 well-log
+// channels unclassifiable. fesapi answers both in one public call, so a
+// consumer can group logs by their nature (saturation, porosity, velocity...)
+// whichever way the writer expressed it.
+// (getEnergisticsPropertyKind201() is the enum-only route — it is PROTECTED,
+// not usable from here; getPropertyKindAsString() is the public one.)
 std::string propertyKindTitle(RESQML2_NS::AbstractProperty const* prop)
 {
 	try
 	{
-		EML2_NS::PropertyKind* w_pk =
-			const_cast<RESQML2_NS::AbstractProperty*>(prop)->getPropertyKind();
-		if (w_pk != nullptr)
-		{
-			return w_pk->getTitle();
-		}
+		return prop->getPropertyKindAsString();
 	}
 	catch (const std::exception&)
 	{
-		// standard 2.0.1 Energistics kind — no object to read
+		return std::string();
 	}
-	return std::string();
+}
+
+// Unit of measure ("m3/m3", "mD", "ohm.m", …) for a CONTINUOUS property.
+// Feeds the "uom" assembly attribute. A log track is unreadable without it,
+// and it also tells a consumer which curves share a scale. Discrete and
+// categorical properties carry no unit, and return empty here.
+std::string propertyUom(RESQML2_NS::AbstractProperty const* prop)
+{
+	auto const* w_cont = dynamic_cast<RESQML2_NS::ContinuousProperty const*>(prop);
+	if (w_cont == nullptr)
+	{
+		return std::string();
+	}
+	try
+	{
+		return w_cont->getUomAsString();
+	}
+	catch (const std::exception&)
+	{
+		return std::string();
+	}
 }
 }
 
@@ -841,21 +864,35 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::addDefaultToDataAsse
 	_output->GetDataAssembly()->SetAttribute(nodeId, "kind", w_kind.c_str());
 	_output->GetDataAssembly()->SetAttribute(nodeId, "title", w_title.c_str());
 
-	// PWLS / local property-kind title (volume, depth, …) on plain
-	// property leaves — the synthetic TS / MR nodes get the same
-	// attribute from their name→kind maps. Absent when the property
-	// has no PropertyKind object (standard 2.0.1 Energistics kind).
-	if (auto const* w_prop = dynamic_cast<RESQML2_NS::AbstractProperty const*>(object))
-	{
-		const std::string w_pkTitle = propertyKindTitle(w_prop);
-		if (!w_pkTitle.empty())
-		{
-			_output->GetDataAssembly()->SetAttribute(nodeId, "propertyKind", w_pkTitle.c_str());
-		}
-	}
-
 	if (type != TreeViewNodeType::Partial)
 	{
+		// Property kind (volume, depth, saturation, …) and unit on plain
+		// property leaves — the synthetic TS / MR nodes get the same
+		// attributes from their name→kind maps. Both drive the well-log
+		// display: the kind groups curves of the same nature into one track,
+		// the unit labels its scale.
+		//
+		// INSIDE this guard, and double-checked with isPartial(): a partial
+		// object is a stub whose gsoap content was never read, so asking it
+		// anything walks a null pointer — a hard crash while the file loads,
+		// not a catchable exception. Drogon ships four partial log channels
+		// (Vp/Vs Ratio, Shale Volume, Fault Distance, Phyllosilicate Volume
+		// Fraction), which is exactly what fell over.
+		if (auto const* w_prop = dynamic_cast<RESQML2_NS::AbstractProperty const*>(object);
+			w_prop != nullptr && !object->isPartial())
+		{
+			const std::string w_pkTitle = propertyKindTitle(w_prop);
+			if (!w_pkTitle.empty())
+			{
+				_output->GetDataAssembly()->SetAttribute(nodeId, "propertyKind", w_pkTitle.c_str());
+			}
+			const std::string w_uom = propertyUom(w_prop);
+			if (!w_uom.empty())
+			{
+				_output->GetDataAssembly()->SetAttribute(nodeId, "uom", w_uom.c_str());
+			}
+		}
+
 		// metadatas attribute
 		try {
 			for (uint64_t i = 0; i < object->getExtraMetadataCount(); ++i) {
