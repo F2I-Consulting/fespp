@@ -22,6 +22,8 @@ under the License.
 #include <vtkPointData.h>
 #include <vtkTubeFilter.h>
 #include <vtkDoubleArray.h>
+#include <vtkIdTypeArray.h>
+#include <vtkFieldData.h>
 #include <vtkPolyLine.h>
 #include <vtkInformation.h>
 
@@ -102,7 +104,17 @@ void ResqmlWellboreChannelToVtkPolyData::loadVtkObject()
 	auto tubeRadius = vtkSmartPointer<vtkDoubleArray>::New();
 	tubeRadius->SetName(w_arrayName.c_str());
 	tubeRadius->SetNumberOfTuples(_pointCount);
-	bool hasNANValue = false;
+	// A log gap (NaN) cannot stay NaN in this array: it is the vtkTubeFilter's
+	// VaryRadiusByScalar input, and a NaN radius destroys the geometry. It is
+	// written as NEGATIVE ZERO instead of plain 0. -0.0 == 0.0 numerically, so
+	// the tube radius and the colour map behave exactly as before, but its
+	// IEEE-754 bit pattern differs: a consumer that wants to plot the log as a
+	// CURVE (a well-log track, where a gap must stay a gap) recovers the gaps
+	// exactly with std::signbit / math.copysign — including on a discrete log
+	// whose zero is a legitimate value, which no value-range heuristic can do.
+	// Careful: the sign of a zero is erased by the first arithmetic on it
+	// (v + 0.0, std::abs(v)). Read the array as it comes, do not massage it.
+	vtkIdType w_nanCount = 0;
 	if (dynamic_cast<RESQML2_NS::ContinuousProperty const*>(_abstractProperty) != nullptr)
 	{
 		std::unique_ptr<double[]> values(new double[_pointCount]);
@@ -111,11 +123,11 @@ void ResqmlWellboreChannelToVtkPolyData::loadVtkObject()
 		{
 			if (std::isnan(values[i]))
 			{
-				hasNANValue = true;
-				tubeRadius->SetTuple1(i, 0);
+				++w_nanCount;
+				tubeRadius->SetTuple1(i, -0.0);
 			}
-			else 
-			{ 
+			else
+			{
 				tubeRadius->SetTuple1(i, values[i]);
 			}
 		}
@@ -128,8 +140,8 @@ void ResqmlWellboreChannelToVtkPolyData::loadVtkObject()
 		{
 			if (values[i] > (std::numeric_limits<int>::max)())
 			{
-				hasNANValue = true;
-				tubeRadius->SetTuple1(i, 0);
+				++w_nanCount;
+				tubeRadius->SetTuple1(i, -0.0);
 			}
 			else
 			{
@@ -142,10 +154,20 @@ void ResqmlWellboreChannelToVtkPolyData::loadVtkObject()
 		vtkOutputWindowDisplayErrorText("Cannot show a log which is not discrete, categorical no continuous.\n");
 		return;
 	}
-	if (hasNANValue)
+	if (w_nanCount > 0)
 	{
-		vtkOutputWindowDisplayWarningText(("The log `" + _abstractProperty->getTitle() + "' has NaN values. NaN values are changed to 0.\n").c_str());
+		vtkOutputWindowDisplayWarningText(("The log `" + _abstractProperty->getTitle() + "' has NaN values. NaN values are changed to negative zero.\n").c_str());
 	}
+
+	// How many gaps there SHOULD be, so a consumer can check that the negative
+	// zeros survived the pipeline instead of trusting them: a mismatch means
+	// the sentinel was erased somewhere, and silently drawing the gaps as real
+	// zeros is worse than knowing the answer is unreliable. One tuple.
+	auto w_nanCountArray = vtkSmartPointer<vtkIdTypeArray>::New();
+	w_nanCountArray->SetName((w_arrayName + "_nanCount").c_str());
+	w_nanCountArray->SetNumberOfTuples(1);
+	w_nanCountArray->SetTuple1(0, w_nanCount);
+	channelPolyline->GetFieldData()->AddArray(w_nanCountArray);
 
 	channelPolyline->GetPointData()->AddArray(tubeRadius);
 	// Activate the SAME (sanitized) name just set on the array — must stay
