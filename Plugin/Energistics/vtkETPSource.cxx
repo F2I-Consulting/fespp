@@ -136,14 +136,13 @@ void vtkETPSource::setProxyToken(char* auth_connection)
 }
 
 //----------------------------------------------------------------------------
+// The vtkCustomProgressBar blocks that used to live here (and in
+// SetDataspaces / RequestData) spawned a DETACHED thread capturing the
+// stack-local vtkNew by reference: whenever the function body was fast
+// (empty repository, no-op dataspace), the thread outlived the frame —
+// use-after-free, hard process crash. Useless in a headless server; removed.
 void vtkETPSource::confirmConnectionClicked()
 {
-	vtkNew<vtkCustomProgressBar>  progressBar;
-	progressBar->setWindowName("connection...");
-	progressBar->setIndeterminate(true);
-
-	std::thread t1([&progressBar] { progressBar->task1(); });
-	t1.detach();
 	try
 	{
 		// Clear AllDataspaces before filling to avoid accumulation
@@ -167,7 +166,6 @@ void vtkETPSource::confirmConnectionClicked()
 	{
 		vtkErrorMacro(<< e.what());
 	}
-	progressBar->setIndeterminate(false);
 }
 
 //----------------------------------------------------------------------------
@@ -191,13 +189,6 @@ void vtkETPSource::SetDataspaces(const char* dataspaces)
 {
 	if (ConnectionTag == 0)
 	{
-		vtkNew<vtkCustomProgressBar>  progressBar;
-		progressBar->setWindowName("get dataSpace");
-		progressBar->setIndeterminate(true);
-
-		std::thread t1([&progressBar] { progressBar->task1(); });
-		t1.detach();
-
 		if (std::string(dataspaces) != "")
 		{
 			std::string msg = repository.addDataspace(dataspaces);
@@ -207,8 +198,6 @@ void vtkETPSource::SetDataspaces(const char* dataspaces)
 			}
 		}
 		AssemblyTag++;
-
-		progressBar->setIndeterminate(false);
 	}
 }
 
@@ -331,7 +320,12 @@ int vtkETPSource::RequestData(vtkInformation*,
 	vtkInformationVector**,
 	vtkInformationVector* outputVector)
 {
-	if (ConnectionTag == 0 && _newSelection)
+	// No `_newSelection` gate: mirror vtkEPCCollector::RequestData, which
+	// deep-copies the repository PDC unconditionally. The pipeline OUTPUT is
+	// the only surface a non-wrapped-Python client can read the assembly
+	// from (GetOutput()->GetDataAssembly() on the wrapped base class), so it
+	// must carry the assembly right after a dataspace load, selection or not.
+	if (ConnectionTag == 0)
 	{
 		auto* outInfo = outputVector->GetInformationObject(0);
 		outInfo->Remove(vtkStreamingDemandDrivenPipeline::TIME_STEPS());
@@ -353,13 +347,6 @@ int vtkETPSource::RequestData(vtkInformation*,
 		}
 		try
 		{
-			vtkNew<vtkCustomProgressBar>  progressBar;
-			progressBar->setWindowName("get data");
-			progressBar->setIndeterminate(true);
-
-			std::thread t1([&progressBar] { progressBar->task1(); });
-			t1.detach();
-
 			vtkPartitionedDataSetCollection::GetData(outInfo)->DeepCopy(repository.getVtkPartitionedDatasSetCollection(requestedTimeStep));
 
 			_newSelection = false;
@@ -371,8 +358,6 @@ int vtkETPSource::RequestData(vtkInformation*,
 				colorApplyLoading = false;
 			}
 			*/
-
-			progressBar->setIndeterminate(false);
 		}
 		catch (const std::exception& e)
 		{

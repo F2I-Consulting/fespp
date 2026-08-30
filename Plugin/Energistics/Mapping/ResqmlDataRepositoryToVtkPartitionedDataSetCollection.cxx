@@ -31,6 +31,7 @@ VtkAssembly => TreeView:
 
 #include <algorithm>
 #include <chrono>
+#include <utility>
 #include <vector>
 #include <set>
 #include <list>
@@ -459,11 +460,28 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::addDataspace(
 	//************ LIST RESOURCES ************
 	Energistics::Etp::v12::Datatypes::Object::ContextInfo w_ctxInfo;
 	w_ctxInfo.uri = p_dataspace;
-	w_ctxInfo.depth = 0;
 	w_ctxInfo.navigableEdges = Energistics::Etp::v12::Datatypes::Object::RelationshipKind::Both;
 	w_ctxInfo.includeSecondaryTargets = false;
 	w_ctxInfo.includeSecondarySources = false;
-	const auto w_resources = _session->getResources(w_ctxInfo, Energistics::Etp::v12::Datatypes::Object::ContextScopeKind::targets);
+	// Query parameters differ between server implementations: spec-strict
+	// stores (OSDU RDDMS / ADME) return NOTHING for the historical
+	// (targets, depth 0) query that open-etp-server tolerated. Try the
+	// spec-conformant variants first, keep the legacy one as fallback.
+	const std::pair<Energistics::Etp::v12::Datatypes::Object::ContextScopeKind, int> w_scopeAndDepthTries[] = {
+		{ Energistics::Etp::v12::Datatypes::Object::ContextScopeKind::self, 1 },
+		{ Energistics::Etp::v12::Datatypes::Object::ContextScopeKind::targets, 1 },
+		{ Energistics::Etp::v12::Datatypes::Object::ContextScopeKind::targets, 0 },
+	};
+	std::vector<Energistics::Etp::v12::Datatypes::Object::Resource> w_resources;
+	for (const auto& w_try : w_scopeAndDepthTries)
+	{
+		w_ctxInfo.depth = w_try.second;
+		w_resources = _session->getResources(w_ctxInfo, w_try.first);
+		if (!w_resources.empty())
+		{
+			break;
+		}
+	}
 
 	//************ GET ALL DATAOBJECTS ************
 	_repository->setHdfProxyFactory(new ETP_NS::FesapiHdfProxyFactory(_session.get()));
