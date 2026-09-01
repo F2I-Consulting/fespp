@@ -30,6 +30,7 @@ under the License.
 #include <vtkCellData.h>
 #include <vtkFieldData.h>
 #include <vtkIntArray.h>
+#include <vtkDoubleArray.h>
 #include <vtkNew.h>
 #include <vtkStringArray.h>
 
@@ -119,6 +120,33 @@ void ResqmlWellboreMarkerToVtkPolyData::loadVtkObject()
 				createSphere(w_mIndex);
 			}
 			tagMarkerName(w_markerSet[w_mIndex]->getTitle());
+			// The marker's TRUE measured depth, one-tuple FIELD data. The
+			// glyph's geometry only says where in XYZ — that is TVD — and a
+			// log panel needs its tops on the SAME MD axis as the curves,
+			// or the two disagree on every deviated well.
+			try
+			{
+				const uint64_t w_mdCount = getResqmlData()->getMdValuesCount();
+				vtkPolyData* w_pd =
+					vtkPolyData::SafeDownCast(_vtkData->GetPartition(0));
+				if (w_pd != nullptr && w_mIndex < w_mdCount)
+				{
+					std::unique_ptr<double[]> w_mds(new double[w_mdCount]);
+					getResqmlData()->getMdAsDoubleValues(w_mds.get());
+					if (!std::isnan(w_mds[w_mIndex]))
+					{
+						vtkNew<vtkDoubleArray> w_mdArr;
+						w_mdArr->SetName("MD");
+						w_mdArr->SetNumberOfTuples(1);
+						w_mdArr->SetTuple1(0, w_mds[w_mIndex]);
+						w_pd->GetFieldData()->AddArray(w_mdArr);
+					}
+				}
+			}
+			catch (const std::exception&)
+			{
+				// no MD stored — the consumer falls back to geometry (TVD)
+			}
 		}
 	}
 }

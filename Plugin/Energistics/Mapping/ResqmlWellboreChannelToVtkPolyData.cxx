@@ -169,6 +169,34 @@ void ResqmlWellboreChannelToVtkPolyData::loadVtkObject()
 	w_nanCountArray->SetTuple1(0, w_nanCount);
 	channelPolyline->GetFieldData()->AddArray(w_nanCountArray);
 
+	// The TRUE measured depth, one value per frame node, as FIELD data. The
+	// geometry only carries XYZ, so a log consumer could plot nothing better
+	// than -Z — TVD, which is WRONG depth for every deviated well. As point
+	// data it would be copied onto all NumberOfSides ring vertices of the
+	// tube (x10 memory for nothing); field data crosses vtkTubeFilter intact
+	// and pairs with the samples by node index.
+	try
+	{
+		const uint64_t w_mdCount = frame->getMdValuesCount();
+		if (w_mdCount == _pointCount)
+		{
+			std::unique_ptr<double[]> w_mdValues(new double[w_mdCount]);
+			frame->getMdAsDoubleValues(w_mdValues.get());
+			auto w_mdArray = vtkSmartPointer<vtkDoubleArray>::New();
+			w_mdArray->SetName("MD");
+			w_mdArray->SetNumberOfTuples(w_mdCount);
+			for (uint64_t i = 0; i < w_mdCount; ++i)
+			{
+				w_mdArray->SetTuple1(i, w_mdValues[i]);
+			}
+			channelPolyline->GetFieldData()->AddArray(w_mdArray);
+		}
+	}
+	catch (const std::exception&)
+	{
+		// no MD stored for this frame — the consumer falls back to -Z (TVD)
+	}
+
 	channelPolyline->GetPointData()->AddArray(tubeRadius);
 	// Activate the SAME (sanitized) name just set on the array — must stay
 	// in lockstep with the SetName above, or the active-scalar lookup fails.
