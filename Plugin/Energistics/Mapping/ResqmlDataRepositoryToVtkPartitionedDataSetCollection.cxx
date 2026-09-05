@@ -42,6 +42,8 @@ VtkAssembly => TreeView:
 #include <cstdlib>
 #include <sstream>
 #include <iostream>
+#include <algorithm>
+#include <cctype>
 
 // VTK includes
 #include <vtkPartitionedDataSetCollection.h>
@@ -64,7 +66,9 @@ VtkAssembly => TreeView:
 
 // FESAPI includes
 #include <fesapi/common/DataObjectRepository.h>
+#include <fesapi/common/AbstractObject.h>
 #include <fesapi/common/EpcDocument.h>
+#include <fesapi/resqml2/StratigraphicColumnRankInterpretation.h>
 #include <fesapi/resqml2/ContinuousProperty.h>
 #include <fesapi/eml2/PropertyKind.h>
 #include <fesapi/eml2/TimeSeries.h>
@@ -172,6 +176,162 @@ ResqmlDataRepositoryToVtkPartitionedDataSetCollection::~ResqmlDataRepositoryToVt
 	{
 		delete w_keyVal.second;
 	}
+}
+
+// ---- Query channel ---------------------------------------------------------
+namespace
+{
+	// The marker's title is user text and lands inside an XML element.
+	std::string xmlEscape(const std::string& p_text)
+	{
+		std::string w_out;
+		w_out.reserve(p_text.size());
+		for (const char c : p_text)
+		{
+			switch (c)
+			{
+			case '&': w_out += "&amp;"; break;
+			case '<': w_out += "&lt;"; break;
+			case '>': w_out += "&gt;"; break;
+			case '"': w_out += "&quot;"; break;
+			default: w_out += c;
+			}
+		}
+		return w_out;
+	}
+
+	std::string asciiLower(std::string p_text)
+	{
+		std::transform(p_text.begin(), p_text.end(), p_text.begin(),
+			[](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+		return p_text;
+	}
+
+	std::string asciiUpper(std::string p_text)
+	{
+		std::transform(p_text.begin(), p_text.end(), p_text.begin(),
+			[](unsigned char c) { return static_cast<char>(std::toupper(c)); });
+		return p_text;
+	}
+}
+
+std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::getObjectXml(const std::string& p_uuid)
+{
+	if (_repository == nullptr || p_uuid.empty())
+	{
+		return std::string();
+	}
+
+	// getDataObjectByUuid is a bare std::map::find — exact and case-sensitive.
+	// RESQML uuids are canonically lower-case, but a writer may emit upper-case
+	// hex and the caller hands the uuid over as it found it. Try as given,
+	// then folded either way, before declaring it unknown.
+	COMMON_NS::AbstractObject* w_object = _repository->getDataObjectByUuid(p_uuid);
+	if (w_object == nullptr)
+	{
+		const std::string w_lower = asciiLower(p_uuid);
+		if (w_lower != p_uuid)
+		{
+			w_object = _repository->getDataObjectByUuid(w_lower);
+		}
+	}
+	if (w_object == nullptr)
+	{
+		const std::string w_upper = asciiUpper(p_uuid);
+		if (w_upper != p_uuid)
+		{
+			w_object = _repository->getDataObjectByUuid(w_upper);
+		}
+	}
+	if (w_object == nullptr)
+	{
+		return std::string();
+	}
+
+	if (w_object->isPartial())
+	{
+		// A reference stub carries no gsoap content: serializeIntoString()
+		// goes through cannotBePartial() and throws. Hand back what the stub
+		// knows — its uuid and the referring DOR's title — as child ELEMENTS,
+		// which is the only shape the Python XML helpers read (they never
+		// look at attributes). The title is verbatim: it is the join key of
+		// the well-log marker band.
+		std::string w_title;
+		try
+		{
+			w_title = w_object->getTitle();
+		}
+		catch (const std::exception&)
+		{
+			w_title.clear();
+		}
+		return "<PartialObject uuid=\"" + xmlEscape(w_object->getUuid()) + "\">"
+			"<Citation><Title>" + xmlEscape(w_title) + "</Title></Citation>"
+			"</PartialObject>";
+	}
+
+	std::string w_xml;
+	try
+	{
+		w_xml = w_object->serializeIntoString();
+	}
+	catch (const std::exception& e)
+	{
+		vtkOutputWindowDisplayWarningText(("Query channel: cannot serialize object " + p_uuid + ": " + e.what() + "\n").c_str());
+		w_xml.clear();
+	}
+	catch (...)
+	{
+		w_xml.clear();
+	}
+
+	// serializeIntoStream parks the REPOSITORY-WIDE gsoap context's output
+	// stream pointer on a temporary ostringstream that no longer exists once
+	// it returns, and nothing in fesapi resets it. The same context is what
+	// every deserialize writes through. Never leave a dangling pointer on a
+	// shared context — and never run this concurrently with a dataspace
+	// fetch (the ETP session lives on a detached thread).
+	if (soap* w_context = _repository->getGsoapContext(); w_context != nullptr)
+	{
+		w_context->os = nullptr;
+	}
+	return w_xml;
+}
+
+std::vector<std::string> ResqmlDataRepositoryToVtkPartitionedDataSetCollection::getObjectUuids(const std::string& p_typeName)
+{
+	std::vector<std::string> w_uuids;
+	if (_repository == nullptr)
+	{
+		return w_uuids;
+	}
+	try
+	{
+		// One entry per supported type. getDataObjects<T> is a linear
+		// dynamic_cast sweep over the whole repository; the readers cache the
+		// answer per assembly tag so it runs once per load, not per query.
+		// Partials are NOT filtered — see the header.
+		if (p_typeName == "StratigraphicColumnRankInterpretation")
+		{
+			for (auto* w_rank : _repository->getDataObjects<RESQML2_NS::StratigraphicColumnRankInterpretation>())
+			{
+				if (w_rank != nullptr)
+				{
+					w_uuids.push_back(w_rank->getUuid());
+				}
+			}
+		}
+	}
+	catch (const std::exception& e)
+	{
+		vtkOutputWindowDisplayWarningText(("Query channel: cannot list " + p_typeName + ": " + e.what() + "\n").c_str());
+		w_uuids.clear();
+	}
+	catch (...)
+	{
+		w_uuids.clear();
+	}
+	return w_uuids;
 }
 
 MapperType getMapperType(TreeViewNodeType p_type)

@@ -91,6 +91,30 @@ public:
 	// are NOT stable across rebuilds — always address nodes by path.
 	vtkDataAssembly* GetAssembly() { return _output->GetDataAssembly(); };
 
+	// ---- Query channel for fespp_on_trame ------------------------------
+	// (doc/private/fesapi-query-channel.md in the trame app.)
+	// The plugin's classes are ClientServer-wrapped only, never
+	// Python-wrapped, so a plain getter is unreachable from Python whatever
+	// it returns. Each reader exposes these through a settable +
+	// information-only ServerManager property pair (see
+	// vtkEPCCollector::SetObjectXmlKey); this is the ONE implementation
+	// both readers forward to, since each owns its own repository.
+
+	// Serialized XML of one data object, by uuid (case-insensitive: fesapi's
+	// lookup is an exact map find and a writer may emit upper-case hex). A
+	// <PartialObject> marker — uuid attribute, Citation/Title child, the
+	// shape the Python helpers read — when the object is only a reference
+	// stub (the normal ETP case, where serializeIntoString() throws). ""
+	// when the uuid is unknown. Never throws.
+	std::string getObjectXml(const std::string& p_uuid);
+
+	// Uuids of every object of one RESQML type name, PARTIALS INCLUDED: one
+	// unrecognised reference demotes a whole rank to partial on load, and
+	// such a rank must still be listed so absence and demotion stay
+	// distinguishable on the Python side. Empty for an unknown type name.
+	// Never throws.
+	std::vector<std::string> getObjectUuids(const std::string& p_typeName);
+
 	//---------------------------------
 
 	// for EPC reader
