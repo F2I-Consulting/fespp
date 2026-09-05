@@ -16,6 +16,26 @@
 			<StringVectorProperty command="GetAllFiles" information_only="1" name="FilesInfo">
 				<StringArrayHelper />
 			</StringVectorProperty>
+
+			<!-- Query channel for fespp_on_trame (vtkEPCCollector::SetObjectXmlKey):
+			     the plugin classes are not Python-wrapped, so a settable property
+			     asks and an information-only one answers. Programmatic only. -->
+			<StringVectorProperty name="ObjectXmlKey" command="SetObjectXmlKey"
+				number_of_elements="1" panel_visibility="never">
+				<Documentation>"&lt;tag&gt;|&lt;uuid&gt;[,&lt;uuid&gt;...]": the objects whose serialized XML ObjectXml then carries, one value per uuid, in order.</Documentation>
+			</StringVectorProperty>
+			<StringVectorProperty name="ObjectXml" command="GetObjectXml"
+				information_only="1" panel_visibility="never">
+				<StringArrayHelper />
+			</StringVectorProperty>
+			<StringVectorProperty name="ObjectUuidsKey" command="SetObjectUuidsKey"
+				number_of_elements="1" panel_visibility="never">
+				<Documentation>"&lt;tag&gt;|&lt;TypeName&gt;": the RESQML type whose object uuids ObjectUuids then carries (partial stubs included).</Documentation>
+			</StringVectorProperty>
+			<StringVectorProperty name="ObjectUuids" command="GetObjectUuids"
+				information_only="1" panel_visibility="never">
+				<StringArrayHelper />
+			</StringVectorProperty>
 			<!-- NOTE: this property used to carry an <ArraySelectionDomain> on
 			     top of `FilesInfo`. ArraySelectionDomain implicitly stores its
 			     values as (name, "0"|"1") pairs, but SetFiles only pushes the
@@ -371,6 +391,26 @@
 			                      name="AllDataspaceNames">
 				<StringArrayHelper />
 				<Documentation>Returns all available dataspace names from the AllDataspaces vtkStringArray.</Documentation>
+			</StringVectorProperty>
+
+			<!-- Query channel for fespp_on_trame — the mirror of the EPCCollector's
+			     (vtkETPSource::SetObjectXmlKey). Same four properties, same
+			     contract, so the Python side asks either reader the same way. -->
+			<StringVectorProperty name="ObjectXmlKey" command="SetObjectXmlKey"
+				number_of_elements="1" panel_visibility="never">
+				<Documentation>"&lt;tag&gt;|&lt;uuid&gt;[,&lt;uuid&gt;...]": the objects whose serialized XML ObjectXml then carries, one value per uuid, in order.</Documentation>
+			</StringVectorProperty>
+			<StringVectorProperty name="ObjectXml" command="GetObjectXml"
+				information_only="1" panel_visibility="never">
+				<StringArrayHelper />
+			</StringVectorProperty>
+			<StringVectorProperty name="ObjectUuidsKey" command="SetObjectUuidsKey"
+				number_of_elements="1" panel_visibility="never">
+				<Documentation>"&lt;tag&gt;|&lt;TypeName&gt;": the RESQML type whose object uuids ObjectUuids then carries (partial stubs included).</Documentation>
+			</StringVectorProperty>
+			<StringVectorProperty name="ObjectUuids" command="GetObjectUuids"
+				information_only="1" panel_visibility="never">
+				<StringArrayHelper />
 			</StringVectorProperty>
 
 			<!-- TimeStepValues for Time series -->

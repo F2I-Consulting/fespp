@@ -388,3 +388,73 @@ vtkDataAssembly* vtkETPSource::GetAssembly()
 	}
 	return nullptr;
 }
+
+//----------------------------------------------------------------------------
+// Query channel — the mirror of vtkEPCCollector's, kept in step field for
+// field (see the rationale there). The fetch it reads from must be over: the
+// ETP session runs on a detached thread and shares the repository's gsoap
+// context with serializeIntoString(); the Python side only asks after the
+// dataspace load has returned.
+void vtkETPSource::SetObjectXmlKey(const char* key)
+{
+	if (!ObjectXmlReply)
+		ObjectXmlReply = vtkSmartPointer<vtkStringArray>::New();
+	ObjectXmlReply->SetNumberOfValues(0);
+	if (key == nullptr || key[0] == '\0')
+		return;
+	std::string w_arg(key);
+	const auto w_bar = w_arg.find('|');
+	if (w_bar != std::string::npos)
+		w_arg.erase(0, w_bar + 1);
+	std::size_t w_start = 0;
+	while (true)
+	{
+		const auto w_comma = w_arg.find(',', w_start);
+		const std::string w_uuid = w_arg.substr(w_start,
+			w_comma == std::string::npos ? std::string::npos : w_comma - w_start);
+		ObjectXmlReply->InsertNextValue(w_uuid.empty() ? std::string() : repository.getObjectXml(w_uuid));
+		if (w_comma == std::string::npos)
+			break;
+		w_start = w_comma + 1;
+	}
+}
+
+//----------------------------------------------------------------------------
+vtkStringArray* vtkETPSource::GetObjectXml()
+{
+	if (!ObjectXmlReply)
+		ObjectXmlReply = vtkSmartPointer<vtkStringArray>::New();
+	return ObjectXmlReply;
+}
+
+//----------------------------------------------------------------------------
+void vtkETPSource::SetObjectUuidsKey(const char* key)
+{
+	if (!ObjectUuidsReply)
+		ObjectUuidsReply = vtkSmartPointer<vtkStringArray>::New();
+	const std::string w_key = key == nullptr ? std::string() : std::string(key);
+	if (w_key.empty())
+	{
+		ObjectUuidsReply->SetNumberOfValues(0);
+		ObjectUuidsKeyCached.clear();
+		return;
+	}
+	if (w_key == ObjectUuidsKeyCached)
+		return;
+	std::string w_type = w_key;
+	const auto w_bar = w_type.find('|');
+	if (w_bar != std::string::npos)
+		w_type.erase(0, w_bar + 1);
+	ObjectUuidsReply->SetNumberOfValues(0);
+	for (const std::string& w_uuid : repository.getObjectUuids(w_type))
+		ObjectUuidsReply->InsertNextValue(w_uuid);
+	ObjectUuidsKeyCached = w_key;
+}
+
+//----------------------------------------------------------------------------
+vtkStringArray* vtkETPSource::GetObjectUuids()
+{
+	if (!ObjectUuidsReply)
+		ObjectUuidsReply = vtkSmartPointer<vtkStringArray>::New();
+	return ObjectUuidsReply;
+}

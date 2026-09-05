@@ -473,6 +473,79 @@ vtkDataAssembly* vtkEPCCollector::GetLiveAssembly()
 	return repository.GetAssembly();
 }
 
+//----------------------------------------------------------------------------
+// Query channel (see the header). Same shape as vtkETPSource — keep the two
+// in step: a field added to one and not the other is a feature that works
+// over EPC and not ETP, the exact bug class this channel closes.
+void vtkEPCCollector::SetObjectXmlKey(const char* key)
+{
+	if (!ObjectXmlReply)
+		ObjectXmlReply = vtkSmartPointer<vtkStringArray>::New();
+	ObjectXmlReply->SetNumberOfValues(0);
+	if (key == nullptr || key[0] == '\0')
+		return;
+	// "<tag>|<uuid>[,<uuid>...]" — the tag is the caller's cache key, not ours
+	std::string w_arg(key);
+	const auto w_bar = w_arg.find('|');
+	if (w_bar != std::string::npos)
+		w_arg.erase(0, w_bar + 1);
+	// One reply value per requested uuid, in order, so the caller can zip the
+	// two lists; an empty item answers "" rather than shifting the rest.
+	std::size_t w_start = 0;
+	while (true)
+	{
+		const auto w_comma = w_arg.find(',', w_start);
+		const std::string w_uuid = w_arg.substr(w_start,
+			w_comma == std::string::npos ? std::string::npos : w_comma - w_start);
+		ObjectXmlReply->InsertNextValue(w_uuid.empty() ? std::string() : repository.getObjectXml(w_uuid));
+		if (w_comma == std::string::npos)
+			break;
+		w_start = w_comma + 1;
+	}
+}
+
+//----------------------------------------------------------------------------
+vtkStringArray* vtkEPCCollector::GetObjectXml()
+{
+	if (!ObjectXmlReply)
+		ObjectXmlReply = vtkSmartPointer<vtkStringArray>::New();
+	return ObjectXmlReply;
+}
+
+//----------------------------------------------------------------------------
+void vtkEPCCollector::SetObjectUuidsKey(const char* key)
+{
+	if (!ObjectUuidsReply)
+		ObjectUuidsReply = vtkSmartPointer<vtkStringArray>::New();
+	const std::string w_key = key == nullptr ? std::string() : std::string(key);
+	if (w_key.empty())
+	{
+		ObjectUuidsReply->SetNumberOfValues(0);
+		ObjectUuidsKeyCached.clear();
+		return;
+	}
+	// The type sweep is a dynamic_cast over the whole repository; the tag in
+	// the key changes on every load, so the same key means the same answer.
+	if (w_key == ObjectUuidsKeyCached)
+		return;
+	std::string w_type = w_key;
+	const auto w_bar = w_type.find('|');
+	if (w_bar != std::string::npos)
+		w_type.erase(0, w_bar + 1);
+	ObjectUuidsReply->SetNumberOfValues(0);
+	for (const std::string& w_uuid : repository.getObjectUuids(w_type))
+		ObjectUuidsReply->InsertNextValue(w_uuid);
+	ObjectUuidsKeyCached = w_key;
+}
+
+//----------------------------------------------------------------------------
+vtkStringArray* vtkEPCCollector::GetObjectUuids()
+{
+	if (!ObjectUuidsReply)
+		ObjectUuidsReply = vtkSmartPointer<vtkStringArray>::New();
+	return ObjectUuidsReply;
+}
+
 //------------------------------------------------------------------------------
 // For extract by reference: clear selection
 void vtkEPCCollector::ClearDataSetList()

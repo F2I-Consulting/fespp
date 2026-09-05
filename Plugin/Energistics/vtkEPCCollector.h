@@ -129,6 +129,35 @@ public:
    */
   vtkDataAssembly* GetLiveAssembly();
 
+  ///@{
+  /**
+   * Query channel for fespp_on_trame (doc/private/fesapi-query-channel.md in
+   * the trame app). This class is ClientServer-wrapped only — a plain getter
+   * is unreachable from Python, whatever it returns — so each query is a
+   * settable property (the question) plus an information-only property
+   * carrying a StringArrayHelper (the answer):
+   *
+   *   ObjectXmlKey   = "<tag>|<uuid>[,<uuid>...]"  ->  GetObjectXml()
+   *       one value per uuid, in order: the serialized part, a
+   *       <PartialObject> marker for a reference stub, or "" if unknown.
+   *   ObjectUuidsKey = "<tag>|<TypeName>"          ->  GetObjectUuids()
+   *       the uuids of every object of that type, partial stubs included.
+   *
+   * The work happens in the SETTER; the getter is a pure cache read.
+   * ParaView pulls every information property on a bare
+   * UpdatePropertyInformation(), so a getter that did the work would re-run
+   * on every unrelated pull — GetAllFiles() in this very class is the
+   * counter-example. Neither setter calls Modified(): these are queries, not
+   * pipeline state. The <tag> is the caller's cache key (its AssemblyTag),
+   * carried in the key so that an unchanged key means an unchanged question.
+   * Kept in step with vtkETPSource, field for field.
+   */
+  void SetObjectXmlKey(const char* key);
+  vtkStringArray* GetObjectXml();
+  void SetObjectUuidsKey(const char* key);
+  vtkStringArray* GetObjectUuids();
+  ///@}
+
   vtkGetMacro(ExtractTag, int);
 
   	///@{
@@ -299,6 +328,15 @@ private:
 	char* FileName;
 	std::set<std::string> FilesList;
 	std::set<std::string> FileNamesLoaded;
+
+	// Query channel replies (see SetObjectXmlKey): lazily created arrays for
+	// the info-only readback by ParaView's StringArrayHelper, plus the key
+	// the uuid list was last computed for — the type sweep is a dynamic_cast
+	// over the whole repository, and the tag inside the key changes on every
+	// load, so an unchanged key means the cached answer still holds.
+	vtkSmartPointer<vtkStringArray> ObjectXmlReply;
+	vtkSmartPointer<vtkStringArray> ObjectUuidsReply;
+	std::string ObjectUuidsKeyCached;
 
 	std::set<std::string> selectorNotLoaded; // load state, load selector before files :(
 

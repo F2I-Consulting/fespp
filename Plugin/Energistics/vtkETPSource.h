@@ -118,6 +118,20 @@ public:
 	vtkDataAssembly *GetAssembly();
 	///@}
 
+	///@{
+	/**
+	 * Query channel for fespp_on_trame — the mirror of
+	 * vtkEPCCollector::SetObjectXmlKey, kept in step field for field (see the
+	 * rationale there). Over ETP most objects a rank points at are reference
+	 * stubs until their dataspace is fetched; GetObjectXml answers those with
+	 * a <PartialObject> marker rather than "".
+	 */
+	void SetObjectXmlKey(const char* key);
+	vtkStringArray* GetObjectXml();
+	void SetObjectUuidsKey(const char* key);
+	vtkStringArray* GetObjectUuids();
+	///@}
+
 	/**
 	 * Whenever the assembly is changed, this tag gets changed. Note, users should
 	 * not assume that this is monotonically increasing but instead simply rely on
@@ -189,5 +203,10 @@ private:
 
 	bool colorApplyLoading;
 	ResqmlDataRepositoryToVtkPartitionedDataSetCollection repository;
+
+	// Query channel replies — see vtkEPCCollector for the cache rationale.
+	vtkSmartPointer<vtkStringArray> ObjectXmlReply;
+	vtkSmartPointer<vtkStringArray> ObjectUuidsReply;
+	std::string ObjectUuidsKeyCached;
 };
 #endif
