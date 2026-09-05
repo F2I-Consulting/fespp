@@ -458,3 +458,28 @@ vtkStringArray* vtkETPSource::GetObjectUuids()
 		ObjectUuidsReply = vtkSmartPointer<vtkStringArray>::New();
 	return ObjectUuidsReply;
 }
+
+//----------------------------------------------------------------------------
+void vtkETPSource::SetObjectFieldsKey(const char* key)
+{
+	if (!ObjectFieldsReply)
+		ObjectFieldsReply = vtkSmartPointer<vtkStringArray>::New();
+	ObjectFieldsReply->SetNumberOfValues(0);
+	if (key == nullptr || key[0] == '\0')
+		return;
+	// "<tag>|<uuid>" — the tag is the caller's cache key, not ours
+	std::string w_uuid(key);
+	const auto w_bar = w_uuid.find('|');
+	if (w_bar != std::string::npos)
+		w_uuid.erase(0, w_bar + 1);
+	for (const std::string& w_line : repository.getObjectFields(w_uuid))
+		ObjectFieldsReply->InsertNextValue(w_line);
+}
+
+//----------------------------------------------------------------------------
+vtkStringArray* vtkETPSource::GetObjectFields()
+{
+	if (!ObjectFieldsReply)
+		ObjectFieldsReply = vtkSmartPointer<vtkStringArray>::New();
+	return ObjectFieldsReply;
+}

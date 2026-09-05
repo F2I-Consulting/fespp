@@ -546,6 +546,31 @@ vtkStringArray* vtkEPCCollector::GetObjectUuids()
 	return ObjectUuidsReply;
 }
 
+//----------------------------------------------------------------------------
+void vtkEPCCollector::SetObjectFieldsKey(const char* key)
+{
+	if (!ObjectFieldsReply)
+		ObjectFieldsReply = vtkSmartPointer<vtkStringArray>::New();
+	ObjectFieldsReply->SetNumberOfValues(0);
+	if (key == nullptr || key[0] == '\0')
+		return;
+	// "<tag>|<uuid>" — the tag is the caller's cache key, not ours
+	std::string w_uuid(key);
+	const auto w_bar = w_uuid.find('|');
+	if (w_bar != std::string::npos)
+		w_uuid.erase(0, w_bar + 1);
+	for (const std::string& w_line : repository.getObjectFields(w_uuid))
+		ObjectFieldsReply->InsertNextValue(w_line);
+}
+
+//----------------------------------------------------------------------------
+vtkStringArray* vtkEPCCollector::GetObjectFields()
+{
+	if (!ObjectFieldsReply)
+		ObjectFieldsReply = vtkSmartPointer<vtkStringArray>::New();
+	return ObjectFieldsReply;
+}
+
 //------------------------------------------------------------------------------
 // For extract by reference: clear selection
 void vtkEPCCollector::ClearDataSetList()

@@ -142,6 +142,10 @@ public:
    *       <PartialObject> marker for a reference stub, or "" if unknown.
    *   ObjectUuidsKey = "<tag>|<TypeName>"          ->  GetObjectUuids()
    *       the uuids of every object of that type, partial stubs included.
+   *   ObjectFieldsKey = "<tag>|<uuid>"              ->  GetObjectFields()
+   *       the object's typed fields, one "key=value" per value — what
+   *       fesapi's accessors know; empty for an unknown uuid, a reference
+   *       stub, or a type without an entry (today: the local 3D CRS).
    *
    * The work happens in the SETTER; the getter is a pure cache read.
    * ParaView pulls every information property on a bare
@@ -156,6 +160,8 @@ public:
   vtkStringArray* GetObjectXml();
   void SetObjectUuidsKey(const char* key);
   vtkStringArray* GetObjectUuids();
+  void SetObjectFieldsKey(const char* key);
+  vtkStringArray* GetObjectFields();
   ///@}
 
   vtkGetMacro(ExtractTag, int);
@@ -336,6 +342,7 @@ private:
 	// load, so an unchanged key means the cached answer still holds.
 	vtkSmartPointer<vtkStringArray> ObjectXmlReply;
 	vtkSmartPointer<vtkStringArray> ObjectUuidsReply;
+	vtkSmartPointer<vtkStringArray> ObjectFieldsReply;
 	std::string ObjectUuidsKeyCached;
 
 	std::set<std::string> selectorNotLoaded; // load state, load selector before files :(

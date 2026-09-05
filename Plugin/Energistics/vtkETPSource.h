@@ -130,6 +130,8 @@ public:
 	vtkStringArray* GetObjectXml();
 	void SetObjectUuidsKey(const char* key);
 	vtkStringArray* GetObjectUuids();
+	void SetObjectFieldsKey(const char* key);
+	vtkStringArray* GetObjectFields();
 	///@}
 
 	/**
@@ -207,6 +209,7 @@ private:
 	// Query channel replies — see vtkEPCCollector for the cache rationale.
 	vtkSmartPointer<vtkStringArray> ObjectXmlReply;
 	vtkSmartPointer<vtkStringArray> ObjectUuidsReply;
+	vtkSmartPointer<vtkStringArray> ObjectFieldsReply;
 	std::string ObjectUuidsKeyCached;
 };
 #endif

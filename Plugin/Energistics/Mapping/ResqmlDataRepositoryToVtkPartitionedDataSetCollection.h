@@ -115,6 +115,14 @@ public:
 	// Never throws.
 	std::vector<std::string> getObjectUuids(const std::string& p_typeName);
 
+	// Typed fields of one data object as "key=value" lines — what fesapi's
+	// own accessors know, so the Python side stops re-deriving the same
+	// values from the XML. Types with an entry: AbstractLocal3dCrs (the base
+	// class, so 2.0.1 depth/time CRS and the 2.2 compound CRS alike). Empty
+	// when the uuid is unknown, the object is a reference stub (every typed
+	// getter throws on one) or its type has no entry. Never throws.
+	std::vector<std::string> getObjectFields(const std::string& p_uuid);
+
 	//---------------------------------
 
 	// for EPC reader

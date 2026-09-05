@@ -69,6 +69,7 @@ VtkAssembly => TreeView:
 #include <fesapi/common/AbstractObject.h>
 #include <fesapi/common/EpcDocument.h>
 #include <fesapi/resqml2/StratigraphicColumnRankInterpretation.h>
+#include <fesapi/eml2/AbstractLocal3dCrs.h>
 #include <fesapi/resqml2/ContinuousProperty.h>
 #include <fesapi/eml2/PropertyKind.h>
 #include <fesapi/eml2/TimeSeries.h>
@@ -213,6 +214,117 @@ namespace
 			[](unsigned char c) { return static_cast<char>(std::toupper(c)); });
 		return p_text;
 	}
+
+	// getDataObjectByUuid is a bare std::map::find — exact and case-sensitive.
+	// RESQML uuids are canonically lower-case, but a writer may emit upper-case
+	// hex and the caller hands the uuid over as it found it. Try as given,
+	// then folded either way, before declaring it unknown.
+	COMMON_NS::AbstractObject* findObjectAnyCase(COMMON_NS::DataObjectRepository* p_repository, const std::string& p_uuid)
+	{
+		COMMON_NS::AbstractObject* w_object = p_repository->getDataObjectByUuid(p_uuid);
+		if (w_object == nullptr)
+		{
+			const std::string w_lower = asciiLower(p_uuid);
+			if (w_lower != p_uuid)
+			{
+				w_object = p_repository->getDataObjectByUuid(w_lower);
+			}
+		}
+		if (w_object == nullptr)
+		{
+			const std::string w_upper = asciiUpper(p_uuid);
+			if (w_upper != p_uuid)
+			{
+				w_object = p_repository->getDataObjectByUuid(w_upper);
+			}
+		}
+		return w_object;
+	}
+
+	// One "key=value" line per field. The reader splits on the FIRST '=' only,
+	// so a value may carry one; a WKT or a description may carry newlines,
+	// which would break one-value-per-line — those fold to a space.
+	void putText(std::vector<std::string>& p_out, const std::string& p_key, std::string p_value)
+	{
+		for (char& c : p_value)
+		{
+			if (c == '\r' || c == '\n')
+			{
+				c = ' ';
+			}
+		}
+		p_out.push_back(p_key + "=" + p_value);
+	}
+
+	void putFlag(std::vector<std::string>& p_out, const std::string& p_key, bool p_value)
+	{
+		p_out.push_back(p_key + (p_value ? "=true" : "=false"));
+	}
+
+	// Full round-trip precision: these are CRS origins in projected metres.
+	void putNumber(std::vector<std::string>& p_out, const std::string& p_key, double p_value)
+	{
+		std::ostringstream w_os;
+		w_os.precision(std::numeric_limits<double>::max_digits10);
+		w_os << p_value;
+		p_out.push_back(p_key + "=" + w_os.str());
+	}
+
+	// Every guarded getter below THROWS (invalid_argument) without its guard,
+	// so the guards are the contract, not an optimisation. Each field is
+	// taken on its own: a getter that fails for a reason of its own — the
+	// 2.2 compound CRS resolves its projected CRS by uuid, say — drops that
+	// one line, not the object. The Python side treats every key as
+	// optional. NEVER getExtraMetadataSet(): it throws "Not implemented
+	// yet." on every 2.2 object; getExtraMetadata(key) is a plain loop.
+	void crsFields(const EML2_NS::AbstractLocal3dCrs& p_crs, std::vector<std::string>& p_out)
+	{
+		const auto w_field = [](auto&& p_fill)
+		{
+			try
+			{
+				p_fill();
+			}
+			catch (const std::exception&)
+			{
+			}
+			catch (...)
+			{
+			}
+		};
+		w_field([&] { putText(p_out, "title", p_crs.getTitle()); });
+		w_field([&] { if (p_crs.isProjectedCrsDefinedWithEpsg()) putText(p_out, "epsg", std::to_string(p_crs.getProjectedCrsEpsgCode())); });
+		w_field([&] { putFlag(p_out, "projected_unknown", p_crs.isProjectedCrsUnknown()); });
+		w_field([&] { if (p_crs.isProjectedCrsUnknown()) putText(p_out, "projected_reason", p_crs.getProjectedCrsUnknownReason()); });
+		w_field([&] { if (p_crs.isProjectedCrsDefinedWithWkt()) putText(p_out, "projected_wkt", p_crs.getProjectedCrsWkt()); });
+		w_field([&] { if (p_crs.isVerticalCrsDefinedWithEpsg()) putText(p_out, "vertical_epsg", std::to_string(p_crs.getVerticalCrsEpsgCode())); });
+		w_field([&] { putFlag(p_out, "depth_oriented", p_crs.isDepthOriented()); });
+		w_field([&] { putFlag(p_out, "time_crs", p_crs.isATimeCrs()); });
+		w_field([&] { if (p_crs.isATimeCrs()) putText(p_out, "time_unit", p_crs.getTimeUomAsString()); });
+		w_field([&] { putNumber(p_out, "origin_x", p_crs.getOriginOrdinal1()); });
+		w_field([&] { putNumber(p_out, "origin_y", p_crs.getOriginOrdinal2()); });
+		w_field([&] { putNumber(p_out, "origin_z", p_crs.getOriginDepthOrElevation()); });
+		w_field([&] { putNumber(p_out, "areal_rotation", p_crs.getArealRotation()); });
+		w_field([&] { putText(p_out, "projected_unit", p_crs.getProjectedCrsUnitAsString()); });
+		w_field([&] { putText(p_out, "vertical_unit", p_crs.getVerticalCrsUnitAsString()); });
+		w_field([&] { putText(p_out, "description", p_crs.getDescription()); });
+		// Writers that never declare the code properly sometimes park it in
+		// ExtraMetadata under one of these names; first non-empty wins.
+		w_field([&]
+		{
+			for (const char* w_key : { "EPSG", "ProjectedCrsEpsg", "Projected_EPSG" })
+			{
+				for (const std::string& w_value : p_crs.getExtraMetadata(w_key))
+				{
+					if (!w_value.empty())
+					{
+						putText(p_out, "extrametadata_epsg", w_value);
+						return;
+					}
+				}
+			}
+		});
+	}
 }
 
 std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::getObjectXml(const std::string& p_uuid)
@@ -222,27 +334,7 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::getObjectXml(
 		return std::string();
 	}
 
-	// getDataObjectByUuid is a bare std::map::find — exact and case-sensitive.
-	// RESQML uuids are canonically lower-case, but a writer may emit upper-case
-	// hex and the caller hands the uuid over as it found it. Try as given,
-	// then folded either way, before declaring it unknown.
-	COMMON_NS::AbstractObject* w_object = _repository->getDataObjectByUuid(p_uuid);
-	if (w_object == nullptr)
-	{
-		const std::string w_lower = asciiLower(p_uuid);
-		if (w_lower != p_uuid)
-		{
-			w_object = _repository->getDataObjectByUuid(w_lower);
-		}
-	}
-	if (w_object == nullptr)
-	{
-		const std::string w_upper = asciiUpper(p_uuid);
-		if (w_upper != p_uuid)
-		{
-			w_object = _repository->getDataObjectByUuid(w_upper);
-		}
-	}
+	COMMON_NS::AbstractObject* w_object = findObjectAnyCase(_repository, p_uuid);
 	if (w_object == nullptr)
 	{
 		return std::string();
@@ -321,6 +413,21 @@ std::vector<std::string> ResqmlDataRepositoryToVtkPartitionedDataSetCollection::
 				}
 			}
 		}
+		else if (p_typeName == "AbstractLocal3dCrs")
+		{
+			// The BASE class on purpose: one entry covers LocalDepth3dCrs and
+			// LocalTime3dCrs in RESQML 2.0.1 and LocalEngineeringCompoundCrs in
+			// 2.2. Enumerating by fesapi TYPE is also what makes the 2.2 case
+			// work at all: its part name carries no "3dCrs", so every
+			// filename-based search missed it.
+			for (auto* w_crs : _repository->getDataObjects<EML2_NS::AbstractLocal3dCrs>())
+			{
+				if (w_crs != nullptr)
+				{
+					w_uuids.push_back(w_crs->getUuid());
+				}
+			}
+		}
 	}
 	catch (const std::exception& e)
 	{
@@ -332,6 +439,41 @@ std::vector<std::string> ResqmlDataRepositoryToVtkPartitionedDataSetCollection::
 		w_uuids.clear();
 	}
 	return w_uuids;
+}
+
+std::vector<std::string> ResqmlDataRepositoryToVtkPartitionedDataSetCollection::getObjectFields(const std::string& p_uuid)
+{
+	std::vector<std::string> w_fields;
+	if (_repository == nullptr || p_uuid.empty())
+	{
+		return w_fields;
+	}
+	COMMON_NS::AbstractObject* w_object = findObjectAnyCase(_repository, p_uuid);
+	// A reference stub knows its uuid and title and nothing else: every typed
+	// getter goes through cannotBePartial(). getObjectXml already hands the
+	// title over for those.
+	if (w_object == nullptr || w_object->isPartial())
+	{
+		return w_fields;
+	}
+	try
+	{
+		// Dispatch on the dynamic type, one entry per supported base class.
+		if (auto* w_crs = dynamic_cast<EML2_NS::AbstractLocal3dCrs*>(w_object); w_crs != nullptr)
+		{
+			crsFields(*w_crs, w_fields);
+		}
+	}
+	catch (const std::exception& e)
+	{
+		vtkOutputWindowDisplayWarningText(("Query channel: cannot read fields of object " + p_uuid + ": " + e.what() + "\n").c_str());
+		w_fields.clear();
+	}
+	catch (...)
+	{
+		w_fields.clear();
+	}
+	return w_fields;
 }
 
 MapperType getMapperType(TreeViewNodeType p_type)
