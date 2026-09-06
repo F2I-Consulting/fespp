@@ -30,9 +30,9 @@ enum class MapperType
 	MapperSet
 };
 
-// Tree node kinds set as the "type" attribute on each vtkDataAssembly
+// Tree node kinds set as the "typeCode" attribute on each vtkDataAssembly
 // node. Python (the trame app) reads them as strings via the parallel
-// "kind" attribute — see treeViewNodeTypeName below.
+// "type" attribute — see treeViewNodeTypeName below.
 enum class TreeViewNodeType
 {
 	Unknown,
@@ -127,7 +127,7 @@ inline bool isGroupingType(TreeViewNodeType p_type)
 		|| p_type == TreeViewNodeType::SubRepresentationFolder;
 }
 
-// String name of a TreeViewNodeType. Used for the "kind" attribute
+// String name of a TreeViewNodeType. Used for the "type" attribute
 // shared with Python — keep in sync with the enum above.
 inline const char* treeViewNodeTypeName(TreeViewNodeType p_type)
 {

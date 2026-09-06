@@ -524,11 +524,11 @@ MapperType getMapperType(TreeViewNodeType p_type)
 // (which it is — the existing code at lines ~1054/1082 already uses the same
 // pattern on AbstractValuesProperty pointers).
 //
-// Used to set the "propKind" attribute on synthetic TimeSeries /
+// Used to set the "propType" attribute on synthetic TimeSeries /
 // MultiRealization / MultiRealizationTimeSeries nodes — those collapse the
 // per-time / per-realization sub-tree into a single leaf, so without this
-// attribute the Python side could only see the synthetic kind ("TimeSeries"
-// etc.) and not the underlying property type that drives the icon and the
+// attribute the Python side could only see the synthetic node type
+// ("TimeSeries" etc.) and not the underlying property type that drives the
 // color editor (Categorical/Discrete need a list-of-values editor instead
 // of the continuous LUT editor).
 namespace {
@@ -541,8 +541,9 @@ const char* propKindName(RESQML2_NS::AbstractProperty const* prop)
 }
 
 // PWLS / local property-kind TITLE ("volume", "depth", …) — the
-// geology-level classification, distinct from propKindName's VALUE
-// type above. Feeds the "propertyKind" assembly attribute.
+// geology-level classification. THIS is what RESQML calls a KIND, and it is
+// the only one of these attributes that carries that name honestly: the
+// others name a TYPE. Feeds the "propertyKind" assembly attribute.
 //
 // RESQML has two ways of saying the same thing: a local or PWLS kind is a real
 // PropertyKind OBJECT, while a STANDARD Energistics kind is only an enum with
@@ -877,9 +878,9 @@ int ResqmlDataRepositoryToVtkPartitionedDataSetCollection::resolveGroupingParent
 			if (w_fId == -1)
 			{
 				w_fId = w_assembly->AddNode(w_fNodeName.c_str(), w_effectiveParent);
-				w_assembly->SetAttribute(w_fId, "type",
+				w_assembly->SetAttribute(w_fId, "typeCode",
 					std::to_string(static_cast<int>(TreeViewNodeType::Feature)).c_str());
-				w_assembly->SetAttribute(w_fId, "kind", "Feature");
+				w_assembly->SetAttribute(w_fId, "type", "Feature");
 				const std::string w_label = MakeValidNodeName(("Feature_" + w_feature->getTitle()).c_str());
 				w_assembly->SetAttribute(w_fId, "label", w_label.c_str());
 				w_assembly->SetAttribute(w_fId, "title", w_feature->getTitle().c_str());
@@ -896,9 +897,9 @@ int ResqmlDataRepositoryToVtkPartitionedDataSetCollection::resolveGroupingParent
 	if (w_iId == -1)
 	{
 		w_iId = w_assembly->AddNode(w_iNodeName.c_str(), w_effectiveParent);
-		w_assembly->SetAttribute(w_iId, "type",
+		w_assembly->SetAttribute(w_iId, "typeCode",
 			std::to_string(static_cast<int>(TreeViewNodeType::Interpretation)).c_str());
-		w_assembly->SetAttribute(w_iId, "kind", "Interpretation");
+		w_assembly->SetAttribute(w_iId, "type", "Interpretation");
 		const std::string w_label = MakeValidNodeName(("Interpretation_" + w_interp->getTitle()).c_str());
 		w_assembly->SetAttribute(w_iId, "label", w_label.c_str());
 		w_assembly->SetAttribute(w_iId, "title", w_interp->getTitle().c_str());
@@ -1029,8 +1030,8 @@ int ResqmlDataRepositoryToVtkPartitionedDataSetCollection::findOrCreateGridSubFo
 	if (w_id == -1)
 	{
 		w_id = w_assembly->AddNode(w_nodeName.c_str(), p_containerId);
-		w_assembly->SetAttribute(w_id, "type", std::to_string(static_cast<int>(p_type)).c_str());
-		w_assembly->SetAttribute(w_id, "kind", treeViewNodeTypeName(p_type));
+		w_assembly->SetAttribute(w_id, "typeCode", std::to_string(static_cast<int>(p_type)).c_str());
+		w_assembly->SetAttribute(w_id, "type", treeViewNodeTypeName(p_type));
 		w_assembly->SetAttribute(w_id, "label", MakeValidNodeName(p_title).c_str());
 		w_assembly->SetAttribute(w_id, "title", p_title);
 	}
@@ -1044,7 +1045,7 @@ int ResqmlDataRepositoryToVtkPartitionedDataSetCollection::resolveGridGeometryRe
 	uint32_t w_typeVal = 0;
 	while (w_cur > 0)
 	{
-		if (!w_assembly->GetAttribute(w_cur, "type", w_typeVal)) return -1;
+		if (!w_assembly->GetAttribute(w_cur, "typeCode", w_typeVal)) return -1;
 		const TreeViewNodeType w_t = static_cast<TreeViewNodeType>(w_typeVal);
 		if (w_t == TreeViewNodeType::GridContainer) break;
 		// A property under a SubRepresentation / BlockedWellbore belongs to that
@@ -1062,12 +1063,12 @@ int ResqmlDataRepositoryToVtkPartitionedDataSetCollection::resolveGridGeometryRe
 	// GridContainer -> (PropertiesFolder) -> geometry Representation leaf.
 	for (int w_child : w_assembly->GetChildNodes(w_cur))
 	{
-		if (w_assembly->GetAttribute(w_child, "type", w_typeVal) &&
+		if (w_assembly->GetAttribute(w_child, "typeCode", w_typeVal) &&
 			static_cast<TreeViewNodeType>(w_typeVal) == TreeViewNodeType::Representation)
 			return w_child;
 		for (int w_gchild : w_assembly->GetChildNodes(w_child))
 		{
-			if (w_assembly->GetAttribute(w_gchild, "type", w_typeVal) &&
+			if (w_assembly->GetAttribute(w_gchild, "typeCode", w_typeVal) &&
 				static_cast<TreeViewNodeType>(w_typeVal) == TreeViewNodeType::Representation)
 				return w_gchild;
 		}
@@ -1093,7 +1094,7 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::fanOutCellDataToBloc
 	int w_cur = w_assembly->GetParent(p_gridGeomNodeId);
 	while (w_cur > 0)
 	{
-		if (!w_assembly->GetAttribute(w_cur, "type", w_typeVal))
+		if (!w_assembly->GetAttribute(w_cur, "typeCode", w_typeVal))
 		{
 			return;
 		}
@@ -1119,7 +1120,7 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::fanOutCellDataToBloc
 	// also keeps us off the property nodes of a big grid.
 	for (int w_child : w_assembly->GetChildNodes(w_cur, /*traverse_subtree=*/false))
 	{
-		if (!w_assembly->GetAttribute(w_child, "type", w_typeVal)
+		if (!w_assembly->GetAttribute(w_child, "typeCode", w_typeVal)
 			|| static_cast<TreeViewNodeType>(w_typeVal) != TreeViewNodeType::BlockedWellboreFolder)
 		{
 			continue;
@@ -1144,7 +1145,7 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::fanOutCellDataToBloc
 void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::addDefaultToDataAssemblyNode(common::AbstractObject const* object, const TreeViewNodeType type, int nodeId)
 {
 	// type attribute
-	_output->GetDataAssembly()->SetAttribute(nodeId, "type", std::to_string(static_cast<int>(type)).c_str());
+	_output->GetDataAssembly()->SetAttribute(nodeId, "typeCode", std::to_string(static_cast<int>(type)).c_str());
 
 	// label attribute (composite "kind_title" — kept for backwards display compat)
 	// + 'kind' (fine type Python uses) + 'title' (raw object title) attributes
@@ -1181,7 +1182,7 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::addDefaultToDataAsse
 	}
 	const std::string w_representationVtkValidName = MakeValidNodeName((w_kind + "_" + w_title).c_str());
 	_output->GetDataAssembly()->SetAttribute(nodeId, "label", w_representationVtkValidName.c_str());
-	_output->GetDataAssembly()->SetAttribute(nodeId, "kind", w_kind.c_str());
+	_output->GetDataAssembly()->SetAttribute(nodeId, "type", w_kind.c_str());
 	_output->GetDataAssembly()->SetAttribute(nodeId, "title", w_title.c_str());
 
 	if (type != TreeViewNodeType::Partial)
@@ -1342,7 +1343,7 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchReprese
 		p_nodeId = w_existingNodeId;
 		if (!p_representation->isPartial()) {
 			int w_type;
-			_output->GetDataAssembly()->GetAttribute(p_nodeId, "type", w_type);
+			_output->GetDataAssembly()->GetAttribute(p_nodeId, "typeCode", w_type);
 			if (w_type == static_cast<int>(TreeViewNodeType::Partial)) {
 
 				auto const* w_subrep = dynamic_cast<RESQML2_NS::SubRepresentation const*>(p_representation);
@@ -1387,7 +1388,7 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchReprese
 		const int w_pf = _output->GetDataAssembly()->GetParent(p_nodeId);
 		uint32_t w_pfType = 0;
 		if (w_pf > 0
-			&& _output->GetDataAssembly()->GetAttribute(w_pf, "type", w_pfType)
+			&& _output->GetDataAssembly()->GetAttribute(w_pf, "typeCode", w_pfType)
 			&& static_cast<TreeViewNodeType>(w_pfType) == TreeViewNodeType::PropertiesFolder)
 		{
 			p_nodeId = w_pf;
@@ -1643,7 +1644,7 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchWellbor
 			{
 				if (!w_wellboreTrajectory->isPartial()) {
 					int w_type;
-					 _output->GetDataAssembly()->GetAttribute(_output->GetDataAssembly()->FindFirstNodeWithName(("_" + w_wellboreFeature->getUuid()).c_str()), "type", w_type);
+					 _output->GetDataAssembly()->GetAttribute(_output->GetDataAssembly()->FindFirstNodeWithName(("_" + w_wellboreFeature->getUuid()).c_str()), "typeCode", w_type);
 					if (w_type == static_cast<int>(TreeViewNodeType::Partial)) {
 						w_nodeId = _output->GetDataAssembly()->FindFirstNodeWithName(("_" + w_wellboreTrajectory->getUuid()).c_str());
 						addDefaultToDataAssemblyNode(w_wellboreTrajectory, TreeViewNodeType::WellboreTrajectory, w_nodeId);
@@ -1959,8 +1960,8 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchWellbor
 
 				int w_nodeId = _output->GetDataAssembly()->AddNode(this->MakeValidNodeName(("_" + w_wellboreCompletion->getUuid() + "_" + w_wellboreCompletion->getConnectionUid(WITSML2_1_NS::WellboreCompletion::WellReservoirConnectionType::PERFORATION, w_perforationIndex)).c_str()).c_str(), w_completionNodeId);
 				_output->GetDataAssembly()->SetAttribute(w_nodeId, "label", MakeValidNodeName((w_perforationName).c_str()).c_str());
-				_output->GetDataAssembly()->SetAttribute(w_nodeId, "type", std::to_string(static_cast<int>(TreeViewNodeType::Perforation)).c_str());
-				_output->GetDataAssembly()->SetAttribute(w_nodeId, "kind", treeViewNodeTypeName(TreeViewNodeType::Perforation));
+				_output->GetDataAssembly()->SetAttribute(w_nodeId, "typeCode", std::to_string(static_cast<int>(TreeViewNodeType::Perforation)).c_str());
+				_output->GetDataAssembly()->SetAttribute(w_nodeId, "type", treeViewNodeTypeName(TreeViewNodeType::Perforation));
 				_output->GetDataAssembly()->SetAttribute(w_nodeId, "title", w_perforationName.c_str());
 				_output->GetDataAssembly()->SetAttribute(w_nodeId, "connection", w_wellboreCompletion->getConnectionUid(WITSML2_1_NS::WellboreCompletion::WellReservoirConnectionType::PERFORATION, w_perforationIndex).c_str());
 				_output->GetDataAssembly()->SetAttribute(w_nodeId, "skin", w_perforationSkin.c_str());
@@ -2132,12 +2133,12 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchTimeSer
 				std::string w_vtkValidName = MakeValidNodeName((w_timeSeries->getXmlTag() + '_' + w_myPair.first).c_str());
 				auto w_nodeId = _output->GetDataAssembly()->AddNode(("_" + w_timeSeries->getUuid() + w_vtkValidName).c_str(), w_parentNodeId);
 				_output->GetDataAssembly()->SetAttribute(w_nodeId, "label", w_vtkValidName.c_str());
-				_output->GetDataAssembly()->SetAttribute(w_nodeId, "type", std::to_string(static_cast<int>(TreeViewNodeType::TimeSeries)).c_str());
-				_output->GetDataAssembly()->SetAttribute(w_nodeId, "kind", treeViewNodeTypeName(TreeViewNodeType::TimeSeries));
+				_output->GetDataAssembly()->SetAttribute(w_nodeId, "typeCode", std::to_string(static_cast<int>(TreeViewNodeType::TimeSeries)).c_str());
+				_output->GetDataAssembly()->SetAttribute(w_nodeId, "type", treeViewNodeTypeName(TreeViewNodeType::TimeSeries));
 				_output->GetDataAssembly()->SetAttribute(w_nodeId, "title", w_myPair.first.c_str());
 				if (auto kindIt = w_propertyNameToKind.find(w_myPair.first); kindIt != w_propertyNameToKind.end())
 				{
-					_output->GetDataAssembly()->SetAttribute(w_nodeId, "propKind", kindIt->second.c_str());
+					_output->GetDataAssembly()->SetAttribute(w_nodeId, "propType", kindIt->second.c_str());
 				}
 				if (auto pkIt = w_propertyNameToPwlsKind.find(w_myPair.first);
 					pkIt != w_propertyNameToPwlsKind.end() && !pkIt->second.empty())
@@ -2400,15 +2401,15 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchRealiza
 		_output->GetDataAssembly()->SetAttribute(w_nodeId, "label", w_label.c_str());
 		_output->GetDataAssembly()->SetAttribute(
 			w_nodeId,
-			"type",
+			"typeCode",
 			std::to_string(static_cast<int>(TreeViewNodeType::MultiRealization)).c_str()
 		);
-		_output->GetDataAssembly()->SetAttribute(w_nodeId, "kind", treeViewNodeTypeName(TreeViewNodeType::MultiRealization));
+		_output->GetDataAssembly()->SetAttribute(w_nodeId, "type", treeViewNodeTypeName(TreeViewNodeType::MultiRealization));
 		_output->GetDataAssembly()->SetAttribute(w_nodeId, "title", w_vtkValidName.c_str());
 		_output->GetDataAssembly()->SetAttribute(w_nodeId, "propTitle", propName.c_str());
 		if (auto kindIt = propertyNameToKind.find(propName); kindIt != propertyNameToKind.end())
 		{
-			_output->GetDataAssembly()->SetAttribute(w_nodeId, "propKind", kindIt->second.c_str());
+			_output->GetDataAssembly()->SetAttribute(w_nodeId, "propType", kindIt->second.c_str());
 		}
 		if (auto pkIt = propertyNameToPwlsKind.find(propName);
 			pkIt != propertyNameToPwlsKind.end() && !pkIt->second.empty())
@@ -2445,15 +2446,15 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchRealiza
 			);
 			const std::string childLabel = "Realization " + std::to_string(idx);
 			_output->GetDataAssembly()->SetAttribute(childId, "label", childLabel.c_str());
-			_output->GetDataAssembly()->SetAttribute(childId, "type",
+			_output->GetDataAssembly()->SetAttribute(childId, "typeCode",
 				std::to_string(static_cast<int>(TreeViewNodeType::Properties)).c_str());
-			_output->GetDataAssembly()->SetAttribute(childId, "kind",
+			_output->GetDataAssembly()->SetAttribute(childId, "type",
 				treeViewNodeTypeName(TreeViewNodeType::Properties));
 			_output->GetDataAssembly()->SetAttribute(childId, "realization_index",
 				std::to_string(idx).c_str());
 			if (auto kindIt = propertyNameToKind.find(propName); kindIt != propertyNameToKind.end())
 			{
-				_output->GetDataAssembly()->SetAttribute(childId, "propKind",
+				_output->GetDataAssembly()->SetAttribute(childId, "propType",
 					kindIt->second.c_str());
 			}
 			if (auto pkIt = propertyNameToPwlsKind.find(propName);
@@ -2523,14 +2524,14 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchRealiza
 		const int w_nodeId = _output->GetDataAssembly()->AddNode(nodeName.c_str(), w_parentNodeId);
 		const std::string w_label = "MultiRealizationTimeSeries_" + w_vtkValidName;
 		_output->GetDataAssembly()->SetAttribute(w_nodeId, "label", w_label.c_str());
-		_output->GetDataAssembly()->SetAttribute(w_nodeId, "type",
+		_output->GetDataAssembly()->SetAttribute(w_nodeId, "typeCode",
 			std::to_string(static_cast<int>(TreeViewNodeType::MultiRealizationTimeSeries)).c_str());
-		_output->GetDataAssembly()->SetAttribute(w_nodeId, "kind", treeViewNodeTypeName(TreeViewNodeType::MultiRealizationTimeSeries));
+		_output->GetDataAssembly()->SetAttribute(w_nodeId, "type", treeViewNodeTypeName(TreeViewNodeType::MultiRealizationTimeSeries));
 		_output->GetDataAssembly()->SetAttribute(w_nodeId, "title", w_vtkValidName.c_str());
 		_output->GetDataAssembly()->SetAttribute(w_nodeId, "propTitle", propName.c_str());
 		if (!mrtsKind.empty())
 		{
-			_output->GetDataAssembly()->SetAttribute(w_nodeId, "propKind", mrtsKind.c_str());
+			_output->GetDataAssembly()->SetAttribute(w_nodeId, "propType", mrtsKind.c_str());
 		}
 		_output->GetDataAssembly()->SetAttribute(w_nodeId, "realization_count",
 			std::to_string(realizationMap.size()).c_str());
@@ -2561,15 +2562,15 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchRealiza
 			const int childId = _output->GetDataAssembly()->AddNode(childName.c_str(), w_nodeId);
 			const std::string childLabel = "Realization " + std::to_string(realIdx);
 			_output->GetDataAssembly()->SetAttribute(childId, "label", childLabel.c_str());
-			_output->GetDataAssembly()->SetAttribute(childId, "type",
+			_output->GetDataAssembly()->SetAttribute(childId, "typeCode",
 				std::to_string(static_cast<int>(TreeViewNodeType::TimeSeries)).c_str());
-			_output->GetDataAssembly()->SetAttribute(childId, "kind",
+			_output->GetDataAssembly()->SetAttribute(childId, "type",
 				treeViewNodeTypeName(TreeViewNodeType::TimeSeries));
 			_output->GetDataAssembly()->SetAttribute(childId, "realization_index",
 				std::to_string(realIdx).c_str());
 			if (!mrtsKind.empty())
 			{
-				_output->GetDataAssembly()->SetAttribute(childId, "propKind", mrtsKind.c_str());
+				_output->GetDataAssembly()->SetAttribute(childId, "propType", mrtsKind.c_str());
 			}
 
 			// Populate the per-child time→uuid slice. The TimeSeries
@@ -2641,7 +2642,7 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::selectNodeId(
 	if (_explicitSelection && p_node != 0)
 	{
 		uint32_t typeVal = 0;
-		if (_output->GetDataAssembly()->GetAttribute(p_node, "type", typeVal))
+		if (_output->GetDataAssembly()->GetAttribute(p_node, "typeCode", typeVal))
 		{
 			if (isGroupingType(static_cast<TreeViewNodeType>(typeVal)))
 			{
@@ -2976,14 +2977,14 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::addDataToParent(cons
 	// rep mapper lookup hits the actual Representation node.
 	int w_nodeParent = _output->GetDataAssembly()->GetParent(p_nodeId);
 	uint32_t value_type;
-	_output->GetDataAssembly()->GetAttribute(w_nodeParent, "type", value_type);
+	_output->GetDataAssembly()->GetAttribute(w_nodeParent, "typeCode", value_type);
 	TreeViewNodeType w_typeParent = static_cast<TreeViewNodeType>(value_type);
 	while (w_typeParent == TreeViewNodeType::Collection
 		|| w_typeParent == TreeViewNodeType::MultiRealization
 		|| w_typeParent == TreeViewNodeType::MultiRealizationTimeSeries)
 	{
 		w_nodeParent = _output->GetDataAssembly()->GetParent(w_nodeParent);
-		_output->GetDataAssembly()->GetAttribute(w_nodeParent, "type", value_type);
+		_output->GetDataAssembly()->GetAttribute(w_nodeParent, "typeCode", value_type);
 		w_typeParent = static_cast<TreeViewNodeType>(value_type);
 	}
 	// SolidColor variant: a GRID property's geometry rep is a SIBLING under the
@@ -3256,7 +3257,7 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::deleteMapper()
 	{
 		// retrieval of object type for nodeid
 		uint32_t w_valueType;
-		w_Assembly->GetAttribute(w_nodeId, "type", w_valueType);
+		w_Assembly->GetAttribute(w_nodeId, "typeCode", w_valueType);
 		TreeViewNodeType valueType = static_cast<TreeViewNodeType>(w_valueType);
 
 		// retrieval of object UUID for nodeId
@@ -3278,14 +3279,14 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::deleteMapper()
 			// reach the rep mapper.
 			int w_nodeParent = w_Assembly->GetParent(w_Assembly->FindFirstNodeWithName(("_" + uuid_unselect).c_str()));
 			uint32_t w_typeValue;
-			w_Assembly->GetAttribute(w_nodeParent, "type", w_typeValue);
+			w_Assembly->GetAttribute(w_nodeParent, "typeCode", w_typeValue);
 			TreeViewNodeType w_typeParent = static_cast<TreeViewNodeType>(w_typeValue);
 			while (w_typeParent == TreeViewNodeType::Collection
 				|| w_typeParent == TreeViewNodeType::MultiRealization
 				|| w_typeParent == TreeViewNodeType::MultiRealizationTimeSeries)
 			{
 				w_nodeParent = w_Assembly->GetParent(w_nodeParent);
-				w_Assembly->GetAttribute(w_nodeParent, "type", w_typeValue);
+				w_Assembly->GetAttribute(w_nodeParent, "typeCode", w_typeValue);
 				w_typeParent = static_cast<TreeViewNodeType>(w_typeValue);
 			}
 			// SolidColor variant: redirect a grid TS property to the sibling
@@ -3328,14 +3329,14 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::deleteMapper()
 		{
 			int w_nodeParent = _output->GetDataAssembly()->GetParent(w_nodeId);
 			uint32_t w_typeValue;
-			_output->GetDataAssembly()->GetAttribute(w_nodeParent, "type", w_typeValue);
+			_output->GetDataAssembly()->GetAttribute(w_nodeParent, "typeCode", w_typeValue);
 			TreeViewNodeType w_typeParent = static_cast<TreeViewNodeType>(w_typeValue);
 			while (w_typeParent == TreeViewNodeType::Collection
 				|| w_typeParent == TreeViewNodeType::MultiRealization
 				|| w_typeParent == TreeViewNodeType::MultiRealizationTimeSeries)
 			{
 				w_nodeParent = _output->GetDataAssembly()->GetParent(w_nodeParent);
-				_output->GetDataAssembly()->GetAttribute(w_nodeParent, "type", w_typeValue);
+				_output->GetDataAssembly()->GetAttribute(w_nodeParent, "typeCode", w_typeValue);
 				w_typeParent = static_cast<TreeViewNodeType>(w_typeValue);
 			}
 
@@ -3521,7 +3522,7 @@ vtkPartitionedDataSetCollection* ResqmlDataRepositoryToVtkPartitionedDataSetColl
 	while (w_it != nodesToProcess.end())
 	{
 		uint32_t w_typeValue;
-		_output->GetDataAssembly()->GetAttribute(*w_it, "type", w_typeValue);
+		_output->GetDataAssembly()->GetAttribute(*w_it, "typeCode", w_typeValue);
 		TreeViewNodeType w_type = static_cast<TreeViewNodeType>(w_typeValue);
 
 		// init MapperSet && save nodeId for attach to vtkPartitionedDataSetcollection
@@ -3575,7 +3576,7 @@ vtkPartitionedDataSetCollection* ResqmlDataRepositoryToVtkPartitionedDataSetColl
 	for (const int w_nodeSelection : nodesToProcess)
 	{
 		uint32_t w_typeValue;
-		_output->GetDataAssembly()->GetAttribute(w_nodeSelection, "type", w_typeValue);
+		_output->GetDataAssembly()->GetAttribute(w_nodeSelection, "typeCode", w_typeValue);
 		TreeViewNodeType w_type = static_cast<TreeViewNodeType>(w_typeValue);
 		const std::string nodeUuid = std::string(_output->GetDataAssembly()->GetNodeName(w_nodeSelection)).substr(1);
 
