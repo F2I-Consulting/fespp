@@ -441,11 +441,6 @@ std::vector<std::string> ResqmlDataRepositoryToVtkPartitionedDataSetCollection::
 	return w_uuids;
 }
 
-std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::getTypeEnumXml() const
-{
-	return treeViewNodeTypeEnumXml();
-}
-
 std::vector<std::string> ResqmlDataRepositoryToVtkPartitionedDataSetCollection::getObjectFields(const std::string& p_uuid)
 {
 	std::vector<std::string> w_fields;
@@ -519,6 +514,36 @@ MapperType getMapperType(TreeViewNodeType p_type)
 		return MapperType::Folder;
 	}
 }
+
+// The whole TreeViewNodeType enum as XML, so the trame app can read a node's
+// numeric "typeCode" without hard-coding what the numbers mean, and can stop
+// re-implementing two predicates this plugin owns:
+//
+//   grouping : isGroupingType — checking the node cascades to its descendants
+//   mapper   : getMapperType  — Folder renders nothing; the rest carry data
+//
+// Both were copied into the Python side as lists of type NAMES, which drift
+// silently. Here they are answered by the build that decides them.
+//
+//   <TreeViewNodeTypes>
+//     <Type code="1" label="Collection" grouping="1" mapper="Folder"/> ...
+//
+// Static: it depends on the build, never on the data.
+std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::getTypeEnumXml() const
+{
+	std::string w_xml = "<TreeViewNodeTypes>";
+	for (int w_i = 0; w_i < static_cast<int>(TreeViewNodeType::_Count); ++w_i)
+	{
+		const TreeViewNodeType w_type = static_cast<TreeViewNodeType>(w_i);
+		w_xml += std::string("<Type code=\"") + std::to_string(w_i)
+			+ "\" label=\"" + treeViewNodeTypeName(w_type)
+			+ "\" grouping=\"" + (isGroupingType(w_type) ? "1" : "0")
+			+ "\" mapper=\"" + mapperTypeName(getMapperType(w_type))
+			+ "\"/>";
+	}
+	return w_xml + "</TreeViewNodeTypes>";
+}
+
 
 // Map a RESQML AbstractProperty to the matching TreeView property kind name
 // ("ContinuousProperty" / "DiscreteProperty" / "CategoricalProperty"). Takes

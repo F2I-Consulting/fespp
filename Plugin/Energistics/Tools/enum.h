@@ -30,6 +30,21 @@ enum class MapperType
 	MapperSet
 };
 
+// String name of a MapperType, published with the enum table so the Python
+// side can tell a node that RENDERS from one that is pure tree furniture
+// without keeping its own list of type names.
+inline const char* mapperTypeName(MapperType p_type)
+{
+	switch (p_type)
+	{
+	case MapperType::Folder:    return "Folder";
+	case MapperType::Data:      return "Data";
+	case MapperType::Mapper:    return "Mapper";
+	case MapperType::MapperSet: return "MapperSet";
+	}
+	return "Folder";
+}
+
 // Tree node kinds set as the "typeCode" attribute on each vtkDataAssembly
 // node. Python (the trame app) reads them as strings via the parallel
 // "type" attribute — see treeViewNodeTypeName below.
@@ -87,7 +102,8 @@ enum class TreeViewNodeType
 	// Per-grid folder grouping ALL of a grid's SubRepresentations. No VTK object.
 	SubRepresentationFolder,
 	// KEEP LAST, never serialized: how many entries there are, so the enum can
-	// be walked and published (see treeViewNodeTypeEnumXml). Appending a real
+	// be walked and published (see getTypeEnumXml in the Mapping .cxx, which
+	// also publishes isGroupingType and getMapperType). Appending a real
 	// type BEFORE this keeps every existing int value stable.
 	_Count
 };
@@ -165,25 +181,6 @@ inline const char* treeViewNodeTypeName(TreeViewNodeType p_type)
 	case TreeViewNodeType::_Count:                    break;
 	}
 	return "Unknown";
-}
-
-// The whole enum as XML, for the trame app to resolve a node's "typeCode"
-// without hard-coding the numbers. FESPP owns the enum, so it publishes the
-// table: the two can no longer disagree about what code 5 means, and adding a
-// type needs no matching edit on the Python side.
-//
-//   <TreeViewNodeTypes><Type code="0" label="Unknown"/>...</TreeViewNodeTypes>
-//
-// Static — it depends on the build, never on the data.
-inline std::string treeViewNodeTypeEnumXml()
-{
-	std::string w_xml = "<TreeViewNodeTypes>";
-	for (int w_i = 0; w_i < static_cast<int>(TreeViewNodeType::_Count); ++w_i)
-	{
-		w_xml += "<Type code=\"" + std::to_string(w_i) + "\" label=\""
-			+ treeViewNodeTypeName(static_cast<TreeViewNodeType>(w_i)) + "\"/>";
-	}
-	return w_xml + "</TreeViewNodeTypes>";
 }
 
 #endif // ENUM_H
