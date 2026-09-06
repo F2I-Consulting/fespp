@@ -441,6 +441,11 @@ std::vector<std::string> ResqmlDataRepositoryToVtkPartitionedDataSetCollection::
 	return w_uuids;
 }
 
+std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::getTypeEnumXml() const
+{
+	return treeViewNodeTypeEnumXml();
+}
+
 std::vector<std::string> ResqmlDataRepositoryToVtkPartitionedDataSetCollection::getObjectFields(const std::string& p_uuid)
 {
 	std::vector<std::string> w_fields;

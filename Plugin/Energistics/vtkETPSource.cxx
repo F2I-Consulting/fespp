@@ -483,3 +483,16 @@ vtkStringArray* vtkETPSource::GetObjectFields()
 		ObjectFieldsReply = vtkSmartPointer<vtkStringArray>::New();
 	return ObjectFieldsReply;
 }
+
+//----------------------------------------------------------------------------
+// No key: the enum is a property of the BUILD, not of the data, so there is
+// nothing to ask — the getter may compute it.
+vtkStringArray* vtkETPSource::GetTypeEnumXml()
+{
+	if (!TypeEnumReply)
+	{
+		TypeEnumReply = vtkSmartPointer<vtkStringArray>::New();
+		TypeEnumReply->InsertNextValue(repository.getTypeEnumXml());
+	}
+	return TypeEnumReply;
+}

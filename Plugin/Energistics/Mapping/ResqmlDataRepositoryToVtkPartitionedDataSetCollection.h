@@ -123,6 +123,11 @@ public:
 	// getter throws on one) or its type has no entry. Never throws.
 	std::vector<std::string> getObjectFields(const std::string& p_uuid);
 
+	// The TreeViewNodeType enum as XML, so the Python side can read a
+	// node's "typeCode" without hard-coding what the numbers mean. FESPP
+	// owns the enum and therefore publishes the table. Static.
+	std::string getTypeEnumXml() const;
+
 	//---------------------------------
 
 	// for EPC reader

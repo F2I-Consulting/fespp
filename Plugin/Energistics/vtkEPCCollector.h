@@ -162,6 +162,7 @@ public:
   vtkStringArray* GetObjectUuids();
   void SetObjectFieldsKey(const char* key);
   vtkStringArray* GetObjectFields();
+  vtkStringArray* GetTypeEnumXml();
   ///@}
 
   vtkGetMacro(ExtractTag, int);
@@ -343,6 +344,7 @@ private:
 	vtkSmartPointer<vtkStringArray> ObjectXmlReply;
 	vtkSmartPointer<vtkStringArray> ObjectUuidsReply;
 	vtkSmartPointer<vtkStringArray> ObjectFieldsReply;
+	vtkSmartPointer<vtkStringArray> TypeEnumReply;
 	std::string ObjectUuidsKeyCached;
 
 	std::set<std::string> selectorNotLoaded; // load state, load selector before files :(

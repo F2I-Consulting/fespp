@@ -44,6 +44,11 @@
 				information_only="1" panel_visibility="never">
 				<StringArrayHelper />
 			</StringVectorProperty>
+			<StringVectorProperty name="TypeEnumXml" command="GetTypeEnumXml"
+				information_only="1" panel_visibility="never">
+				<StringArrayHelper />
+				<Documentation>The TreeViewNodeType enum as XML — one &lt;Type code label/&gt; per entry — so a node's typeCode can be resolved without hard-coding the numbers.</Documentation>
+			</StringVectorProperty>
 			<!-- NOTE: this property used to carry an <ArraySelectionDomain> on
 			     top of `FilesInfo`. ArraySelectionDomain implicitly stores its
 			     values as (name, "0"|"1") pairs, but SetFiles only pushes the
@@ -427,6 +432,11 @@
 			<StringVectorProperty name="ObjectFields" command="GetObjectFields"
 				information_only="1" panel_visibility="never">
 				<StringArrayHelper />
+			</StringVectorProperty>
+			<StringVectorProperty name="TypeEnumXml" command="GetTypeEnumXml"
+				information_only="1" panel_visibility="never">
+				<StringArrayHelper />
+				<Documentation>The TreeViewNodeType enum as XML — one &lt;Type code label/&gt; per entry — so a node's typeCode can be resolved without hard-coding the numbers.</Documentation>
 			</StringVectorProperty>
 
 			<!-- TimeStepValues for Time series -->
