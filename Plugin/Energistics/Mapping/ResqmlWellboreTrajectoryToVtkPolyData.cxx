@@ -26,6 +26,8 @@ under the License.
 #include <vtkPolyLine.h>
 #include <vtkDoubleArray.h>
 
+#include <memory>
+
 // include F2i-consulting Energistics Standards API
 #include <fesapi/eml2/AbstractLocal3dCrs.h>
 #include <fesapi/resqml2/WellboreTrajectoryRepresentation.h>
@@ -91,6 +93,35 @@ void ResqmlWellboreTrajectoryToVtkPolyData::loadVtkObject()
 		setPolylineRepresentationLines->InsertNextCell(polylineRepresentation);
 
 		vtk_polydata->SetLines(setPolylineRepresentationLines);
+
+		// The TRUE measured depth of each station, as POINT data: the
+		// geometry only carries XYZ, so a consumer sampling a grid along the
+		// hole could pace nothing better than the chord length — a pseudo-MD
+		// that drifts from the channels' true MD on every deviated well. The
+		// polyline is not tubed here, so point data pairs with the stations
+		// by index. Absent when the trajectory stores no MD (a geometry that
+		// is not a parametric line, no HDF proxy): the consumer then falls
+		// back to the chord.
+		try
+		{
+			if (wellbore->hasMdValues())
+			{
+				std::unique_ptr<double[]> w_mdValues(new double[_pointCount]);
+				wellbore->getMdValues(w_mdValues.get());
+				auto w_mdArray = vtkSmartPointer<vtkDoubleArray>::New();
+				w_mdArray->SetName("MD");
+				w_mdArray->SetNumberOfTuples(_pointCount);
+				for (uint64_t i = 0; i < _pointCount; ++i)
+				{
+					w_mdArray->SetTuple1(i, w_mdValues[i]);
+				}
+				vtk_polydata->GetPointData()->AddArray(w_mdArray);
+			}
+		}
+		catch (const std::exception&)
+		{
+			// no MD stored for this trajectory — the consumer paces on the chord
+		}
 
 		_vtkData->SetPartition(0, vtk_polydata);
 		_vtkData->Modified();

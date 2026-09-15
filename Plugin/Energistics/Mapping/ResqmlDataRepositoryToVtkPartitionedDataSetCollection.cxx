@@ -1242,6 +1242,49 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::addDefaultToDataAsse
 			{
 				_output->GetDataAssembly()->SetAttribute(nodeId, "uom", w_uom.c_str());
 			}
+			// A vector / tensor property: how many values each element carries.
+			// Scalars stay silent, so the assembly does not grow for the common case.
+			const uint64_t w_componentCount = w_prop->getValueCountPerIndexableElement();
+			if (w_componentCount > 1)
+			{
+				_output->GetDataAssembly()->SetAttribute(nodeId, "componentCount", std::to_string(w_componentCount).c_str());
+			}
+			// The DECLARED bounds of the property (its XML minimum / maximum),
+			// the same "minvalue" / "maxvalue" a time series or a realization
+			// set carries: a plain property was the one kind whose range the
+			// file's health could not check. Silent when the file declares
+			// none — a NaN on a continuous, no element on a discrete.
+			try
+			{
+				if (auto const* w_cont = dynamic_cast<RESQML2_NS::ContinuousProperty const*>(w_prop))
+				{
+					const double w_min = w_cont->getMinimumValue();
+					const double w_max = w_cont->getMaximumValue();
+					if (!std::isnan(w_min))
+					{
+						_output->GetDataAssembly()->SetAttribute(nodeId, "minvalue", std::to_string(w_min).c_str());
+					}
+					if (!std::isnan(w_max))
+					{
+						_output->GetDataAssembly()->SetAttribute(nodeId, "maxvalue", std::to_string(w_max).c_str());
+					}
+				}
+				else if (auto const* w_disc = dynamic_cast<RESQML2_NS::DiscreteProperty const*>(w_prop))
+				{
+					if (w_disc->hasMinimumValue())
+					{
+						_output->GetDataAssembly()->SetAttribute(nodeId, "minvalue", std::to_string(static_cast<double>(w_disc->getMinimumValue())).c_str());
+					}
+					if (w_disc->hasMaximumValue())
+					{
+						_output->GetDataAssembly()->SetAttribute(nodeId, "maxvalue", std::to_string(static_cast<double>(w_disc->getMaximumValue())).c_str());
+					}
+				}
+			}
+			catch (const std::exception&)
+			{
+				// a property whose bounds cannot be read stays without them
+			}
 		}
 
 		// metadatas attribute
@@ -1509,6 +1552,11 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchPropert
 	int w_propertySetNodeId = p_nodeParent;
 	for (auto const* w_property : w_valuesPropertySet)
 	{
+		// Each property starts from the representation's own folder: the id is
+		// only moved into a PropertySet collection by the property that BELONGS
+		// to it, and must not leak to the next one (Volve: Lithology1 landed
+		// under GasSat, active_cell and fault_blocks under WatSat).
+		w_propertySetNodeId = p_nodeParent;
 		try
 		{
 			// Skip properties already consumed by a synthetic TimeSeries

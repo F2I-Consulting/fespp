@@ -77,35 +77,68 @@ ResqmlPropertyToVtkDataArray::ResqmlPropertyToVtkDataArray(const RESQML2_NS::Abs
 
 	if (nbElement > 0)
 	{
-		const auto elementCountPerValue = valuesProperty->getValueCountPerIndexableElement();
-		if (elementCountPerValue != 1)
+		// A vector (or tensor) property carries several values per element.
+		// RESQML stores them as the FASTEST dimension of the HDF5 dataset, so
+		// the hyperslab gains one trailing dimension of that size and the VTK
+		// array gets that many components. numValuesInEachDimension is
+		// ordered slowest dimension first, as FESAPI expects.
+		const uint64_t w_componentCount = valuesProperty->getValueCountPerIndexableElement();
+		const uint64_t w_total = nbElement * w_componentCount;
+		const uint64_t w_datasetRank = valuesProperty->getDimensionsCountOfPatch(patch_index);
+		unsigned int w_extra = w_componentCount > 1 ? 1u : 0u;
+		uint64_t w_num[4] = { 0, 0, 0, 0 };
+		uint64_t w_off[4] = { 0, 0, 0, 0 };
+		unsigned int w_rank = 0;
+		if (w_datasetRank == 3 + w_extra)
 		{
-			vtkOutputWindowDisplayErrorText("does not support vectorial property yet\n");
+			w_num[0] = kCellCount;
+			w_num[1] = jCellCount;
+			w_num[2] = iCellCount;
+			w_off[0] = initKIndex;
+			w_rank = 3;
 		}
-
-		const uint64_t numValuesInEachDimension = cellCount;						 // cellCount/kCellCount; //3834;//iCellCount*jCellCount*kCellCount;
-		const uint64_t offsetInEachDimension = iCellCount * jCellCount * initKIndex; // initKIndex;//iCellCount*jCellCount*initKIndex;
+		else if (w_datasetRank == 1 + w_extra)
+		{
+			w_num[0] = cellCount;
+			w_off[0] = iCellCount * jCellCount * initKIndex;
+			w_rank = 1;
+		}
+		else if (w_datasetRank == 1 && w_componentCount > 1)
+		{
+			// A vector stored FLAT (one dimension of element x component
+			// values, the components contiguous per element): the hyperslab is
+			// the same run of values, scaled by the count, and needs no
+			// trailing dimension.
+			w_num[0] = cellCount * w_componentCount;
+			w_off[0] = iCellCount * jCellCount * initKIndex * w_componentCount;
+			w_rank = 1;
+			w_extra = 0;
+		}
+		else
+		{
+			vtkOutputWindowDisplayErrorText("error in : propertyValue->getDimensionsCountOfPatch (values different of 1 or 3, plus one for a vector property)\n");
+		}
+		if (w_rank > 0 && w_extra)
+		{
+			w_num[w_rank] = w_componentCount;
+			++w_rank;
+		}
 
 		std::string typeProperty = valuesProperty->getXmlTag();
 		if (typeProperty == RESQML2_NS::ContinuousProperty::XML_TAG)
 		{
 			vtkSmartPointer<vtkFloatArray> cellDataFloat = vtkSmartPointer<vtkFloatArray>::New();
-			float* valuesFloatSet = new float[nbElement]; // deleted by VTK cellData vtkSmartPointer
-			if (valuesProperty->getDimensionsCountOfPatch(patch_index) == 3)
+			float* valuesFloatSet = new float[w_total]; // deleted by VTK cellData vtkSmartPointer
+			// an unreadable shape leaves NaN, never the garbage of an unfilled buffer
+			std::fill_n(valuesFloatSet, w_total, std::numeric_limits<float>::quiet_NaN());
+			if (w_rank > 0)
 			{
-				valuesProperty->getFloatValuesOf3dPatch(patch_index, valuesFloatSet, iCellCount, jCellCount, kCellCount, 0, 0, initKIndex);
+				valuesProperty->getFloatValuesOfPatch(patch_index, valuesFloatSet, w_num, w_off, w_rank);
 			}
-			else if (valuesProperty->getDimensionsCountOfPatch(patch_index) == 1)
-			{
-				valuesProperty->getFloatValuesOfPatch(patch_index, valuesFloatSet, &numValuesInEachDimension, &offsetInEachDimension, 1);
-			}
-			else
-			{
-				vtkOutputWindowDisplayErrorText("error in : propertyValue->getDimensionsCountOfPatch (values different of 1 or 3)\n");
-			}
+			cellDataFloat->SetNumberOfComponents(static_cast<int>(w_componentCount));
 			cellDataFloat->SetName(w_arrayName.c_str());
-			cellDataFloat->SetArray(valuesFloatSet, nbElement, 0, vtkAbstractArray::VTK_DATA_ARRAY_DELETE);
-			
+			cellDataFloat->SetArray(valuesFloatSet, w_total, 0, vtkAbstractArray::VTK_DATA_ARRAY_DELETE);
+
 			dataArray = cellDataFloat;
 			dataArray->Modified();
 
@@ -118,21 +151,15 @@ ResqmlPropertyToVtkDataArray::ResqmlPropertyToVtkDataArray(const RESQML2_NS::Abs
 		else if (typeProperty == RESQML2_NS::DiscreteProperty::XML_TAG)
 		{
 			vtkSmartPointer<vtkIntArray> cellDataInt = vtkSmartPointer<vtkIntArray>::New();
-			int32_t* valuesIntSet = new int32_t[nbElement]; // deleted by VTK cellData vtkSmartPointer
-			if (valuesProperty->getDimensionsCountOfPatch(patch_index) == 3)
+			int32_t* valuesIntSet = new int32_t[w_total]; // deleted by VTK cellData vtkSmartPointer
+			std::fill_n(valuesIntSet, w_total, 0);
+			if (w_rank > 0)
 			{
-				valuesProperty->getIntValuesOf3dPatch(patch_index, valuesIntSet, iCellCount, jCellCount, kCellCount, 0, 0, initKIndex);
+				valuesProperty->getIntValuesOfPatch(patch_index, valuesIntSet, w_num, w_off, w_rank);
 			}
-			else if (valuesProperty->getDimensionsCountOfPatch(patch_index) == 1)
-			{
-				valuesProperty->getIntValuesOfPatch(patch_index, valuesIntSet, &numValuesInEachDimension, &offsetInEachDimension, 1);
-			}
-			else
-			{
-				vtkOutputWindowDisplayErrorText("error in : propertyValue->getDimensionsCountOfPatch (values different of 1 or 3)\n");
-			}
+			cellDataInt->SetNumberOfComponents(static_cast<int>(w_componentCount));
 			cellDataInt->SetName(w_arrayName.c_str());
-			cellDataInt->SetArray(valuesIntSet, nbElement, 0, vtkAbstractArray::VTK_DATA_ARRAY_DELETE);
+			cellDataInt->SetArray(valuesIntSet, w_total, 0, vtkAbstractArray::VTK_DATA_ARRAY_DELETE);
 
 			dataArray = cellDataInt;
 			dataArray->Modified();
@@ -146,21 +173,15 @@ ResqmlPropertyToVtkDataArray::ResqmlPropertyToVtkDataArray(const RESQML2_NS::Abs
 		else if (typeProperty == RESQML2_NS::CategoricalProperty::XML_TAG)
 		{
 			vtkSmartPointer<vtkIntArray> cellDataInt = vtkSmartPointer<vtkIntArray>::New();
-			int32_t* valuesIntSet = new int32_t[nbElement]; // deleted by VTK cellData vtkSmartPointer
-			if (valuesProperty->getDimensionsCountOfPatch(patch_index) == 3)
+			int32_t* valuesIntSet = new int32_t[w_total]; // deleted by VTK cellData vtkSmartPointer
+			std::fill_n(valuesIntSet, w_total, 0);
+			if (w_rank > 0)
 			{
-				valuesProperty->getIntValuesOf3dPatch(patch_index, valuesIntSet, iCellCount, jCellCount, kCellCount, 0, 0, initKIndex);
+				valuesProperty->getIntValuesOfPatch(patch_index, valuesIntSet, w_num, w_off, w_rank);
 			}
-			else if (valuesProperty->getDimensionsCountOfPatch(patch_index) == 1)
-			{
-				valuesProperty->getIntValuesOfPatch(patch_index, valuesIntSet, &numValuesInEachDimension, &offsetInEachDimension, 1);
-			}
-			else
-			{
-				vtkOutputWindowDisplayErrorText("error in : propertyValue->getDimensionsCountOfPatch (values different of 1 or 3)\n");
-			}
+			cellDataInt->SetNumberOfComponents(static_cast<int>(w_componentCount));
 			cellDataInt->SetName(w_arrayName.c_str());
-			cellDataInt->SetArray(valuesIntSet, nbElement, 0, vtkAbstractArray::VTK_DATA_ARRAY_DELETE);
+			cellDataInt->SetArray(valuesIntSet, w_total, 0, vtkAbstractArray::VTK_DATA_ARRAY_DELETE);
 
 			dataArray = cellDataInt;
 			dataArray->Modified();
