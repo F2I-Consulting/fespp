@@ -1344,8 +1344,35 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchReprese
 
 		if (p_representation->isPartial())
 		{
-			p_nodeId = addNodeToDataAssembly(p_representation, TreeViewNodeType::Partial, p_nodeId);
-			_output->GetDataAssembly()->SetAttribute(p_nodeId, "supporttype", w_typeRepresentation.c_str());
+			if (dynamic_cast<RESQML2_NS::AbstractIjkGridRepresentation const*>(p_representation) != nullptr ||
+				dynamic_cast<RESQML2_NS::UnstructuredGridRepresentation const*>(p_representation) != nullptr)
+			{
+				// A grid known by reference only (the EPC of its properties read
+				// before its own): the SolidColor layout right away — container,
+				// properties folder, a PARTIAL geometry leaf — so what is read now
+				// (properties, completions) hangs where it belongs, and the real
+				// grid, read later, only retypes the leaf (the existing-node branch
+				// below). The container is written by hand: addDefaultToDataAssemblyNode
+				// asks a partial object for metadata it cannot give.
+				auto* w_assembly = _output->GetDataAssembly();
+				const std::string w_uuid = p_representation->getUuid();
+				const std::string w_containerKind = treeViewNodeTypeName(TreeViewNodeType::GridContainer);
+				const int w_gridFolderId = w_assembly->AddNode(("_gridfolder_" + w_uuid).c_str(), p_nodeId);
+				w_assembly->SetAttribute(w_gridFolderId, "typeCode", std::to_string(static_cast<int>(TreeViewNodeType::GridContainer)).c_str());
+				w_assembly->SetAttribute(w_gridFolderId, "type", w_containerKind.c_str());
+				w_assembly->SetAttribute(w_gridFolderId, "label", MakeValidNodeName((w_containerKind + "_" + p_representation->getTitle()).c_str()).c_str());
+				w_assembly->SetAttribute(w_gridFolderId, "title", p_representation->getTitle().c_str());
+				const int w_propsFolderId = findOrCreateGridSubFolder(
+					"_propsfolder_", w_uuid, TreeViewNodeType::PropertiesFolder, "properties", w_gridFolderId);
+				const int w_stubId = addNodeToDataAssembly(p_representation, TreeViewNodeType::Partial, w_propsFolderId);
+				w_assembly->SetAttribute(w_stubId, "supporttype", w_typeRepresentation.c_str());
+				p_nodeId = w_propsFolderId;
+			}
+			else
+			{
+				p_nodeId = addNodeToDataAssembly(p_representation, TreeViewNodeType::Partial, p_nodeId);
+				_output->GetDataAssembly()->SetAttribute(p_nodeId, "supporttype", w_typeRepresentation.c_str());
+			}
 		}
 		else
 		{
@@ -1448,6 +1475,23 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchReprese
 					w_type = TreeViewNodeType::SubRepresentation;
 				}
 				addDefaultToDataAssemblyNode(p_representation, w_type, p_nodeId);
+				// The stub of a grid met partial sits in the properties folder of
+				// the layout built for it (the partial branch above): the real grid
+				// makes it the geometry leaf, and the container above it takes the
+				// metadata the stub could not give.
+				if (w_type == TreeViewNodeType::Representation)
+				{
+					auto* w_assembly = _output->GetDataAssembly();
+					const int w_folder = w_assembly->GetParent(p_nodeId);
+					uint32_t w_folderType = 0;
+					if (w_folder > 0
+						&& w_assembly->GetAttribute(w_folder, "typeCode", w_folderType)
+						&& static_cast<TreeViewNodeType>(w_folderType) == TreeViewNodeType::PropertiesFolder)
+					{
+						w_assembly->SetAttribute(p_nodeId, "title", "SolidColor");
+						addDefaultToDataAssemblyNode(p_representation, TreeViewNodeType::GridContainer, w_assembly->GetParent(w_folder));
+					}
+				}
 			}
 		}
 	}
