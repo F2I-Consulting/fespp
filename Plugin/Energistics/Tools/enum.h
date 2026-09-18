@@ -101,6 +101,14 @@ enum class TreeViewNodeType
 	PropertiesFolder,
 	// Per-grid folder grouping ALL of a grid's SubRepresentations. No VTK object.
 	SubRepresentationFolder,
+	// Appended on purpose (keeps existing serialized int values stable).
+	// Per-wellbore folders, the well laid out like a grid: the trajectory stays
+	// a direct child, the log frames sit under "logs", the marker frames under
+	// "markers", the completions under "completions". Grouping types (checking
+	// one selects everything in it), no VTK object.
+	WellboreLogsFolder,
+	WellboreMarkersFolder,
+	WellboreCompletionsFolder,
 	// KEEP LAST, never serialized: how many entries there are, so the enum can
 	// be walked and published (see getTypeEnumXml in the Mapping .cxx, which
 	// also publishes isGroupingType and getMapperType). Appending a real
@@ -144,7 +152,12 @@ inline bool isGroupingType(TreeViewNodeType p_type)
 		|| p_type == TreeViewNodeType::BlockedWellboreFolder
 		// PropertiesFolder is DELIBERATELY NOT grouping — checking it must NOT
 		// cascade to geometry + all props. Still MapperType::Folder (renders nothing).
-		|| p_type == TreeViewNodeType::SubRepresentationFolder;
+		|| p_type == TreeViewNodeType::SubRepresentationFolder
+		// The wellbore's folders: checking "markers" checks every marker frame,
+		// "logs" every log frame, "completions" every completion.
+		|| p_type == TreeViewNodeType::WellboreLogsFolder
+		|| p_type == TreeViewNodeType::WellboreMarkersFolder
+		|| p_type == TreeViewNodeType::WellboreCompletionsFolder;
 }
 
 // String name of a TreeViewNodeType. Used for the "type" attribute
@@ -178,6 +191,9 @@ inline const char* treeViewNodeTypeName(TreeViewNodeType p_type)
 		case TreeViewNodeType::BlockedWellboreFolder:     return "BlockedWellboreFolder";
 		case TreeViewNodeType::PropertiesFolder:          return "PropertiesFolder";
 		case TreeViewNodeType::SubRepresentationFolder:   return "SubRepresentationFolder";
+		case TreeViewNodeType::WellboreLogsFolder:        return "WellboreLogsFolder";
+		case TreeViewNodeType::WellboreMarkersFolder:     return "WellboreMarkersFolder";
+		case TreeViewNodeType::WellboreCompletionsFolder: return "WellboreCompletionsFolder";
 	case TreeViewNodeType::_Count:                    break;
 	}
 	return "Unknown";

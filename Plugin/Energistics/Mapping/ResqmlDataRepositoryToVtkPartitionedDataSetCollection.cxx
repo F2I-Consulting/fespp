@@ -498,6 +498,9 @@ MapperType getMapperType(TreeViewNodeType p_type)
 	case TreeViewNodeType::PropertiesFolder:
 	case TreeViewNodeType::SubRepresentationFolder:
 	case TreeViewNodeType::BlockedWellboreFolder:
+	case TreeViewNodeType::WellboreLogsFolder:
+	case TreeViewNodeType::WellboreMarkersFolder:
+	case TreeViewNodeType::WellboreCompletionsFolder:
 		return MapperType::Folder;
 	case TreeViewNodeType::Representation:
 	case TreeViewNodeType::SubRepresentation:
@@ -1746,9 +1749,16 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchWellbor
 					w_initNodeId = searchRepresentationSetRepresentation(w_rsr);
 				}
 
-				if (_output->GetDataAssembly()->FindFirstNodeWithName(("_" + w_wellboreFeature->getUuid()).c_str()) == -1)
+				const int w_existingWellNodeId = _output->GetDataAssembly()->FindFirstNodeWithName(("_" + w_wellboreFeature->getUuid()).c_str());
+				if (w_existingWellNodeId == -1)
 				{
 					w_initNodeId = addNodeToDataAssembly(w_wellboreFeature, TreeViewNodeType::Wellbore, w_initNodeId);
+				}
+				else
+				{
+					// a second trajectory of the same well goes under the well,
+					// not beside it
+					w_initNodeId = w_existingWellNodeId;
 				}
 
 				std::string w_vtkValidName = "";
@@ -1764,9 +1774,17 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchWellbor
 			}
 			else
 			{
-				if (!w_wellboreTrajectory->isPartial()) {
+				// The trajectory is already in the tree (a companion EPC): the
+				// frames and completions read now go under ITS wellbore, not the
+				// root, which is where an unresolved w_initNodeId used to put them.
+				const int w_wellNodeId = _output->GetDataAssembly()->FindFirstNodeWithName(("_" + w_wellboreFeature->getUuid()).c_str());
+				if (w_wellNodeId != -1)
+				{
+					w_initNodeId = w_wellNodeId;
+				}
+				if (!w_wellboreTrajectory->isPartial() && w_wellNodeId != -1) {
 					int w_type;
-					 _output->GetDataAssembly()->GetAttribute(_output->GetDataAssembly()->FindFirstNodeWithName(("_" + w_wellboreFeature->getUuid()).c_str()), "typeCode", w_type);
+					 _output->GetDataAssembly()->GetAttribute(w_wellNodeId, "typeCode", w_type);
 					if (w_type == static_cast<int>(TreeViewNodeType::Partial)) {
 						w_nodeId = _output->GetDataAssembly()->FindFirstNodeWithName(("_" + w_wellboreTrajectory->getUuid()).c_str());
 						addDefaultToDataAssemblyNode(w_wellboreTrajectory, TreeViewNodeType::WellboreTrajectory, w_nodeId);
@@ -1839,9 +1857,17 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchWellbor
 			}
 		  // common with wellboreMarkerFrame & WellboreFrame
 			auto* w_wellboreMarkerFrame = dynamic_cast<RESQML2_NS::WellboreMarkerFrameRepresentation const*>(w_wellboreFrame);
+			// The well laid out like a grid: its log frames under a "logs" folder,
+			// its marker frames under "markers", both named after the wellbore
+			// (p_nodeId is the wellbore node, "_<feature uuid>"; the root when no
+			// wellbore could be resolved, and then the frame stays where it was).
+			const std::string w_wellUuid = p_nodeId > 0
+				? std::string(_output->GetDataAssembly()->GetNodeName(p_nodeId)).substr(1) : std::string();
 			if (w_wellboreMarkerFrame == nullptr)
 			{ // WellboreFrame
-				int w_frameNodeId = addNodeToDataAssembly(w_wellboreFrame, TreeViewNodeType::WellboreFrame, p_nodeId);
+				const int w_logsFolderId = w_wellUuid.empty() ? p_nodeId : findOrCreateGridSubFolder(
+					"_logsfolder_", w_wellUuid, TreeViewNodeType::WellboreLogsFolder, "logs", p_nodeId);
+				int w_frameNodeId = addNodeToDataAssembly(w_wellboreFrame, TreeViewNodeType::WellboreFrame, w_logsFolderId);
 				// chanel
 				for (auto* w_property : w_wellboreFrame->getValuesPropertySet())
 				{
@@ -1874,7 +1900,9 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchWellbor
 			}
 			else
 			{ // WellboreMarkerFrame
-				int w_frameNodeId = addNodeToDataAssembly(w_wellboreFrame, TreeViewNodeType::WellboreMarkerFrame, p_nodeId);
+				const int w_markersFolderId = w_wellUuid.empty() ? p_nodeId : findOrCreateGridSubFolder(
+					"_markersfolder_", w_wellUuid, TreeViewNodeType::WellboreMarkersFolder, "markers", p_nodeId);
+				int w_frameNodeId = addNodeToDataAssembly(w_wellboreFrame, TreeViewNodeType::WellboreMarkerFrame, w_markersFolderId);
 				// Ride each marker's MD on its node ("md" attribute): the
 				// Python tree sorts marker siblings by DEPTH instead of
 				// name. Marker set index i pairs with mdValues[i] on the
@@ -2024,7 +2052,14 @@ std::string ResqmlDataRepositoryToVtkPartitionedDataSetCollection::searchWellbor
 	{
 		for (const auto* w_wellboreCompletion : w_witsmlWellbore->getWellboreCompletionSet())
 		{
-			int w_completionNodeId = addNodeToDataAssembly(w_wellboreCompletion, TreeViewNodeType::WellboreCompletion, p_nodeId);
+			// under the wellbore's "completions" folder (see searchWellboreFrame
+			// for the layout); p_nodeId is the wellbore node, or the root when
+			// none could be resolved
+			const std::string w_wellUuid = p_nodeId > 0
+				? std::string(_output->GetDataAssembly()->GetNodeName(p_nodeId)).substr(1) : std::string();
+			const int w_completionsFolderId = w_wellUuid.empty() ? p_nodeId : findOrCreateGridSubFolder(
+				"_completionsfolder_", w_wellUuid, TreeViewNodeType::WellboreCompletionsFolder, "completions", p_nodeId);
+			int w_completionNodeId = addNodeToDataAssembly(w_wellboreCompletion, TreeViewNodeType::WellboreCompletion, w_completionsFolderId);
 			// Iterate over the perforations.
 			for (uint64_t w_perforationIndex = 0; w_perforationIndex < w_wellboreCompletion->getConnectionCount(WITSML2_1_NS::WellboreCompletion::WellReservoirConnectionType::PERFORATION); ++w_perforationIndex)
 			{
