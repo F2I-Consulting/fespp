@@ -112,7 +112,9 @@ public:
 	// unrecognised reference demotes a whole rank to partial on load, and
 	// such a rank must still be listed so absence and demotion stay
 	// distinguishable on the Python side. Empty for an unknown type name.
-	// Never throws.
+	// The type name "*" is the INDEX of the repository: one entry per object,
+	// "uuid|xmlTag|partial|title" (partial 0/1; the title last, it may carry
+	// a "|"), the door the XML explorer opens any object from. Never throws.
 	std::vector<std::string> getObjectUuids(const std::string& p_typeName);
 
 	// Typed fields of one data object as "key=value" lines — what fesapi's

@@ -403,7 +403,23 @@ std::vector<std::string> ResqmlDataRepositoryToVtkPartitionedDataSetCollection::
 		// dynamic_cast sweep over the whole repository; the readers cache the
 		// answer per assembly tag so it runs once per load, not per query.
 		// Partials are NOT filtered — see the header.
-		if (p_typeName == "StratigraphicColumnRankInterpretation")
+		if (p_typeName == "*")
+		{
+			// The whole repository, one line per object. A partial stub answers
+			// its uuid, tag and title (the three a stub holds) and nothing else
+			// is asked of it.
+			for (const std::string& w_uuid : _repository->getUuids())
+			{
+				COMMON_NS::AbstractObject const* w_obj = _repository->getDataObjectByUuid(w_uuid);
+				if (w_obj == nullptr)
+				{
+					continue;
+				}
+				w_uuids.push_back(w_uuid + "|" + w_obj->getXmlTag() + "|"
+					+ (w_obj->isPartial() ? "1" : "0") + "|" + w_obj->getTitle());
+			}
+		}
+		else if (p_typeName == "StratigraphicColumnRankInterpretation")
 		{
 			for (auto* w_rank : _repository->getDataObjects<RESQML2_NS::StratigraphicColumnRankInterpretation>())
 			{
