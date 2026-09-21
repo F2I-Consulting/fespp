@@ -19,6 +19,9 @@ under the License.
 #include "Mapping/ResqmlIjkGridSubRepToVtkExplicitStructuredGrid.h"
 
 #include <array>
+#include <cstdint>
+#include <utility>
+#include <vector>
 
 // include VTK library
 #include <vtkSmartPointer.h>
@@ -108,13 +111,19 @@ void ResqmlIjkGridSubRepToVtkExplicitStructuredGrid::loadVtkObject()
 
 	size_t indice = 0;
 
+	// Which supporting-grid cell each VTK cell IS, in the order they go in —
+	// what lets the grid's own cell properties be restricted onto this subset
+	// (declareSupportingCells / syncCellDataFromSupportingGrid on the base).
+	std::vector<int64_t> subsetCells;
+	subsetCells.reserve(elementCountOfPatch);
+
 	for (uint_fast32_t vtkKCellIndex = 0; vtkKCellIndex < _kCellCount; ++vtkKCellIndex)
 	{
 		for (uint_fast32_t vtkJCellIndex = 0; vtkJCellIndex < _jCellCount; ++vtkJCellIndex)
 		{
 			for (uint_fast32_t vtkICellIndex = 0; vtkICellIndex < _iCellCount; ++vtkICellIndex)
 			{
-				if (elementIndices[indice] == cellIndex)
+				if (indice < elementCountOfPatch && elementIndices[indice] == cellIndex)
 				{
 					vtkIdType hexPointIds[8];
 					for (uint_fast8_t cornerId = 0; cornerId < 8; ++cornerId)
@@ -123,6 +132,7 @@ void ResqmlIjkGridSubRepToVtkExplicitStructuredGrid::loadVtkObject()
 							supportingGrid->getXyzPointIndexFromCellCorner(vtkICellIndex, vtkJCellIndex, vtkKCellIndex, correspondingResqmlCornerId[cornerId]));
 					}
 					vtk_unstructuredGrid->InsertNextCell(VTK_HEXAHEDRON, 8, hexPointIds);
+					subsetCells.push_back(static_cast<int64_t>(cellIndex));
 					indice++;
 				}
 				++cellIndex;
@@ -133,6 +143,14 @@ void ResqmlIjkGridSubRepToVtkExplicitStructuredGrid::loadVtkObject()
 	supportingGrid->unloadSplitInformation();
 	_vtkData->SetPartition(0, vtk_unstructuredGrid);
 	_vtkData->Modified();
+
+	// A sub-representation carries no RESQML property of its own: it IS a
+	// subset of its grid's cells, so a property of the grid applies to it cell
+	// by cell. Without this the reader ticked a property, the grid took the
+	// colour and the object EXTRACTED from it stayed grey — which is where
+	// they were looking.
+	declareSupportingCells(std::move(subsetCells), supportingGrid->getCellCount());
+	syncCellDataFromSupportingGrid(mapperIjkGrid);
 }
 
 //----------------------------------------------------------------------------

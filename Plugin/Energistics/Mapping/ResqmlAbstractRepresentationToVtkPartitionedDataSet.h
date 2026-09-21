@@ -20,11 +20,15 @@ under the License.
 #define __ResqmlAbstractRepresentationTovtkPartitionedDataSet__h__
 
 // include system
+#include <map>
+#include <set>
 #include <string>
+#include <vector>
 
 // include VTK library
 #include <vtkSmartPointer.h>
 #include <vtkPartitionedDataSet.h>
+#include <vtkType.h>
 
 // include F2i-consulting Energistics Standards API
 #include <fesapi/resqml2/AbstractRepresentation.h>
@@ -161,6 +165,38 @@ public:
 	void unregisterSubRep();
 	uint32_t subRepLinkedCount();
 
+	/**
+	 * Mirror the supporting grid's CELL arrays onto THIS representation's
+	 * cells: myArray[k] = gridArray[_supportingCells[k]] — an exact
+	 * restriction, no interpolation.
+	 *
+	 * A blocked wellbore and a sub-representation are the same thing seen
+	 * twice: a SUBSET of a grid's cells, carrying no RESQML property of its
+	 * own. A property of the grid applies to them cell by cell — that is what
+	 * the subset IS — so without this a property ticked on the grid coloured
+	 * the grid and left the objects extracted from it grey, which is exactly
+	 * where the reader was looking.
+	 *
+	 * Idempotent and safe at any time: a no-op while this representation or
+	 * the supporting grid is not loaded, and only the arrays a previous call
+	 * mirrored are evicted — never an array the representation owns.
+	 *
+	 * `p_gridMapper` is passed IN and never read back from a member: the
+	 * caller owns the mapper lifetimes and thereby guarantees it is alive (a
+	 * subset's pointer to its grid is raw and non-owning, so a grid unload
+	 * can leave it dangling).
+	 */
+	void syncCellDataFromSupportingGrid(ResqmlAbstractRepresentationToVtkPartitionedDataSet *p_gridMapper);
+
+	/**
+	 * True when this representation is a CELL SUBSET of a supporting grid and
+	 * knows which cells — i.e. when the mirror above can do anything at all.
+	 */
+	bool mirrorsSupportingGridCells() const
+	{
+		return !_supportingCells.empty() && _supportingCellCount > 0;
+	}
+
 	const char* getActivePropertyName() { return activeArrayName; }
 	int getActivePropertyType() { return activeType; }
 
@@ -170,6 +206,20 @@ private:
 
 protected:
 	const RESQML2_NS::AbstractRepresentation *getResqmlData() const { return _resqmlData; }
+
+	/**
+	 * Declare, at the end of loadVtkObject, which supporting-grid cell each of
+	 * this representation's VTK cells IS — `p_cells[k]` for VTK cell k, in the
+	 * order the cells were inserted — and how many cells the grid has. The
+	 * count is what makes an index addressable: a grid CELL array only lines
+	 * up with these indices when it holds exactly that many tuples (a
+	 * K-hyperslabbed array of a multi-process read is shorter and shifted).
+	 *
+	 * Pass an empty vector (or a zero count) to disable the mirror rather
+	 * than guess — a subset of several supporting grids, or one built from
+	 * something other than cells, has no single index space to restrict from.
+	 */
+	void declareSupportingCells(std::vector<int64_t> p_cells, uint64_t p_supportingCellCount);
 
 	uint32_t _subrepPointerOnPointsCount;
 
@@ -185,6 +235,29 @@ protected:
 	const RESQML2_NS::AbstractRepresentation *_resqmlData;
 
 	std::unordered_map<std::string, class ResqmlPropertyToVtkDataArray *> _uuidToVtkDataArray;
+
+	/** The supporting grid's flat cell index of each of this
+	 *  representation's VTK cells, in VTK order (see declareSupportingCells).
+	 *  Empty on anything that is not a cell subset of a grid. */
+	std::vector<int64_t> _supportingCells;
+
+	/** Flat cell count of that supporting grid; 0 disables the mirror. */
+	uint64_t _supportingCellCount = 0;
+
+	/** Every index of _supportingCells addresses the grid. Checked ONCE, at
+	 *  declaration: the indices need not be sorted (a sub-representation may
+	 *  list its cells in any order), so bounding them by front() and back()
+	 *  would be a silent out-of-range read. */
+	bool _supportingCellsAddressable = false;
+
+	/** Names of the cell arrays THIS mirror wrote, so a later call evicts
+	 *  only its own leftovers. */
+	std::set<std::string> _syncedArrayNames;
+
+	/** MTime of the grid array behind each mirrored name, at copy time. The
+	 *  collection re-pushes the WHOLE selection on every batch, so without
+	 *  this memo one click costs O(N_props² x N_subsets) tuple copies. */
+	std::map<std::string, vtkMTimeType> _syncedArrayMTimes;
 
 	char * activeArrayName = nullptr;
 	int activeType =0;

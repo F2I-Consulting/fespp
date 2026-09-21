@@ -19,6 +19,10 @@ under the License.
 #include "Mapping/ResqmlUnstructuredGridSubRepToVtkUnstructuredGrid.h"
 
 #include <array>
+#include <cstdint>
+#include <memory>
+#include <utility>
+#include <vector>
 
 // VTK
 #include <vtkSmartPointer.h>
@@ -70,6 +74,12 @@ void ResqmlUnstructuredGridSubRepToVtkUnstructuredGrid::loadVtkObject()
 {
 	RESQML2_NS::SubRepresentation const* subRep = getResqmlData();
 
+	// A (re)load rebuilds partition 0 from scratch, so every mirrored cell
+	// array goes with the previous data set: drop the correspondence too. The
+	// FACES branch below never declares one — a face subset has no cell index
+	// space to restrict a cell property from.
+	declareSupportingCells({}, 0);
+
 	if (subRep->areElementIndicesPairwise(0))
 	{
 		vtkOutputWindowDisplayErrorText(("not supported: the element indices of a particular patch are pairwise for SubRepresentation " + subRep->getUuid()).c_str());
@@ -105,8 +115,16 @@ void ResqmlUnstructuredGridSubRepToVtkUnstructuredGrid::loadVtkObject()
 		std::unique_ptr<uint64_t[]> elementIndices(new uint64_t[cellCount]);
 		subRep->getElementIndicesOfPatch(0, 0, elementIndices.get());
 
+		// Which supporting-grid cell each VTK cell IS, in the order they go in
+		// — one cell is inserted per turn of the loop below, optimized shape or
+		// polyhedron. This is what lets the grid's own cell properties be
+		// restricted onto the subset (see declareSupportingCells).
+		std::vector<int64_t> subsetCells;
+		subsetCells.reserve(static_cast<size_t>(maxCellIndex - _procNumber * cellCount / _maxProc));
+
 		for (uint64_t cellIndex = _procNumber * cellCount / _maxProc; cellIndex < maxCellIndex; ++cellIndex)
 		{
+			subsetCells.push_back(static_cast<int64_t>(elementIndices[cellIndex]));
 			bool isOptimizedCell = false;
 
 			const uint64_t localFaceCount = supportingGrid->getFaceCountOfCell(elementIndices[cellIndex]);
@@ -159,6 +177,14 @@ void ResqmlUnstructuredGridSubRepToVtkUnstructuredGrid::loadVtkObject()
 
 		_vtkData->SetPartition(0, vtk_unstructuredGrid);
 		_vtkData->Modified();
+
+		// A sub-representation carries no RESQML property of its own: it IS a
+		// subset of its grid's cells, so a property of the grid applies to it
+		// cell by cell. Without this the reader ticked a property, the grid
+		// took the colour and the object EXTRACTED from it stayed grey —
+		// which is where they were looking.
+		declareSupportingCells(std::move(subsetCells), supportingGrid->getCellCount());
+		syncCellDataFromSupportingGrid(mapperUnstructuredGrid);
 	}
 	else if (indexable_element == gsoap_eml2_3::eml23__IndexableElement::faces)
 	{

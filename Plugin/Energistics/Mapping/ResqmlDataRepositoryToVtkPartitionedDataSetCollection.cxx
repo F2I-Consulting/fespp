@@ -1125,7 +1125,7 @@ int ResqmlDataRepositoryToVtkPartitionedDataSetCollection::resolveGridGeometryRe
 	return -1;
 }
 
-void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::fanOutCellDataToBlockedWellbores(
+void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::fanOutCellDataToGridSubsets(
 	int p_gridGeomNodeId, ResqmlAbstractRepresentationToVtkPartitionedDataSet* p_gridMapper)
 {
 	if (p_gridMapper == nullptr || p_gridGeomNodeId <= 0)
@@ -1163,29 +1163,45 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::fanOutCellDataToBloc
 		return;
 	}
 
-	// The "block wellbore" folder is a DIRECT child of the container
-	// (findOrCreateGridSubFolder with the "_bwfolder_" prefix), and the wellbore
-	// nodes are its direct children — hence traverse_subtree=false on both, which
-	// also keeps us off the property nodes of a big grid.
+	// The "block wellbore" and "SubRep" folders are DIRECT children of the
+	// container (findOrCreateGridSubFolder, "_bwfolder_" / "_subrepfolder_"
+	// prefixes) and their objects are the folders' direct children — hence
+	// traverse_subtree=false on both, which also keeps us off the property
+	// nodes of a big grid.
+	//
+	// BOTH folders, because both hold the same kind of thing: a SUBSET of this
+	// grid's cells, carrying no property of its own. A property ticked on the
+	// grid used to colour the grid and leave the objects extracted from it
+	// grey — and a blocked wellbore or a sub-representation is exactly what
+	// the reader was looking at when they ticked it.
 	for (int w_child : w_assembly->GetChildNodes(w_cur, /*traverse_subtree=*/false))
 	{
-		if (!w_assembly->GetAttribute(w_child, "typeCode", w_typeVal)
-			|| static_cast<TreeViewNodeType>(w_typeVal) != TreeViewNodeType::BlockedWellboreFolder)
+		if (!w_assembly->GetAttribute(w_child, "typeCode", w_typeVal))
 		{
 			continue;
 		}
-		for (int w_bwNode : w_assembly->GetChildNodes(w_child, /*traverse_subtree=*/false))
+		const TreeViewNodeType w_folder = static_cast<TreeViewNodeType>(w_typeVal);
+		if (w_folder != TreeViewNodeType::BlockedWellboreFolder
+			&& w_folder != TreeViewNodeType::SubRepresentationFolder)
 		{
-			// An UNCHECKED blocked wellbore has no mapper: skip it, never build
-			// one here (it would show up unasked and cost a full load).
-			auto w_it = _nodeIdToMapper.find(w_bwNode);
+			continue;
+		}
+		for (int w_subsetNode : w_assembly->GetChildNodes(w_child, /*traverse_subtree=*/false))
+		{
+			// An UNCHECKED object has no mapper: skip it, never build one here
+			// (it would show up unasked and cost a full load).
+			auto w_it = _nodeIdToMapper.find(w_subsetNode);
 			if (w_it == _nodeIdToMapper.end() || w_it->second == nullptr)
 			{
 				continue;
 			}
-			if (auto* w_bw = dynamic_cast<ResqmlBlockedWellboreToVtkUnstructuredGrid*>(w_it->second); w_bw != nullptr)
+			// The mirror lives on the representation base class, and is a no-op
+			// on anything that did not declare which grid cells it is made of
+			// (a face sub-representation, a wellbore over several grids).
+			if (auto* w_subset = dynamic_cast<ResqmlAbstractRepresentationToVtkPartitionedDataSet*>(w_it->second);
+				w_subset != nullptr && w_subset->mirrorsSupportingGridCells())
 			{
-				w_bw->syncCellDataFromSupportingGrid(p_gridMapper);
+				w_subset->syncCellDataFromSupportingGrid(p_gridMapper);
 			}
 		}
 	}
@@ -3270,11 +3286,12 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::addDataToParent(cons
 					? std::string("_real_") + realIdxAttr
 					: std::string{};
 				abstractRepresentation->addDataArray(w_uuid, 0, true, suffix);
-				// Blocked wellbores of this grid borrow its cell arrays. Called
+				// The cell subsets of this grid — blocked wellbores and
+				// sub-representations — borrow its cell arrays. Called
 				// unconditionally: addDataArray no-ops when the array is already
-				// loaded, yet a wellbore checked AFTER the property still has to
+				// loaded, yet a subset checked AFTER the property still has to
 				// receive its copy.
-				fanOutCellDataToBlockedWellbores(w_nodeParent, abstractRepresentation);
+				fanOutCellDataToGridSubsets(w_nodeParent, abstractRepresentation);
 			}
 			else
 			{
@@ -3371,9 +3388,9 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::addDataToParent(cons
 					if (!w_titleStr.empty())
 						abstractRepresentation->addNaNFillDataArray(
 							w_titleStr, suffix, /*autoActivate*/ !isStepSwap);
-					// Mirror the NaN fill too, else the wellbores would keep the
+					// Mirror the NaN fill too, else the subsets would keep the
 					// previous step's values while the grid goes transparent.
-					fanOutCellDataToBlockedWellbores(w_nodeParent, abstractRepresentation);
+					fanOutCellDataToGridSubsets(w_nodeParent, abstractRepresentation);
 					return;
 				}
 
@@ -3394,13 +3411,13 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::addDataToParent(cons
 				// auto-activate so coloring follows the user's pick. Step swaps
 				// must not steal the active scalar coloring.
 				abstractRepresentation->addDataArray(newUuid, 0, !isStepSwap, suffix);
-				// The ONLY site that keeps the wellbores in sync on a step change:
+				// The ONLY site that keeps the subsets in sync on a step change:
 				// their mapper is neither deleted (deleteMapper only walks
 				// _oldSelection) nor reloaded (it still has its partition), so
 				// without this push they would silently display step N-1 while the
 				// grid displays N. The array name is stable across steps, so the
 				// mirror replaces it by name (the grid array's MTime bumped).
-				fanOutCellDataToBlockedWellbores(w_nodeParent, abstractRepresentation);
+				fanOutCellDataToGridSubsets(w_nodeParent, abstractRepresentation);
 			}
 		}
 		catch (const std::exception& e)
@@ -3527,12 +3544,12 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::deleteMapper()
 				{
 					auto* abstractRepresentation = static_cast<ResqmlAbstractRepresentationToVtkPartitionedDataSet*>(_nodeIdToMapper[w_nodeParent]);
 					abstractRepresentation->deleteDataArray(uuid_unselect);
-					// EVICTION: the blocked wellbores mirror this grid's cell
-					// arrays — re-sync so the copy of the array the user just
-					// unchecked leaves the wells too. Without this, unchecking
-					// the LAST grid property leaves the wells painted with a
-					// value the grid no longer carries. No-op for non-grid reps.
-					fanOutCellDataToBlockedWellbores(w_nodeParent, abstractRepresentation);
+					// EVICTION: this grid's cell subsets mirror its cell arrays
+					// — re-sync so the copy of the array the user just unchecked
+					// leaves them too. Without this, unchecking the LAST grid
+					// property leaves them painted with a value the grid no
+					// longer carries. No-op for non-grid reps.
+					fanOutCellDataToGridSubsets(w_nodeParent, abstractRepresentation);
 				}
 			}
 			catch (const std::exception& e)

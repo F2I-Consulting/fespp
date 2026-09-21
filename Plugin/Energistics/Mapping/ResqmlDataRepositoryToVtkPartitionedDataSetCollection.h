@@ -197,14 +197,15 @@ private:
 	// Representation child of the GridContainer). Returns -1 for non-grid nodes.
 	int resolveGridGeometryRepId(int p_nodeId);
 
-	// A blocked wellbore has no RESQML property of its own: it borrows its
-	// supporting grid's CELL arrays, restricted to the cells it crosses. Push
-	// them from the grid geometry rep p_gridGeomNodeId (with its mapper, which
-	// the caller has just resolved and thus knows to be alive) to every CHECKED
-	// blocked wellbore of that grid. No-op for a non-grid rep, and never creates
-	// a mapper — an unchecked wellbore is skipped. Also the EVICTION path: after
+	// A blocked wellbore and a sub-representation are the same thing: a SUBSET
+	// of a grid's cells, with no RESQML property of its own. Both borrow the
+	// supporting grid's CELL arrays, restricted to the cells they are made of.
+	// Push them from the grid geometry rep p_gridGeomNodeId (with its mapper,
+	// which the caller has just resolved and thus knows to be alive) to every
+	// CHECKED subset of that grid. No-op for a non-grid rep, and never creates
+	// a mapper — an unchecked object is skipped. Also the EVICTION path: after
 	// a deleteDataArray on the grid, the same push drops the mirrored copy.
-	void fanOutCellDataToBlockedWellbores(int p_gridGeomNodeId,
+	void fanOutCellDataToGridSubsets(int p_gridGeomNodeId,
 		ResqmlAbstractRepresentationToVtkPartitionedDataSet* p_gridMapper);
 
 	// Helper for the alternate tree hierarchy modes

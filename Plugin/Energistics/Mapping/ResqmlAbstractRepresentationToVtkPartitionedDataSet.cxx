@@ -21,11 +21,15 @@ under the License.
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <cstring>
 #include <limits>
+#include <utility>
 
 // include VTK library
 #include <vtkCellData.h>
+#include <vtkDataArray.h>
 #include <vtkDataSet.h>
+#include <vtkDataSetAttributes.h>
 #include <vtkDoubleArray.h>
 #include <vtkPointData.h>
 
@@ -271,6 +275,170 @@ void ResqmlAbstractRepresentationToVtkPartitionedDataSet::unregisterSubRep()
 unsigned int ResqmlAbstractRepresentationToVtkPartitionedDataSet::subRepLinkedCount()
 {
 	return _subrepPointerOnPointsCount;
+}
+
+//----------------------------------------------------------------------------
+void ResqmlAbstractRepresentationToVtkPartitionedDataSet::declareSupportingCells(
+	std::vector<int64_t> p_cells, uint64_t p_supportingCellCount)
+{
+	_supportingCells = std::move(p_cells);
+	_supportingCellCount = p_supportingCellCount;
+	// Checked once, here, and never again while copying: a sub-representation
+	// may list its cells in ANY order, so the min/max of the whole list is the
+	// only honest bound. Out of range disables the mirror instead of reading
+	// past the grid's arrays.
+	_supportingCellsAddressable = !_supportingCells.empty() && _supportingCellCount > 0;
+	for (int64_t w_cell : _supportingCells)
+	{
+		if (w_cell < 0 || static_cast<uint64_t>(w_cell) >= _supportingCellCount)
+		{
+			_supportingCellsAddressable = false;
+			break;
+		}
+	}
+	// a re-load invalidates what an earlier one mirrored
+	_syncedArrayNames.clear();
+	_syncedArrayMTimes.clear();
+}
+
+//----------------------------------------------------------------------------
+void ResqmlAbstractRepresentationToVtkPartitionedDataSet::syncCellDataFromSupportingGrid(
+	ResqmlAbstractRepresentationToVtkPartitionedDataSet* p_gridMapper)
+{
+	if (p_gridMapper == nullptr || !_supportingCellsAddressable)
+	{
+		return;
+	}
+
+	// This subset loaded?
+	if (_vtkData == nullptr || _vtkData->GetNumberOfPartitions() == 0)
+	{
+		return;
+	}
+	vtkDataSet* w_mine = vtkDataSet::SafeDownCast(_vtkData->GetPartition(0));
+	if (w_mine == nullptr)
+	{
+		return;
+	}
+
+	// Supporting grid loaded? A points-only stub has no partition — not an
+	// error, the properties simply are not there yet.
+	vtkSmartPointer<vtkPartitionedDataSet> w_gridOutput = p_gridMapper->getOutput();
+	if (w_gridOutput == nullptr || w_gridOutput->GetNumberOfPartitions() == 0)
+	{
+		return;
+	}
+	vtkDataSet* w_gridDataSet = vtkDataSet::SafeDownCast(w_gridOutput->GetPartition(0));
+	if (w_gridDataSet == nullptr)
+	{
+		return;
+	}
+
+	vtkCellData* w_gridCellData = w_gridDataSet->GetCellData();
+	vtkCellData* w_myCellData = w_mine->GetCellData();
+	if (w_gridCellData == nullptr || w_myCellData == nullptr)
+	{
+		return;
+	}
+
+	// One VTK cell per declared supporting cell, in the same order — the
+	// correspondence is only sound if the counts still agree.
+	const vtkIdType w_cellCount = w_mine->GetNumberOfCells();
+	if (w_cellCount != static_cast<vtkIdType>(_supportingCells.size()))
+	{
+		return;
+	}
+
+	std::set<std::string> w_freshNames;
+	std::map<std::string, vtkMTimeType> w_freshMTimes;
+	const int w_arrayCount = w_gridCellData->GetNumberOfArrays();
+	for (int w_a = 0; w_a < w_arrayCount; ++w_a)
+	{
+		vtkDataArray* w_gridArray = w_gridCellData->GetArray(w_a);
+		if (w_gridArray == nullptr)
+		{
+			continue;
+		}
+		const char* w_name = w_gridArray->GetName();
+		if (w_name == nullptr || w_name[0] == '\0')
+		{
+			continue; // an unnamed array can be neither mirrored nor evicted by name
+		}
+		// VTK-internal bookkeeping of the supporting grid, never property data:
+		// vtkGhostType would import the grid's dead-cell blanking (VTK honours
+		// the name and installs it as the live ghost array) and silently hide
+		// the subset's cells; ConnectivityFlags is vtkExplicitStructuredGrid
+		// face bookkeeping, meaningless on a vtkUnstructuredGrid.
+		if (std::strcmp(w_name, vtkDataSetAttributes::GhostArrayName()) == 0
+			|| std::strcmp(w_name, "ConnectivityFlags") == 0)
+		{
+			continue;
+		}
+		// The declared indices are FLAT grid indices: they only address this
+		// array's tuples when it covers the WHOLE grid. A K-hyperslabbed array
+		// (multi process) is shorter and shifted — skip rather than mis-map.
+		if (w_gridArray->GetNumberOfTuples() != static_cast<vtkIdType>(_supportingCellCount))
+		{
+			continue;
+		}
+
+		// The collection re-pushes the WHOLE selection every batch, so this sync
+		// runs O(N_props) times per click: skip the copy when the grid array has
+		// not changed since we last mirrored it (a time-step swap reloads the
+		// grid array in place and bumps its MTime, so it is never missed).
+		const auto w_seen = _syncedArrayMTimes.find(w_name);
+		if (w_seen != _syncedArrayMTimes.end()
+			&& w_seen->second == w_gridArray->GetMTime()
+			&& w_myCellData->HasArray(w_name))
+		{
+			w_freshNames.insert(w_name);
+			w_freshMTimes[w_name] = w_seen->second;
+			continue;
+		}
+
+		// NewInstance keeps the grid's concrete type (double / float / int ...)
+		// and SetTuple copies the whole tuple, so vectorial properties ride along
+		// untouched. No hard-coded cast, no interpolation.
+		vtkSmartPointer<vtkDataArray> w_mineArray;
+		w_mineArray.TakeReference(w_gridArray->NewInstance());
+		w_mineArray->SetName(w_name);
+		w_mineArray->SetNumberOfComponents(w_gridArray->GetNumberOfComponents());
+		w_mineArray->SetNumberOfTuples(w_cellCount);
+		for (vtkIdType w_k = 0; w_k < w_cellCount; ++w_k)
+		{
+			w_mineArray->SetTuple(w_k, static_cast<vtkIdType>(_supportingCells[w_k]), w_gridArray);
+		}
+		// Categorical / property-kind colour map, if the grid's array carries one.
+		w_mineArray->SetLookupTable(w_gridArray->GetLookupTable());
+
+		w_myCellData->AddArray(w_mineArray); // replaces the homonym, if any
+		w_freshNames.insert(w_name);
+		w_freshMTimes[w_name] = w_gridArray->GetMTime();
+	}
+
+	// Evict only what a PREVIOUS sync mirrored and that the grid no longer
+	// carries (property unchecked, time step swapped to another array name...).
+	for (const std::string& w_stale : _syncedArrayNames)
+	{
+		if (w_freshNames.find(w_stale) == w_freshNames.end())
+		{
+			w_myCellData->RemoveArray(w_stale.c_str());
+		}
+	}
+	_syncedArrayNames = std::move(w_freshNames);
+	_syncedArrayMTimes = std::move(w_freshMTimes);
+
+	// Follow the grid's active scalars when it has some, so the subset colours
+	// with it out of the box. Best effort: the app binds ColorBy by name anyway.
+	vtkDataArray* w_gridScalars = w_gridCellData->GetScalars();
+	if (w_gridScalars != nullptr && w_gridScalars->GetName() != nullptr
+		&& w_myCellData->HasArray(w_gridScalars->GetName()))
+	{
+		w_myCellData->SetActiveScalars(w_gridScalars->GetName());
+	}
+
+	w_mine->Modified();
+	_vtkData->Modified();
 }
 
 
