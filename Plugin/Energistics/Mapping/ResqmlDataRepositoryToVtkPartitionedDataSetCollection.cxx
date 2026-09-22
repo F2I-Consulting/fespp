@@ -305,6 +305,24 @@ namespace
 		w_field([&] { putNumber(p_out, "origin_y", p_crs.getOriginOrdinal2()); });
 		w_field([&] { putNumber(p_out, "origin_z", p_crs.getOriginDepthOrElevation()); });
 		w_field([&] { putNumber(p_out, "areal_rotation", p_crs.getArealRotation()); });
+		// The axis order the FILE declares: which of easting / northing /
+		// westing / southing runs first, and therefore what the two
+		// horizontal ordinates are CALLED. Taken from the file rather than
+		// derived from the EPSG code, because the file's own word is what
+		// the data was written with — an EPSG lookup is the fallback when
+		// the file says nothing, not the first authority.
+		w_field([&]
+		{
+			static const char* const w_names[] = {
+				"Easting Northing", "Easting Southing", "Southing Easting",
+				"Northing Easting", "Westing Southing", "Southing Westing",
+				"Northing Westing", "Westing Northing" };
+			const int w_order = static_cast<int>(p_crs.getAxisOrder());
+			if (w_order >= 0 && w_order < 8)
+			{
+				putText(p_out, "axis_order", w_names[w_order]);
+			}
+		});
 		w_field([&] { putText(p_out, "projected_unit", p_crs.getProjectedCrsUnitAsString()); });
 		w_field([&] { putText(p_out, "vertical_unit", p_crs.getVerticalCrsUnitAsString()); });
 		w_field([&] { putText(p_out, "description", p_crs.getDescription()); });
