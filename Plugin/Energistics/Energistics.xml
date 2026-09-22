@@ -44,6 +44,14 @@
 				information_only="1" panel_visibility="never">
 				<StringArrayHelper />
 			</StringVectorProperty>
+			<StringVectorProperty name="ObjectRelationsKey" command="SetObjectRelationsKey"
+				number_of_elements="1" panel_visibility="never">
+				<Documentation>"&lt;tag&gt;|&lt;uuid&gt;": the object whose relationships ObjectRelations then carries, one "direction|uuid|xmlTag|partial|title" per relation. direction "target" = designated BY this object, "source" = designates it. The second direction is readable nowhere else: a DataObjectReference is written in the XML of the object that points, never in the one it points at.</Documentation>
+			</StringVectorProperty>
+			<StringVectorProperty name="ObjectRelations" command="GetObjectRelations"
+				information_only="1" panel_visibility="never">
+				<StringArrayHelper />
+			</StringVectorProperty>
 			<StringVectorProperty name="TypeEnumXml" command="GetTypeEnumXml"
 				information_only="1" panel_visibility="never">
 				<StringArrayHelper />
@@ -430,6 +438,14 @@
 				<Documentation>"&lt;tag&gt;|&lt;uuid&gt;": the object whose typed fields ObjectFields then carries, one "key=value" per value (empty for an unknown uuid, a reference stub, or a type without an entry).</Documentation>
 			</StringVectorProperty>
 			<StringVectorProperty name="ObjectFields" command="GetObjectFields"
+				information_only="1" panel_visibility="never">
+				<StringArrayHelper />
+			</StringVectorProperty>
+			<StringVectorProperty name="ObjectRelationsKey" command="SetObjectRelationsKey"
+				number_of_elements="1" panel_visibility="never">
+				<Documentation>"&lt;tag&gt;|&lt;uuid&gt;": the object whose relationships ObjectRelations then carries, one "direction|uuid|xmlTag|partial|title" per relation. direction "target" = designated BY this object, "source" = designates it. The second direction is readable nowhere else: a DataObjectReference is written in the XML of the object that points, never in the one it points at.</Documentation>
+			</StringVectorProperty>
+			<StringVectorProperty name="ObjectRelations" command="GetObjectRelations"
 				information_only="1" panel_visibility="never">
 				<StringArrayHelper />
 			</StringVectorProperty>

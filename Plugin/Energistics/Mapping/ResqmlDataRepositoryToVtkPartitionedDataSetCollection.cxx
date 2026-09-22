@@ -457,6 +457,61 @@ std::vector<std::string> ResqmlDataRepositoryToVtkPartitionedDataSetCollection::
 	return w_uuids;
 }
 
+std::vector<std::string> ResqmlDataRepositoryToVtkPartitionedDataSetCollection::getObjectRelations(const std::string& p_uuid)
+{
+	std::vector<std::string> w_lines;
+	if (_repository == nullptr || p_uuid.empty())
+	{
+		return w_lines;
+	}
+	COMMON_NS::AbstractObject* w_object = findObjectAnyCase(_repository, p_uuid);
+	if (w_object == nullptr)
+	{
+		return w_lines;
+	}
+
+	// One line per related object, in the shape the "*" index already uses so
+	// the Python side parses relations and the index with the same reader.
+	auto w_append = [&w_lines](const char* p_direction,
+		const std::vector<COMMON_NS::AbstractObject*>& p_objects)
+	{
+		for (COMMON_NS::AbstractObject const* w_rel : p_objects)
+		{
+			if (w_rel == nullptr)
+			{
+				continue;
+			}
+			w_lines.push_back(std::string(p_direction) + "|" + w_rel->getUuid()
+				+ "|" + w_rel->getXmlTag() + "|"
+				+ (w_rel->isPartial() ? "1" : "0") + "|" + w_rel->getTitle());
+		}
+	};
+
+	// fesapi keeps both directions in unordered_maps and reads them with
+	// .at(): an object nothing points at (or that points at nothing) is
+	// ABSENT from the map, not an empty entry, so .at() throws on the very
+	// normal case. Each direction is therefore asked for on its own — one
+	// throwing must not cost the other.
+	try
+	{
+		w_append("target", _repository->getTargetObjects(w_object));
+	}
+	catch (const std::exception&)
+	{
+		// nothing designated by this object: not an error, and not a reason
+		// to lose what designates it
+	}
+	try
+	{
+		w_append("source", _repository->getSourceObjects(w_object));
+	}
+	catch (const std::exception&)
+	{
+		// nothing designates this object
+	}
+	return w_lines;
+}
+
 std::vector<std::string> ResqmlDataRepositoryToVtkPartitionedDataSetCollection::getObjectFields(const std::string& p_uuid)
 {
 	std::vector<std::string> w_fields;

@@ -485,6 +485,31 @@ vtkStringArray* vtkETPSource::GetObjectFields()
 }
 
 //----------------------------------------------------------------------------
+void vtkETPSource::SetObjectRelationsKey(const char* key)
+{
+	if (!ObjectRelationsReply)
+		ObjectRelationsReply = vtkSmartPointer<vtkStringArray>::New();
+	ObjectRelationsReply->SetNumberOfValues(0);
+	if (key == nullptr || key[0] == '\0')
+		return;
+	// "<tag>|<uuid>" — the tag is the caller's cache key, not ours
+	std::string w_uuid(key);
+	const auto w_bar = w_uuid.find('|');
+	if (w_bar != std::string::npos)
+		w_uuid.erase(0, w_bar + 1);
+	for (const std::string& w_line : repository.getObjectRelations(w_uuid))
+		ObjectRelationsReply->InsertNextValue(w_line);
+}
+
+//----------------------------------------------------------------------------
+vtkStringArray* vtkETPSource::GetObjectRelations()
+{
+	if (!ObjectRelationsReply)
+		ObjectRelationsReply = vtkSmartPointer<vtkStringArray>::New();
+	return ObjectRelationsReply;
+}
+
+//----------------------------------------------------------------------------
 // No key: the enum is a property of the BUILD, not of the data, so there is
 // nothing to ask — the getter may compute it.
 vtkStringArray* vtkETPSource::GetTypeEnumXml()

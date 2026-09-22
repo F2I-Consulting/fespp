@@ -146,6 +146,12 @@ public:
    *       the object's typed fields, one "key=value" per value — what
    *       fesapi's accessors know; empty for an unknown uuid, a reference
    *       stub, or a type without an entry (today: the local 3D CRS).
+   *   ObjectRelationsKey = "<tag>|<uuid>"           ->  GetObjectRelations()
+   *       what the object designates and what designates IT, one
+   *       "direction|uuid|xmlTag|partial|title" per relation. The second
+   *       direction is readable NOWHERE else: a DataObjectReference is
+   *       written in the XML of the object that POINTS, never in the one
+   *       it points at.
    *
    * The work happens in the SETTER; the getter is a pure cache read.
    * ParaView pulls every information property on a bare
@@ -162,6 +168,8 @@ public:
   vtkStringArray* GetObjectUuids();
   void SetObjectFieldsKey(const char* key);
   vtkStringArray* GetObjectFields();
+  void SetObjectRelationsKey(const char* key);
+  vtkStringArray* GetObjectRelations();
   vtkStringArray* GetTypeEnumXml();
   ///@}
 
@@ -344,6 +352,7 @@ private:
 	vtkSmartPointer<vtkStringArray> ObjectXmlReply;
 	vtkSmartPointer<vtkStringArray> ObjectUuidsReply;
 	vtkSmartPointer<vtkStringArray> ObjectFieldsReply;
+	vtkSmartPointer<vtkStringArray> ObjectRelationsReply;
 	vtkSmartPointer<vtkStringArray> TypeEnumReply;
 	std::string ObjectUuidsKeyCached;
 

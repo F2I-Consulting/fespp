@@ -132,6 +132,8 @@ public:
 	vtkStringArray* GetObjectUuids();
 	void SetObjectFieldsKey(const char* key);
 	vtkStringArray* GetObjectFields();
+	void SetObjectRelationsKey(const char* key);
+	vtkStringArray* GetObjectRelations();
 	vtkStringArray* GetTypeEnumXml();
 	///@}
 
@@ -211,6 +213,7 @@ private:
 	vtkSmartPointer<vtkStringArray> ObjectXmlReply;
 	vtkSmartPointer<vtkStringArray> ObjectUuidsReply;
 	vtkSmartPointer<vtkStringArray> ObjectFieldsReply;
+	vtkSmartPointer<vtkStringArray> ObjectRelationsReply;
 	vtkSmartPointer<vtkStringArray> TypeEnumReply;
 	std::string ObjectUuidsKeyCached;
 };

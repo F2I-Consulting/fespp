@@ -117,6 +117,23 @@ public:
 	// a "|"), the door the XML explorer opens any object from. Never throws.
 	std::vector<std::string> getObjectUuids(const std::string& p_typeName);
 
+	// The relationships of one data object, BOTH WAYS, as
+	// "direction|uuid|xmlTag|partial|title" lines (direction "target" or
+	// "source"; the title last, it may carry a "|").
+	//
+	// A "target" is an object this one designates — those are readable from
+	// the XML itself, since a DataObjectReference is written there. A
+	// "source" is an object that designates THIS one, and that is readable
+	// NOWHERE but here: it lives in another part of the repository, so no
+	// amount of reading this object's bytes will find it. fesapi keeps both
+	// directions (forwardRels / backwardRels) and this is the door to the
+	// second.
+	//
+	// Partials included and marked: a reference stub is often exactly what
+	// the reader is chasing. Empty for an unknown uuid or an object fesapi
+	// holds no relationship for. Never throws.
+	std::vector<std::string> getObjectRelations(const std::string& p_uuid);
+
 	// Typed fields of one data object as "key=value" lines — what fesapi's
 	// own accessors know, so the Python side stops re-deriving the same
 	// values from the XML. Types with an entry: AbstractLocal3dCrs (the base
