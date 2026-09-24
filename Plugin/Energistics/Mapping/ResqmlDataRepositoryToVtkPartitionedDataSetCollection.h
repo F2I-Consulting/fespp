@@ -318,6 +318,10 @@ private:
 	std::set<int> _selection;
 	std::set<int> _currentSelection;
 	std::set<int> _oldSelection;
+	// nodes whose partitions are IN the current _output: a RequestData that
+	// runs without a fresh selection batch (a file added, a property edited)
+	// must not append them a second time
+	std::set<int> _attachedNodes;
 	bool _selectionCleared;
 
 	std::set<std::string> _files;

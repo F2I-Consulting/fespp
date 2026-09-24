@@ -3514,6 +3514,12 @@ void ResqmlDataRepositoryToVtkPartitionedDataSetCollection::deleteMapper()
 	vtkSmartPointer<vtkDataAssembly> w_Assembly = _output->GetDataAssembly();
 	_output = vtkSmartPointer<vtkPartitionedDataSetCollection>::New();
 	_output->SetDataAssembly(w_Assembly);
+	// The output is empty again: no node is attached, and no node may keep
+	// pointing at a partition index of the OLD output (a deselected node's
+	// index would name whatever the next attach puts there). Every node
+	// that stays selected is re-linked below.
+	_attachedNodes.clear();
+	w_Assembly->RemoveAllDataSetIndices(0, true);
 
 	// delete unchecked object
 	for (const int w_nodeId : _oldSelection)
@@ -3838,6 +3844,16 @@ vtkPartitionedDataSetCollection* ResqmlDataRepositoryToVtkPartitionedDataSetColl
 	// foreach selection node load object — same source as the init loop above.
 	for (const int w_nodeSelection : nodesToProcess)
 	{
+		// Already attached to this _output: a RequestData that runs without a
+		// fresh selection batch (a file added, a property edited) would append
+		// the same partitions again and link the node to all of them — measured
+		// 2026-09-24: one addFile left three copies of a 930 000-cell grid in the
+		// output, the node owning indices [0, 1, 2]. deleteMapper() forgets the
+		// set when the output is rebuilt.
+		if (!_attachedNodes.insert(w_nodeSelection).second)
+		{
+			continue;
+		}
 		uint32_t w_typeValue;
 		_output->GetDataAssembly()->GetAttribute(w_nodeSelection, "typeCode", w_typeValue);
 		TreeViewNodeType w_type = static_cast<TreeViewNodeType>(w_typeValue);
