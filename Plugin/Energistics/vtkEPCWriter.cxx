@@ -25,6 +25,8 @@ under the License.
 #include <vtkInformation.h>
 #include <vtkPartitionedDataSetCollection.h>
 #include <vtkPointData.h>
+#include <vtkIdList.h>
+#include <vtkNew.h>
 #include <vtkUnstructuredGrid.h>
 #include <vtkArrayDispatch.h>
 
@@ -799,9 +801,15 @@ void vtkEPCWriter::loadFacesForVTK_HEXAGONAL_PRISM(vtkIdType const* p_ptsIds, st
 */
 void vtkEPCWriter::loadFacesForVTK_POLYHEDRON(vtkIdType cellId, std::vector<uint64_t>& p_nodeIndicesPerFace, std::vector<uint64_t>& nodeIndicesCumulativeCountPerFace, std::vector<uint64_t>& faceIndicesPerCell, std::vector<uint64_t>& faceIndicesCumulativeCountPerCell, std::vector<uint8_t>& faceRightHandness)
 {
-	vtkIdType nfaces;
-	const vtkIdType* facePtIds;
-	Internal->inputUnstructuredGrid->GetFaceStream(cellId, nfaces, facePtIds);
+	// VTK 9.4 stores polyhedra as two vtkCellArrays, and VTK 9.6 (ParaView 6.1)
+	// removed the 3-argument GetFaceStream that pointed into the legacy face
+	// stream. The vtkIdList form fills the same layout (numCellFaces, then per
+	// face its point count and ids) and exists in 9.5 too: the plugin keeps
+	// building against ParaView 6.0.
+	vtkNew<vtkIdList> faceStream;
+	Internal->inputUnstructuredGrid->GetFaceStream(cellId, faceStream);
+	const vtkIdType nfaces = faceStream->GetNumberOfIds() > 0 ? faceStream->GetId(0) : 0;
+	const vtkIdType* facePtIds = faceStream->GetPointer(0) + 1;
 
 	uint64_t newNodeIndicesCumulativeCountPerFace = nodeIndicesCumulativeCountPerFace.empty() ? 0 : nodeIndicesCumulativeCountPerFace.back();
 	uint64_t initFaceId = faceIndicesPerCell.empty() ? 0 : faceIndicesPerCell.back() + 1;
