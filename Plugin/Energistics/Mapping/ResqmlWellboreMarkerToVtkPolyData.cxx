@@ -95,8 +95,13 @@ void ResqmlWellboreMarkerToVtkPolyData::loadVtkObject()
 		if (w_markerSet[w_mIndex]->getUuid() == getUuid())
 		{
 			setTitle("Marker_"+ w_markerSet[w_mIndex]->getTitle());
+			// The marker positions are read in the GLOBAL crs here and in
+			// createDisk / createSphere, as the trajectory reads its points: in
+			// the local crs they lacked its origin (Volve: every marker ~420 km
+			// west and ~6,470 km south of its well), which stretched the scene
+			// bounds so far that a camera reset left everything else sub-pixel.
 			std::unique_ptr<double[]> w_doublePositions(new double[getResqmlData()->getMdValuesCount() * 3]);
-			getResqmlData()->getXyzPointsOfPatch(0, w_doublePositions.get());
+			getResqmlData()->getXyzPointsOfPatchInGlobalCrs(0, w_doublePositions.get());
 
 			if (_orientation)
 			{
@@ -228,7 +233,7 @@ namespace
 void ResqmlWellboreMarkerToVtkPolyData::createDisk(uint32_t markerIndex)
 {
 	std::unique_ptr<double[]> doublePositions(new double[getResqmlData()->getMdValuesCount() * 3]);
-	getResqmlData()->getXyzPointsOfPatch(0, doublePositions.get());
+	getResqmlData()->getXyzPointsOfPatchInGlobalCrs(0, doublePositions.get());
 
 	// initialize a disk
 	vtkSmartPointer<vtkDiskSource> diskSource = vtkSmartPointer<vtkDiskSource>::New();
@@ -272,7 +277,7 @@ void ResqmlWellboreMarkerToVtkPolyData::createDisk(uint32_t markerIndex)
 void ResqmlWellboreMarkerToVtkPolyData::createSphere(uint32_t markerIndex)
 {
 	std::unique_ptr<double[]> doublePositions(new double[getResqmlData()->getMdValuesCount() * 3]);
-	getResqmlData()->getXyzPointsOfPatch(0, doublePositions.get());
+	getResqmlData()->getXyzPointsOfPatchInGlobalCrs(0, doublePositions.get());
 
 	// get markerSet
 	const double zIndice = getResqmlData()->getLocalCrs(0)->isDepthOriented() ? -1 : 1;
